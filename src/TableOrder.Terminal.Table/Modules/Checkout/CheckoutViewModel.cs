@@ -29,6 +29,8 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     private PaymentResponse? payment;
 
+    private bool finished;
+
     public string TableText { get; }
 
     public string GuestsText { get; }
@@ -175,19 +177,23 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         await Navigator.PostActionAsync(LoadAsync);
 
     // 戻るは画面の「戻る」と同じ (支払を待っている間とレジの案内の間は支払方法の選び直し)
+    // コマンドの外で API を待つので、その間は Busy にして画面のボタンと重ならないようにする
     protected override async Task OnNotifyBackAsync()
     {
-        if (CanChangeMethod)
+        using (BusyState.Begin())
         {
-            await ChangeMethodAsync();
-        }
-        else if (IsCompleted)
-        {
-            await FinishAsync();
-        }
-        else
-        {
-            await BackAsync();
+            if (CanChangeMethod)
+            {
+                await ChangeMethodAsync();
+            }
+            else if (IsCompleted)
+            {
+                await FinishAsync();
+            }
+            else
+            {
+                await BackAsync();
+            }
         }
     }
 
@@ -309,6 +315,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
                     return;
                 case PaymentStatus.Failed:
                 case PaymentStatus.Cancelled:
+                    payment = null;
                     ShowError(AppResources.PaymentFailed);
                     SetStep(CheckoutStep.Method);
                     return;
@@ -317,18 +324,37 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     }
 
     // お礼と電子レシートを出し、しばらく操作がなければ待受に戻す
+    // 完了は読み直しと選び直し (取り消す前に払い終わっていた) の両方から来るので、先の 1 回だけ行う
+    // レシートを待つ前にお礼の画面にし、払い終わったあとに戻る・選び直しを受け付けない (注文の画面に戻らないように)
     private async Task CompleteAsync(CancellationToken token)
     {
+        if (IsCompleted)
+        {
+            return;
+        }
+
+        SetStep(CheckoutStep.Completed);
+
         var receipt = await orderApi.GetReceiptAsync(visitState.Id, token);
+        if (token.IsCancellationRequested)
+        {
+            return;
+        }
+
         ReceiptValue = receipt.Content?.Url.ToString() ?? string.Empty;
         HasReceipt = ReceiptValue.Length > 0;
-        SetStep(CheckoutStep.Completed);
 
         try
         {
             await Task.Delay(FinishAfter, token);
         }
         catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        // 操作の途中 (スタッフメニューの PIN など) なら待受に戻さない
+        if (BusyState.IsBusy)
         {
             return;
         }
@@ -383,8 +409,16 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         await Navigator.ForwardAsync(ViewId.Menu);
     }
 
+    // 待受に戻すのは、お礼のタイマーと操作 (閉じる、端末の戻る) の両方から来るので、先の 1 回だけ行う
+    // (タイマーの待ちが終わった直後の操作では、待ちを止めても続きが動く)
     private async Task FinishAsync()
     {
+        if (finished)
+        {
+            return;
+        }
+
+        finished = true;
         StopWaiting();
         orderUsecase.FinishVisit();
         await Navigator.ForwardAsync(ViewId.Standby);

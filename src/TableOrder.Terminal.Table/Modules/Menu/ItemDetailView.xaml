@@ -19,7 +19,8 @@
               Style="{StaticResource FillGrid}"
               ColumnDefinitions="480,1,*">
             <!-- image / info -->
-            <ScrollView Grid.Column="0">
+            <ScrollView Grid.Column="0"
+                        Style="{StaticResource PanelScroll}">
                 <VerticalStackLayout>
                     <Grid Style="{StaticResource DetailImageGrid}">
                         <Image Style="{StaticResource DetailImage}"
@@ -69,7 +70,8 @@
                      Style="{StaticResource VerticalRule}" />
 
             <!-- options / timing / quantity -->
-            <ScrollView Grid.Column="2">
+            <ScrollView Grid.Column="2"
+                        Style="{StaticResource PanelScroll}">
                 <VerticalStackLayout Style="{StaticResource DetailOptionStack}">
                     <VerticalStackLayout Style="{StaticResource DetailGroupListStack}"
                                          BindableLayout.ItemsSource="{Binding Groups}">

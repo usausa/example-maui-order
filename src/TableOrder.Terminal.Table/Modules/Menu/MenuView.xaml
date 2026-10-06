@@ -2,6 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
+             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Table.Behaviors"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:markup="clr-namespace:TableOrder.Terminal.Table.Markup"
@@ -72,44 +73,68 @@
             <Grid Grid.Column="0"
                   Style="{StaticResource FillGrid}"
                   RowDefinitions="64,1,*,1,80">
-                <!-- category -->
-                <ScrollView Grid.Row="0"
-                            Style="{StaticResource CategoryBarScroll}"
-                            Orientation="Horizontal"
-                            HorizontalScrollBarVisibility="Never">
-                    <HorizontalStackLayout Style="{StaticResource CategoryBarStack}"
-                                           BindableLayout.ItemsSource="{Binding Categories}">
-                        <BindableLayout.ItemTemplate>
-                            <DataTemplate x:DataType="{x:Type module:CategoryTab}">
-                                <Border Style="{StaticResource CategoryTabBorder}">
-                                    <Border.Triggers>
-                                        <DataTrigger TargetType="Border"
-                                                     Binding="{Binding IsSelected}"
-                                                     Value="True">
-                                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
-                                        </DataTrigger>
-                                    </Border.Triggers>
-                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                    <Border.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                              CommandParameter="{Binding .}" />
-                                    </Border.GestureRecognizers>
-                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                                    <Label Style="{StaticResource CategoryTabLabel}"
-                                           Text="{Binding Name}">
-                                        <Label.Triggers>
-                                            <DataTrigger TargetType="Label"
+                <!-- category (横にスクロールする。タブが続いている向きの端に送りのボタンを重ねる) -->
+                <Grid Grid.Row="0"
+                      Style="{StaticResource FillGrid}">
+                    <ScrollView x:Name="CategoryScroll"
+                                Style="{StaticResource CategoryBarScroll}"
+                                Orientation="Horizontal"
+                                HorizontalScrollBarVisibility="Never">
+                        <HorizontalStackLayout Style="{StaticResource CategoryBarStack}"
+                                               BindableLayout.ItemsSource="{Binding Categories}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Type module:CategoryTab}">
+                                    <Border Style="{StaticResource CategoryTabBorder}">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border"
                                                          Binding="{Binding IsSelected}"
                                                          Value="True">
-                                                <Setter Property="TextColor" Value="{StaticResource OnPrimaryColor}" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
                                             </DataTrigger>
-                                        </Label.Triggers>
-                                    </Label>
-                                </Border>
-                            </DataTemplate>
-                        </BindableLayout.ItemTemplate>
-                    </HorizontalStackLayout>
-                </ScrollView>
+                                        </Border.Triggers>
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <Label Style="{StaticResource CategoryTabLabel}"
+                                               Text="{Binding Name}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label"
+                                                             Binding="{Binding IsSelected}"
+                                                             Value="True">
+                                                    <Setter Property="TextColor" Value="{StaticResource OnPrimaryColor}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </ScrollView>
+                    <Grid Style="{StaticResource CategoryPagerGrid}"
+                          ColumnDefinitions="*,1"
+                          behaviors:ScrollPager.Forward="False"
+                          behaviors:ScrollPager.Target="{x:Reference CategoryScroll}"
+                          HorizontalOptions="Start">
+                        <Label Grid.Column="0"
+                               Style="{StaticResource CategoryPagerLabel}"
+                               Text="{x:Static fonts:MaterialIcons.Chevron_left}" />
+                        <BoxView Grid.Column="1"
+                                 Style="{StaticResource VerticalRule}" />
+                    </Grid>
+                    <Grid Style="{StaticResource CategoryPagerGrid}"
+                          ColumnDefinitions="1,*"
+                          behaviors:ScrollPager.Target="{x:Reference CategoryScroll}"
+                          HorizontalOptions="End">
+                        <BoxView Grid.Column="0"
+                                 Style="{StaticResource VerticalRule}" />
+                        <Label Grid.Column="1"
+                               Style="{StaticResource CategoryPagerLabel}"
+                               Text="{x:Static fonts:MaterialIcons.Chevron_right}" />
+                    </Grid>
+                </Grid>
                 <BoxView Grid.Row="1"
                          Style="{StaticResource HorizontalRule}" />
 

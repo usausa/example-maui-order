@@ -15,6 +15,9 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
 
     private readonly Dictionary<string, string> reasonNames;
 
+    // 操作 (呼び出し) で内容を反映するたびに進める。読み直しの結果は、頼んだあとに操作で反映していたら古いので使わない
+    private int revision;
+
     // 用件のタイルを 4 つずつ並べる行
     public IReadOnlyList<CallReasonRow> ReasonRows { get; }
 
@@ -92,6 +95,7 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
             return;
         }
 
+        revision++;
         Apply([call]);
     }
 
@@ -99,10 +103,14 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
     {
         while (!token.IsCancellationRequested)
         {
+            var requested = revision;
             var result = await orderApi.GetCallsAsync(visitState.Id, token);
             if (result.Content is { } content)
             {
-                Apply(content.Items);
+                if (requested == revision)
+                {
+                    Apply(content.Items);
+                }
             }
             else if (result.Status != ApiStatus.Canceled)
             {

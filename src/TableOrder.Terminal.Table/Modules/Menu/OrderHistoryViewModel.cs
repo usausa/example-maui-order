@@ -15,6 +15,9 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
 
     private readonly LanguageState languageState;
 
+    // 操作 (お願い) で内容を反映するたびに進める。読み直しの結果は、頼んだあとに操作で反映していたら古いので使わない
+    private int revision;
+
     public ObservableCollection<HistoryOrder> Orders { get; } = [];
 
     [ObservableProperty]
@@ -77,10 +80,14 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
     {
         while (!token.IsCancellationRequested)
         {
+            var requested = revision;
             var result = await orderApi.GetOrdersAsync(visitState.Id, token);
             if (result.Content is { } content)
             {
-                Apply(content);
+                if (requested == revision)
+                {
+                    Apply(content);
+                }
             }
             else if (result.Status != ApiStatus.Canceled)
             {
@@ -103,6 +110,7 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
         var result = await orderApi.ReleaseAsync(visitState.Id, new OrderReleaseRequest { LineIds = [] });
         if (result.Content is { } content)
         {
+            revision++;
             Apply(content);
         }
         else

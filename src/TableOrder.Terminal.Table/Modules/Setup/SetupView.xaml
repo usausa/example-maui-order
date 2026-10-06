@@ -26,7 +26,8 @@
                  Style="{StaticResource SystemRule}" />
 
         <!-- form -->
-        <ScrollView Grid.Row="2">
+        <ScrollView Grid.Row="2"
+                    Style="{StaticResource PanelScroll}">
             <VerticalStackLayout Style="{StaticResource SetupFormStack}">
                 <!-- table -->
                 <VerticalStackLayout Style="{StaticResource SetupFieldStack}">

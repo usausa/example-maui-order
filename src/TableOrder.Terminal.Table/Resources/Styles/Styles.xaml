@@ -77,6 +77,12 @@
         <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
     </Style>
 
+    <!-- 縦にスクロールする面 (商品の詳細、端末の設定、スタッフメニュー)。端まで来ても伸びる効果を出さない -->
+    <Style x:Key="PanelScroll"
+           TargetType="ScrollView">
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
     <!-- 面の区切りは 1 本の罫線にする -->
 
     <Style x:Key="HorizontalRule"
@@ -573,6 +579,23 @@
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontSize" Value="20" />
         <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- タブが続いている向きの端に重ねる送りのボタン (押すとその向きへ送る)。タブとは罫線で分ける -->
+    <Style x:Key="CategoryPagerGrid"
+           TargetType="Grid">
+        <Setter Property="WidthRequest" Value="65" />
+        <Setter Property="ColumnSpacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="CategoryPagerLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="36" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
 
