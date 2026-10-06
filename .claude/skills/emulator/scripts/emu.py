@@ -168,15 +168,21 @@ def launch():
     shell(f'monkey -p {PACKAGE} -c android.intent.category.LAUNCHER 1')
 
 
+def app_pid():
+    # pidof は見つからないときに終了コード 1 を返すので、失敗として扱わない
+    result = subprocess.run([ADB, '-s', emulator_serial(), 'shell', f'pidof {PACKAGE}'], capture_output=True, text=True, check=False)
+    return result.stdout.strip()
+
+
 def stop():
     shell(f'am force-stop {PACKAGE}')
-    if shell(f'pidof {PACKAGE}').strip():
+    if app_pid():
         print('止まりませんでした (Device Owner のアプリは force-stop が効かないので emu.py kill を使う)')
 
 
 def kill():
     # アプリの権限 (run-as) で自分のプロセスを止める。Debug (debuggable) のときだけ使える
-    pid = shell(f'pidof {PACKAGE}').strip()
+    pid = app_pid()
     if pid:
         shell(f'run-as {PACKAGE} kill -9 {pid}')
     print(f'止めました: {pid}' if pid else '動いていません')
