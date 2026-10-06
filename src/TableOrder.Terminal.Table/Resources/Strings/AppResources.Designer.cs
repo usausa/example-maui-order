@@ -465,6 +465,42 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string KioskDeviceOwner {
+            get {
+                return ResourceManager.GetString("KioskDeviceOwner", resourceCulture);
+            }
+        }
+
+        internal static string KioskLocked {
+            get {
+                return ResourceManager.GetString("KioskLocked", resourceCulture);
+            }
+        }
+
+        internal static string KioskManaged {
+            get {
+                return ResourceManager.GetString("KioskManaged", resourceCulture);
+            }
+        }
+
+        internal static string KioskNone {
+            get {
+                return ResourceManager.GetString("KioskNone", resourceCulture);
+            }
+        }
+
+        internal static string KioskReleased {
+            get {
+                return ResourceManager.GetString("KioskReleased", resourceCulture);
+            }
+        }
+
+        internal static string KioskUnlocked {
+            get {
+                return ResourceManager.GetString("KioskUnlocked", resourceCulture);
+            }
+        }
+
         internal static string LimitMessageFormat {
             get {
                 return ResourceManager.GetString("LimitMessageFormat", resourceCulture);
@@ -672,6 +708,258 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string SoldOut {
             get {
                 return ResourceManager.GetString("SoldOut", resourceCulture);
+            }
+        }
+
+        internal static string StaffApp {
+            get {
+                return ResourceManager.GetString("StaffApp", resourceCulture);
+            }
+        }
+
+        internal static string StaffBattery {
+            get {
+                return ResourceManager.GetString("StaffBattery", resourceCulture);
+            }
+        }
+
+        internal static string StaffBatteryChargingFormat {
+            get {
+                return ResourceManager.GetString("StaffBatteryChargingFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffBatteryFormat {
+            get {
+                return ResourceManager.GetString("StaffBatteryFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffChangePin {
+            get {
+                return ResourceManager.GetString("StaffChangePin", resourceCulture);
+            }
+        }
+
+        internal static string StaffConnected {
+            get {
+                return ResourceManager.GetString("StaffConnected", resourceCulture);
+            }
+        }
+
+        internal static string StaffDevice {
+            get {
+                return ResourceManager.GetString("StaffDevice", resourceCulture);
+            }
+        }
+
+        internal static string StaffDeviceId {
+            get {
+                return ResourceManager.GetString("StaffDeviceId", resourceCulture);
+            }
+        }
+
+        internal static string StaffDisconnected {
+            get {
+                return ResourceManager.GetString("StaffDisconnected", resourceCulture);
+            }
+        }
+
+        internal static string StaffEndpoint {
+            get {
+                return ResourceManager.GetString("StaffEndpoint", resourceCulture);
+            }
+        }
+
+        internal static string StaffEndpointMock {
+            get {
+                return ResourceManager.GetString("StaffEndpointMock", resourceCulture);
+            }
+        }
+
+        internal static string StaffInfo {
+            get {
+                return ResourceManager.GetString("StaffInfo", resourceCulture);
+            }
+        }
+
+        internal static string StaffKiosk {
+            get {
+                return ResourceManager.GetString("StaffKiosk", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskFormat {
+            get {
+                return ResourceManager.GetString("StaffKioskFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskHint {
+            get {
+                return ResourceManager.GetString("StaffKioskHint", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskRelease {
+            get {
+                return ResourceManager.GetString("StaffKioskRelease", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskRestore {
+            get {
+                return ResourceManager.GetString("StaffKioskRestore", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskSettings {
+            get {
+                return ResourceManager.GetString("StaffKioskSettings", resourceCulture);
+            }
+        }
+
+        internal static string StaffMock {
+            get {
+                return ResourceManager.GetString("StaffMock", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockAdvance {
+            get {
+                return ResourceManager.GetString("StaffMockAdvance", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockAdvanceDone {
+            get {
+                return ResourceManager.GetString("StaffMockAdvanceDone", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockCartEmpty {
+            get {
+                return ResourceManager.GetString("StaffMockCartEmpty", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockFailPayments {
+            get {
+                return ResourceManager.GetString("StaffMockFailPayments", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockOffline {
+            get {
+                return ResourceManager.GetString("StaffMockOffline", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockOnline {
+            get {
+                return ResourceManager.GetString("StaffMockOnline", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockPassPayments {
+            get {
+                return ResourceManager.GetString("StaffMockPassPayments", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockRestock {
+            get {
+                return ResourceManager.GetString("StaffMockRestock", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockRestockDone {
+            get {
+                return ResourceManager.GetString("StaffMockRestockDone", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockSellOut {
+            get {
+                return ResourceManager.GetString("StaffMockSellOut", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockSoldOutDone {
+            get {
+                return ResourceManager.GetString("StaffMockSoldOutDone", resourceCulture);
+            }
+        }
+
+        internal static string StaffNetwork {
+            get {
+                return ResourceManager.GetString("StaffNetwork", resourceCulture);
+            }
+        }
+
+        internal static string StaffNewPin {
+            get {
+                return ResourceManager.GetString("StaffNewPin", resourceCulture);
+            }
+        }
+
+        internal static string StaffNewPinAgain {
+            get {
+                return ResourceManager.GetString("StaffNewPinAgain", resourceCulture);
+            }
+        }
+
+        internal static string StaffOpenVisit {
+            get {
+                return ResourceManager.GetString("StaffOpenVisit", resourceCulture);
+            }
+        }
+
+        internal static string StaffPin {
+            get {
+                return ResourceManager.GetString("StaffPin", resourceCulture);
+            }
+        }
+
+        internal static string StaffPinChanged {
+            get {
+                return ResourceManager.GetString("StaffPinChanged", resourceCulture);
+            }
+        }
+
+        internal static string StaffPinLength {
+            get {
+                return ResourceManager.GetString("StaffPinLength", resourceCulture);
+            }
+        }
+
+        internal static string StaffPinMismatch {
+            get {
+                return ResourceManager.GetString("StaffPinMismatch", resourceCulture);
+            }
+        }
+
+        internal static string StaffPinWrong {
+            get {
+                return ResourceManager.GetString("StaffPinWrong", resourceCulture);
+            }
+        }
+
+        internal static string StaffTitle {
+            get {
+                return ResourceManager.GetString("StaffTitle", resourceCulture);
+            }
+        }
+
+        internal static string StaffVisit {
+            get {
+                return ResourceManager.GetString("StaffVisit", resourceCulture);
+            }
+        }
+
+        internal static string StaffVisitOpen {
+            get {
+                return ResourceManager.GetString("StaffVisitOpen", resourceCulture);
             }
         }
 

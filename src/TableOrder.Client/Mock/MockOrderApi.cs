@@ -1,7 +1,8 @@
 namespace TableOrder.Client.Mock;
 
 // 注文サーバの代わり。来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る
-public sealed class MockOrderApi : IOrderApi
+// スタッフメニューから障害 (通信できない、支払の失敗、売り切れ) と注文の進み具合を起こせる
+public sealed class MockOrderApi : IOrderApi, IMockOrderControl
 {
     private static readonly TimeSpan Latency = TimeSpan.FromMilliseconds(400);
 
@@ -42,6 +43,72 @@ public sealed class MockOrderApi : IOrderApi
         options = menu.OptionGroups.SelectMany(static x => x.Options).ToDictionary(static x => x.Id);
         optionGroups = menu.OptionGroups.SelectMany(static g => g.Options.Select(o => (GroupId: g.Id, OptionId: o.Id))).ToDictionary(static x => x.OptionId, static x => x.GroupId);
         stocks = MockData.CreateStock().ToDictionary(static x => x.TargetId);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Control
+    //--------------------------------------------------------------------------------
+
+    public bool Offline { get; set; }
+
+    public bool FailPayments { get; set; }
+
+    public void SellOut(IEnumerable<Guid> itemIds)
+    {
+        lock (sync)
+        {
+            var now = DateTimeOffset.UtcNow;
+            foreach (var id in itemIds)
+            {
+                stocks[id] = new StockResponseItem
+                {
+                    TargetId = id,
+                    TargetKind = StockTargetKind.Item,
+                    Status = StockStatus.SoldOut,
+                    UpdatedAt = now
+                };
+            }
+        }
+    }
+
+    public void Restock()
+    {
+        lock (sync)
+        {
+            stocks.Clear();
+            foreach (var stock in MockData.CreateStock())
+            {
+                stocks[stock.TargetId] = stock;
+            }
+        }
+    }
+
+    public void AdvanceOrders()
+    {
+        lock (sync)
+        {
+            if (visit is null)
+            {
+                return;
+            }
+
+            // 今の段階の次の段階の時間まで、経過した時間を足す
+            var now = DateTimeOffset.UtcNow;
+            foreach (var line in visit.Orders.SelectMany(static x => x.Lines))
+            {
+                var next = LineStatus(line, now) switch
+                {
+                    OrderLineStatus.Ordered => CookingAfter,
+                    OrderLineStatus.Cooking => ReadyAfter,
+                    OrderLineStatus.Ready => ServedAfter,
+                    _ => (TimeSpan?)null
+                };
+                if (next is { } target)
+                {
+                    line.Advanced += target - Elapsed(line, now);
+                }
+            }
+        }
     }
 
     //--------------------------------------------------------------------------------
@@ -360,6 +427,11 @@ public sealed class MockOrderApi : IOrderApi
 
         lock (sync)
         {
+            if (Offline)
+            {
+                return ApiResult.Failure<T>(ApiStatus.Unavailable);
+            }
+
             var now = DateTimeOffset.UtcNow;
             Advance(now);
             return func(now);
@@ -372,11 +444,17 @@ public sealed class MockOrderApi : IOrderApi
     private Visit? FindVisit(Guid visitId) =>
         visit?.Id == visitId ? visit : null;
 
-    // 支払を完了にし、残りがなくなった来店を終える
+    // 支払を完了 (支払を失敗させている間は失敗) にし、残りがなくなった来店を終える
     private void Advance(DateTimeOffset now)
     {
         foreach (var payment in payments.Where(x => (x.Status == PaymentStatus.Pending) && (now - x.CreatedAt >= PaymentAfter)))
         {
+            if (FailPayments)
+            {
+                payment.Status = PaymentStatus.Failed;
+                continue;
+            }
+
             payment.Status = PaymentStatus.Completed;
             payment.CompletedAt = payment.CreatedAt + PaymentAfter;
         }
@@ -477,7 +555,7 @@ public sealed class MockOrderApi : IOrderApi
             return OrderLineStatus.Served;
         }
 
-        var elapsed = now - (line.ReleasedAt ?? line.OrderedAt);
+        var elapsed = Elapsed(line, now);
         if (elapsed >= ServedAfter)
         {
             return OrderLineStatus.Served;
@@ -490,6 +568,10 @@ public sealed class MockOrderApi : IOrderApi
 
         return elapsed >= CookingAfter ? OrderLineStatus.Cooking : OrderLineStatus.Ordered;
     }
+
+    // 注文 (食後の品はお願い) からの時間。スタッフメニューで進めた分を足す
+    private static TimeSpan Elapsed(OrderLine line, DateTimeOffset now) =>
+        now - (line.ReleasedAt ?? line.OrderedAt) + line.Advanced;
 
     private static CallStatus CallStatusOf(Call call, DateTimeOffset now) =>
         now - call.CreatedAt >= AcknowledgeAfter ? CallStatus.Acknowledged : CallStatus.Open;
@@ -703,6 +785,9 @@ public sealed class MockOrderApi : IOrderApi
 
         // 食後の品をお願いした時刻
         public DateTimeOffset? ReleasedAt { get; set; }
+
+        // スタッフメニューで進めた時間
+        public TimeSpan Advanced { get; set; }
 
         public OrderLine(Guid id, MenuResponseItem item, IReadOnlyList<MenuResponseOption> options, int quantity, decimal unitPrice, OrderTiming timing, DateTimeOffset orderedAt)
         {

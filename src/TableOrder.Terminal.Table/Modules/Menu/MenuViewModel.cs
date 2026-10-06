@@ -7,6 +7,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private readonly IPopupNavigator popupNavigator;
 
+    private readonly Settings settings;
+
     private readonly MenuState menuState;
 
     private readonly VisitState visitState;
@@ -61,6 +63,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     public IObserveCommand LanguageCommand { get; }
 
+    public IObserveCommand StaffCommand { get; }
+
     //--------------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------------
@@ -77,6 +81,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
+        this.settings = settings;
         this.menuState = menuState;
         this.visitState = visitState;
         this.cartState = cartState;
@@ -102,6 +107,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         CallCommand = MakeAsyncCommand(async () => await popupNavigator.StaffCallAsync());
         CheckoutCommand = MakeAsyncCommand(CheckoutAsync);
         LanguageCommand = MakeAsyncCommand(SwitchLanguageAsync);
+        StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
         SyncCart();
     }
@@ -354,5 +360,18 @@ public sealed partial class MenuViewModel : AppViewModelBase
     {
         log.WarnApiFailed(operation, result.Status, result.ErrorCode);
         await popupNavigator.MessageAsync(AppResources.ErrorTitle, ViewHelper.ErrorMessage(result));
+    }
+
+    //--------------------------------------------------------------------------------
+    // Staff
+    //--------------------------------------------------------------------------------
+
+    // ブランドの印の長押しで、PIN を確かめてスタッフメニューに入る
+    private async Task OpenStaffAsync()
+    {
+        if (await popupNavigator.VerifyStaffAsync(settings))
+        {
+            await Navigator.ForwardAsync(ViewId.Staff);
+        }
     }
 }

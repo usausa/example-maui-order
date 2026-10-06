@@ -2,6 +2,8 @@ namespace TableOrder.Terminal.Table.Modules.Helpers;
 
 using Fonts;
 
+using TableOrder.Terminal.Table.Components;
+
 // 表示用の書式と文言 (文言は表示する言語の AppResources から引く)
 public static class ViewHelper
 {
@@ -60,6 +62,14 @@ public static class ViewHelper
             OrderLineStatus.Served => AppResources.StatusServed,
             OrderLineStatus.Cancelled => AppResources.StatusCancelled,
             _ => value.ToString()
+        };
+
+    public static string Name(KioskMode value) =>
+        value switch
+        {
+            KioskMode.Managed => AppResources.KioskManaged,
+            KioskMode.DeviceOwner => AppResources.KioskDeviceOwner,
+            _ => AppResources.KioskNone
         };
 
     // 他の言語の名前 (言語の切り替えのボタンに出す)

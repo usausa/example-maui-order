@@ -56,7 +56,10 @@ paths:
 - 折り返して並べるタイルは `FlexLayout` を使わず、行に分けて `HorizontalStackLayout` で並べる (`FlexLayout` は縦の大きさを誤る)
 - `GridItemsLayout` の間隔は端の項目の外側と見出し・末尾にも半分ずつ入る。外側の余白は `CollectionView` の `Margin` と見出しの高さからその分を引いて決める
 - 画面全体のタッチ (待受など) は一番下の面に付け、上に重ねるボタンを含む親に `TapGestureRecognizer` を付けない (子のボタンのタップも拾う)
-- 全画面にしている間は、ポップアップの窓のシステムバーも隠す (`Extender/FullscreenPopupPlugin`)。ステータスバーの色の指定は全画面と合わせない
+- 全画面と専用端末 (ロックタスク、Device Owner の制限、一時的な解除) は `Components/KioskManager` にまとめ、画面から直接 Android の API を呼ばない
+- 全画面の間は、ポップアップの窓のシステムバーも隠す (`Extender/FullscreenPopupPlugin`)。ステータスバーの色の指定は全画面と合わせない
+- CommunityToolkit の `TouchBehavior` は付けた要素の BindingContext を受け継がないので、要素に `x:Name` を付けて `BindingContext="{Binding Source={x:Reference Xxx}, Path=BindingContext, x:DataType={x:Type Border}}"` で渡す (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
+- スタッフメニューの入口は、ブランドの印の長押し (`AppGestures.StaffLongPress`) と PIN (`PopupNavigatorExtensions.VerifyStaffAsync`) にする。お客様の画面に入口のボタンを置かない
 
 ## 操作
 

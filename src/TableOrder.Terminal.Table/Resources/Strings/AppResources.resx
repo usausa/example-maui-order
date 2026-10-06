@@ -252,6 +252,24 @@
   <data name="HistoryTotal" xml:space="preserve">
     <value>ご注文の合計 (税込)</value>
   </data>
+  <data name="KioskDeviceOwner" xml:space="preserve">
+    <value>Device Owner</value>
+  </data>
+  <data name="KioskLocked" xml:space="preserve">
+    <value>ロック中</value>
+  </data>
+  <data name="KioskManaged" xml:space="preserve">
+    <value>外部の管理 (EMM)</value>
+  </data>
+  <data name="KioskNone" xml:space="preserve">
+    <value>なし (開発中の端末)</value>
+  </data>
+  <data name="KioskReleased" xml:space="preserve">
+    <value>一時的に解除中</value>
+  </data>
+  <data name="KioskUnlocked" xml:space="preserve">
+    <value>ロックなし</value>
+  </data>
   <data name="LimitMessageFormat" xml:space="preserve">
     <value>「{0}」の商品のため、これ以上はご注文いただけません</value>
   </data>
@@ -356,6 +374,132 @@
   </data>
   <data name="SoldOut" xml:space="preserve">
     <value>売り切れ</value>
+  </data>
+  <data name="StaffApp" xml:space="preserve">
+    <value>アプリ</value>
+  </data>
+  <data name="StaffBattery" xml:space="preserve">
+    <value>電池</value>
+  </data>
+  <data name="StaffBatteryChargingFormat" xml:space="preserve">
+    <value>{0}% (充電中)</value>
+  </data>
+  <data name="StaffBatteryFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="StaffChangePin" xml:space="preserve">
+    <value>PIN を変える</value>
+  </data>
+  <data name="StaffConnected" xml:space="preserve">
+    <value>接続</value>
+  </data>
+  <data name="StaffDevice" xml:space="preserve">
+    <value>端末</value>
+  </data>
+  <data name="StaffDeviceId" xml:space="preserve">
+    <value>端末 ID</value>
+  </data>
+  <data name="StaffDisconnected" xml:space="preserve">
+    <value>未接続</value>
+  </data>
+  <data name="StaffEndpoint" xml:space="preserve">
+    <value>接続先</value>
+  </data>
+  <data name="StaffEndpointMock" xml:space="preserve">
+    <value>モック</value>
+  </data>
+  <data name="StaffInfo" xml:space="preserve">
+    <value>端末の情報</value>
+  </data>
+  <data name="StaffKiosk" xml:space="preserve">
+    <value>専用端末</value>
+  </data>
+  <data name="StaffKioskFormat" xml:space="preserve">
+    <value>{0}・{1}</value>
+  </data>
+  <data name="StaffKioskHint" xml:space="preserve">
+    <value>解除は、アプリを起動し直すと元に戻ります</value>
+  </data>
+  <data name="StaffKioskRelease" xml:space="preserve">
+    <value>一時的に解除する</value>
+  </data>
+  <data name="StaffKioskRestore" xml:space="preserve">
+    <value>専用端末に戻す</value>
+  </data>
+  <data name="StaffKioskSettings" xml:space="preserve">
+    <value>Android の設定</value>
+  </data>
+  <data name="StaffMock" xml:space="preserve">
+    <value>モックの操作</value>
+  </data>
+  <data name="StaffMockAdvance" xml:space="preserve">
+    <value>注文を進める</value>
+  </data>
+  <data name="StaffMockAdvanceDone" xml:space="preserve">
+    <value>注文を 1 段進めました</value>
+  </data>
+  <data name="StaffMockCartEmpty" xml:space="preserve">
+    <value>注文リストが空です</value>
+  </data>
+  <data name="StaffMockFailPayments" xml:space="preserve">
+    <value>支払を失敗させる</value>
+  </data>
+  <data name="StaffMockOffline" xml:space="preserve">
+    <value>通信できなくする</value>
+  </data>
+  <data name="StaffMockOnline" xml:space="preserve">
+    <value>通信を戻す</value>
+  </data>
+  <data name="StaffMockPassPayments" xml:space="preserve">
+    <value>支払を戻す</value>
+  </data>
+  <data name="StaffMockRestock" xml:space="preserve">
+    <value>在庫を戻す</value>
+  </data>
+  <data name="StaffMockRestockDone" xml:space="preserve">
+    <value>在庫を戻しました</value>
+  </data>
+  <data name="StaffMockSellOut" xml:space="preserve">
+    <value>注文リストの品を売り切れにする</value>
+  </data>
+  <data name="StaffMockSoldOutDone" xml:space="preserve">
+    <value>注文リストの品を売り切れにしました</value>
+  </data>
+  <data name="StaffNetwork" xml:space="preserve">
+    <value>ネットワーク</value>
+  </data>
+  <data name="StaffNewPin" xml:space="preserve">
+    <value>新しい PIN</value>
+  </data>
+  <data name="StaffNewPinAgain" xml:space="preserve">
+    <value>新しい PIN (もう一度)</value>
+  </data>
+  <data name="StaffOpenVisit" xml:space="preserve">
+    <value>来店を開く</value>
+  </data>
+  <data name="StaffPin" xml:space="preserve">
+    <value>スタッフの PIN</value>
+  </data>
+  <data name="StaffPinChanged" xml:space="preserve">
+    <value>PIN を変えました</value>
+  </data>
+  <data name="StaffPinLength" xml:space="preserve">
+    <value>{0} 桁で入れてください</value>
+  </data>
+  <data name="StaffPinMismatch" xml:space="preserve">
+    <value>PIN が合いません</value>
+  </data>
+  <data name="StaffPinWrong" xml:space="preserve">
+    <value>PIN が違います</value>
+  </data>
+  <data name="StaffTitle" xml:space="preserve">
+    <value>スタッフメニュー</value>
+  </data>
+  <data name="StaffVisit" xml:space="preserve">
+    <value>来店</value>
+  </data>
+  <data name="StaffVisitOpen" xml:space="preserve">
+    <value>来店中です (お会計で終わります)</value>
   </data>
   <data name="StandbyMessage" xml:space="preserve">
     <value>タブレットからご注文いただけます</value>

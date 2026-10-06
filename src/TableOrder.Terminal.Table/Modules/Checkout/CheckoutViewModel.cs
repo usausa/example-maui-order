@@ -11,11 +11,15 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     private readonly ILogger<CheckoutViewModel> log;
 
-    private readonly IOrderApi orderApi;
+    private readonly IPopupNavigator popupNavigator;
+
+    private readonly Settings settings;
 
     private readonly VisitState visitState;
 
     private readonly LanguageState languageState;
+
+    private readonly IOrderApi orderApi;
 
     private readonly OrderUsecase orderUsecase;
 
@@ -114,20 +118,25 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     public IObserveCommand FinishCommand { get; }
 
+    public IObserveCommand StaffCommand { get; }
+
     //--------------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------------
 
     public CheckoutViewModel(
         ILogger<CheckoutViewModel> log,
-        IOrderApi orderApi,
+        IPopupNavigator popupNavigator,
         Settings settings,
         MenuState menuState,
         VisitState visitState,
         LanguageState languageState,
+        IOrderApi orderApi,
         OrderUsecase orderUsecase)
     {
         this.log = log;
+        this.popupNavigator = popupNavigator;
+        this.settings = settings;
         this.orderApi = orderApi;
         this.visitState = visitState;
         this.languageState = languageState;
@@ -145,6 +154,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         ChangeMethodCommand = MakeAsyncCommand(ChangeMethodAsync, () => CanChangeMethod);
         BackCommand = MakeAsyncCommand(BackAsync, () => !IsCompleted);
         FinishCommand = MakeAsyncCommand(FinishAsync, () => IsCompleted);
+        StaffCommand = MakeAsyncCommand(OpenStaffAsync);
     }
 
     protected override void Dispose(bool disposing)
@@ -418,5 +428,18 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     {
         ErrorText = message;
         HasError = true;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Staff
+    //--------------------------------------------------------------------------------
+
+    // ブランドの印の長押しで、PIN を確かめてスタッフメニューに入る
+    private async Task OpenStaffAsync()
+    {
+        if (await popupNavigator.VerifyStaffAsync(settings))
+        {
+            await Navigator.ForwardAsync(ViewId.Staff);
+        }
     }
 }

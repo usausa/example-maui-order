@@ -111,7 +111,7 @@
     <!-- System -->
     <!-- ================================================================================ -->
 
-    <!-- 起動と端末の設定。チェーンの色を使わず、System の役割の色で組む -->
+    <!-- 起動、端末の設定、スタッフメニュー。チェーンの色を使わず、System の役割の色で組む -->
 
     <Style x:Key="SystemScreenGrid"
            TargetType="Grid">
@@ -364,6 +364,73 @@
            BasedOn="{StaticResource SystemPrimaryButton}">
         <Setter Property="HeightRequest" Value="80" />
         <Setter Property="Margin" Value="0,8,0,0" />
+    </Style>
+
+    <!-- Staff -->
+
+    <Style x:Key="SystemVerticalRule"
+           TargetType="BoxView">
+        <Setter Property="WidthRequest" Value="1" />
+        <Setter Property="Color" Value="{StaticResource SystemOutlineColor}" />
+    </Style>
+
+    <Style x:Key="StaffPanelStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="32,16,32,32" />
+        <Setter Property="Spacing" Value="12" />
+    </Style>
+
+    <Style x:Key="StaffSectionLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,16,0,0" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasColor}" />
+    </Style>
+
+    <Style x:Key="StaffInfoGrid"
+           TargetType="Grid">
+        <Setter Property="RowSpacing" Value="16" />
+        <Setter Property="ColumnSpacing" Value="16" />
+    </Style>
+
+    <Style x:Key="StaffInfoNameLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasVariantColor}" />
+    </Style>
+
+    <Style x:Key="StaffInfoValueLabel"
+           TargetType="Label">
+        <Setter Property="LineBreakMode" Value="CharacterWrap" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasColor}" />
+    </Style>
+
+    <Style x:Key="StaffButtonGrid"
+           TargetType="Grid">
+        <Setter Property="RowSpacing" Value="12" />
+        <Setter Property="ColumnSpacing" Value="16" />
+    </Style>
+
+    <Style x:Key="StaffButton"
+           TargetType="Button"
+           BasedOn="{StaticResource SystemSecondaryButton}">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+
+    <Style x:Key="StaffHintLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasVariantColor}" />
+    </Style>
+
+    <Style x:Key="StaffCloseButton"
+           TargetType="Button"
+           BasedOn="{StaticResource SystemPrimaryButton}">
+        <Setter Property="HeightRequest" Value="80" />
     </Style>
 
     <!-- ================================================================================ -->

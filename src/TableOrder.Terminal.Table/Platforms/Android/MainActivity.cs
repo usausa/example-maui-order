@@ -3,20 +3,26 @@
 namespace TableOrder.Terminal.Table;
 
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 
 using AndroidX.Activity;
 
 // テーブルに置くタブレットなので横向きに固定する (台に逆さに置いても使えるように 180 度の回転は許す)
+// ロックタスクを許されていれば (Device Owner / EMM)、起動したときにシステムがロックタスクに入れる (落ちて起動し直したときも)
+// 専用端末のホームアプリにもなる (Device Owner のときに KioskManager が常に使うホームにする)
+// ホームの候補に入るだけでは、ホームの役割 (Android 10 以降) は替わらず、開発中の端末のホームはそのまま
 [Activity(
     Name = "tableorder.terminal.table.MainActivity",
     Theme = "@style/Maui.SplashTheme",
     MainLauncher = true,
     AlwaysRetainTaskState = true,
     LaunchMode = LaunchMode.SingleInstance,
+    LockTaskMode = "if_whitelisted",
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density,
     ScreenOrientation = ScreenOrientation.SensorLandscape)]
+[IntentFilter([Intent.ActionMain], Categories = [Intent.CategoryHome, Intent.CategoryDefault])]
 public sealed class MainActivity : MauiAppCompatActivity
 {
     private BackPressedCallback? backPressedCallback;

@@ -26,7 +26,17 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 - 例外の確認: `emu.py logcat --grep "Exception|FATAL"`
 - アプリの設定: `emu.py pref get <キー>` / `emu.py pref set <キー> <値>` (アプリを止めてから書き換わる)
 
+## 専用端末 (Device Owner)
+
+- Device Owner にする: `emu.py owner set` (アカウントを足していないエミュレータで行う)。状態は `emu.py owner status` (Device Owner、ロックタスク、前の画面、ホーム)
+- 掛けた制限は、アプリが前に出たときに入る。ホームアプリとして動かすには `emu.py reboot` で再起動する (ランチャーから起動しただけでは、落ちたときにランチャーへ戻る)
+- Device Owner のアプリは `am force-stop` と `am crash` が効かない。止めるときは `emu.py kill` (run-as で止める。Debug だけ)
+- Device Owner の間は Debug の高速配置でアプリを差し替えられない (止められないため、本体のない APK が残って起動できない)。入れるときは `emu.py install --embed`
+- スタッフメニューは、ブランドの印を長押し (`emu.py swipe x y x y 3500`) して PIN (初めは 1234) を入れる
+- 外す: `emu.py owner clear` (Debug は testOnly なので外せる。Release は外せない)。画面を点けたままの設定とホームの役割も元に戻す
+
 ## 後片付け
 
-- `emu.py stop` でアプリを止める
+- `emu.py stop` でアプリを止める (Device Owner のときは `emu.py kill`)
+- Device Owner にしたら `emu.py owner clear` で外す
 - 変えた設定は控えた値に戻す

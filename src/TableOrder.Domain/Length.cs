@@ -8,4 +8,7 @@ public static class Length
 
     // 来店の人数 (大人と子どもそれぞれ)
     public const int MaxGuests = 20;
+
+    // スタッフの PIN (電卓で入れる)
+    public const int StaffPinDigits = 4;
 }

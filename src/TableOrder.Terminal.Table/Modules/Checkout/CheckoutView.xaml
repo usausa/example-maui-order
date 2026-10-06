@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:fonts="clr-namespace:Fonts"
+             xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:markup="clr-namespace:TableOrder.Terminal.Table.Markup"
              xmlns:controls="clr-namespace:TableOrder.Terminal.Table.Controls"
              xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
@@ -18,8 +19,18 @@
         <Grid Grid.Row="0"
               Style="{StaticResource HeaderGrid}"
               ColumnDefinitions="64,*,Auto,1,Auto">
-            <Border Grid.Column="0"
+            <!-- ブランドの印 (長押しで PIN を確かめてスタッフメニューに入る、隠れた入口) -->
+            <!-- TouchBehavior は付けた要素の BindingContext を受け継がないので、印の BindingContext を渡す -->
+            <Border x:Name="BrandMark"
+                    Grid.Column="0"
                     Style="{StaticResource BrandMarkBorder}">
+                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                <Border.Behaviors>
+                    <mct:TouchBehavior BindingContext="{Binding Source={x:Reference BrandMark}, Path=BindingContext, x:DataType={x:Type Border}}"
+                                       LongPressCommand="{Binding StaffCommand}"
+                                       LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
+                </Border.Behaviors>
+                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                 <Image Style="{StaticResource BrandMarkImage}"
                        Source="{x:Static markup:AppIcons.Brand}" />
             </Border>

@@ -4,8 +4,11 @@
 #   python emu.py avds                       作成済みの AVD の名前
 #   python emu.py boot <avd> [--timeout 秒]  エミュレータを起動して、起動の完了まで待つ (起動済みなら何もしない)
 #   python emu.py devices                    機器の一覧と、使うエミュレータ
-#   python emu.py install [--release]        ビルドしてエミュレータに入れて起動する
+#   python emu.py install [--release] [--embed]   ビルドしてエミュレータに入れて起動する (--embed は Device Owner の間に使う)
 #   python emu.py launch | stop              アプリを起動する / 止める
+#   python emu.py kill                       アプリのプロセスを止める (Device Owner のアプリは stop が効かない。Debug だけ)
+#   python emu.py owner set|clear|status     アプリを Device Owner にする / 外す / 今の状態 (専用端末、Debug だけ外せる)
+#   python emu.py reboot [--timeout 秒]      エミュレータを再起動して、起動の完了まで待つ
 #   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200)
 #   python emu.py tap <x> <y>                撮った画像の座標をタップする
 #   python emu.py text <ascii>               文字を入力する (英数字と記号だけ)
@@ -30,11 +33,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[4]
 FRAMEWORK = 'net10.0-android'
 
-# 端末アプリ (名前: パッケージ名、プロジェクト)。モノレポに端末アプリを足したらここに足す
+# 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
 APPS = {
-    'table': ('tableorder.terminal.table', 'src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj'),
+    'table': ('tableorder.terminal.table', 'src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj', '.AdminReceiver'),
 }
-PACKAGE, PROJECT = APPS['table']
+PACKAGE, PROJECT, ADMIN = APPS['table']
 
 
 def sdk_candidates(*parts):
@@ -122,6 +125,17 @@ def boot(avd, timeout):
         flags = (subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP) if os.name == 'nt' else 0
         subprocess.Popen([emulator, '-avd', avd, '-no-boot-anim'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, creationflags=flags, start_new_session=os.name != 'nt')
         print(f'{avd} を起動しています', flush=True)
+    return wait_boot(timeout)
+
+
+def reboot(timeout):
+    # 電源を入れたときの動き (専用端末のホームアプリ、ロック画面) を確かめる
+    adb('reboot')
+    adb('wait-for-device')
+    return wait_boot(timeout)
+
+
+def wait_boot(timeout):
     deadline = time.time() + timeout
     while time.time() < deadline:
         serial = running_emulator()
@@ -138,11 +152,16 @@ def boot(avd, timeout):
 # App
 #--------------------------------------------------------------------------------
 
-def install(release):
+def install(release, embed):
     serial = emulator_serial()
     configuration = 'Release' if release else 'Debug'
     print(f'{serial} に {configuration} を入れて起動します', flush=True)
-    return subprocess.run(['dotnet', 'build', PROJECT, '-f', FRAMEWORK, '-c', configuration, '-t:Run', f'-p:AdbTarget=-s {serial}'], cwd=ROOT, check=False).returncode
+    command = ['dotnet', 'build', PROJECT, '-f', FRAMEWORK, '-c', configuration, '-t:Run', f'-p:AdbTarget=-s {serial}']
+    # Debug の高速配置は入れたあとにアプリを止めて差し替えるが、Device Owner のアプリは止められない
+    # そのままだと本体のない APK が残って起動できないので、本体を APK に入れる
+    if embed:
+        command.append('-p:EmbedAssembliesIntoApk=true')
+    return subprocess.run(command, cwd=ROOT, check=False).returncode
 
 
 def launch():
@@ -151,6 +170,53 @@ def launch():
 
 def stop():
     shell(f'am force-stop {PACKAGE}')
+    if shell(f'pidof {PACKAGE}').strip():
+        print('止まりませんでした (Device Owner のアプリは force-stop が効かないので emu.py kill を使う)')
+
+
+def kill():
+    # アプリの権限 (run-as) で自分のプロセスを止める。Debug (debuggable) のときだけ使える
+    pid = shell(f'pidof {PACKAGE}').strip()
+    if pid:
+        shell(f'run-as {PACKAGE} kill -9 {pid}')
+    print(f'止めました: {pid}' if pid else '動いていません')
+
+
+#--------------------------------------------------------------------------------
+# Device owner
+#--------------------------------------------------------------------------------
+
+def owner(action):
+    component = f'{PACKAGE}/{ADMIN}'
+    if action == 'set':
+        # 端末にアカウントやほかの利用者があると設定できない (エミュレータはアカウントを足さずに使う)
+        print(shell(f'dpm set-device-owner {component}').strip())
+        print('アプリが前に出たとき (emu.py kill と launch) に端末の制限を掛ける。ホームアプリにするには emu.py reboot で再起動する')
+    elif action == 'clear':
+        # testOnly (Debug) のアプリだけ外せる。端末の制限とロックタスクは外れるが、次の 2 つは残るので戻す
+        # - 画面を点けたままの設定 (グローバルの設定)
+        # - ホームの役割 (常に使うホームにしたときにこのアプリに移る)。ホームの候補のうち、ほかのランチャーに戻す
+        try:
+            print(shell(f'dpm remove-active-admin {component}').strip())
+        except subprocess.CalledProcessError:
+            print('Device Owner ではありません (外れているときも、残った設定は戻す)')
+        shell('settings put global stay_on_while_plugged_in 0')
+        candidates = shell('cmd package query-activities --brief -a android.intent.action.MAIN -c android.intent.category.HOME')
+        launchers = [line.strip().split('/')[0] for line in candidates.splitlines() if '/' in line]
+        launchers = [name for name in launchers if name not in (PACKAGE, 'com.android.settings')]
+        if launchers:
+            shell(f'cmd role add-role-holder android.app.role.HOME {launchers[0]}')
+            print(f'ホームを戻しました: {launchers[0]}')
+    else:
+        print(shell('dpm list-owners').strip())
+        for line in shell('dumpsys activity activities').splitlines():
+            if 'mLockTaskModeState' in line or 'topResumedActivity' in line:
+                print(line.strip())
+        home = shell('cmd package resolve-activity -a android.intent.action.MAIN -c android.intent.category.HOME')
+        for line in home.splitlines():
+            if line.strip().startswith('name='):
+                print(f'home: {line.strip()[5:]}')
+                break
 
 
 #--------------------------------------------------------------------------------
@@ -232,8 +298,14 @@ def main():
     sub.add_parser('devices')
     p = sub.add_parser('install')
     p.add_argument('--release', action='store_true')
+    p.add_argument('--embed', action='store_true')
     sub.add_parser('launch')
     sub.add_parser('stop')
+    sub.add_parser('kill')
+    p = sub.add_parser('owner')
+    p.add_argument('action', choices=['set', 'clear', 'status'])
+    p = sub.add_parser('reboot')
+    p.add_argument('--timeout', type=int, default=300)
     p = sub.add_parser('shot')
     p.add_argument('file')
     p = sub.add_parser('tap')
@@ -257,8 +329,8 @@ def main():
     p.add_argument('value', nargs='?')
     args = parser.parse_args()
 
-    global PACKAGE, PROJECT
-    PACKAGE, PROJECT = APPS[args.app]
+    global PACKAGE, PROJECT, ADMIN
+    PACKAGE, PROJECT, ADMIN = APPS[args.app]
 
     if args.command == 'avds':
         for name in avds():
@@ -270,11 +342,17 @@ def main():
             print(f'{serial}\t{state}\t{"(使わない)" if not serial.startswith("emulator-") else ""}')
         print(f'使うエミュレータ: {running_emulator() or "(なし)"}')
     elif args.command == 'install':
-        return install(args.release)
+        return install(args.release, args.embed)
     elif args.command == 'launch':
         launch()
     elif args.command == 'stop':
         stop()
+    elif args.command == 'kill':
+        kill()
+    elif args.command == 'owner':
+        owner(args.action)
+    elif args.command == 'reboot':
+        return reboot(args.timeout)
     elif args.command == 'shot':
         shot(args.file)
     elif args.command == 'tap':

@@ -7,6 +7,8 @@ public sealed class StandbyViewModel : AppViewModelBase
 
     private readonly IPopupNavigator popupNavigator;
 
+    private readonly Settings settings;
+
     private readonly LanguageState languageState;
 
     private readonly OrderUsecase orderUsecase;
@@ -23,6 +25,8 @@ public sealed class StandbyViewModel : AppViewModelBase
 
     public IObserveCommand LanguageCommand { get; }
 
+    public IObserveCommand StaffCommand { get; }
+
     //--------------------------------------------------------------------------------
     // Constructor
     //--------------------------------------------------------------------------------
@@ -37,6 +41,7 @@ public sealed class StandbyViewModel : AppViewModelBase
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
+        this.settings = settings;
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
@@ -47,6 +52,7 @@ public sealed class StandbyViewModel : AppViewModelBase
 
         StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);
         LanguageCommand = MakeAsyncCommand(SwitchLanguageAsync);
+        StaffCommand = MakeAsyncCommand(OpenStaffAsync);
     }
 
     //--------------------------------------------------------------------------------
@@ -83,5 +89,18 @@ public sealed class StandbyViewModel : AppViewModelBase
     {
         languageState.Change(languageState.Current == Language.Japanese ? Language.English : Language.Japanese);
         await Navigator.ForwardAsync(ViewId.Standby);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Staff
+    //--------------------------------------------------------------------------------
+
+    // ブランドの印の長押しで、PIN を確かめてスタッフメニューに入る
+    private async Task OpenStaffAsync()
+    {
+        if (await popupNavigator.VerifyStaffAsync(settings))
+        {
+            await Navigator.ForwardAsync(ViewId.Staff);
+        }
     }
 }

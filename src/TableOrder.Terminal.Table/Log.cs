@@ -1,5 +1,7 @@
 namespace TableOrder.Terminal.Table;
 
+using TableOrder.Terminal.Table.Components;
+
 internal static partial class Log
 {
     // Startup
@@ -20,6 +22,17 @@ internal static partial class Log
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Connectivity changed. profile=[{profile}], access=[{access}]")]
     public static partial void DebugConnectivityState(this ILogger logger, NetworkProfile profile, NetworkAccess access);
+
+    // Kiosk
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Kiosk mode. mode=[{mode}]")]
+    public static partial void InfoKioskMode(this ILogger logger, KioskMode mode);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Kiosk released by staff.")]
+    public static partial void InfoKioskReleased(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Kiosk restored.")]
+    public static partial void InfoKioskRestored(this ILogger logger);
 
     // Order
 

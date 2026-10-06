@@ -1,12 +1,25 @@
 namespace TableOrder.Terminal.Table.Extender;
 
-// 仮の全画面の間は、ポップアップの窓でもシステムバーを隠す
+using TableOrder.Terminal.Table.Components;
+
+// 全画面の間は、ポップアップの窓でもシステムバーを隠す
 // ポップアップは Activity と別の窓 (ダイアログ) に出るので、Activity の全画面の設定が効かずにシステムバーが出てしまう
 public sealed class FullscreenPopupPlugin : IPopupPlugin
 {
+    private readonly KioskManager kiosk;
+
+    public FullscreenPopupPlugin(KioskManager kiosk)
+    {
+        this.kiosk = kiosk;
+    }
+
     public void Extend(ContentView view)
     {
-        view.Loaded += OnLoaded;
+        // スタッフが専用端末を解除している間は、システムバーを出したままにする
+        if (kiosk.IsFullscreen)
+        {
+            view.Loaded += OnLoaded;
+        }
     }
 
     private static void OnLoaded(object? sender, EventArgs e)

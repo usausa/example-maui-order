@@ -22,6 +22,29 @@ public static class PopupNavigatorExtensions
             DialogId.InputNumber,
             new NumberInputParameter(AppResources.SetupTableNo, value, Length.TableNoDigits, digits: true));
 
+    // スタッフの PIN (入れた桁数だけを見せる)
+    public static ValueTask<string?> InputPinAsync(this IPopupNavigator popupNavigator, string title) =>
+        popupNavigator.PopupAsync<NumberInputParameter, string?>(
+            DialogId.InputNumber,
+            new NumberInputParameter(title, string.Empty, Length.StaffPinDigits, digits: true, masked: true));
+
+    // スタッフメニューに入る前に PIN を確かめる。違うときは知らせて false
+    public static async ValueTask<bool> VerifyStaffAsync(this IPopupNavigator popupNavigator, Settings settings)
+    {
+        if (await popupNavigator.InputPinAsync(AppResources.StaffPin) is not { } pin)
+        {
+            return false;
+        }
+
+        if (pin == settings.StaffPin)
+        {
+            return true;
+        }
+
+        await popupNavigator.MessageAsync(AppResources.StaffTitle, AppResources.StaffPinWrong);
+        return false;
+    }
+
     public static ValueTask MessageAsync(this IPopupNavigator popupNavigator, string title, string message) =>
         popupNavigator.PopupAsync(DialogId.Message, new MessageParameter(title, message));
 

@@ -252,6 +252,24 @@
   <data name="HistoryTotal" xml:space="preserve">
     <value>Total (tax incl.)</value>
   </data>
+  <data name="KioskDeviceOwner" xml:space="preserve">
+    <value>Device owner</value>
+  </data>
+  <data name="KioskLocked" xml:space="preserve">
+    <value>locked</value>
+  </data>
+  <data name="KioskManaged" xml:space="preserve">
+    <value>Managed (EMM)</value>
+  </data>
+  <data name="KioskNone" xml:space="preserve">
+    <value>None (development)</value>
+  </data>
+  <data name="KioskReleased" xml:space="preserve">
+    <value>released</value>
+  </data>
+  <data name="KioskUnlocked" xml:space="preserve">
+    <value>not locked</value>
+  </data>
   <data name="LimitMessageFormat" xml:space="preserve">
     <value>This item is limited ({0}). You cannot add more.</value>
   </data>
@@ -356,6 +374,132 @@
   </data>
   <data name="SoldOut" xml:space="preserve">
     <value>Sold out</value>
+  </data>
+  <data name="StaffApp" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="StaffBattery" xml:space="preserve">
+    <value>Battery</value>
+  </data>
+  <data name="StaffBatteryChargingFormat" xml:space="preserve">
+    <value>{0}% (charging)</value>
+  </data>
+  <data name="StaffBatteryFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="StaffChangePin" xml:space="preserve">
+    <value>Change PIN</value>
+  </data>
+  <data name="StaffConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="StaffDevice" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="StaffDeviceId" xml:space="preserve">
+    <value>Device ID</value>
+  </data>
+  <data name="StaffDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="StaffEndpoint" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="StaffEndpointMock" xml:space="preserve">
+    <value>Mock</value>
+  </data>
+  <data name="StaffInfo" xml:space="preserve">
+    <value>Device information</value>
+  </data>
+  <data name="StaffKiosk" xml:space="preserve">
+    <value>Kiosk</value>
+  </data>
+  <data name="StaffKioskFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="StaffKioskHint" xml:space="preserve">
+    <value>Restarting the app locks it again.</value>
+  </data>
+  <data name="StaffKioskRelease" xml:space="preserve">
+    <value>Release</value>
+  </data>
+  <data name="StaffKioskRestore" xml:space="preserve">
+    <value>Lock again</value>
+  </data>
+  <data name="StaffKioskSettings" xml:space="preserve">
+    <value>Android settings</value>
+  </data>
+  <data name="StaffMock" xml:space="preserve">
+    <value>Mock controls</value>
+  </data>
+  <data name="StaffMockAdvance" xml:space="preserve">
+    <value>Advance orders</value>
+  </data>
+  <data name="StaffMockAdvanceDone" xml:space="preserve">
+    <value>Orders have advanced one step.</value>
+  </data>
+  <data name="StaffMockCartEmpty" xml:space="preserve">
+    <value>The cart is empty.</value>
+  </data>
+  <data name="StaffMockFailPayments" xml:space="preserve">
+    <value>Fail payments</value>
+  </data>
+  <data name="StaffMockOffline" xml:space="preserve">
+    <value>Go offline</value>
+  </data>
+  <data name="StaffMockOnline" xml:space="preserve">
+    <value>Go online</value>
+  </data>
+  <data name="StaffMockPassPayments" xml:space="preserve">
+    <value>Restore payments</value>
+  </data>
+  <data name="StaffMockRestock" xml:space="preserve">
+    <value>Restock</value>
+  </data>
+  <data name="StaffMockRestockDone" xml:space="preserve">
+    <value>Stock has been restored.</value>
+  </data>
+  <data name="StaffMockSellOut" xml:space="preserve">
+    <value>Sell out cart items</value>
+  </data>
+  <data name="StaffMockSoldOutDone" xml:space="preserve">
+    <value>Cart items are now sold out.</value>
+  </data>
+  <data name="StaffNetwork" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="StaffNewPin" xml:space="preserve">
+    <value>New PIN</value>
+  </data>
+  <data name="StaffNewPinAgain" xml:space="preserve">
+    <value>New PIN (again)</value>
+  </data>
+  <data name="StaffOpenVisit" xml:space="preserve">
+    <value>Open a visit</value>
+  </data>
+  <data name="StaffPin" xml:space="preserve">
+    <value>Staff PIN</value>
+  </data>
+  <data name="StaffPinChanged" xml:space="preserve">
+    <value>The PIN has been changed.</value>
+  </data>
+  <data name="StaffPinLength" xml:space="preserve">
+    <value>Enter {0} digits.</value>
+  </data>
+  <data name="StaffPinMismatch" xml:space="preserve">
+    <value>The PINs do not match.</value>
+  </data>
+  <data name="StaffPinWrong" xml:space="preserve">
+    <value>Incorrect PIN.</value>
+  </data>
+  <data name="StaffTitle" xml:space="preserve">
+    <value>Staff menu</value>
+  </data>
+  <data name="StaffVisit" xml:space="preserve">
+    <value>Visit</value>
+  </data>
+  <data name="StaffVisitOpen" xml:space="preserve">
+    <value>A visit is in progress (it ends at checkout).</value>
   </data>
   <data name="StandbyMessage" xml:space="preserve">
     <value>You can order from this tablet</value>

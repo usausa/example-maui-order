@@ -2,6 +2,7 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
+             xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:markup="clr-namespace:TableOrder.Terminal.Table.Markup"
              xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Standby"
@@ -28,12 +29,25 @@
               InputTransparent="True">
             <HorizontalStackLayout Grid.Column="0"
                                    Style="{StaticResource StandbyBrandStack}"
+                                   CascadeInputTransparent="False"
                                    InputTransparent="True">
-                <Border Style="{StaticResource StandbyMarkBorder}">
+                <!-- ブランドの印 (長押しで PIN を確かめてスタッフメニューに入る、隠れた入口) -->
+                <!-- TouchBehavior は付けた要素の BindingContext を受け継がないので、印の BindingContext を渡す -->
+                <Border x:Name="BrandMark"
+                        Style="{StaticResource StandbyMarkBorder}">
+                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                    <Border.Behaviors>
+                        <mct:TouchBehavior BindingContext="{Binding Source={x:Reference BrandMark}, Path=BindingContext, x:DataType={x:Type Border}}"
+                                           LongPressCommand="{Binding StaffCommand}"
+                                           LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
+                    </Border.Behaviors>
+                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                     <Label Style="{StaticResource StandbyMarkLabel}"
+                           InputTransparent="True"
                            Text="{x:Static markup:AppIcons.BrandGlyph}" />
                 </Border>
                 <Label Style="{StaticResource StandbyBrandLabel}"
+                       InputTransparent="True"
                        Text="{x:Static strings:AppResources.BrandName}" />
             </HorizontalStackLayout>
             <Button Grid.Column="1"

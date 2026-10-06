@@ -4,6 +4,8 @@ namespace TableOrder.Terminal.Table.State;
 #pragma warning disable CA1724
 public sealed class Settings
 {
+    private const string DefaultStaffPin = "1234";
+
     private readonly IPreferences preferences;
 
     public Settings(IPreferences preferences)
@@ -23,6 +25,13 @@ public sealed class Settings
     {
         get => preferences.Get(nameof(ApiEndPoint), string.Empty);
         set => preferences.Set(nameof(ApiEndPoint), value);
+    }
+
+    // スタッフメニューに入る PIN。今は端末ごとに持ち、初めは 1234 にする
+    public string StaffPin
+    {
+        get => preferences.Get(nameof(StaffPin), DefaultStaffPin);
+        set => preferences.Set(nameof(StaffPin), value);
     }
 
     public bool IsConfigured => !String.IsNullOrEmpty(TableNo);

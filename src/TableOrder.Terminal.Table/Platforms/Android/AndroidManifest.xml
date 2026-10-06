@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<!-- テーブル番号などの端末の設定を別の端末に移さないため、バックアップと端末間の転送はしない (Android 12 以降の転送は dataExtractionRules で止める) -->
-	<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="TableOrder"></application>
+	<!-- testOnly は csproj で Debug だけ true にする (Device Owner にしたあと adb から外せるように) -->
+	<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="TableOrder" android:testOnly="${testOnly}"></application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 </manifest>

@@ -232,6 +232,7 @@ public static partial class MauiProgram
         // Components
         services.AddSingleton<DeviceInformation>();
         services.AddSingleton<IStorageManager, StorageManager>();
+        services.AddSingleton<KioskManager>();
 
         // Resource
         services.AddSingleton<ResourceDictionary>(static _ => Application.Current!.Resources);
@@ -246,8 +247,10 @@ public static partial class MauiProgram
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();
 
-        // Service (サーバができたら REST / gRPC の実装に替える)
-        services.AddSingleton<IOrderApi, MockOrderApi>();
+        // Service (サーバができたら REST / gRPC の実装に替える。モックはスタッフメニューから障害と進み具合を起こせる)
+        services.AddSingleton<MockOrderApi>();
+        services.AddSingleton<IOrderApi>(static p => p.GetRequiredService<MockOrderApi>());
+        services.AddSingleton<IMockOrderControl>(static p => p.GetRequiredService<MockOrderApi>());
 
         // Usecase
         services.AddSingleton<OrderUsecase>();

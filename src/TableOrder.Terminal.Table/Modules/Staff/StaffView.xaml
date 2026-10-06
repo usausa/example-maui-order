@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Staff"
+             x:Class="TableOrder.Terminal.Table.Modules.Staff.StaffView"
+             x:DataType="{x:Type module:StaffViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:StaffViewModel}">
+
+    <!-- スタッフメニュー: 左に端末の情報、右に操作。端末の設定と同じくシステムの色にする -->
+    <Grid Style="{StaticResource SystemScreenGrid}"
+          RowDefinitions="72,1,*,1,80">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource SystemHeaderGrid}"
+              ColumnDefinitions="Auto,*">
+            <Image Grid.Column="0"
+                   Style="{StaticResource SystemHeaderLogoImage}"
+                   Source="system_logo.png" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource SystemHeaderLabel}"
+                   Text="{x:Static strings:AppResources.StaffTitle}" />
+        </Grid>
+        <BoxView Grid.Row="1"
+                 Style="{StaticResource SystemRule}" />
+
+        <!-- body -->
+        <Grid Grid.Row="2"
+              ColumnDefinitions="480,1,*">
+            <!-- information -->
+            <ScrollView Grid.Column="0">
+                <VerticalStackLayout Style="{StaticResource StaffPanelStack}">
+                    <Label Style="{StaticResource StaffSectionLabel}"
+                           Text="{x:Static strings:AppResources.StaffInfo}" />
+                    <Grid Style="{StaticResource StaffInfoGrid}"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          ColumnDefinitions="128,*">
+                        <Label Grid.Row="0" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.HeaderTable}" />
+                        <Label Grid.Row="0" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding TableText}" />
+                        <Label Grid.Row="1" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffEndpoint}" />
+                        <Label Grid.Row="1" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding EndpointText}" />
+                        <Label Grid.Row="2" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffKiosk}" />
+                        <Label Grid.Row="2" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding KioskText}" />
+                        <Label Grid.Row="3" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffBattery}" />
+                        <Label Grid.Row="3" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding BatteryText}" />
+                        <Label Grid.Row="4" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffNetwork}" />
+                        <Label Grid.Row="4" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding NetworkText}" />
+                        <Label Grid.Row="5" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffDeviceId}" />
+                        <Label Grid.Row="5" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding DeviceIdText}" />
+                        <Label Grid.Row="6" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffApp}" />
+                        <Label Grid.Row="6" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding VersionText}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <BoxView Grid.Column="1"
+                     Style="{StaticResource SystemVerticalRule}" />
+
+            <!-- operation -->
+            <ScrollView Grid.Column="2">
+                <VerticalStackLayout Style="{StaticResource StaffPanelStack}">
+                    <!-- visit -->
+                    <Label Style="{StaticResource StaffSectionLabel}"
+                           Text="{x:Static strings:AppResources.StaffVisit}" />
+                    <Grid Style="{StaticResource StaffButtonGrid}"
+                          ColumnDefinitions="*,*"
+                          IsVisible="{Binding CanOpenVisit}">
+                        <Button Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding OpenVisitCommand}"
+                                Text="{x:Static strings:AppResources.StaffOpenVisit}" />
+                    </Grid>
+                    <Label Style="{StaticResource StaffHintLabel}"
+                           IsVisible="{Binding CanOpenVisit, Converter={StaticResource ReverseConverter}}"
+                           Text="{x:Static strings:AppResources.StaffVisitOpen}" />
+
+                    <!-- device -->
+                    <Label Style="{StaticResource StaffSectionLabel}"
+                           Text="{x:Static strings:AppResources.StaffDevice}" />
+                    <Grid Style="{StaticResource StaffButtonGrid}"
+                          ColumnDefinitions="*,*">
+                        <Button Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding SetupCommand}"
+                                Text="{x:Static strings:AppResources.SetupTitle}" />
+                        <Button Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding ChangePinCommand}"
+                                Text="{x:Static strings:AppResources.StaffChangePin}" />
+                    </Grid>
+
+                    <!-- kiosk -->
+                    <Label Style="{StaticResource StaffSectionLabel}"
+                           Text="{x:Static strings:AppResources.StaffKiosk}" />
+                    <Grid Style="{StaticResource StaffButtonGrid}"
+                          ColumnDefinitions="*,*">
+                        <Button Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding ReleaseCommand}"
+                                IsVisible="{Binding IsReleased, Converter={StaticResource ReverseConverter}}"
+                                Text="{x:Static strings:AppResources.StaffKioskRelease}" />
+                        <Button Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding RestoreCommand}"
+                                IsVisible="{Binding IsReleased}"
+                                Text="{x:Static strings:AppResources.StaffKioskRestore}" />
+                        <Button Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding SystemSettingsCommand}"
+                                IsVisible="{Binding IsReleased}"
+                                Text="{x:Static strings:AppResources.StaffKioskSettings}" />
+                    </Grid>
+                    <Label Style="{StaticResource StaffHintLabel}"
+                           Text="{x:Static strings:AppResources.StaffKioskHint}" />
+
+                    <!-- mock -->
+                    <Label Style="{StaticResource StaffSectionLabel}"
+                           Text="{x:Static strings:AppResources.StaffMock}" />
+                    <Grid Style="{StaticResource StaffButtonGrid}"
+                          RowDefinitions="Auto,Auto,Auto"
+                          ColumnDefinitions="*,*">
+                        <Button Grid.Row="0" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding OfflineCommand}"
+                                Text="{Binding OfflineText}" />
+                        <Button Grid.Row="0" Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding PaymentCommand}"
+                                Text="{Binding PaymentText}" />
+                        <Button Grid.Row="1" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding SellOutCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockSellOut}" />
+                        <Button Grid.Row="1" Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding RestockCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockRestock}" />
+                        <Button Grid.Row="2" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding AdvanceCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockAdvance}" />
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+        <BoxView Grid.Row="3"
+                 Style="{StaticResource SystemRule}" />
+
+        <!-- close -->
+        <Button Grid.Row="4"
+                Style="{StaticResource StaffCloseButton}"
+                Command="{Binding CloseCommand}"
+                Text="{x:Static strings:AppResources.CommonClose}" />
+    </Grid>
+
+</ContentView>
