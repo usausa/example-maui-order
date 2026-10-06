@@ -1447,6 +1447,35 @@
     </Style>
 
     <!-- ================================================================================ -->
+    <!-- Language -->
+    <!-- ================================================================================ -->
+
+    <Style x:Key="LanguageListStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="24" />
+        <Setter Property="Spacing" Value="12" />
+    </Style>
+
+    <!-- 押せる面の高さは主な操作と同じ 80 にする -->
+    <Style x:Key="LanguageTileBorder"
+           TargetType="Border">
+        <Setter Property="HeightRequest" Value="80" />
+        <Setter Property="Padding" Value="24,0" />
+        <Setter Property="Stroke" Value="{StaticResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="LanguageNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- ================================================================================ -->
     <!-- Detail -->
     <!-- ================================================================================ -->
 

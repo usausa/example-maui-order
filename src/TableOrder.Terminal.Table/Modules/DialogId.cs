@@ -6,6 +6,7 @@ public enum DialogId
     InputNumber,
     Message,
     Confirm,
+    Language,
 
     // 来店
     GuestCount,

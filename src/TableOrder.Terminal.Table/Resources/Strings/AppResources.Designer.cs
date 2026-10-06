@@ -501,6 +501,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string LanguageTitle {
+            get {
+                return ResourceManager.GetString("LanguageTitle", resourceCulture);
+            }
+        }
+
         internal static string LimitMessageFormat {
             get {
                 return ResourceManager.GetString("LimitMessageFormat", resourceCulture);

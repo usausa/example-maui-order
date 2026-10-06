@@ -91,7 +91,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         var language = languageState.Current;
         TableText = ViewHelper.Table(settings.TableNo);
         GuestsText = ViewHelper.Guests(visitState.Guests);
-        LanguageText = ViewHelper.SwitchName(language);
+        LanguageText = ViewHelper.LanguageName(language);
         Categories = menuState.GetCategories(language)
             .Select(x => new CategoryTab(x.Id, x.Name, x.Products.Select(p => new MenuCard(p, menuState.GetItem(p.Id).OptionGroupIds.Count > 0)).ToList()))
             .ToList();
@@ -106,7 +106,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         HistoryCommand = MakeAsyncCommand(async () => await popupNavigator.OrderHistoryAsync());
         CallCommand = MakeAsyncCommand(async () => await popupNavigator.StaffCallAsync());
         CheckoutCommand = MakeAsyncCommand(CheckoutAsync);
-        LanguageCommand = MakeAsyncCommand(SwitchLanguageAsync);
+        LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
         SyncCart();
@@ -347,10 +347,15 @@ public sealed partial class MenuViewModel : AppViewModelBase
         await Navigator.ForwardAsync(ViewId.Checkout);
     }
 
-    // 文言を引き直すために画面を作り直す (カートは状態に残る)
-    private async Task SwitchLanguageAsync()
+    // 言語を選び、替えたら文言を引き直すために画面を作り直す (カートは状態に残る)
+    private async Task SelectLanguageAsync()
     {
-        languageState.Change(languageState.Current == Language.Japanese ? Language.English : Language.Japanese);
+        if ((await popupNavigator.LanguageAsync() is not { } language) || (language == languageState.Current))
+        {
+            return;
+        }
+
+        languageState.Change(language);
 
         var selected = Categories.FirstOrDefault(static x => x.IsSelected);
         await Navigator.ForwardAsync(ViewId.Menu, selected is null ? null : Parameters.MakeCategoryId(selected.Id));

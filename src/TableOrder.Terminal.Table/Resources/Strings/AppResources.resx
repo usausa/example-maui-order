@@ -270,6 +270,9 @@
   <data name="KioskUnlocked" xml:space="preserve">
     <value>ロックなし</value>
   </data>
+  <data name="LanguageTitle" xml:space="preserve">
+    <value>言語 / Language</value>
+  </data>
   <data name="LimitMessageFormat" xml:space="preserve">
     <value>「{0}」の商品のため、これ以上はご注文いただけません</value>
   </data>

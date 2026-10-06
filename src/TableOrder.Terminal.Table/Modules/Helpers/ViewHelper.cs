@@ -73,8 +73,9 @@ public static class ViewHelper
         };
 
     // 他の言語の名前 (言語の切り替えのボタンに出す)
-    public static string SwitchName(Language current) =>
-        current == Language.Japanese ? "English" : "日本語";
+    // 言語の名前はその言語で書く (どの言語の画面でも読めるように)
+    public static string LanguageName(Language language) =>
+        language == Language.English ? "English" : "日本語";
 
     //--------------------------------------------------------------------------------
     // Glyph

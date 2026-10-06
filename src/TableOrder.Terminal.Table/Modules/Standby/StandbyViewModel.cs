@@ -48,10 +48,10 @@ public sealed class StandbyViewModel : AppViewModelBase
         CanStart = menuState.Config.OrderRules.SelfStart;
         Message = CanStart ? AppResources.StandbyMessage : AppResources.StandbyWaiting;
         TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(settings.TableNo));
-        LanguageText = ViewHelper.SwitchName(languageState.Current);
+        LanguageText = ViewHelper.LanguageName(languageState.Current);
 
         StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);
-        LanguageCommand = MakeAsyncCommand(SwitchLanguageAsync);
+        LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
     }
 
@@ -84,10 +84,15 @@ public sealed class StandbyViewModel : AppViewModelBase
         await Navigator.ForwardAsync(ViewId.Menu);
     }
 
-    // 文言を引き直すために画面を作り直す
-    private async Task SwitchLanguageAsync()
+    // 言語を選び、替えたら文言を引き直すために画面を作り直す
+    private async Task SelectLanguageAsync()
     {
-        languageState.Change(languageState.Current == Language.Japanese ? Language.English : Language.Japanese);
+        if ((await popupNavigator.LanguageAsync() is not { } language) || (language == languageState.Current))
+        {
+            return;
+        }
+
+        languageState.Change(language);
         await Navigator.ForwardAsync(ViewId.Standby);
     }
 

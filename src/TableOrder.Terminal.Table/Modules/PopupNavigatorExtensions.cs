@@ -52,6 +52,10 @@ public static class PopupNavigatorExtensions
     public static ValueTask<bool> ConfirmAsync(this IPopupNavigator popupNavigator, string title, string message, string ok, string cancel) =>
         popupNavigator.PopupAsync<ConfirmParameter, bool>(DialogId.Confirm, new ConfirmParameter(title, message, ok, cancel));
 
+    // 言語を選ぶ (今の言語に印を付ける)
+    public static ValueTask<Language?> LanguageAsync(this IPopupNavigator popupNavigator) =>
+        popupNavigator.PopupAsync<Language?>(DialogId.Language);
+
     //--------------------------------------------------------------------------------
     // 来店
     //--------------------------------------------------------------------------------

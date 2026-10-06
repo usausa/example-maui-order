@@ -40,6 +40,8 @@ paths:
 - resx を変えたら `AppResources.Designer.cs` も合わせる (Visual Studio で保存すると作り直される)
 - 値を埋め込む文言は `{0}` を使う書式にし、`ViewHelper.Format` で組み立てる
 - 言語を切り替えたら表示中の画面を作り直して文言を引き直す (画面をまたぐ内容は State に置く)
+- 言語のボタンには今の言語を出し、押したら選ぶポップアップ (`PopupNavigatorExtensions.LanguageAsync`) を開く (切り替え先を出すトグルにしない)
+- 言語の名前はその言語で書く (`ViewHelper.LanguageName`。どの言語の画面でも読めるように)
 - メニューの名前など、サーバから受ける文字は `LocalizedText.Get(language)` で選ぶ
 - チェーンの名前は resx の `BrandName` に置いて `{x:Static strings:AppResources.BrandName}` で引き、サーバの店舗の名前 (`storeName`) と混ぜない
 
@@ -52,6 +54,7 @@ paths:
 - ViewModel のプロパティは `[ObservableProperty] public partial`、コマンドは `MakeAsyncCommand` / `MakeDelegateCommand` で作る
 - 一覧の項目の操作は ViewModel の引数つきコマンドにし、項目からは `RelativeSource AncestorType` と `x:DataType` を付けたバインドで呼ぶ (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
 - ポップアップの ViewModel が読み直しを続けるときは、`CancellationTokenSource` を `Dispose` で止める (閉じると ViewModel が破棄される)
+- ポップアップの結果を値の型で返すときは、開く側と同じ型 (Nullable も含めて) で `CloseAsync<T>` を呼ぶ (例: `CloseAsync<Language?>(x)`。型が違うと結果が渡らず null になる)
 - コマンドの中で長く待たない (実行中は処理中の覆いで画面を止める)。支払の完了などを待つ繰り返しは、コマンドの外のタスクにする
 - `AcceptsCommand` は画面の有効・無効 (遷移) に合わせて基底クラスが切り替える。各画面では書き換えず、止める必要があれば画面のフラグを用意する
 - ボタンを押せなくするのは `MakeXxxCommand` の `canExecute` (画面の状態) で行う。実行中と遷移中は `BusyState` で止まる

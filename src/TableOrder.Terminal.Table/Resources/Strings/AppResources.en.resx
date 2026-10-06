@@ -270,6 +270,9 @@
   <data name="KioskUnlocked" xml:space="preserve">
     <value>not locked</value>
   </data>
+  <data name="LanguageTitle" xml:space="preserve">
+    <value>Language / 言語</value>
+  </data>
   <data name="LimitMessageFormat" xml:space="preserve">
     <value>This item is limited ({0}). You cannot add more.</value>
   </data>
