@@ -513,18 +513,21 @@
     <!-- Menu -->
     <!-- ================================================================================ -->
 
-    <!-- カードは 4 列。料理の絵 (4:3) を主役にし、名前は 2 行まで、価格と + を下の帯に置く -->
+    <!-- カードは 4 列で、縦に 3 段を見せる。料理の絵を主役にし、文字は 2 行の高さにまとめ、+ は絵の右下に重ねる -->
+    <!-- 3 段がタブと下部の操作の帯の間に収まるように、カードの高さを 208 (絵 148、文字 60)、間隔を 8 にしている -->
 
+    <!-- カードの間隔の半分が端のカードの外側にも入るので、左右の余白はカードの間隔と同じくらいになる -->
     <Style x:Key="MenuCollectionView"
            TargetType="CollectionView">
-        <Setter Property="Margin" Value="24,0" />
+        <Setter Property="Margin" Value="4,0" />
         <Setter Property="SelectionMode" Value="None" />
         <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
+    <!-- 見出しと末尾にもカードの間隔の半分ずつが入るので、高さ 0 の行を置くだけで上下の余白がカードの間隔と揃う -->
     <Style x:Key="MenuGapBoxView"
            TargetType="BoxView">
-        <Setter Property="HeightRequest" Value="24" />
+        <Setter Property="HeightRequest" Value="0" />
     </Style>
 
     <Style x:Key="MenuCardBorder"
@@ -537,7 +540,7 @@
 
     <Style x:Key="MenuCardImageGrid"
            TargetType="Grid">
-        <Setter Property="HeightRequest" Value="168" />
+        <Setter Property="HeightRequest" Value="148" />
         <Setter Property="BackgroundColor" Value="{StaticResource SurfaceVariantColor}" />
     </Style>
 
@@ -578,28 +581,50 @@
         <Setter Property="TextColor" Value="{StaticResource OnScrimColor}" />
     </Style>
 
+    <!-- 文字は 2 行の高さで揃える。多くの名前は 1 行に収まり、2 行になっても価格を最後の行の右に置く -->
+    <Style x:Key="MenuCardTextGrid"
+           TargetType="Grid">
+        <Setter Property="HeightRequest" Value="60" />
+        <Setter Property="Padding" Value="12,5,12,6" />
+    </Style>
+
     <Style x:Key="MenuCardNameLabel"
            TargetType="Label">
-        <Setter Property="Margin" Value="16,12,16,0" />
-        <Setter Property="HeightRequest" Value="50" />
+        <Setter Property="VerticalOptions" Value="Start" />
         <Setter Property="MaxLines" Value="2" />
         <Setter Property="LineBreakMode" Value="TailTruncation" />
-        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontSize" Value="17" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
 
+    <!-- 名前の後ろで価格の幅を確保する文字 (見える価格と同じ大きさにし、面と同じ色で見せない) -->
+    <!-- 名前と同じ大きさにして、この文字が 1 行目に入っても行の高さが変わらないようにする (名前の位置をカードの間で揃える) -->
+    <Style x:Key="MenuCardPriceSpaceSpan"
+           TargetType="Span">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource SurfaceColor}" />
+    </Style>
+
+    <!-- 3 行に及ぶ長い名前は 2 行目の末尾が価格の下に入るので、価格の左右を面の色で塗って重なりを隠す -->
     <Style x:Key="MenuCardPriceLabel"
            TargetType="Label">
-        <Setter Property="Margin" Value="16,0,0,0" />
-        <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontSize" Value="22" />
+        <Setter Property="Padding" Value="8,0,0,0" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="End" />
+        <Setter Property="FontSize" Value="17" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SurfaceColor}" />
     </Style>
 
     <Style x:Key="MenuCardAddButton"
            TargetType="Button">
+        <Setter Property="WidthRequest" Value="64" />
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="HorizontalOptions" Value="End" />
+        <Setter Property="VerticalOptions" Value="End" />
         <Setter Property="Padding" Value="0" />
         <Setter Property="BorderWidth" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
@@ -769,36 +794,42 @@
         <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
+    <!-- 注文リストの行は 2 段: 名前と数量の増減 / 食後の印・オプション・金額 -->
     <Style x:Key="CartLineGrid"
            TargetType="Grid">
-        <Setter Property="Padding" Value="20,16" />
-        <Setter Property="RowSpacing" Value="0" />
-        <Setter Property="ColumnSpacing" Value="12" />
-    </Style>
-
-    <Style x:Key="CartLineTextStack"
-           TargetType="VerticalStackLayout">
-        <Setter Property="Padding" Value="0,0,0,10" />
-        <Setter Property="Spacing" Value="4" />
+        <Setter Property="Padding" Value="16,8,12,8" />
+        <Setter Property="RowSpacing" Value="4" />
+        <Setter Property="ColumnSpacing" Value="8" />
     </Style>
 
     <Style x:Key="CartLineNameLabel"
            TargetType="Label">
-        <Setter Property="FontSize" Value="18" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="MaxLines" Value="2" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="17" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
 
+    <Style x:Key="CartLineDetailGrid"
+           TargetType="Grid">
+        <Setter Property="MinimumHeightRequest" Value="24" />
+        <Setter Property="ColumnSpacing" Value="8" />
+    </Style>
+
     <Style x:Key="CartLineOptionLabel"
            TargetType="Label">
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="13" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceVariantColor}" />
     </Style>
 
     <!-- 食後などの小さな印 -->
     <Style x:Key="TagBorder"
            TargetType="Border">
-        <Setter Property="Margin" Value="0,0,0,10" />
         <Setter Property="Padding" Value="8,2" />
         <Setter Property="HorizontalOptions" Value="Start" />
         <Setter Property="VerticalOptions" Value="Center" />
@@ -818,14 +849,14 @@
            TargetType="Grid">
         <Setter Property="HeightRequest" Value="64" />
         <Setter Property="ColumnSpacing" Value="0" />
-        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="HorizontalOptions" Value="End" />
     </Style>
 
     <Style x:Key="CartQuantityLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
         <Setter Property="VerticalTextAlignment" Value="Center" />
-        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontSize" Value="20" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
@@ -834,7 +865,7 @@
            TargetType="Label">
         <Setter Property="HorizontalOptions" Value="End" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontSize" Value="18" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
@@ -872,8 +903,16 @@
 
     <Style x:Key="CartTotalGrid"
            TargetType="Grid">
-        <Setter Property="Padding" Value="24,16" />
+        <Setter Property="Padding" Value="20,10" />
         <Setter Property="ColumnSpacing" Value="12" />
+    </Style>
+
+    <Style x:Key="CartTotalLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{StaticResource OnSurfaceColor}" />
     </Style>
 
     <Style x:Key="TotalCaptionLabel"

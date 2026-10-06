@@ -12,11 +12,11 @@
 
     <!-- 帯 (ヘッダ、タブ、下部の操作) を画面の端まで通し、注文リストは右端に固定した列にする -->
     <Grid Style="{StaticResource ScreenGrid}"
-          RowDefinitions="72,1,*">
+          RowDefinitions="64,1,*">
         <!-- header -->
         <Grid Grid.Row="0"
               Style="{StaticResource HeaderGrid}"
-              ColumnDefinitions="72,*,Auto,1,Auto,1,Auto">
+              ColumnDefinitions="64,*,Auto,1,Auto,1,Auto">
             <Border Grid.Column="0"
                     Style="{StaticResource BrandMarkBorder}">
                 <Image Style="{StaticResource BrandMarkImage}"
@@ -24,7 +24,7 @@
             </Border>
             <Label Grid.Column="1"
                    Style="{StaticResource BrandLabel}"
-                   Text="{Binding StoreName}" />
+                   Text="{x:Static strings:AppResources.BrandName}" />
             <VerticalStackLayout Grid.Column="2"
                                  Style="{StaticResource HeaderItemStack}">
                 <Label Style="{StaticResource HeaderCaptionLabel}"
@@ -60,7 +60,7 @@
             <!-- category / menu / action -->
             <Grid Grid.Column="0"
                   Style="{StaticResource FillGrid}"
-                  RowDefinitions="64,1,*,1,88">
+                  RowDefinitions="64,1,*,1,80">
                 <!-- category -->
                 <ScrollView Grid.Row="0"
                             Style="{StaticResource CategoryBarScroll}"
@@ -109,8 +109,8 @@
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical"
                                          Span="4"
-                                         HorizontalItemSpacing="16"
-                                         VerticalItemSpacing="16" />
+                                         HorizontalItemSpacing="8"
+                                         VerticalItemSpacing="8" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.Header>
                         <BoxView Style="{StaticResource MenuGapBoxView}" />
@@ -121,18 +121,23 @@
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="{x:Type module:MenuCard}">
                             <Border Style="{StaticResource MenuCardBorder}">
-                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=OpenItemCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                          CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                <!-- 詳細を開くタッチは一番下の面に付け、+ はその上に重ねる (+ を押したときに詳細を開かないように) -->
                                 <Grid Style="{StaticResource FillGrid}"
-                                      RowDefinitions="Auto,Auto,64"
-                                      ColumnDefinitions="*,64">
-                                    <!-- image -->
-                                    <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                                          Style="{StaticResource MenuCardImageGrid}">
+                                      RowDefinitions="Auto,Auto">
+                                    <!-- touch -->
+                                    <BoxView Grid.Row="0" Grid.RowSpan="2">
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <BoxView.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=OpenItemCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </BoxView.GestureRecognizers>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                    </BoxView>
+
+                                    <!-- image / badge / sold out -->
+                                    <Grid Grid.Row="0"
+                                          Style="{StaticResource MenuCardImageGrid}"
+                                          InputTransparent="True">
                                         <Image Style="{StaticResource MenuCardImage}"
                                                Source="{Binding ImageName}" />
                                         <Border Style="{StaticResource MenuBadgeBorder}"
@@ -147,15 +152,30 @@
                                         </Grid>
                                     </Grid>
 
-                                    <!-- name / price -->
-                                    <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
-                                           Style="{StaticResource MenuCardNameLabel}"
-                                           Text="{Binding Name}" />
-                                    <Label Grid.Row="2" Grid.Column="0"
-                                           Style="{StaticResource MenuCardPriceLabel}"
-                                           Text="{Binding PriceText}" />
+                                    <!-- name / price (名前は 2 行まで。価格は最後の行の右に置き、名前の下に行を足さない) -->
+                                    <!-- 名前の 1 行目は価格の上まで使い、2 行目に入ったときだけ価格の分を空ける -->
+                                    <!-- (名前の後ろに価格と同じ文字を面の色で続けて幅を確保し、見える価格はその上に重ねる) -->
+                                    <Grid Grid.Row="1"
+                                          Style="{StaticResource MenuCardTextGrid}"
+                                          InputTransparent="True">
+                                        <Label Style="{StaticResource MenuCardNameLabel}">
+                                            <Label.FormattedText>
+                                                <FormattedString>
+                                                    <Span Text="{Binding Name}" />
+                                                    <Span Style="{StaticResource MenuCardPriceSpaceSpan}"
+                                                          Text=" " />
+                                                    <Span Style="{StaticResource MenuCardPriceSpaceSpan}"
+                                                          Text="{Binding PriceText}" />
+                                                </FormattedString>
+                                            </Label.FormattedText>
+                                        </Label>
+                                        <Label Style="{StaticResource MenuCardPriceLabel}"
+                                               Text="{Binding PriceText}" />
+                                    </Grid>
+
+                                    <!-- + (すぐ入れる。絵の右下に重ねて、名前の幅を広くとる) -->
                                     <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                    <Button Grid.Row="2" Grid.Column="1"
+                                    <Button Grid.Row="0"
                                             Style="{StaticResource MenuCardAddButton}"
                                             Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=QuickAddCommand, x:DataType={x:Type module:MenuViewModel}}"
                                             CommandParameter="{Binding .}"
@@ -201,7 +221,7 @@
             <!-- cart -->
             <Grid Grid.Column="2"
                   Style="{StaticResource CartPanelGrid}"
-                  RowDefinitions="64,1,*,1,Auto,88">
+                  RowDefinitions="64,1,*,1,Auto,80">
                 <Grid Grid.Row="0"
                       Style="{StaticResource CartTitleGrid}"
                       ColumnDefinitions="*,Auto">
@@ -217,7 +237,7 @@
                 <BoxView Grid.Row="1"
                          Style="{StaticResource HorizontalRule}" />
 
-                <!-- lines -->
+                <!-- lines (1 行を 2 段にする: 名前と数量の増減 / 食後の印・オプション・金額) -->
                 <CollectionView Grid.Row="2"
                                 Style="{StaticResource CartCollectionView}"
                                 ItemsSource="{Binding CartLines}">
@@ -235,36 +255,29 @@
                         <DataTemplate x:DataType="{x:Type module:CartLineItem}">
                             <Grid Style="{StaticResource FillGrid}"
                                   RowDefinitions="Auto,1">
+                                <!-- 行を押すと詳細を開いて直す。そのタッチは一番下の面に付け、増減のボタンは上に置く -->
+                                <BoxView Grid.Row="0">
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <BoxView.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=EditLineCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </BoxView.GestureRecognizers>
+                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                </BoxView>
                                 <Grid Grid.Row="0"
                                       Style="{StaticResource CartLineGrid}"
-                                      RowDefinitions="Auto,Auto,Auto"
-                                      ColumnDefinitions="*,Auto">
-                                    <!-- name / options (タップで詳細を開いて直す) -->
-                                    <VerticalStackLayout Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
-                                                         Style="{StaticResource CartLineTextStack}">
-                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                        <VerticalStackLayout.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=EditLineCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </VerticalStackLayout.GestureRecognizers>
-                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                                        <Label Style="{StaticResource CartLineNameLabel}"
-                                               Text="{Binding Name}" />
-                                        <Label Style="{StaticResource CartLineOptionLabel}"
-                                               IsVisible="{Binding HasOptions}"
-                                               Text="{Binding OptionText}" />
-                                    </VerticalStackLayout>
-                                    <Border Grid.Row="1" Grid.Column="0"
-                                            Style="{StaticResource TagBorder}"
-                                            IsVisible="{Binding IsAfterMeal}">
-                                        <Label Style="{StaticResource TagLabel}"
-                                               Text="{x:Static strings:AppResources.AfterMealTag}" />
-                                    </Border>
-
-                                    <!-- quantity / amount -->
-                                    <Grid Grid.Row="2" Grid.Column="0"
+                                      RowDefinitions="64,Auto"
+                                      ColumnDefinitions="*,Auto"
+                                      CascadeInputTransparent="False"
+                                      InputTransparent="True">
+                                    <!-- name / quantity -->
+                                    <Label Grid.Row="0" Grid.Column="0"
+                                           Style="{StaticResource CartLineNameLabel}"
+                                           InputTransparent="True"
+                                           Text="{Binding Name}" />
+                                    <Grid Grid.Row="0" Grid.Column="1"
                                           Style="{StaticResource CartStepperGrid}"
-                                          ColumnDefinitions="64,56,64">
+                                          ColumnDefinitions="64,44,64">
                                         <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                                         <Button Grid.Column="0"
                                                 Style="{StaticResource StepperButton}"
@@ -283,9 +296,25 @@
                                                 Text="{x:Static fonts:MaterialIcons.Add}" />
                                         <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                     </Grid>
-                                    <Label Grid.Row="2" Grid.Column="1"
-                                           Style="{StaticResource CartAmountLabel}"
-                                           Text="{Binding AmountText}" />
+
+                                    <!-- after meal / options / amount -->
+                                    <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                          Style="{StaticResource CartLineDetailGrid}"
+                                          ColumnDefinitions="Auto,*,Auto"
+                                          InputTransparent="True">
+                                        <Border Grid.Column="0"
+                                                Style="{StaticResource TagBorder}"
+                                                IsVisible="{Binding IsAfterMeal}">
+                                            <Label Style="{StaticResource TagLabel}"
+                                                   Text="{x:Static strings:AppResources.AfterMealTag}" />
+                                        </Border>
+                                        <Label Grid.Column="1"
+                                               Style="{StaticResource CartLineOptionLabel}"
+                                               Text="{Binding OptionText}" />
+                                        <Label Grid.Column="2"
+                                               Style="{StaticResource CartAmountLabel}"
+                                               Text="{Binding AmountText}" />
+                                    </Grid>
                                 </Grid>
                                 <BoxView Grid.Row="1"
                                          Style="{StaticResource HorizontalVariantRule}" />
@@ -304,7 +333,7 @@
                            Style="{StaticResource TotalCaptionLabel}"
                            Text="{x:Static strings:AppResources.TotalCaption}" />
                     <Label Grid.Column="1"
-                           Style="{StaticResource TotalLabel}"
+                           Style="{StaticResource CartTotalLabel}"
                            Text="{Binding CartTotalText}" />
                 </Grid>
                 <Button Grid.Row="5"

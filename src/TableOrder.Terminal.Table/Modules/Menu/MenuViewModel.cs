@@ -17,8 +17,6 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private readonly OrderUsecase orderUsecase;
 
-    public string StoreName { get; }
-
     public string TableText { get; }
 
     public string GuestsText { get; }
@@ -86,7 +84,6 @@ public sealed partial class MenuViewModel : AppViewModelBase
         this.orderUsecase = orderUsecase;
 
         var language = languageState.Current;
-        StoreName = menuState.StoreName(language);
         TableText = ViewHelper.Table(settings.TableNo);
         GuestsText = ViewHelper.Guests(visitState.Guests);
         LanguageText = ViewHelper.SwitchName(language);

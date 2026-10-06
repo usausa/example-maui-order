@@ -170,7 +170,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
-| `storeName` | LocalizedText | 店舗の名前 |
+| `storeName` | LocalizedText | 店舗の名前 (チェーンの名前は端末の文言に持つ) |
 | `languages` | string[] | 画面で選べる言語 (`["ja", "en"]`) |
 | `orderRules` | object | `maxQuantityPerLine` (1 明細の数量の上限)、`maxLinesPerOrder` (1 回の注文の明細の上限)、`selfStart` (テーブル端末から来店を開けるか) |
 | `paymentMethods` | enum[] | テーブルで使える支払方法 (`QrCode` / `CreditCard`)。空ならテーブルでは会計せず、レジに案内する |

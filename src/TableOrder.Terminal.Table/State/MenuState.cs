@@ -39,8 +39,6 @@ public sealed class MenuState
     // Display
     //--------------------------------------------------------------------------------
 
-    public string StoreName(Language language) => Config.StoreName.Get(language);
-
     // カテゴリ (表示順) と、その中の商品
     public IReadOnlyList<MenuCategory> GetCategories(Language language) =>
         Menu.Categories

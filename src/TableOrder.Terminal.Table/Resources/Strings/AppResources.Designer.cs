@@ -75,6 +75,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string BrandName {
+            get {
+                return ResourceManager.GetString("BrandName", resourceCulture);
+            }
+        }
+
         internal static string CallAcknowledged {
             get {
                 return ResourceManager.GetString("CallAcknowledged", resourceCulture);

@@ -9,7 +9,7 @@
 | | |
 | --- | --- |
 | ![起動](docs/images/startup.png) | ![待受](docs/images/standby.png) |
-| 起動。システムのロゴと準備の進み具合 (チェーンの色を使わない) | 待受。タッチして人数を入れると注文を始められる |
+| 起動 | 待受 |
 | ![注文](docs/images/menu.png) | ![商品の詳細](docs/images/item-detail.png) |
 | 注文。カテゴリのタブ、料理のカード、注文リスト、下部の操作 | 商品の詳細。オプション、数量、合計を選んで入れる |
 | ![注文の確認](docs/images/order-confirm.png) | ![注文履歴](docs/images/order-history.png) |

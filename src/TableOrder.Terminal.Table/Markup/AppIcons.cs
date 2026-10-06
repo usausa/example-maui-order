@@ -15,7 +15,10 @@ public static class AppIcons
 
     // Brand
 
-    public static FontImageSource Brand => Create(MaterialIcons.Restaurant, BrandSize, "OnPrimaryColor");
+    // チェーンの印。ヘッダと待受の印で同じグリフを使い、チェーンに合わせるときはここだけを替える
+    public static string BrandGlyph => MaterialIcons.Cruelty_free;
+
+    public static FontImageSource Brand => Create(BrandGlyph, BrandSize, "OnPrimaryColor");
 
     // Header
 

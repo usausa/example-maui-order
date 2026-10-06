@@ -56,6 +56,10 @@
   <data name="BadgeRecommended" xml:space="preserve">
     <value>おすすめ</value>
   </data>
+  <data name="BrandName" xml:space="preserve">
+    <value>バニーズ</value>
+    <comment>チェーンの名前。チェーンの色 (Colors.xaml の Brand の節) と印 (AppIcons の BrandGlyph) と合わせて替える</comment>
+  </data>
   <data name="CallAcknowledged" xml:space="preserve">
     <value>スタッフが向かっています</value>
   </data>

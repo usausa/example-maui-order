@@ -13,11 +13,11 @@
 
     <!-- 注文の画面と同じ帯の組み方で、左に明細と合計、右に支払の段階 (方法を選ぶ、QR / カードで払う、お礼) を置く -->
     <Grid Style="{StaticResource ScreenGrid}"
-          RowDefinitions="72,1,*">
+          RowDefinitions="64,1,*">
         <!-- header -->
         <Grid Grid.Row="0"
               Style="{StaticResource HeaderGrid}"
-              ColumnDefinitions="72,*,Auto,1,Auto">
+              ColumnDefinitions="64,*,Auto,1,Auto">
             <Border Grid.Column="0"
                     Style="{StaticResource BrandMarkBorder}">
                 <Image Style="{StaticResource BrandMarkImage}"
@@ -25,7 +25,7 @@
             </Border>
             <Label Grid.Column="1"
                    Style="{StaticResource BrandLabel}"
-                   Text="{Binding StoreName}" />
+                   Text="{x:Static strings:AppResources.BrandName}" />
             <VerticalStackLayout Grid.Column="2"
                                  Style="{StaticResource HeaderItemStack}">
                 <Label Style="{StaticResource HeaderCaptionLabel}"
@@ -53,7 +53,7 @@
             <!-- bill -->
             <Grid Grid.Column="0"
                   Style="{StaticResource PanelGrid}"
-                  RowDefinitions="64,1,*,1,Auto,1,88">
+                  RowDefinitions="64,1,*,1,Auto,1,80">
                 <Grid Grid.Row="0"
                       Style="{StaticResource PanelTitleGrid}"
                       ColumnDefinitions="*,Auto">
@@ -141,7 +141,7 @@
             <!-- payment -->
             <Grid Grid.Column="2"
                   Style="{StaticResource PanelGrid}"
-                  RowDefinitions="64,1,*,1,88">
+                  RowDefinitions="64,1,*,1,80">
                 <Grid Grid.Row="0"
                       Style="{StaticResource PanelTitleGrid}">
                     <Label Style="{StaticResource PanelTitleLabel}"

@@ -25,8 +25,6 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     private PaymentResponse? payment;
 
-    public string StoreName { get; }
-
     public string TableText { get; }
 
     public string GuestsText { get; }
@@ -135,7 +133,6 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
-        StoreName = menuState.StoreName(languageState.Current);
         TableText = ViewHelper.Table(settings.TableNo);
         GuestsText = ViewHelper.Guests(visitState.Guests);
         CanUseQrCode = menuState.Config.PaymentMethods.Contains(PaymentMethod.QrCode);

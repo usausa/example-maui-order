@@ -78,7 +78,7 @@ internal static class MockData
     public static DeviceConfigResponse CreateConfig() =>
         new()
         {
-            StoreName = Text("ファミリーダイニング", "Family Dining"),
+            StoreName = Text("駅前店", "Ekimae"),
             Languages = ["ja", "en"],
             OrderRules = new DeviceConfigResponseOrderRules
             {
@@ -122,7 +122,7 @@ internal static class MockData
             MenuVersion = "mock-1",
             Categories =
             [
-                Category(101, "おすすめ", "Recommended", [], [MixedGrill, CheeseHamburg, Parfait, Margherita, Carbonara, Sirloin]),
+                Category(101, "おすすめ", "Recommended", [], [MixedGrill, CheeseHamburg, Parfait, Margherita, Carbonara, Sirloin, EggHamburg, Doria, Caesar, Pancake, CornSoup, DrinkBar]),
                 Category(102, "ハンバーグ・ステーキ", "Hamburg & Steak", [], [CheeseHamburg, EggHamburg, MixedGrill, Sirloin]),
                 Category(103, "パスタ・ドリア", "Pasta & Doria", [], [Carbonara, MeatSauce, Doria]),
                 Category(104, "サラダ・サイド", "Salad & Sides", [], [Caesar, Fries, CornSoup, Margherita]),

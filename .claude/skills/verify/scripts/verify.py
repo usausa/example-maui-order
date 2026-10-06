@@ -115,9 +115,28 @@ def changed_files():
     return files
 
 
+def checkout_eols(paths):
+    # Git が作業ツリーに書き出す改行コード (.gitattributes の eol)。決まっていないファイルは含めない
+    if not paths:
+        return {}
+    output = subprocess.run(['git', 'ls-files', '--eol', '-z', '--', *paths], cwd=ROOT, capture_output=True, check=True).stdout.decode('utf-8')
+    eols = {}
+    for entry in output.split('\0'):
+        if '\t' not in entry:
+            continue
+        info, path = entry.split('\t', 1)
+        if 'eol=crlf' in info:
+            eols[path] = 'crlf'
+        elif 'eol=lf' in info:
+            eols[path] = 'lf'
+    return eols
+
+
 def check_line_endings(files, fix):
-    # 新しいファイルは CRLF。既存のファイルは元の改行コードのままにする (混ざっていたら NG)
+    # 新しいファイルは CRLF。既存のファイルは元の改行コード (Git の eol の指定、なければ多い方) のままにする
+    # (Write などで書き直すと既存のファイルが丸ごと LF になるので、混ざっていなくても eol の指定と比べる)
     bad = []
+    eols = checkout_eols([path for path, new in files if not new])
     for path, new in files:
         full = ROOT / path
         if full.suffix.lower() in BINARY_SUFFIXES:
@@ -127,12 +146,20 @@ def check_line_endings(files, fix):
             continue
         crlf = data.count(b'\r\n')
         lf = data.count(b'\n') - crlf
-        if lf == 0 or (not new and crlf == 0):
+        expected = 'crlf' if new else eols.get(path)
+        if expected == 'crlf':
+            ok = lf == 0
+        elif expected == 'lf':
+            ok = crlf == 0
+        else:
+            ok = lf == 0 or crlf == 0
+        if ok:
             continue
         bad.append(f'{path} (CRLF {crlf}、LF {lf}{"、新規" if new else ""})')
         if fix:
             normalized = data.replace(b'\r\n', b'\n')
-            full.write_bytes(normalized.replace(b'\n', b'\r\n') if new or crlf >= lf else normalized)
+            to_crlf = expected == 'crlf' or (expected is None and crlf >= lf)
+            full.write_bytes(normalized.replace(b'\n', b'\r\n') if to_crlf else normalized)
     report('改行コード', not bad or fix, f'直すファイル {len(bad)}' + (' (直した)' if bad and fix else ''))
     for line in bad[:40]:
         print('    ' + line)

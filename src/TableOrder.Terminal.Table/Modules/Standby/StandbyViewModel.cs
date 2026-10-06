@@ -11,8 +11,6 @@ public sealed class StandbyViewModel : AppViewModelBase
 
     private readonly OrderUsecase orderUsecase;
 
-    public string StoreName { get; }
-
     public string Message { get; }
 
     public string TableText { get; }
@@ -42,7 +40,6 @@ public sealed class StandbyViewModel : AppViewModelBase
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
-        StoreName = menuState.StoreName(languageState.Current);
         CanStart = menuState.Config.OrderRules.SelfStart;
         Message = CanStart ? AppResources.StandbyMessage : AppResources.StandbyWaiting;
         TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(settings.TableNo));
