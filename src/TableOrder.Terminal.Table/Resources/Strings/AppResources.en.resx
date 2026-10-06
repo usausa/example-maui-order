@@ -90,11 +90,26 @@
   <data name="CheckoutNoOrder" xml:space="preserve">
     <value>You have not ordered anything yet.</value>
   </data>
+  <data name="CheckoutPaidFormat" xml:space="preserve">
+    <value>Paid {0}</value>
+  </data>
+  <data name="CheckoutPayPerPerson" xml:space="preserve">
+    <value>Amount per person (tax incl.)</value>
+  </data>
   <data name="CheckoutProceed" xml:space="preserve">
     <value>Go to checkout</value>
   </data>
+  <data name="CheckoutSplit" xml:space="preserve">
+    <value>Split the bill</value>
+  </data>
+  <data name="CheckoutSplitCountFormat" xml:space="preserve">
+    <value>{0} people</value>
+  </data>
   <data name="CheckoutSplitFormat" xml:space="preserve">
     <value>Split by {0}: {1}</value>
+  </data>
+  <data name="CheckoutSplitNone" xml:space="preserve">
+    <value>Off</value>
   </data>
   <data name="CheckoutTaxFormat" xml:space="preserve">
     <value>Includes {0}% tax of {2} (on {1})</value>
@@ -341,6 +356,9 @@
   </data>
   <data name="PaymentFailed" xml:space="preserve">
     <value>Payment failed. Please choose a method again.</value>
+  </data>
+  <data name="PaymentPartDone" xml:space="preserve">
+    <value>Payment received. Next person, please choose how to pay.</value>
   </data>
   <data name="PaymentWaiting" xml:space="preserve">
     <value>Waiting for payment</value>

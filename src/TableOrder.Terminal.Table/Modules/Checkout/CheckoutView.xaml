@@ -128,6 +128,9 @@
                     <Label Style="{StaticResource BillNoteLabel}"
                            IsVisible="{Binding HasSplit}"
                            Text="{Binding SplitText}" />
+                    <Label Style="{StaticResource BillNoteLabel}"
+                           IsVisible="{Binding HasPaid}"
+                           Text="{Binding PaidText}" />
                     <Label Style="{StaticResource BillWarningLabel}"
                            IsVisible="{Binding HasUnserved}"
                            Text="{x:Static strings:AppResources.CheckoutUnserved}" />
@@ -141,7 +144,7 @@
                             Command="{Binding BackCommand}"
                             ContentLayout="Left,12"
                             ImageSource="{x:Static markup:AppIcons.Back}"
-                            IsVisible="{Binding IsCompleted, Converter={StaticResource ReverseConverter}}"
+                            IsVisible="{Binding CanBack}"
                             Text="{x:Static strings:AppResources.CheckoutBackToMenu}" />
                 </Grid>
             </Grid>
@@ -172,9 +175,43 @@
                     <VerticalStackLayout Style="{StaticResource PaymentStack}"
                                          IsVisible="{Binding IsMethod}">
                         <Label Style="{StaticResource PaymentAmountCaptionLabel}"
-                               Text="{x:Static strings:AppResources.CheckoutTotal}" />
+                               Text="{Binding PayCaption}" />
                         <Label Style="{StaticResource PaymentAmountLabel}"
-                               Text="{Binding TotalText}" />
+                               Text="{Binding PayAmountText}" />
+                        <!-- split (2 人以上のとき。人数で割った 1 人分ずつ払い、残りがなくなるまで続ける) -->
+                        <Grid Style="{StaticResource SplitGrid}"
+                              ColumnDefinitions="*,Auto"
+                              IsVisible="{Binding CanSplit}">
+                            <Label Grid.Column="0"
+                                   Style="{StaticResource SplitCaptionLabel}"
+                                   Text="{x:Static strings:AppResources.CheckoutSplit}" />
+                            <Grid Grid.Column="1"
+                                  Style="{StaticResource SplitStepperGrid}"
+                                  ColumnDefinitions="64,120,64">
+                                <Button Grid.Column="0"
+                                        Style="{StaticResource StepperButton}"
+                                        Command="{Binding SplitDecreaseCommand}"
+                                        Text="{x:Static fonts:MaterialIcons.Remove}" />
+                                <Label Grid.Column="1"
+                                       Style="{StaticResource SplitCountLabel}"
+                                       Text="{Binding SplitCountText}" />
+                                <Button Grid.Column="2"
+                                        Style="{StaticResource StepperButton}"
+                                        Command="{Binding SplitIncreaseCommand}"
+                                        Text="{x:Static fonts:MaterialIcons.Add}" />
+                            </Grid>
+                        </Grid>
+                        <!-- 割り勘の 1 人分を払い終えたときの知らせ -->
+                        <Grid Style="{StaticResource PaymentNoticeGrid}"
+                              ColumnDefinitions="Auto,*"
+                              IsVisible="{Binding HasNotice}">
+                            <Label Grid.Column="0"
+                                   Style="{StaticResource PaymentNoticeGlyphLabel}"
+                                   Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource PaymentNoticeLabel}"
+                                   Text="{Binding NoticeText}" />
+                        </Grid>
                         <Label Style="{StaticResource DialogErrorLabel}"
                                IsVisible="{Binding HasError}"
                                Text="{Binding ErrorText}" />
@@ -237,7 +274,7 @@
                     <VerticalStackLayout Style="{StaticResource PaymentCenterStack}"
                                          IsVisible="{Binding IsQrCode}">
                         <Label Style="{StaticResource PaymentAmountLabel}"
-                               Text="{Binding TotalText}" />
+                               Text="{Binding PayAmountText}" />
                         <Border Style="{StaticResource QrFrameBorder}">
                             <controls:QrCodeView Style="{StaticResource PaymentQrCodeView}"
                                                  Text="{Binding QrValue}" />
@@ -250,7 +287,7 @@
                     <VerticalStackLayout Style="{StaticResource PaymentCenterStack}"
                                          IsVisible="{Binding IsCreditCard}">
                         <Label Style="{StaticResource PaymentAmountLabel}"
-                               Text="{Binding TotalText}" />
+                               Text="{Binding PayAmountText}" />
                         <Label Style="{StaticResource PaymentGlyphLabel}"
                                Text="{x:Static fonts:MaterialIcons.Contactless}" />
                         <Label Style="{StaticResource PaymentMessageLabel}"

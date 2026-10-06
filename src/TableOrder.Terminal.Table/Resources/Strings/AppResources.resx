@@ -90,11 +90,26 @@
   <data name="CheckoutNoOrder" xml:space="preserve">
     <value>まだご注文がありません</value>
   </data>
+  <data name="CheckoutPaidFormat" xml:space="preserve">
+    <value>お支払い済み {0}</value>
+  </data>
+  <data name="CheckoutPayPerPerson" xml:space="preserve">
+    <value>お一人様のお支払い金額 (税込)</value>
+  </data>
   <data name="CheckoutProceed" xml:space="preserve">
     <value>お会計に進む</value>
   </data>
+  <data name="CheckoutSplit" xml:space="preserve">
+    <value>割り勘</value>
+  </data>
+  <data name="CheckoutSplitCountFormat" xml:space="preserve">
+    <value>{0} 人</value>
+  </data>
   <data name="CheckoutSplitFormat" xml:space="preserve">
     <value>{0} 名で割ると {1}</value>
+  </data>
+  <data name="CheckoutSplitNone" xml:space="preserve">
+    <value>なし</value>
   </data>
   <data name="CheckoutTaxFormat" xml:space="preserve">
     <value>内消費税 {0}% 対象 {1}  消費税 {2}</value>
@@ -341,6 +356,9 @@
   </data>
   <data name="PaymentFailed" xml:space="preserve">
     <value>お支払いできませんでした。もう一度お選びください</value>
+  </data>
+  <data name="PaymentPartDone" xml:space="preserve">
+    <value>お支払いが終わりました。次の方のお支払い方法をお選びください</value>
   </data>
   <data name="PaymentWaiting" xml:space="preserve">
     <value>お支払いを待っています</value>

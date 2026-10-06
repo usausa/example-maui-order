@@ -15,7 +15,7 @@
 | ![注文の確認](docs/images/order-confirm.png) | ![注文履歴](docs/images/order-history.png) |
 | 注文の確認。ドリンクバーの人数分の提案を 1 枠だけ出す | 注文履歴。調理と提供の状態、食後の品のお願い |
 | ![店員呼出](docs/images/staff-call.png) | ![お会計](docs/images/checkout.png) |
-| 店員呼出。用件を選ぶと「向かっています」まで知らせる | お会計。明細、内税、割り勘の目安、QR コード決済 |
+| 店員呼出。用件を選ぶと「向かっています」まで知らせる | お会計。明細、内税、割り勘 (1 人分ずつ払える)、QR コード決済 |
 | ![English](docs/images/menu-en.png) | |
 | 英語の表示。ヘッダと待受で日本語と切り替える | |
 

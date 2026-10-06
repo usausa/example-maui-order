@@ -211,6 +211,7 @@ public static partial class MauiProgram
         });
         services.AddComponentsPopup(static c => c.AutoRegister(DialogSource()));
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
+        services.AddSingleton<IPopupPlugin, VisitPopupClosePlugin>();
         services.AddComponentsScreen();
         services.AddComponentsLocation();
         services.AddComponentsSpeech();

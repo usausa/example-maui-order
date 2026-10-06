@@ -141,15 +141,45 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string CheckoutPaidFormat {
+            get {
+                return ResourceManager.GetString("CheckoutPaidFormat", resourceCulture);
+            }
+        }
+
+        internal static string CheckoutPayPerPerson {
+            get {
+                return ResourceManager.GetString("CheckoutPayPerPerson", resourceCulture);
+            }
+        }
+
         internal static string CheckoutProceed {
             get {
                 return ResourceManager.GetString("CheckoutProceed", resourceCulture);
             }
         }
 
+        internal static string CheckoutSplit {
+            get {
+                return ResourceManager.GetString("CheckoutSplit", resourceCulture);
+            }
+        }
+
+        internal static string CheckoutSplitCountFormat {
+            get {
+                return ResourceManager.GetString("CheckoutSplitCountFormat", resourceCulture);
+            }
+        }
+
         internal static string CheckoutSplitFormat {
             get {
                 return ResourceManager.GetString("CheckoutSplitFormat", resourceCulture);
+            }
+        }
+
+        internal static string CheckoutSplitNone {
+            get {
+                return ResourceManager.GetString("CheckoutSplitNone", resourceCulture);
             }
         }
 
@@ -642,6 +672,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string PaymentFailed {
             get {
                 return ResourceManager.GetString("PaymentFailed", resourceCulture);
+            }
+        }
+
+        internal static string PaymentPartDone {
+            get {
+                return ResourceManager.GetString("PaymentPartDone", resourceCulture);
             }
         }
 

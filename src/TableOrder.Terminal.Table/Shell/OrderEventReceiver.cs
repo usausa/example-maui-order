@@ -1,5 +1,7 @@
 namespace TableOrder.Terminal.Table.Shell;
 
+using TableOrder.Terminal.Table.Modules;
+
 // 注文サーバの通知を受けて状態を替え、表示中の画面に知らせる (画面での扱いは各画面が決める)
 // 操作の途中 (Busy) と遷移の間は待ち、終わってから届いた順に渡す (お客様の操作と重ならないように)
 public sealed class OrderEventReceiver
@@ -7,6 +9,8 @@ public sealed class OrderEventReceiver
     private readonly ILogger<OrderEventReceiver> log;
 
     private readonly INavigator navigator;
+
+    private readonly IReactiveMessenger messenger;
 
     private readonly IBusyState busyState;
 
@@ -27,6 +31,7 @@ public sealed class OrderEventReceiver
     public OrderEventReceiver(
         ILogger<OrderEventReceiver> log,
         INavigator navigator,
+        IReactiveMessenger messenger,
         IBusyState busyState,
         VisitState visitState,
         StoreState storeState,
@@ -35,6 +40,7 @@ public sealed class OrderEventReceiver
     {
         this.log = log;
         this.navigator = navigator;
+        this.messenger = messenger;
         this.busyState = busyState;
         this.visitState = visitState;
         this.storeState = storeState;
@@ -63,6 +69,15 @@ public sealed class OrderEventReceiver
 
             lastSeq = e.Seq;
             log.DebugEventReceived(e.GetType().Name, e.Seq, e.OccurredAt);
+
+            // 来店が閉じたら、お客様の画面で開いているポップアップを先に閉じる (開いている間は画面が Busy のままで、知らせを渡せない)
+            // スタッフメニューのポップアップは閉じない
+            if ((e is VisitClosedEvent closed) && visitState.IsOpen && (visitState.Id == closed.Visit.Id) &&
+                (navigator.CurrentViewId is ViewId.Menu or ViewId.Checkout))
+            {
+                messenger.Send(new VisitClosedMessage());
+            }
+
             pending.Enqueue(e);
             Deliver();
         });

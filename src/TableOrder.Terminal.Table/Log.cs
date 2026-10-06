@@ -47,6 +47,11 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Event delivery failed.")]
     public static partial void WarnEventDeliveryFailed(this ILogger logger, Exception exception);
 
+    // Popup
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Popup close failed.")]
+    public static partial void WarnPopupCloseFailed(this ILogger logger, Exception exception);
+
     // Navigation
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Unhandled navigation error.")]
