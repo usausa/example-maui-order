@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
+           xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Menu"
+           x:Class="TableOrder.Terminal.Table.Modules.Menu.ItemDetailView"
+           x:DataType="{x:Type module:ItemDetailViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:ItemDetailViewModel}"
+           WidthRequest="1120"
+           HeightRequest="760">
+
+    <!-- 左に大きな絵と説明、右にオプション・出す時機・数量。下の帯で閉じる / 入れる -->
+    <Grid Style="{StaticResource DialogGrid}"
+          RowDefinitions="*,1,80">
+        <Grid Grid.Row="0"
+              Style="{StaticResource FillGrid}"
+              ColumnDefinitions="480,1,*">
+            <!-- image / info -->
+            <ScrollView Grid.Column="0">
+                <VerticalStackLayout>
+                    <Grid Style="{StaticResource DetailImageGrid}">
+                        <Image Style="{StaticResource DetailImage}"
+                               Source="{Binding ImageName}" />
+                        <Border Style="{StaticResource MenuBadgeBorder}"
+                                IsVisible="{Binding HasBadge}">
+                            <Label Style="{StaticResource MenuBadgeLabel}"
+                                   Text="{Binding BadgeText}" />
+                        </Border>
+                        <Grid Style="{StaticResource SoldOutGrid}"
+                              IsVisible="{Binding IsSoldOut}">
+                            <Label Style="{StaticResource SoldOutLabel}"
+                                   Text="{x:Static strings:AppResources.SoldOut}" />
+                        </Grid>
+                    </Grid>
+                    <VerticalStackLayout Style="{StaticResource DetailTextStack}">
+                        <Label Style="{StaticResource DetailNameLabel}"
+                               Text="{Binding Name}" />
+                        <Label Style="{StaticResource DetailPriceLabel}"
+                               Text="{Binding PriceText}" />
+                        <Label Style="{StaticResource DetailDescriptionLabel}"
+                               IsVisible="{Binding HasDescription}"
+                               Text="{Binding Description}" />
+                        <Grid Style="{StaticResource DetailFactGrid}"
+                              RowDefinitions="Auto,Auto"
+                              ColumnDefinitions="Auto,*">
+                            <Label Grid.Row="0" Grid.Column="0"
+                                   Style="{StaticResource DetailFactCaptionLabel}"
+                                   Text="{x:Static strings:AppResources.DetailAllergens}" />
+                            <Label Grid.Row="0" Grid.Column="1"
+                                   Style="{StaticResource DetailFactLabel}"
+                                   Text="{Binding AllergenText}" />
+                            <Label Grid.Row="1" Grid.Column="0"
+                                   Style="{StaticResource DetailFactCaptionLabel}"
+                                   IsVisible="{Binding HasCalories}"
+                                   Text="{x:Static strings:AppResources.DetailCalories}" />
+                            <Label Grid.Row="1" Grid.Column="1"
+                                   Style="{StaticResource DetailFactLabel}"
+                                   IsVisible="{Binding HasCalories}"
+                                   Text="{Binding CaloriesText}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </ScrollView>
+
+            <BoxView Grid.Column="1"
+                     Style="{StaticResource VerticalRule}" />
+
+            <!-- options / timing / quantity -->
+            <ScrollView Grid.Column="2">
+                <VerticalStackLayout Style="{StaticResource DetailOptionStack}">
+                    <VerticalStackLayout Style="{StaticResource DetailGroupListStack}"
+                                         BindableLayout.ItemsSource="{Binding Groups}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Type module:OptionGroupChoice}">
+                                <VerticalStackLayout Style="{StaticResource DetailGroupStack}">
+                                    <HorizontalStackLayout Style="{StaticResource DetailGroupTitleStack}">
+                                        <Label Style="{StaticResource DetailGroupLabel}"
+                                               Text="{Binding Name}" />
+                                        <Border Style="{StaticResource RequiredBorder}"
+                                                IsVisible="{Binding IsRequired}">
+                                            <Label Style="{StaticResource RequiredLabel}"
+                                                   Text="{x:Static strings:AppResources.DetailRequired}" />
+                                        </Border>
+                                        <Label Style="{StaticResource DetailGroupHintLabel}"
+                                               Text="{Binding RuleText}" />
+                                    </HorizontalStackLayout>
+                                    <VerticalStackLayout Style="{StaticResource OptionRowListStack}"
+                                                         BindableLayout.ItemsSource="{Binding Rows}">
+                                        <BindableLayout.ItemTemplate>
+                                            <DataTemplate x:DataType="{x:Type module:OptionRow}">
+                                                <HorizontalStackLayout Style="{StaticResource OptionRowStack}"
+                                                                       BindableLayout.ItemsSource="{Binding Items}">
+                                                    <BindableLayout.ItemTemplate>
+                                                        <DataTemplate x:DataType="{x:Type module:OptionChoice}">
+                                                            <Border Style="{StaticResource OptionTileBorder}">
+                                                                <Border.Triggers>
+                                                                    <DataTrigger TargetType="Border"
+                                                                                 Binding="{Binding IsSelected}"
+                                                                                 Value="True">
+                                                                        <Setter Property="Stroke" Value="{StaticResource PrimaryColor}" />
+                                                                        <Setter Property="StrokeThickness" Value="2" />
+                                                                        <Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerColor}" />
+                                                                    </DataTrigger>
+                                                                </Border.Triggers>
+                                                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                                                <Border.GestureRecognizers>
+                                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:ItemDetailViewModel}}, Path=SelectOptionCommand, x:DataType={x:Type module:ItemDetailViewModel}}"
+                                                                                          CommandParameter="{Binding .}" />
+                                                                </Border.GestureRecognizers>
+                                                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                                                <Grid ColumnDefinitions="*,Auto">
+                                                                    <VerticalStackLayout Grid.Column="0"
+                                                                                         Style="{StaticResource OptionTextStack}">
+                                                                        <Label Style="{StaticResource OptionNameLabel}"
+                                                                               Text="{Binding Name}" />
+                                                                        <Label Style="{StaticResource OptionPriceLabel}"
+                                                                               IsVisible="{Binding HasPrice}"
+                                                                               Text="{Binding PriceText}" />
+                                                                    </VerticalStackLayout>
+                                                                    <Label Grid.Column="1"
+                                                                           Style="{StaticResource OptionCheckLabel}"
+                                                                           IsVisible="{Binding IsSelected}"
+                                                                           Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                                                                </Grid>
+                                                            </Border>
+                                                        </DataTemplate>
+                                                    </BindableLayout.ItemTemplate>
+                                                </HorizontalStackLayout>
+                                            </DataTemplate>
+                                        </BindableLayout.ItemTemplate>
+                                    </VerticalStackLayout>
+                                </VerticalStackLayout>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+
+                    <!-- timing -->
+                    <VerticalStackLayout Style="{StaticResource DetailGroupStack}"
+                                         IsVisible="{Binding HasTiming}">
+                        <Label Style="{StaticResource DetailGroupLabel}"
+                               Text="{x:Static strings:AppResources.DetailTiming}" />
+                        <HorizontalStackLayout Style="{StaticResource OptionRowStack}"
+                                               BindableLayout.ItemsSource="{Binding Timings}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Type module:TimingChoice}">
+                                    <Border Style="{StaticResource OptionTileBorder}">
+                                        <Border.Triggers>
+                                            <DataTrigger TargetType="Border"
+                                                         Binding="{Binding IsSelected}"
+                                                         Value="True">
+                                                <Setter Property="Stroke" Value="{StaticResource PrimaryColor}" />
+                                                <Setter Property="StrokeThickness" Value="2" />
+                                                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerColor}" />
+                                            </DataTrigger>
+                                        </Border.Triggers>
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:ItemDetailViewModel}}, Path=SelectTimingCommand, x:DataType={x:Type module:ItemDetailViewModel}}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <Grid ColumnDefinitions="*,Auto">
+                                            <Label Grid.Column="0"
+                                                   Style="{StaticResource OptionNameLabel}"
+                                                   VerticalOptions="Center"
+                                                   Text="{Binding Name}" />
+                                            <Label Grid.Column="1"
+                                                   Style="{StaticResource OptionCheckLabel}"
+                                                   IsVisible="{Binding IsSelected}"
+                                                   Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- quantity -->
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0"
+                               Style="{StaticResource DetailGroupLabel}"
+                               VerticalOptions="Center"
+                               Text="{x:Static strings:AppResources.DetailQuantity}" />
+                        <Grid Grid.Column="1"
+                              Style="{StaticResource StepperGrid}"
+                              ColumnDefinitions="72,96,72">
+                            <Button Grid.Column="0"
+                                    Style="{StaticResource StepperButton}"
+                                    Command="{Binding DecreaseCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Remove}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource StepperValueLabel}"
+                                   Text="{Binding Quantity}" />
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource StepperButton}"
+                                    Command="{Binding IncreaseCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Add}" />
+                        </Grid>
+                    </Grid>
+                </VerticalStackLayout>
+            </ScrollView>
+        </Grid>
+
+        <!-- action -->
+        <BoxView Grid.Row="1"
+                 Style="{StaticResource HorizontalRule}" />
+        <Grid Grid.Row="2"
+              Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonClose}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource PrimaryActionButton}"
+                    Command="{Binding CommitCommand}"
+                    Text="{Binding CommitText}" />
+        </Grid>
+    </Grid>
+
+</mct:Popup>

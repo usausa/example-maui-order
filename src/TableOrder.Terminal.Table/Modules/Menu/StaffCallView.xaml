@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
+           xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Menu"
+           x:Class="TableOrder.Terminal.Table.Modules.Menu.StaffCallView"
+           x:DataType="{x:Type module:StaffCallViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:StaffCallViewModel}"
+           WidthRequest="960">
+
+    <!-- 用件のタイルを押すと呼ぶ。呼んだ用件は下に状態 (呼んでいます / 向かっています) を出す -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{x:Static strings:AppResources.CallTitle}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <!-- reasons -->
+        <VerticalStackLayout Style="{StaticResource DialogBodyStack}">
+            <Label Style="{StaticResource DialogLeadLabel}"
+                   Text="{x:Static strings:AppResources.CallMessage}" />
+            <VerticalStackLayout Style="{StaticResource CallReasonListStack}"
+                                 BindableLayout.ItemsSource="{Binding ReasonRows}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Type module:CallReasonRow}">
+                        <HorizontalStackLayout Style="{StaticResource CallReasonRowStack}"
+                                               BindableLayout.ItemsSource="{Binding Items}">
+                            <BindableLayout.ItemTemplate>
+                                <DataTemplate x:DataType="{x:Type module:CallReasonItem}">
+                                    <Border Style="{StaticResource CallReasonBorder}">
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <Border.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StaffCallViewModel}}, Path=SelectCommand, x:DataType={x:Type module:StaffCallViewModel}}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </Border.GestureRecognizers>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <VerticalStackLayout Style="{StaticResource CallReasonStack}">
+                                            <Label Style="{StaticResource CallReasonGlyphLabel}"
+                                                   Text="{Binding Glyph}" />
+                                            <Label Style="{StaticResource CallReasonNameLabel}"
+                                                   Text="{Binding Name}" />
+                                        </VerticalStackLayout>
+                                    </Border>
+                                </DataTemplate>
+                            </BindableLayout.ItemTemplate>
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </VerticalStackLayout>
+
+        <!-- error -->
+        <Label Style="{StaticResource DialogErrorLabel}"
+               IsVisible="{Binding IsFailed}"
+               Text="{Binding ErrorText}" />
+
+        <!-- calls -->
+        <VerticalStackLayout Style="{StaticResource CallStatusStack}"
+                             IsVisible="{Binding HasCalls}"
+                             BindableLayout.ItemsSource="{Binding Calls}">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:CallStatusItem}">
+                    <Grid Style="{StaticResource CallStatusGrid}"
+                          ColumnDefinitions="Auto,*,Auto">
+                        <Label Grid.Column="0"
+                               Style="{StaticResource CallStatusGlyphLabel}"
+                               Text="{x:Static fonts:MaterialIcons.Hourglass_empty}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsAcknowledged}"
+                                             Value="True">
+                                    <Setter Property="Text" Value="{x:Static fonts:MaterialIcons.Directions_walk}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Label Grid.Column="1"
+                               Style="{StaticResource CallStatusNameLabel}"
+                               Text="{Binding Name}" />
+                        <Label Grid.Column="2"
+                               Style="{StaticResource CallStatusLabel}"
+                               Text="{Binding StatusText}" />
+                    </Grid>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}">
+            <Button Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonClose}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

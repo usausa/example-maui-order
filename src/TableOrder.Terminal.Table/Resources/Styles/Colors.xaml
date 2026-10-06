@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- テーマの色。スタイル・画面・アイコンはここにある役割の名前だけを使い、色の値を直接書かない -->
+    <!-- チェーンのイメージカラーに合わせるときは Brand の節を差し替える (Neutral と Status は店の雰囲気に合わせるときだけ変える) -->
+    <!-- On で始まる色は、対になる面の上に置く文字と記号の色 (面と文字のコントラスト比 4.5 以上を保つ) -->
+
+    <!-- ================================================================================ -->
+    <!-- Brand -->
+    <!-- ================================================================================ -->
+
+    <!-- 主色: 選択中のタブ、注文の確定などの主な操作 -->
+    <Color x:Key="PrimaryColor">#C53D13</Color>
+    <Color x:Key="PrimaryPressedColor">#9E300F</Color>
+    <Color x:Key="OnPrimaryColor">#FFFFFF</Color>
+
+    <!-- 主色の淡い面: 件数、選択中の行、強調の地 -->
+    <Color x:Key="PrimaryContainerColor">#FBE4DA</Color>
+    <Color x:Key="OnPrimaryContainerColor">#7A250B</Color>
+
+    <!-- 補助色: お会計などの強い操作、待受の地 -->
+    <Color x:Key="SecondaryColor">#22201C</Color>
+    <Color x:Key="SecondaryPressedColor">#45413A</Color>
+    <Color x:Key="OnSecondaryColor">#FFFFFF</Color>
+
+    <!-- ================================================================================ -->
+    <!-- Neutral -->
+    <!-- ================================================================================ -->
+
+    <!-- 画面の地 -->
+    <Color x:Key="CanvasColor">#F3F0EA</Color>
+
+    <!-- 面 (ヘッダ、タブ、カード、パネル) と、沈んだ面 (押下、仮置き、入力欄の地) -->
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceVariantColor">#EAE6DE</Color>
+
+    <!-- 面の上の文字と記号 (本文、補足) -->
+    <Color x:Key="OnSurfaceColor">#22201C</Color>
+    <Color x:Key="OnSurfaceVariantColor">#6B665C</Color>
+
+    <!-- 罫線 (枠と区切り)、薄い区切り -->
+    <Color x:Key="OutlineColor">#D6D0C4</Color>
+    <Color x:Key="OutlineVariantColor">#E7E2D9</Color>
+
+    <!-- 押せない操作の面と文字 -->
+    <Color x:Key="DisabledColor">#E4E0D8</Color>
+    <Color x:Key="OnDisabledColor">#A29C90</Color>
+
+    <!-- 幕 (ポップアップの後ろ、売り切れの写真を暗くする) と、幕の上の文字 -->
+    <Color x:Key="ScrimColor">#99000000</Color>
+    <Color x:Key="OnScrimColor">#FFFFFF</Color>
+
+    <!-- ================================================================================ -->
+    <!-- Status -->
+    <!-- ================================================================================ -->
+
+    <!-- 売り切れ、失敗 -->
+    <Color x:Key="ErrorColor">#B3261E</Color>
+    <Color x:Key="OnErrorColor">#FFFFFF</Color>
+
+    <!-- 注文の完了 -->
+    <Color x:Key="SuccessColor">#2E7D32</Color>
+    <Color x:Key="OnSuccessColor">#FFFFFF</Color>
+
+    <!-- ラストオーダー、残り時間の注意 -->
+    <Color x:Key="WarningColor">#A15C00</Color>
+    <Color x:Key="OnWarningColor">#FFFFFF</Color>
+
+    <!-- ================================================================================ -->
+    <!-- System -->
+    <!-- ================================================================================ -->
+
+    <!-- 起動と端末の設定 (システムの画面)。チェーンの色に替えず、スプラッシュとアプリのアイコンの色に揃える -->
+
+    <!-- 地と面 (SystemCanvas はスプラッシュの地と同じ色) -->
+    <Color x:Key="SystemCanvasColor">#F4F5F7</Color>
+    <Color x:Key="SystemSurfaceColor">#FFFFFF</Color>
+
+    <!-- 地と面の上の文字 (本文、補足) -->
+    <Color x:Key="OnSystemCanvasColor">#1F2328</Color>
+    <Color x:Key="OnSystemCanvasVariantColor">#656D76</Color>
+
+    <!-- 罫線、進み具合の溝 -->
+    <Color x:Key="SystemOutlineColor">#D0D7DE</Color>
+
+    <!-- 主な操作と進み具合 (システムのロゴの色) -->
+    <Color x:Key="SystemAccentColor">#1F2328</Color>
+    <Color x:Key="SystemAccentPressedColor">#3A4048</Color>
+    <Color x:Key="OnSystemAccentColor">#FFFFFF</Color>
+
+</ResourceDictionary>

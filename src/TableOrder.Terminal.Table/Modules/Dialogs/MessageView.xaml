@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
+           xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Dialogs"
+           x:Class="TableOrder.Terminal.Table.Modules.Dialogs.MessageView"
+           x:DataType="{x:Type module:MessageViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:MessageViewModel}"
+           WidthRequest="640">
+
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{Binding Title}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <Label Style="{StaticResource DialogMessageLabel}"
+               Text="{Binding Message}" />
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}">
+            <Button Style="{StaticResource PrimaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonOk}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

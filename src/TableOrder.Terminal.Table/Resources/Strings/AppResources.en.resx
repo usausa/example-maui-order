@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AfterMealTag" xml:space="preserve">
+    <value>After meal</value>
+  </data>
+  <data name="BadgeLimited" xml:space="preserve">
+    <value>Limited</value>
+  </data>
+  <data name="BadgeNew" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="BadgePopular" xml:space="preserve">
+    <value>Popular</value>
+  </data>
+  <data name="BadgeRecommended" xml:space="preserve">
+    <value>Recommended</value>
+  </data>
+  <data name="CallAcknowledged" xml:space="preserve">
+    <value>On the way</value>
+  </data>
+  <data name="CallMessage" xml:space="preserve">
+    <value>What can we help you with?</value>
+  </data>
+  <data name="CallOpen" xml:space="preserve">
+    <value>Calling staff</value>
+  </data>
+  <data name="CallTitle" xml:space="preserve">
+    <value>Call staff</value>
+  </data>
+  <data name="CardInstruction" xml:space="preserve">
+    <value>Insert or tap your card on the card reader</value>
+  </data>
+  <data name="CheckoutBackToMenu" xml:space="preserve">
+    <value>Back to menu</value>
+  </data>
+  <data name="CheckoutCompleted" xml:space="preserve">
+    <value>Payment complete</value>
+  </data>
+  <data name="CheckoutDetails" xml:space="preserve">
+    <value>Order details</value>
+  </data>
+  <data name="CheckoutMethod" xml:space="preserve">
+    <value>Payment method</value>
+  </data>
+  <data name="CheckoutNoOrder" xml:space="preserve">
+    <value>You have not ordered anything yet.</value>
+  </data>
+  <data name="CheckoutProceed" xml:space="preserve">
+    <value>Go to checkout</value>
+  </data>
+  <data name="CheckoutSplitFormat" xml:space="preserve">
+    <value>Split by {0}: {1}</value>
+  </data>
+  <data name="CheckoutTaxFormat" xml:space="preserve">
+    <value>Includes {0}% tax of {2} (on {1})</value>
+  </data>
+  <data name="CheckoutTitle" xml:space="preserve">
+    <value>Checkout</value>
+  </data>
+  <data name="CheckoutTotal" xml:space="preserve">
+    <value>Amount due (tax incl.)</value>
+  </data>
+  <data name="CheckoutUnordered" xml:space="preserve">
+    <value>Some items in your list have not been ordered. Go to checkout without ordering them?</value>
+  </data>
+  <data name="CheckoutUnserved" xml:space="preserve">
+    <value>Some items have not been served yet</value>
+  </data>
+  <data name="CommonBack" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="CommonCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CommonNo" xml:space="preserve">
+    <value>No</value>
+  </data>
+  <data name="CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="CommonYes" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ConfirmDoneMessage" xml:space="preserve">
+    <value>Your food will be with you shortly</value>
+  </data>
+  <data name="ConfirmDoneTitle" xml:space="preserve">
+    <value>Thank you for your order</value>
+  </data>
+  <data name="ConfirmRetry" xml:space="preserve">
+    <value>Send again</value>
+  </data>
+  <data name="ConfirmSubmit" xml:space="preserve">
+    <value>Place order</value>
+  </data>
+  <data name="ConfirmTitle" xml:space="preserve">
+    <value>Review your order</value>
+  </data>
+  <data name="CountFormat" xml:space="preserve">
+    <value>Qty {0}</value>
+  </data>
+  <data name="DetailAdd" xml:space="preserve">
+    <value>Add to order</value>
+  </data>
+  <data name="DetailAllergenNone" xml:space="preserve">
+    <value>Contains none of the 8 major allergens</value>
+  </data>
+  <data name="DetailAllergens" xml:space="preserve">
+    <value>Allergens</value>
+  </data>
+  <data name="DetailCalories" xml:space="preserve">
+    <value>Calories</value>
+  </data>
+  <data name="DetailCaloriesFormat" xml:space="preserve">
+    <value>{0} kcal</value>
+  </data>
+  <data name="DetailChooseOne" xml:space="preserve">
+    <value>Choose 1</value>
+  </data>
+  <data name="DetailChooseUpTo" xml:space="preserve">
+    <value>Choose up to {0}</value>
+  </data>
+  <data name="DetailOptional" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="DetailQuantity" xml:space="preserve">
+    <value>Quantity</value>
+  </data>
+  <data name="DetailRequired" xml:space="preserve">
+    <value>Required</value>
+  </data>
+  <data name="DetailTiming" xml:space="preserve">
+    <value>When to serve</value>
+  </data>
+  <data name="DetailTimingAfterMeal" xml:space="preserve">
+    <value>After the meal</value>
+  </data>
+  <data name="DetailTimingNow" xml:space="preserve">
+    <value>Right away</value>
+  </data>
+  <data name="DetailUpdate" xml:space="preserve">
+    <value>Update</value>
+  </data>
+  <data name="ErrorCheckoutInProgress" xml:space="preserve">
+    <value>You cannot order during checkout.</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>Something went wrong. Please call a staff member.</value>
+  </data>
+  <data name="ErrorLimit" xml:space="preserve">
+    <value>You have exceeded the order limit.</value>
+  </data>
+  <data name="ErrorSoldOut" xml:space="preserve">
+    <value>Some items are sold out. Please check your order.</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="ErrorUnauthorized" xml:space="preserve">
+    <value>This tablet is not available. Please call a staff member.</value>
+  </data>
+  <data name="ErrorUnavailable" xml:space="preserve">
+    <value>Could not connect. Please try again in a moment.</value>
+  </data>
+  <data name="GuestAdults" xml:space="preserve">
+    <value>Adults</value>
+  </data>
+  <data name="GuestChildren" xml:space="preserve">
+    <value>Children</value>
+  </data>
+  <data name="GuestChildrenHint" xml:space="preserve">
+    <value>Elementary school age and under</value>
+  </data>
+  <data name="GuestStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="GuestTitle" xml:space="preserve">
+    <value>How many in your party?</value>
+  </data>
+  <data name="GuestsFormat" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="HeaderGuests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="HeaderTable" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="HistoryEmpty" xml:space="preserve">
+    <value>No orders yet</value>
+  </data>
+  <data name="HistoryHeldFormat" xml:space="preserve">
+    <value>{0} after-meal items</value>
+  </data>
+  <data name="HistoryOrderFormat" xml:space="preserve">
+    <value>Order {0}</value>
+  </data>
+  <data name="HistoryRelease" xml:space="preserve">
+    <value>Serve now</value>
+  </data>
+  <data name="HistoryTitle" xml:space="preserve">
+    <value>Order history</value>
+  </data>
+  <data name="HistoryTotal" xml:space="preserve">
+    <value>Total (tax incl.)</value>
+  </data>
+  <data name="LimitMessageFormat" xml:space="preserve">
+    <value>This item is limited ({0}). You cannot add more.</value>
+  </data>
+  <data name="LimitTitle" xml:space="preserve">
+    <value>Order limit</value>
+  </data>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="MenuCall" xml:space="preserve">
+    <value>Call staff</value>
+  </data>
+  <data name="MenuCartEmpty" xml:space="preserve">
+    <value>Your list is empty</value>
+  </data>
+  <data name="MenuCartEmptyHint" xml:space="preserve">
+    <value>Choose items from the menu</value>
+  </data>
+  <data name="MenuCartTitle" xml:space="preserve">
+    <value>Your order</value>
+  </data>
+  <data name="MenuCheckout" xml:space="preserve">
+    <value>Checkout</value>
+  </data>
+  <data name="MenuHistory" xml:space="preserve">
+    <value>History</value>
+  </data>
+  <data name="MenuSubmit" xml:space="preserve">
+    <value>Place order</value>
+  </data>
+  <data name="MethodCreditCard" xml:space="preserve">
+    <value>Credit card</value>
+  </data>
+  <data name="MethodCreditCardHint" xml:space="preserve">
+    <value>Pay with the card reader at your table</value>
+  </data>
+  <data name="MethodQrCode" xml:space="preserve">
+    <value>QR code payment</value>
+  </data>
+  <data name="MethodQrCodeHint" xml:space="preserve">
+    <value>Pay with a smartphone payment app</value>
+  </data>
+  <data name="MethodRegister" xml:space="preserve">
+    <value>Pay at the register</value>
+  </data>
+  <data name="MethodRegisterHint" xml:space="preserve">
+    <value>Cash and other methods</value>
+  </data>
+  <data name="PaymentChange" xml:space="preserve">
+    <value>Change method</value>
+  </data>
+  <data name="PaymentFailed" xml:space="preserve">
+    <value>Payment failed. Please choose a method again.</value>
+  </data>
+  <data name="PaymentWaiting" xml:space="preserve">
+    <value>Waiting for payment</value>
+  </data>
+  <data name="QrInstruction" xml:space="preserve">
+    <value>Scan the QR code with your payment app</value>
+  </data>
+  <data name="ReceiptCaption" xml:space="preserve">
+    <value>E-receipt</value>
+  </data>
+  <data name="ReceiptHint" xml:space="preserve">
+    <value>Scan to save your receipt</value>
+  </data>
+  <data name="RegisterMessageFormat" xml:space="preserve">
+    <value>Please tell the staff your table number ({0})</value>
+  </data>
+  <data name="RegisterTitle" xml:space="preserve">
+    <value>Please pay at the register</value>
+  </data>
+  <data name="RuleConfirmMessage" xml:space="preserve">
+    <value>Please confirm before ordering</value>
+  </data>
+  <data name="RuleConfirmTitle" xml:space="preserve">
+    <value>Please confirm</value>
+  </data>
+  <data name="SetupChange" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="SetupEndpoint" xml:space="preserve">
+    <value>Server (API)</value>
+  </data>
+  <data name="SetupEndpointHint" xml:space="preserve">
+    <value>Leave empty to run with mock data</value>
+  </data>
+  <data name="SetupNotSet" xml:space="preserve">
+    <value>Not set</value>
+  </data>
+  <data name="SetupSave" xml:space="preserve">
+    <value>Save and start</value>
+  </data>
+  <data name="SetupTableNo" xml:space="preserve">
+    <value>Table number</value>
+  </data>
+  <data name="SetupTableNoHint" xml:space="preserve">
+    <value>The table this tablet is placed at</value>
+  </data>
+  <data name="SetupTitle" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="SoldOut" xml:space="preserve">
+    <value>Sold out</value>
+  </data>
+  <data name="StandbyMessage" xml:space="preserve">
+    <value>You can order from this tablet</value>
+  </data>
+  <data name="StandbyStart" xml:space="preserve">
+    <value>Start ordering</value>
+  </data>
+  <data name="StandbyWaiting" xml:space="preserve">
+    <value>A staff member will be with you shortly</value>
+  </data>
+  <data name="StandbyWelcome" xml:space="preserve">
+    <value>Welcome</value>
+  </data>
+  <data name="StartupRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="StartupSetup" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="StartupStepConnect" xml:space="preserve">
+    <value>Connecting to the server</value>
+  </data>
+  <data name="StartupStepMenu" xml:space="preserve">
+    <value>Loading the menu</value>
+  </data>
+  <data name="StartupStepReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StartupStepSettings" xml:space="preserve">
+    <value>Checking device settings</value>
+  </data>
+  <data name="StartupStepVisit" xml:space="preserve">
+    <value>Checking the table status</value>
+  </data>
+  <data name="StatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="StatusCooking" xml:space="preserve">
+    <value>Cooking</value>
+  </data>
+  <data name="StatusHeld" xml:space="preserve">
+    <value>After the meal</value>
+  </data>
+  <data name="StatusOrdered" xml:space="preserve">
+    <value>Ordered</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Coming soon</value>
+  </data>
+  <data name="StatusServed" xml:space="preserve">
+    <value>Served</value>
+  </data>
+  <data name="StockRemainingFormat" xml:space="preserve">
+    <value>Only {0} left. You cannot add more.</value>
+  </data>
+  <data name="SuggestionAdd" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="SuggestionDefault" xml:space="preserve">
+    <value>How about this?</value>
+  </data>
+  <data name="SuggestionRemainingFormat" xml:space="preserve">
+    <value>{0} more</value>
+  </data>
+  <data name="TableFormat" xml:space="preserve">
+    <value>Table {0}</value>
+  </data>
+  <data name="ThanksMessage" xml:space="preserve">
+    <value>We look forward to seeing you again</value>
+  </data>
+  <data name="ThanksTitle" xml:space="preserve">
+    <value>Thank you!</value>
+  </data>
+  <data name="TotalCaption" xml:space="preserve">
+    <value>Total (tax incl.)</value>
+  </data>
+</root>

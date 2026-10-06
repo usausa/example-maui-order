@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:fonts="clr-namespace:Fonts"
+             xmlns:markup="clr-namespace:TableOrder.Terminal.Table.Markup"
+             xmlns:strings="clr-namespace:TableOrder.Terminal.Table.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.Terminal.Table.Modules.Menu"
+             x:Class="TableOrder.Terminal.Table.Modules.Menu.MenuView"
+             x:DataType="{x:Type module:MenuViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:MenuViewModel}">
+
+    <!-- 帯 (ヘッダ、タブ、下部の操作) を画面の端まで通し、注文リストは右端に固定した列にする -->
+    <Grid Style="{StaticResource ScreenGrid}"
+          RowDefinitions="72,1,*">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource HeaderGrid}"
+              ColumnDefinitions="72,*,Auto,1,Auto,1,Auto">
+            <Border Grid.Column="0"
+                    Style="{StaticResource BrandMarkBorder}">
+                <Image Style="{StaticResource BrandMarkImage}"
+                       Source="{x:Static markup:AppIcons.Brand}" />
+            </Border>
+            <Label Grid.Column="1"
+                   Style="{StaticResource BrandLabel}"
+                   Text="{Binding StoreName}" />
+            <VerticalStackLayout Grid.Column="2"
+                                 Style="{StaticResource HeaderItemStack}">
+                <Label Style="{StaticResource HeaderCaptionLabel}"
+                       Text="{x:Static strings:AppResources.HeaderTable}" />
+                <Label Style="{StaticResource HeaderValueLabel}"
+                       Text="{Binding TableText}" />
+            </VerticalStackLayout>
+            <BoxView Grid.Column="3"
+                     Style="{StaticResource VerticalRule}" />
+            <VerticalStackLayout Grid.Column="4"
+                                 Style="{StaticResource HeaderItemStack}">
+                <Label Style="{StaticResource HeaderCaptionLabel}"
+                       Text="{x:Static strings:AppResources.HeaderGuests}" />
+                <Label Style="{StaticResource HeaderValueLabel}"
+                       Text="{Binding GuestsText}" />
+            </VerticalStackLayout>
+            <BoxView Grid.Column="5"
+                     Style="{StaticResource VerticalRule}" />
+            <Button Grid.Column="6"
+                    Style="{StaticResource HeaderButton}"
+                    Command="{Binding LanguageCommand}"
+                    ContentLayout="Left,10"
+                    ImageSource="{x:Static markup:AppIcons.Language}"
+                    Text="{Binding LanguageText}" />
+        </Grid>
+        <BoxView Grid.Row="1"
+                 Style="{StaticResource HorizontalRule}" />
+
+        <!-- body -->
+        <Grid Grid.Row="2"
+              Style="{StaticResource FillGrid}"
+              ColumnDefinitions="*,1,400">
+            <!-- category / menu / action -->
+            <Grid Grid.Column="0"
+                  Style="{StaticResource FillGrid}"
+                  RowDefinitions="64,1,*,1,88">
+                <!-- category -->
+                <ScrollView Grid.Row="0"
+                            Style="{StaticResource CategoryBarScroll}"
+                            Orientation="Horizontal"
+                            HorizontalScrollBarVisibility="Never">
+                    <HorizontalStackLayout Style="{StaticResource CategoryBarStack}"
+                                           BindableLayout.ItemsSource="{Binding Categories}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Type module:CategoryTab}">
+                                <Border Style="{StaticResource CategoryTabBorder}">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border"
+                                                     Binding="{Binding IsSelected}"
+                                                     Value="True">
+                                            <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                    <Label Style="{StaticResource CategoryTabLabel}"
+                                           Text="{Binding Name}">
+                                        <Label.Triggers>
+                                            <DataTrigger TargetType="Label"
+                                                         Binding="{Binding IsSelected}"
+                                                         Value="True">
+                                                <Setter Property="TextColor" Value="{StaticResource OnPrimaryColor}" />
+                                            </DataTrigger>
+                                        </Label.Triggers>
+                                    </Label>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </HorizontalStackLayout>
+                </ScrollView>
+                <BoxView Grid.Row="1"
+                         Style="{StaticResource HorizontalRule}" />
+
+                <!-- menu -->
+                <CollectionView Grid.Row="2"
+                                Style="{StaticResource MenuCollectionView}"
+                                ItemsSource="{Binding Cards}">
+                    <CollectionView.ItemsLayout>
+                        <GridItemsLayout Orientation="Vertical"
+                                         Span="4"
+                                         HorizontalItemSpacing="16"
+                                         VerticalItemSpacing="16" />
+                    </CollectionView.ItemsLayout>
+                    <CollectionView.Header>
+                        <BoxView Style="{StaticResource MenuGapBoxView}" />
+                    </CollectionView.Header>
+                    <CollectionView.Footer>
+                        <BoxView Style="{StaticResource MenuGapBoxView}" />
+                    </CollectionView.Footer>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Type module:MenuCard}">
+                            <Border Style="{StaticResource MenuCardBorder}">
+                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=OpenItemCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                <Grid Style="{StaticResource FillGrid}"
+                                      RowDefinitions="Auto,Auto,64"
+                                      ColumnDefinitions="*,64">
+                                    <!-- image -->
+                                    <Grid Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                          Style="{StaticResource MenuCardImageGrid}">
+                                        <Image Style="{StaticResource MenuCardImage}"
+                                               Source="{Binding ImageName}" />
+                                        <Border Style="{StaticResource MenuBadgeBorder}"
+                                                IsVisible="{Binding HasBadge}">
+                                            <Label Style="{StaticResource MenuBadgeLabel}"
+                                                   Text="{Binding BadgeText}" />
+                                        </Border>
+                                        <Grid Style="{StaticResource SoldOutGrid}"
+                                              IsVisible="{Binding IsSoldOut}">
+                                            <Label Style="{StaticResource SoldOutLabel}"
+                                                   Text="{x:Static strings:AppResources.SoldOut}" />
+                                        </Grid>
+                                    </Grid>
+
+                                    <!-- name / price -->
+                                    <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                           Style="{StaticResource MenuCardNameLabel}"
+                                           Text="{Binding Name}" />
+                                    <Label Grid.Row="2" Grid.Column="0"
+                                           Style="{StaticResource MenuCardPriceLabel}"
+                                           Text="{Binding PriceText}" />
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <Button Grid.Row="2" Grid.Column="1"
+                                            Style="{StaticResource MenuCardAddButton}"
+                                            Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=QuickAddCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                            CommandParameter="{Binding .}"
+                                            IsVisible="{Binding CanQuickAdd}"
+                                            Text="{x:Static fonts:MaterialIcons.Add}" />
+                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <BoxView Grid.Row="3"
+                         Style="{StaticResource HorizontalRule}" />
+
+                <!-- action -->
+                <Grid Grid.Row="4"
+                      Style="{StaticResource ActionBarGrid}"
+                      ColumnDefinitions="*,*,*">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource ActionBarButton}"
+                            Command="{Binding HistoryCommand}"
+                            ContentLayout="Left,12"
+                            ImageSource="{x:Static markup:AppIcons.History}"
+                            Text="{x:Static strings:AppResources.MenuHistory}" />
+                    <Button Grid.Column="1"
+                            Style="{StaticResource ActionBarButton}"
+                            Command="{Binding CallCommand}"
+                            ContentLayout="Left,12"
+                            ImageSource="{x:Static markup:AppIcons.Call}"
+                            Text="{x:Static strings:AppResources.MenuCall}" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource ActionBarStrongButton}"
+                            Command="{Binding CheckoutCommand}"
+                            ContentLayout="Left,12"
+                            ImageSource="{x:Static markup:AppIcons.Checkout}"
+                            Text="{x:Static strings:AppResources.MenuCheckout}" />
+                </Grid>
+            </Grid>
+
+            <BoxView Grid.Column="1"
+                     Style="{StaticResource VerticalRule}" />
+
+            <!-- cart -->
+            <Grid Grid.Column="2"
+                  Style="{StaticResource CartPanelGrid}"
+                  RowDefinitions="64,1,*,1,Auto,88">
+                <Grid Grid.Row="0"
+                      Style="{StaticResource CartTitleGrid}"
+                      ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource PanelTitleLabel}"
+                           Text="{x:Static strings:AppResources.MenuCartTitle}" />
+                    <Border Grid.Column="1"
+                            Style="{StaticResource CountBadgeBorder}">
+                        <Label Style="{StaticResource CountBadgeLabel}"
+                               Text="{Binding CartCountText}" />
+                    </Border>
+                </Grid>
+                <BoxView Grid.Row="1"
+                         Style="{StaticResource HorizontalRule}" />
+
+                <!-- lines -->
+                <CollectionView Grid.Row="2"
+                                Style="{StaticResource CartCollectionView}"
+                                ItemsSource="{Binding CartLines}">
+                    <CollectionView.EmptyView>
+                        <VerticalStackLayout Style="{StaticResource EmptyStack}">
+                            <Label Style="{StaticResource EmptyGlyphLabel}"
+                                   Text="{x:Static fonts:MaterialIcons.Restaurant_menu}" />
+                            <Label Style="{StaticResource EmptyLabel}"
+                                   Text="{x:Static strings:AppResources.MenuCartEmpty}" />
+                            <Label Style="{StaticResource EmptyHintLabel}"
+                                   Text="{x:Static strings:AppResources.MenuCartEmptyHint}" />
+                        </VerticalStackLayout>
+                    </CollectionView.EmptyView>
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Type module:CartLineItem}">
+                            <Grid Style="{StaticResource FillGrid}"
+                                  RowDefinitions="Auto,1">
+                                <Grid Grid.Row="0"
+                                      Style="{StaticResource CartLineGrid}"
+                                      RowDefinitions="Auto,Auto,Auto"
+                                      ColumnDefinitions="*,Auto">
+                                    <!-- name / options (タップで詳細を開いて直す) -->
+                                    <VerticalStackLayout Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                                         Style="{StaticResource CartLineTextStack}">
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <VerticalStackLayout.GestureRecognizers>
+                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=EditLineCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                                  CommandParameter="{Binding .}" />
+                                        </VerticalStackLayout.GestureRecognizers>
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <Label Style="{StaticResource CartLineNameLabel}"
+                                               Text="{Binding Name}" />
+                                        <Label Style="{StaticResource CartLineOptionLabel}"
+                                               IsVisible="{Binding HasOptions}"
+                                               Text="{Binding OptionText}" />
+                                    </VerticalStackLayout>
+                                    <Border Grid.Row="1" Grid.Column="0"
+                                            Style="{StaticResource TagBorder}"
+                                            IsVisible="{Binding IsAfterMeal}">
+                                        <Label Style="{StaticResource TagLabel}"
+                                               Text="{x:Static strings:AppResources.AfterMealTag}" />
+                                    </Border>
+
+                                    <!-- quantity / amount -->
+                                    <Grid Grid.Row="2" Grid.Column="0"
+                                          Style="{StaticResource CartStepperGrid}"
+                                          ColumnDefinitions="64,56,64">
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <Button Grid.Column="0"
+                                                Style="{StaticResource StepperButton}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=DecreaseCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                CommandParameter="{Binding .}"
+                                                Text="{x:Static fonts:MaterialIcons.Remove}" />
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        <Label Grid.Column="1"
+                                               Style="{StaticResource CartQuantityLabel}"
+                                               Text="{Binding Quantity}" />
+                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                        <Button Grid.Column="2"
+                                                Style="{StaticResource StepperButton}"
+                                                Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=IncreaseCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                                CommandParameter="{Binding .}"
+                                                Text="{x:Static fonts:MaterialIcons.Add}" />
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                    </Grid>
+                                    <Label Grid.Row="2" Grid.Column="1"
+                                           Style="{StaticResource CartAmountLabel}"
+                                           Text="{Binding AmountText}" />
+                                </Grid>
+                                <BoxView Grid.Row="1"
+                                         Style="{StaticResource HorizontalVariantRule}" />
+                            </Grid>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+                <BoxView Grid.Row="3"
+                         Style="{StaticResource HorizontalRule}" />
+
+                <!-- total -->
+                <Grid Grid.Row="4"
+                      Style="{StaticResource CartTotalGrid}"
+                      ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource TotalCaptionLabel}"
+                           Text="{x:Static strings:AppResources.TotalCaption}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource TotalLabel}"
+                           Text="{Binding CartTotalText}" />
+                </Grid>
+                <Button Grid.Row="5"
+                        Style="{StaticResource SubmitButton}"
+                        Command="{Binding SubmitCommand}"
+                        Text="{x:Static strings:AppResources.MenuSubmit}" />
+            </Grid>
+        </Grid>
+    </Grid>
+
+</ContentView>

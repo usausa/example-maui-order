@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="240" viewBox="0 0 320 240">
+<rect x="0" y="0" width="320" height="240" fill="#2F2A27" />
+<ellipse cx="160" cy="132" rx="146" ry="102" fill="#8A5A36" />
+<ellipse cx="160" cy="132" rx="146" ry="102" fill="none" stroke="#6E4527" stroke-width="3" />
+<ellipse cx="160" cy="126" rx="122" ry="84" fill="#2A2522" />
+<ellipse cx="160" cy="126" rx="122" ry="84" fill="none" stroke="#3A3430" stroke-width="4" />
+<path d="M 92 108 C 100 80 150 70 196 82 C 236 92 246 128 226 154 C 204 178 150 180 116 166 C 92 156 86 130 92 108 Z" fill="#7A3720" />
+<path d="M 104 112 C 110 92 150 84 190 94 C 220 102 228 126 214 146" fill="none" stroke="#9C4A2C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
+<rect x="114.0" y="91.0" width="4" height="70" rx="2" fill="#4A1E10" transform="rotate(-35 116.0 126.0)" />
+<rect x="138.0" y="91.0" width="4" height="70" rx="2" fill="#4A1E10" transform="rotate(-35 140.0 126.0)" />
+<rect x="162.0" y="91.0" width="4" height="70" rx="2" fill="#4A1E10" transform="rotate(-35 164.0 126.0)" />
+<rect x="186.0" y="91.0" width="4" height="70" rx="2" fill="#4A1E10" transform="rotate(-35 188.0 126.0)" />
+<rect x="210.0" y="91.0" width="4" height="70" rx="2" fill="#4A1E10" transform="rotate(-35 212.0 126.0)" />
+<rect x="150" y="96" width="28" height="20" rx="4" fill="#FBE7A1" transform="rotate(12 164.0 106.0)" />
+<circle cx="124" cy="150" r="6" fill="#EBD9A6" />
+<circle cx="138" cy="156" r="6" fill="#EBD9A6" />
+<circle cx="190" cy="152" r="6" fill="#EBD9A6" />
+<circle cx="204" cy="140" r="6" fill="#EBD9A6" />
+<rect x="247.6" y="104" width="4.800000000000001" height="11.200000000000001" rx="2" fill="#7FA650" />
+<circle cx="243.6" cy="102.4" r="7.2" fill="#3F7F35" />
+<circle cx="256.4" cy="102.4" r="7.2" fill="#3F7F35" />
+<circle cx="250" cy="96.8" r="8.0" fill="#4A8E3C" />
+<ellipse cx="76" cy="132" rx="16" ry="9" fill="#E57A2E" transform="rotate(30 76 132)" />
+<ellipse cx="72" cy="130" rx="6" ry="3" fill="#F09A52" transform="rotate(30 72 130)" />
+</svg>

@@ -426,3 +426,16 @@ FodyWeavers.xsd
 
 # Official VS Code C# Dev Kit Extension exclusion
 #*.lscache
+
+# AI
+CLAUDE.local.md
+.claude/settings.local.json
+.claude/worktrees/
+.chrome-temp
+.edge-temp
+.dotnet-home
+
+# Custom
+desktop.ini
+__*
+/Publish/
