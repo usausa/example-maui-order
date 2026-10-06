@@ -51,14 +51,14 @@ TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract 
 | フォルダ | 内容 |
 | --- | --- |
 | `Modules/` | 画面とポップアップの View と ViewModel (`Startup`、`Setup`、`Standby`、`Menu`、`Checkout`、`Dialogs`) |
-| `State/` | 画面をまたぐ状態 (`Settings`、`MenuState`、`VisitState`、`CartState`、`LanguageState`) |
+| `State/` | 画面をまたぐ状態 (`Settings`、`MenuState`、`VisitState`、`CartState`、`LanguageState`、`StoreState`) |
 | `Usecase/` | 通信と状態の更新を組み合わせる手順 (`OrderUsecase`。来店の開始と終了、メニューのルールの判定、注文の送信) |
 | `Models/` | 画面で使う形 (`MenuCategory`、`MenuProduct`、`CartLine`、`ItemSelection`、`Language`) |
 | `Controls/` | 見た目の部品 (`QrCodeView`。QR コードの代わりの模様) |
 | `Markup/` | 記号 (`AppIcons`)、画面 ID の拡張 |
 | `Resources/` | 色 (`Colors.xaml`)、スタイル (`Styles.xaml`)、画面の文言 (`Strings/AppResources.resx`、`.en.resx`)、料理の絵、アイコン、スプラッシュ |
 | `Extender/` | 画面の切り替えとポップアップのプラグイン |
-| `Shell/` | MainPage から画面への通知 (戻る) と処理中の覆い |
+| `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更) と処理中の覆い |
 | `Behaviors/`、`Components/`、`Diagnostics/`、`Platforms/` | プラットフォームの調整、端末の情報、異常終了の記録、Activity とマニフェスト |
 
 ### 層
@@ -66,13 +66,17 @@ TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract 
 ```
 View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
                     │            │
-                    └────────────┴──> State (Settings / MenuState / VisitState / CartState / LanguageState)
+                    └────────────┴──> State (Settings / MenuState / VisitState / CartState / LanguageState / StoreState)
+
+IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
 ```
 
 - ViewModel は State を読み、通信と状態の更新を組み合わせる手順は Usecase に任せる (読むだけの通信は ViewModel から `IOrderApi` を呼ぶ)
 - 通信の結果は `ApiResult<T>` で受け、例外にしない。  
   失敗は `ViewHelper.ErrorMessage` でお客様向けの文言にし、`Log.WarnApiFailed` で記録する
 - ポップアップとの受け渡しは引数と戻り値で行い、ポップアップは閉じると ViewModel ごと破棄する
+- サーバの通知は `OrderEventReceiver` が受けて状態を替え、操作の途中 (Busy) と遷移の間を待ってから、表示中の画面に `ShellEvent` で知らせる。  
+  扱いは各画面が決める (待受は注文の画面へ、注文は待受へ、お会計はお礼へ)
 
 ---
 
@@ -82,11 +86,11 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 
 | 画面 | ViewId | 内容 |
 | --- | --- | --- |
-| 起動 | `Startup` | システムのロゴ、準備の進み具合 (設定、店舗の設定、メニュー、品切れ、今の来店)、失敗のときの再試行と設定 |
+| 起動 | `Startup` | システムのロゴ、準備の進み具合 (設定、店舗の設定と状態、メニュー、品切れ、今の来店)、失敗のときの再試行と設定 |
 | 端末の設定 | `Setup` | テーブル番号 (電卓)、接続先 (空ならモック) |
 | スタッフメニュー | `Staff` | 端末の情報 (テーブル、接続先、専用端末、電池、ネットワーク、端末 ID、アプリの版)、来店を開く、端末の設定、PIN を変える、専用端末の一時的な解除、モックの操作 |
 | 待受 | `Standby` | チェーンの名前、いらっしゃいませ、言語 (今の言語を出し、押すと選ぶ)、ご注文をはじめる (人数を入れて来店を開く) |
-| 注文 | `Menu` | ヘッダ (チェーンの名前、テーブル、人数、言語)、カテゴリのタブ、メニューのカード、注文リスト、下部の操作 (注文履歴、店員呼出、お会計) |
+| 注文 | `Menu` | ヘッダ (チェーンの名前、テーブル、人数、言語)、カテゴリのタブ、メニューのカード、注文リスト、店舗の知らせ (注文の一時停止、ラストオーダー。注文できない間は確定を止める)、下部の操作 (注文履歴、店員呼出、お会計) |
 | お会計 | `Checkout` | 明細、内税、割り勘の目安、まだ出していない品の注意、支払方法 (QR コード決済、カード、レジ)、QR の表示と待ち、お礼と電子レシートの QR |
 
 | ポップアップ | DialogId | 内容 |
@@ -108,6 +112,9 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 起動 ──(来店あり)──> 注文
 注文 ──お会計──> お会計 ──支払の完了──> (お礼) ──閉じる / 30 秒──> 待受
                     └──メニューに戻る──> 注文
+待受 ──(ホール端末で来店が開いた知らせ)──> 注文
+注文 ──(レジで払い終えた知らせ)──> 待受
+お会計 ──(レジで払い終えた知らせ)──> (お礼) ──閉じる / 30 秒──> 待受
 注文 ──カード──> [商品の詳細] ──(確認のルール)──> [確認]
      ──注文を確定する──> [注文の確認]
      ──注文履歴──> [注文履歴]
@@ -136,6 +143,7 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 | `VisitState` | 今の来店 (人数、状態、答えた確認のルール、注文した品) |
 | `CartState` | 注文する前の行。送ったが結果のわからない注文の Id (送り直しで同じ Id を使う) |
 | `LanguageState` | 画面の言語 |
+| `StoreState` | 店舗の今の状態 (注文の一時停止、ラストオーダー)。起動で読み、通知で替える |
 
 ### メニューのルール
 
@@ -152,7 +160,11 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 
 - `IOrderApi` は API の想定 ([api-design.md](api-design.md)) の要求を 1 つずつメソッドにしたもの。  
   REST と gRPC のどちらで実装しても、端末は `IOrderApi` だけを見る
-- 今は DI で `MockOrderApi` を登録している
+- `IOrderEvents` はサーバの通知 (来店の開始・終了、店舗の変更) を受ける窓口。  
+  同じ通知が 2 回届くことがあるので、受け手が `seq` で重複を捨てる
+- ラストオーダーを過ぎたかは `TableOrder.Domain.StoreHours` で決める (開店の時刻を営業日の区切りにし、日をまたぐ営業も扱う)。  
+  端末は知らせに、サーバは注文の受け付けに使う
+- 今は DI で `MockOrderApi` を `IOrderApi` と `IOrderEvents` に登録している
 
 ---
 
@@ -189,10 +201,12 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 | 注文 | 5 秒で調理中、15 秒でまもなくお持ちします、25 秒で提供済み。お客様がとる品 (ドリンクバー) は受けたときに提供済み、食後の品はお願いされるまで止める |
 | 注文の確認 | 売り切れ・残りの数・確認のルール・上限のルールを確かめ、違えば受け付けない |
 | 呼び出し | 5 秒で「向かっています」。同じ用件の呼び出しは増やさない |
-| 支払 | 6 秒で完了。払い終えると来店を終える |
+| 支払 | 6 秒で完了。払い終えると来店を終え、知らせる (`visit.closed`) |
+| 店舗 | ラストオーダーなし、注文の一時停止なし。一時停止の間とラストオーダーの後の注文は断る |
 | 通信の遅れ | 0.4 秒 |
 
-スタッフメニューから、次の障害と進み具合を起こせる (`IMockOrderControl`)。
+スタッフメニューから、次の障害と進み具合、ホール端末やレジの操作を起こせる (`IMockOrderControl`)。  
+知らせを送る操作は、スタッフメニューを閉じてお客様の画面に戻る間をとって、3 秒後に知らせる。
 
 | 操作 | モックの動き |
 | --- | --- |
@@ -200,6 +214,10 @@ View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
 | 支払を失敗させる | 戻すまで、支払を失敗で終える |
 | 注文リストの品を売り切れにする / 在庫を戻す | 注文リストにある商品を売り切れにし、その商品を含む注文を断る / 初めの在庫に戻す |
 | 注文を進める | 作っている品と提供を待つ品を 1 段進める (食後の品は進めない) |
+| ホールで来店を開く | 人数を入れて来店を開き、知らせる (`visit.opened`) |
+| レジで会計する | 来店を閉じ、知らせる (`visit.closed`) |
+| 注文を一時停止する / 再開する | 店舗の一時停止を替え、知らせる (`store.updated`) |
+| ラストオーダー | なし、まもなく (15 分後)、過ぎた (1 分前) の順に替え、知らせる (`store.updated`) |
 
 ---
 

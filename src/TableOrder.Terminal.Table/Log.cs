@@ -39,6 +39,14 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]
     public static partial void WarnApiFailed(this ILogger logger, string operation, ApiStatus status, string? errorCode);
 
+    // Event
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Event received. type=[{type}], seq=[{seq}], occurredAt=[{occurredAt}]")]
+    public static partial void DebugEventReceived(this ILogger logger, string type, long seq, DateTimeOffset occurredAt);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Event delivery failed.")]
+    public static partial void WarnEventDeliveryFailed(this ILogger logger, Exception exception);
+
     // Navigation
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Unhandled navigation error.")]

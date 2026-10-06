@@ -82,6 +82,10 @@ public static class ViewHelper
     //--------------------------------------------------------------------------------
 
     // 呼び出しの用件の記号 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの記号にする)
+    // 店舗の知らせ (注文の一時停止 / ラストオーダー)
+    public static string StoreNoticeGlyph(bool paused) =>
+        paused ? MaterialIcons.Pause_circle_outline : MaterialIcons.Schedule;
+
     public static string CallGlyph(string code) =>
         code switch
         {
@@ -110,6 +114,8 @@ public static class ViewHelper
                 "ITEM_SOLD_OUT" or "STOCK_INSUFFICIENT" => AppResources.ErrorSoldOut,
                 "CHECKOUT_IN_PROGRESS" => AppResources.ErrorCheckoutInProgress,
                 "LIMIT_EXCEEDED" or "QUANTITY_EXCEEDED" => AppResources.ErrorLimit,
+                "ORDERING_PAUSED" => AppResources.ErrorOrderingPaused,
+                "LAST_ORDER_PASSED" => AppResources.ErrorLastOrderPassed,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric

@@ -17,6 +17,13 @@ public interface IOrderApi
     ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default);
 
     //--------------------------------------------------------------------------------
+    // Store
+    //--------------------------------------------------------------------------------
+
+    // GET /store
+    ValueTask<ApiResult<StoreResponse>> GetStoreAsync(CancellationToken cancel = default);
+
+    //--------------------------------------------------------------------------------
     // Visit
     //--------------------------------------------------------------------------------
 

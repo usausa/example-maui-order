@@ -1,8 +1,8 @@
 namespace TableOrder.Client.Mock;
 
 // 注文サーバの代わり。来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る
-// スタッフメニューから障害 (通信できない、支払の失敗、売り切れ) と注文の進み具合を起こせる
-public sealed class MockOrderApi : IOrderApi, IMockOrderControl
+// スタッフメニューから障害 (通信できない、支払の失敗、売り切れ) と注文の進み具合、ホール端末やレジの操作 (通知) を起こせる
+public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
 {
     private static readonly TimeSpan Latency = TimeSpan.FromMilliseconds(400);
 
@@ -18,6 +18,10 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
     private static readonly TimeSpan PaymentAfter = TimeSpan.FromSeconds(6);
 
     private static readonly TimeSpan QrLifetime = TimeSpan.FromMinutes(5);
+
+    // スタッフメニューから起こすラストオーダーの、今の時刻からのずれ
+    private static readonly TimeSpan LastOrderSoon = TimeSpan.FromMinutes(15);
+    private static readonly TimeSpan LastOrderPassed = TimeSpan.FromMinutes(-1);
 
     private readonly Lock sync = new();
 
@@ -35,7 +39,16 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
 
     private readonly List<Payment> payments = [];
 
+    private readonly StoreResponse store = MockData.CreateStore(DateTimeOffset.UtcNow);
+
+    // ロックの中で作り、ロックの外で送る通知
+    private readonly List<OrderEvent> raising = [];
+
     private Visit? visit;
+
+    private long seq;
+
+    public event EventHandler<OrderEventArgs>? Received;
 
     public MockOrderApi()
     {
@@ -49,9 +62,91 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
     // Control
     //--------------------------------------------------------------------------------
 
+    public TimeSpan EventDelay { get; } = TimeSpan.FromSeconds(3);
+
     public bool Offline { get; set; }
 
     public bool FailPayments { get; set; }
+
+    public bool OrderingPaused
+    {
+        get
+        {
+            lock (sync)
+            {
+                return store.OrderingPaused;
+            }
+        }
+        set
+        {
+            lock (sync)
+            {
+                store.OrderingPaused = value;
+                AddEvent(now => new StoreUpdatedEvent(++seq, now, CopyStore()));
+            }
+
+            RaiseLater();
+        }
+    }
+
+    public MockLastOrder LastOrder
+    {
+        get;
+        set
+        {
+            lock (sync)
+            {
+                field = value;
+                var now = DateTimeOffset.UtcNow;
+                store.LastOrderTime = value switch
+                {
+                    MockLastOrder.Soon => StoreHours.Format(StoreHours.LocalTime(now + LastOrderSoon, store.TimeZone)),
+                    MockLastOrder.Passed => StoreHours.Format(StoreHours.LocalTime(now + LastOrderPassed, store.TimeZone)),
+                    _ => null
+                };
+                AddEvent(at => new StoreUpdatedEvent(++seq, at, CopyStore()));
+            }
+
+            RaiseLater();
+        }
+    }
+
+    public bool OpenVisit(int adults, int children)
+    {
+        lock (sync)
+        {
+            if (visit is { Status: VisitStatus.Open or VisitStatus.Paying })
+            {
+                return false;
+            }
+
+            visit = new Visit(Guid.CreateVersion7(), adults, children, VisitOpenedBy.Hall, DateTimeOffset.UtcNow);
+            var opened = ToResponse(visit);
+            AddEvent(now => new VisitOpenedEvent(++seq, now, opened));
+        }
+
+        RaiseLater();
+        return true;
+    }
+
+    public bool CloseVisit()
+    {
+        lock (sync)
+        {
+            if (visit is not { Status: VisitStatus.Open or VisitStatus.Paying } target)
+            {
+                return false;
+            }
+
+            target.Status = VisitStatus.Closed;
+            target.Version++;
+            var closed = ToResponse(target);
+            AddEvent(now => new VisitClosedEvent(++seq, now, closed));
+        }
+
+        RaiseLater();
+        return true;
+    }
 
     public void SellOut(IEnumerable<Guid> itemIds)
     {
@@ -121,6 +216,9 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
     public ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default) =>
         RespondAsync(() => ApiResult.Success(menu), cancel);
 
+    public ValueTask<ApiResult<StoreResponse>> GetStoreAsync(CancellationToken cancel = default) =>
+        RespondAsync(() => ApiResult.Success(CopyStore()), cancel);
+
     public ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default) =>
         RespondAsync(() => ApiResult.Success(new StockResponse
         {
@@ -159,7 +257,7 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
                 return Reject<VisitResponse>("VALIDATION_ERROR", "人数を確かめてください");
             }
 
-            visit = new Visit(request.Id, request.Adults, request.Children, now);
+            visit = new Visit(request.Id, request.Adults, request.Children, VisitOpenedBy.Table, now);
             return ApiResult.Success(ToResponse(visit));
         }, cancel);
 
@@ -202,6 +300,17 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
                 return target.Status == VisitStatus.Paying
                     ? Reject<OrderListResponseItem>("CHECKOUT_IN_PROGRESS", "お会計中は注文できません")
                     : Reject<OrderListResponseItem>("VISIT_NOT_OPEN", "ご来店の受付が終わっています");
+            }
+
+            if (store.OrderingPaused)
+            {
+                return Reject<OrderListResponseItem>("ORDERING_PAUSED", "ただいまご注文を一時停止しています");
+            }
+
+            if ((store.LastOrderTime is { } last) &&
+                (StoreHours.UntilLastOrder(StoreHours.LocalTime(now, store.TimeZone), StoreHours.Parse(store.OpenTime), StoreHours.Parse(last)) < TimeSpan.Zero))
+            {
+                return Reject<OrderListResponseItem>("LAST_ORDER_PASSED", "ラストオーダーの時間を過ぎました");
             }
 
             if (Validate(target, request) is { } error)
@@ -425,6 +534,7 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
             return ApiResult.Failure<T>(ApiStatus.Canceled);
         }
 
+        ApiResult<T> result;
         lock (sync)
         {
             if (Offline)
@@ -434,8 +544,12 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
 
             var now = DateTimeOffset.UtcNow;
             Advance(now);
-            return func(now);
+            result = func(now);
         }
+
+        // 時間の経過で起きたこと (テーブルで払い終えて来店が閉じた) は、待たずに知らせる
+        Raise();
+        return result;
     }
 
     private static ApiResult<T> Reject<T>(string errorCode, string detail) =>
@@ -463,8 +577,72 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
         {
             paying.Status = VisitStatus.Closed;
             paying.Version++;
+            var closed = ToResponse(paying);
+            AddEvent(at => new VisitClosedEvent(++seq, at, closed));
         }
     }
+
+    //--------------------------------------------------------------------------------
+    // Event
+    //--------------------------------------------------------------------------------
+
+    // ロックの中で通知を作る (seq の順を起きた順にする)
+    private void AddEvent(Func<DateTimeOffset, OrderEvent> create) =>
+        raising.Add(create(DateTimeOffset.UtcNow));
+
+    // 受ける側がモックを呼び返してもよいように、ロックの外で送る
+    private void Raise()
+    {
+        foreach (var e in TakeEvents())
+        {
+            Received?.Invoke(this, new OrderEventArgs(e));
+        }
+    }
+
+    // スタッフメニューの操作の通知は、お客様の画面に戻る間をとってから送る
+    private void RaiseLater()
+    {
+        var events = TakeEvents();
+        if (events.Count > 0)
+        {
+            _ = RaiseLaterAsync(events);
+        }
+    }
+
+    private async Task RaiseLaterAsync(List<OrderEvent> events)
+    {
+        await Task.Delay(EventDelay).ConfigureAwait(false);
+        foreach (var e in events)
+        {
+            Received?.Invoke(this, new OrderEventArgs(e));
+        }
+    }
+
+    private List<OrderEvent> TakeEvents()
+    {
+        lock (sync)
+        {
+            var events = raising.ToList();
+            raising.Clear();
+            return events;
+        }
+    }
+
+    private StoreResponse CopyStore() =>
+        new()
+        {
+            Id = store.Id,
+            Code = store.Code,
+            Name = store.Name,
+            TimeZone = store.TimeZone,
+            BusinessDate = store.BusinessDate,
+            OpenTime = store.OpenTime,
+            CloseTime = store.CloseTime,
+            LastOrderTime = store.LastOrderTime,
+            OrderingPaused = store.OrderingPaused,
+            PausedMessage = store.PausedMessage,
+            TaxRounding = store.TaxRounding
+        };
 
     //--------------------------------------------------------------------------------
     // Validate
@@ -644,7 +822,7 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
             Adults = source.Adults,
             Children = source.Children,
             Status = source.Status,
-            OpenedBy = VisitOpenedBy.Table,
+            OpenedBy = source.OpenedBy,
             OpenedAt = source.OpenedAt,
             ConfirmedRuleIds = source.ConfirmedRuleIds.ToList(),
             OrderTotal = source.Orders.SelectMany(static x => x.Lines).Sum(static x => x.UnitPrice * x.Quantity),
@@ -728,6 +906,8 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
 
         public int Children { get; }
 
+        public VisitOpenedBy OpenedBy { get; }
+
         public DateTimeOffset OpenedAt { get; }
 
         public VisitStatus Status { get; set; } = VisitStatus.Open;
@@ -740,11 +920,12 @@ public sealed class MockOrderApi : IOrderApi, IMockOrderControl
 
         public List<Call> Calls { get; } = [];
 
-        public Visit(Guid id, int adults, int children, DateTimeOffset openedAt)
+        public Visit(Guid id, int adults, int children, VisitOpenedBy openedBy, DateTimeOffset openedAt)
         {
             Id = id;
             Adults = adults;
             Children = children;
+            OpenedBy = openedBy;
             OpenedAt = openedAt;
         }
     }

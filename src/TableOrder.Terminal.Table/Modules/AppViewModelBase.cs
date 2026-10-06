@@ -68,12 +68,30 @@ public abstract class AppViewModelBase :
 
     public async Task NavigatorNotifyAsync(ShellEvent parameter)
     {
-        if (AcceptsCommand && (parameter == ShellEvent.Back))
+        if (!AcceptsCommand)
         {
-            await OnNotifyBackAsync().ConfigureAwait(true);
+            return;
         }
+
+        var task = parameter switch
+        {
+            ShellEvent.Back => OnNotifyBackAsync(),
+            ShellEvent.VisitOpened => OnVisitOpenedAsync(),
+            ShellEvent.VisitClosed => OnVisitClosedAsync(),
+            ShellEvent.StoreUpdated => OnStoreUpdatedAsync(),
+            _ => Task.CompletedTask
+        };
+        await task.ConfigureAwait(true);
     }
 
     // 端末の戻る。お客様の画面から外へ出さないように、画面ごとに扱いを決める
     protected abstract Task OnNotifyBackAsync();
+
+    // サーバの通知。扱う画面だけが替える (受け手は操作の途中と遷移の間を待ってから知らせる)
+
+    protected virtual Task OnVisitOpenedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnVisitClosedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnStoreUpdatedAsync() => Task.CompletedTask;
 }

@@ -48,14 +48,20 @@ public sealed class OrderUsecase
         });
         if (result.Content is { } visit)
         {
-            cartState.Clear();
-            visitState.Open(visit);
+            OpenVisit(visit);
         }
 
         return result;
     }
 
     // 会計を終えた、または来店が閉じられた
+    // 来店を開く (待受で人数を入れたとき、ホール端末で開いた知らせを受けたとき)
+    public void OpenVisit(VisitResponse visit)
+    {
+        cartState.Clear();
+        visitState.Open(visit);
+    }
+
     public void FinishVisit()
     {
         visitState.Close();

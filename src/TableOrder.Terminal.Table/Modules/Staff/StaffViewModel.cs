@@ -57,6 +57,14 @@ public sealed partial class StaffViewModel : AppViewModelBase
     [ObservableProperty]
     public partial string PaymentText { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    public partial string PauseText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string LastOrderText { get; set; } = string.Empty;
+
+    public string MockHintText { get; }
+
     public IObserveCommand OpenVisitCommand { get; }
 
     public IObserveCommand SetupCommand { get; }
@@ -78,6 +86,14 @@ public sealed partial class StaffViewModel : AppViewModelBase
     public IObserveCommand RestockCommand { get; }
 
     public IObserveCommand AdvanceCommand { get; }
+
+    public IObserveCommand HallOpenCommand { get; }
+
+    public IObserveCommand RegisterPayCommand { get; }
+
+    public IObserveCommand PauseCommand { get; }
+
+    public IObserveCommand LastOrderCommand { get; }
 
     public IObserveCommand CloseCommand { get; }
 
@@ -117,6 +133,7 @@ public sealed partial class StaffViewModel : AppViewModelBase
         DeviceIdText = deviceInformation.DeviceId;
         VersionText = ViewHelper.Version(appInfo);
         CanOpenVisit = !visitState.IsOpen;
+        MockHintText = ViewHelper.Format(AppResources.StaffMockHintFormat, (int)mock.EventDelay.TotalSeconds);
 
         OpenVisitCommand = MakeAsyncCommand(OpenVisitAsync);
         SetupCommand = MakeAsyncCommand(() => Navigator.ForwardAsync(ViewId.Setup));
@@ -137,6 +154,18 @@ public sealed partial class StaffViewModel : AppViewModelBase
         SellOutCommand = MakeAsyncCommand(SellOutAsync);
         RestockCommand = MakeAsyncCommand(RestockAsync);
         AdvanceCommand = MakeAsyncCommand(AdvanceAsync);
+        HallOpenCommand = MakeAsyncCommand(HallOpenAsync);
+        RegisterPayCommand = MakeAsyncCommand(RegisterPayAsync);
+        PauseCommand = MakeDelegateCommand(() =>
+        {
+            mock.OrderingPaused = !mock.OrderingPaused;
+            Refresh();
+        });
+        LastOrderCommand = MakeDelegateCommand(() =>
+        {
+            mock.LastOrder = NextLastOrder(mock.LastOrder);
+            Refresh();
+        });
         CloseCommand = MakeAsyncCommand(CloseAsync);
     }
 
@@ -176,6 +205,13 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
         OfflineText = mock.Offline ? AppResources.StaffMockOnline : AppResources.StaffMockOffline;
         PaymentText = mock.FailPayments ? AppResources.StaffMockPassPayments : AppResources.StaffMockFailPayments;
+        PauseText = mock.OrderingPaused ? AppResources.StaffMockResume : AppResources.StaffMockPause;
+        LastOrderText = NextLastOrder(mock.LastOrder) switch
+        {
+            MockLastOrder.Soon => AppResources.StaffMockLastOrderSoon,
+            MockLastOrder.Passed => AppResources.StaffMockLastOrderPassed,
+            _ => AppResources.StaffMockLastOrderNone
+        };
     }
 
     //--------------------------------------------------------------------------------
@@ -270,6 +306,38 @@ public sealed partial class StaffViewModel : AppViewModelBase
         mock.AdvanceOrders();
         await popupNavigator.MessageAsync(AppResources.StaffMock, AppResources.StaffMockAdvanceDone);
     }
+
+    // ホール端末で来店を開いたことにする (待受に戻ると、知らせを受けて注文の画面になる)
+    private async Task HallOpenAsync()
+    {
+        if (await popupNavigator.GuestCountAsync() is not { } guests)
+        {
+            return;
+        }
+
+        var message = mock.OpenVisit(guests.Adults, guests.Children)
+            ? ViewHelper.Format(AppResources.StaffMockHallOpenFormat, (int)mock.EventDelay.TotalSeconds)
+            : AppResources.StaffVisitOpen;
+        await popupNavigator.MessageAsync(AppResources.StaffMock, message);
+    }
+
+    // レジで払い終えたことにする (注文の画面に戻ると、知らせを受けて待受に戻る)
+    private async Task RegisterPayAsync()
+    {
+        var message = mock.CloseVisit()
+            ? ViewHelper.Format(AppResources.StaffMockRegisterPayFormat, (int)mock.EventDelay.TotalSeconds)
+            : AppResources.StaffMockNoVisit;
+        await popupNavigator.MessageAsync(AppResources.StaffMock, message);
+    }
+
+    // ラストオーダーは なし → まもなく → 過ぎた の順に替える
+    private static MockLastOrder NextLastOrder(MockLastOrder current) =>
+        current switch
+        {
+            MockLastOrder.None => MockLastOrder.Soon,
+            MockLastOrder.Soon => MockLastOrder.Passed,
+            _ => MockLastOrder.None
+        };
 
     // 品切れの表示を合わせる (注文の画面は閉じるときに作り直すので、そこで反映される)
     private async Task ReloadStockAsync()

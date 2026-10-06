@@ -351,9 +351,21 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string ErrorLastOrderPassed {
+            get {
+                return ResourceManager.GetString("ErrorLastOrderPassed", resourceCulture);
+            }
+        }
+
         internal static string ErrorLimit {
             get {
                 return ResourceManager.GetString("ErrorLimit", resourceCulture);
+            }
+        }
+
+        internal static string ErrorOrderingPaused {
+            get {
+                return ResourceManager.GetString("ErrorOrderingPaused", resourceCulture);
             }
         }
 
@@ -558,6 +570,24 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string MenuHistory {
             get {
                 return ResourceManager.GetString("MenuHistory", resourceCulture);
+            }
+        }
+
+        internal static string MenuLastOrderPassed {
+            get {
+                return ResourceManager.GetString("MenuLastOrderPassed", resourceCulture);
+            }
+        }
+
+        internal static string MenuLastOrderSoonFormat {
+            get {
+                return ResourceManager.GetString("MenuLastOrderSoonFormat", resourceCulture);
+            }
+        }
+
+        internal static string MenuOrderingPaused {
+            get {
+                return ResourceManager.GetString("MenuOrderingPaused", resourceCulture);
             }
         }
 
@@ -855,6 +885,48 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StaffMockHallOpen {
+            get {
+                return ResourceManager.GetString("StaffMockHallOpen", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockHallOpenFormat {
+            get {
+                return ResourceManager.GetString("StaffMockHallOpenFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockHintFormat {
+            get {
+                return ResourceManager.GetString("StaffMockHintFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockLastOrderNone {
+            get {
+                return ResourceManager.GetString("StaffMockLastOrderNone", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockLastOrderPassed {
+            get {
+                return ResourceManager.GetString("StaffMockLastOrderPassed", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockLastOrderSoon {
+            get {
+                return ResourceManager.GetString("StaffMockLastOrderSoon", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockNoVisit {
+            get {
+                return ResourceManager.GetString("StaffMockNoVisit", resourceCulture);
+            }
+        }
+
         internal static string StaffMockOffline {
             get {
                 return ResourceManager.GetString("StaffMockOffline", resourceCulture);
@@ -873,6 +945,24 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StaffMockPause {
+            get {
+                return ResourceManager.GetString("StaffMockPause", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockRegisterPay {
+            get {
+                return ResourceManager.GetString("StaffMockRegisterPay", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockRegisterPayFormat {
+            get {
+                return ResourceManager.GetString("StaffMockRegisterPayFormat", resourceCulture);
+            }
+        }
+
         internal static string StaffMockRestock {
             get {
                 return ResourceManager.GetString("StaffMockRestock", resourceCulture);
@@ -882,6 +972,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffMockRestockDone {
             get {
                 return ResourceManager.GetString("StaffMockRestockDone", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockResume {
+            get {
+                return ResourceManager.GetString("StaffMockResume", resourceCulture);
             }
         }
 

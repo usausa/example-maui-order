@@ -24,6 +24,7 @@ using TableOrder.Terminal.Table.Components;
 using TableOrder.Terminal.Table.Diagnostics;
 using TableOrder.Terminal.Table.Extender;
 using TableOrder.Terminal.Table.Modules;
+using TableOrder.Terminal.Table.Shell;
 using TableOrder.Terminal.Table.Usecase;
 
 public static partial class MauiProgram
@@ -246,14 +247,19 @@ public static partial class MauiProgram
         services.AddSingleton<MenuState>();
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();
+        services.AddSingleton<StoreState>();
 
         // Service (サーバができたら REST / gRPC の実装に替える。モックはスタッフメニューから障害と進み具合を起こせる)
         services.AddSingleton<MockOrderApi>();
         services.AddSingleton<IOrderApi>(static p => p.GetRequiredService<MockOrderApi>());
+        services.AddSingleton<IOrderEvents>(static p => p.GetRequiredService<MockOrderApi>());
         services.AddSingleton<IMockOrderControl>(static p => p.GetRequiredService<MockOrderApi>());
 
         // Usecase
         services.AddSingleton<OrderUsecase>();
+
+        // Shell
+        services.AddSingleton<OrderEventReceiver>();
     }
 
     // ------------------------------------------------------------
@@ -274,6 +280,9 @@ public static partial class MauiProgram
 
         // 画面の言語は端末の言語の設定によらず日本語から始める
         services.GetRequiredService<LanguageState>().Reset();
+
+        // サーバの通知を受け始める
+        services.GetRequiredService<OrderEventReceiver>().Start();
 
 #if DEBUG
         // Diagnostics for GeneratedServiceProvider

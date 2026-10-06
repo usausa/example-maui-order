@@ -3,6 +3,12 @@ namespace TableOrder.Terminal.Table.Modules.Menu;
 // 注文の画面。上にカテゴリのタブ、左にメニューのカード、右に注文リスト、下に履歴・呼出・会計を置く
 public sealed partial class MenuViewModel : AppViewModelBase
 {
+    // ラストオーダーの前に知らせ始める時間
+    private static readonly TimeSpan LastOrderNotice = TimeSpan.FromMinutes(30);
+
+    // ラストオーダーの知らせは時刻で変わるので、しばらくごとに見直す
+    private static readonly TimeSpan StoreNoticeInterval = TimeSpan.FromSeconds(30);
+
     private readonly ILogger<MenuViewModel> log;
 
     private readonly IPopupNavigator popupNavigator;
@@ -16,6 +22,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
     private readonly CartState cartState;
 
     private readonly LanguageState languageState;
+
+    private readonly StoreState storeState;
 
     private readonly OrderUsecase orderUsecase;
 
@@ -40,6 +48,20 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     [ObservableProperty]
     public partial bool HasCart { get; set; }
+
+    // 店舗の知らせ (注文の一時停止、ラストオーダー)。一時停止とラストオーダーの後は注文を確定できない
+
+    [ObservableProperty]
+    public partial bool HasStoreNotice { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsOrderingStopped { get; set; }
+
+    [ObservableProperty]
+    public partial string StoreNoticeGlyph { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string StoreNoticeText { get; set; } = string.Empty;
 
     public IObserveCommand SelectCategoryCommand { get; }
 
@@ -77,6 +99,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         VisitState visitState,
         CartState cartState,
         LanguageState languageState,
+        StoreState storeState,
         OrderUsecase orderUsecase)
     {
         this.log = log;
@@ -86,6 +109,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         this.visitState = visitState;
         this.cartState = cartState;
         this.languageState = languageState;
+        this.storeState = storeState;
         this.orderUsecase = orderUsecase;
 
         var language = languageState.Current;
@@ -102,7 +126,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         EditLineCommand = MakeAsyncCommand<CartLineItem>(EditLineAsync);
         IncreaseCommand = MakeAsyncCommand<CartLineItem>(IncreaseAsync);
         DecreaseCommand = MakeDelegateCommand<CartLineItem>(x => ChangeQuantity(x, x.Quantity - 1));
-        SubmitCommand = MakeAsyncCommand(SubmitAsync, () => HasCart);
+        SubmitCommand = MakeAsyncCommand(SubmitAsync, () => HasCart && !IsOrderingStopped);
         HistoryCommand = MakeAsyncCommand(async () => await popupNavigator.OrderHistoryAsync());
         CallCommand = MakeAsyncCommand(async () => await popupNavigator.StaffCallAsync());
         CheckoutCommand = MakeAsyncCommand(CheckoutAsync);
@@ -110,6 +134,9 @@ public sealed partial class MenuViewModel : AppViewModelBase
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
         SyncCart();
+        UpdateStoreNotice();
+
+        Disposables.Add(Observable.Interval(StoreNoticeInterval).ObserveOnCurrentContext().Subscribe(_ => UpdateStoreNotice()));
     }
 
     //--------------------------------------------------------------------------------
@@ -129,8 +156,65 @@ public sealed partial class MenuViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
+    // スタッフメニューを開いている間に来店が閉じていたら、来店を終えて待受に戻す
+    public override async Task OnNavigatedToAsync(INavigationContext context)
+    {
+        if (visitState.Status == VisitStatus.Closed)
+        {
+            await Navigator.PostActionAsync(FinishVisitAsync);
+        }
+    }
+
     // お客様の画面なので、戻るでは何もしない
     protected override Task OnNotifyBackAsync() => Task.CompletedTask;
+
+    // レジで払い終えたなど来店が閉じたら、来店を終えて待受に戻す
+    protected override Task OnVisitClosedAsync() => FinishVisitAsync();
+
+    protected override Task OnStoreUpdatedAsync()
+    {
+        UpdateStoreNotice();
+        return Task.CompletedTask;
+    }
+
+    private async Task FinishVisitAsync()
+    {
+        orderUsecase.FinishVisit();
+        await Navigator.ForwardAsync(ViewId.Standby);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Store
+    //--------------------------------------------------------------------------------
+
+    private void UpdateStoreNotice()
+    {
+        var until = storeState.UntilLastOrder(DateTimeOffset.UtcNow);
+        if (storeState.OrderingPaused)
+        {
+            SetStoreNotice(true, ViewHelper.StoreNoticeGlyph(true), storeState.PausedMessage.Get(languageState.Current, AppResources.MenuOrderingPaused)!);
+        }
+        else if (until < TimeSpan.Zero)
+        {
+            SetStoreNotice(true, ViewHelper.StoreNoticeGlyph(false), AppResources.MenuLastOrderPassed);
+        }
+        else if ((until <= LastOrderNotice) && (storeState.LastOrderTime is { } last))
+        {
+            SetStoreNotice(false, ViewHelper.StoreNoticeGlyph(false), ViewHelper.Format(AppResources.MenuLastOrderSoonFormat, StoreHours.Format(last)));
+        }
+        else
+        {
+            SetStoreNotice(false, string.Empty, string.Empty);
+        }
+    }
+
+    private void SetStoreNotice(bool stopped, string glyph, string text)
+    {
+        IsOrderingStopped = stopped;
+        StoreNoticeGlyph = glyph;
+        StoreNoticeText = text;
+        HasStoreNotice = text.Length > 0;
+    }
 
     //--------------------------------------------------------------------------------
     // Category

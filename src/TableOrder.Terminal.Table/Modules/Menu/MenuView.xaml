@@ -257,7 +257,7 @@
             <!-- cart -->
             <Grid Grid.Column="2"
                   Style="{StaticResource CartPanelGrid}"
-                  RowDefinitions="64,1,*,1,Auto,80">
+                  RowDefinitions="64,1,*,1,Auto,Auto,80">
                 <Grid Grid.Row="0"
                       Style="{StaticResource CartTitleGrid}"
                       ColumnDefinitions="*,Auto">
@@ -361,8 +361,44 @@
                 <BoxView Grid.Row="3"
                          Style="{StaticResource HorizontalRule}" />
 
-                <!-- total -->
+                <!-- store notice (注文の一時停止、ラストオーダー。注文できない間は失敗の色にする) -->
                 <Grid Grid.Row="4"
+                      Style="{StaticResource StoreNoticeGrid}"
+                      ColumnDefinitions="Auto,*"
+                      IsVisible="{Binding HasStoreNotice}">
+                    <Grid.Triggers>
+                        <DataTrigger TargetType="Grid"
+                                     Binding="{Binding IsOrderingStopped}"
+                                     Value="True">
+                            <Setter Property="BackgroundColor" Value="{StaticResource ErrorColor}" />
+                        </DataTrigger>
+                    </Grid.Triggers>
+                    <Label Grid.Column="0"
+                           Style="{StaticResource StoreNoticeGlyphLabel}"
+                           Text="{Binding StoreNoticeGlyph}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label"
+                                         Binding="{Binding IsOrderingStopped}"
+                                         Value="True">
+                                <Setter Property="TextColor" Value="{StaticResource OnErrorColor}" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                    <Label Grid.Column="1"
+                           Style="{StaticResource StoreNoticeLabel}"
+                           Text="{Binding StoreNoticeText}">
+                        <Label.Triggers>
+                            <DataTrigger TargetType="Label"
+                                         Binding="{Binding IsOrderingStopped}"
+                                         Value="True">
+                                <Setter Property="TextColor" Value="{StaticResource OnErrorColor}" />
+                            </DataTrigger>
+                        </Label.Triggers>
+                    </Label>
+                </Grid>
+
+                <!-- total -->
+                <Grid Grid.Row="5"
                       Style="{StaticResource CartTotalGrid}"
                       ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0"
@@ -372,7 +408,7 @@
                            Style="{StaticResource CartTotalLabel}"
                            Text="{Binding CartTotalText}" />
                 </Grid>
-                <Button Grid.Row="5"
+                <Button Grid.Row="6"
                         Style="{StaticResource SubmitButton}"
                         Command="{Binding SubmitCommand}"
                         Text="{x:Static strings:AppResources.MenuSubmit}" />

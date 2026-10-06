@@ -257,15 +257,15 @@
 
 | `IOrderApi` のメソッド | API |
 | --- | --- |
-| `GetConfigAsync` / `GetMenuAsync` / `GetStockAsync` | `GET /devices/me/config` / `GET /menu` / `GET /stock` |
+| `GetConfigAsync` / `GetStoreAsync` / `GetMenuAsync` / `GetStockAsync` | `GET /devices/me/config` / `GET /store` / `GET /menu` / `GET /stock` |
 | `GetCurrentVisitAsync` / `StartVisitAsync` / `ConfirmAsync` | `GET /devices/me/visit` / `POST /visits` / `POST /visits/{id}/confirmations` |
 | `CreateOrderAsync` / `GetOrdersAsync` / `ReleaseAsync` | `POST /visits/{id}/orders` / `GET /visits/{id}/orders` / `POST /visits/{id}/orders/release` |
 | `CreateCallAsync` / `GetCallsAsync` | `POST /visits/{id}/calls` / `GET /visits/{id}/calls` |
 | `GetBillAsync` / `StartCheckoutAsync` / `CancelCheckoutAsync` | `GET /visits/{id}/bill` / `POST /visits/{id}/checkout` / `POST /visits/{id}/checkout/cancel` |
 | `CreatePaymentAsync` / `GetPaymentAsync` / `CancelPaymentAsync` / `GetReceiptAsync` | `POST /visits/{id}/payments` / `GET /payments/{id}` / `POST /payments/{id}/cancel` / `GET /visits/{id}/receipt` |
 
-- 通知 (`IOrderEvents`) はまだ作っていない。  
-  注文履歴・呼び出し・支払の状態は、開いている間に読み直して出している
+- 通知 (`IOrderEvents`) は、来店の開始・終了と店舗の変更 (注文の一時停止、ラストオーダー) を受ける (今はモックが出す)。  
+  注文履歴・呼び出し・支払の状態は、まだ開いている間に読み直して出している
 - モックの動き (時間で進む調理と提供、呼び出し、支払) は [architecture.md](architecture.md#-6-モックの動き) に書いた
 - スタッフメニューから、通信できない・支払の失敗・売り切れ・注文の進みを起こせる (モックの操作は [architecture.md](architecture.md#-6-モックの動き) に書いた)
 
@@ -381,15 +381,15 @@
 ### 6. 待受と来店
 
 - [x] 待受と、お客様が人数を入れて始める来店 (`selfStart`)
-- [ ] 来店の通知で注文の画面にする流れ (ホール端末が来店を開く店)
-- [ ] 来店が閉じられたら待受に戻す (レジでの会計、スタッフの操作。サーバの通知を受け、実行中の操作が終わってから戻す)
-- [ ] ラストオーダーと注文の一時停止の表示
+- [x] 来店の通知で注文の画面にする流れ (ホール端末が来店を開く店)
+- [x] 来店が閉じられたら待受に戻す (レジでの会計、スタッフの操作。サーバの通知を受け、実行中の操作が終わってから戻す)
+- [x] ラストオーダーと注文の一時停止の表示
 
 ### 7. スタッフメニュー
 
 - [x] 隠れた入口 (ブランドの印の長押し) と PIN、PIN を変える
 - [x] 端末の情報 (テーブル、接続先、専用端末、電池、ネットワーク)、来店を開く (ハンディのない店)、端末の設定
-- [x] モックの操作 (通信できない、支払の失敗、売り切れ、注文の進み)、アプリの情報
+- [x] モックの操作 (通信できない、支払の失敗、売り切れ、注文の進み、ホールとレジ、注文の一時停止、ラストオーダー)、アプリの情報
 
 ### 8. 専用端末化
 

@@ -195,8 +195,14 @@
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした。スタッフをお呼びください</value>
   </data>
+  <data name="ErrorLastOrderPassed" xml:space="preserve">
+    <value>ラストオーダーの時間を過ぎたため、ご注文をお受けできません</value>
+  </data>
   <data name="ErrorLimit" xml:space="preserve">
     <value>ご注文の数の上限を超えています</value>
+  </data>
+  <data name="ErrorOrderingPaused" xml:space="preserve">
+    <value>ただいまご注文を一時停止しています。しばらくお待ちください</value>
   </data>
   <data name="ErrorSoldOut" xml:space="preserve">
     <value>売り切れの商品があります。ご注文リストを確かめてください</value>
@@ -299,6 +305,15 @@
   </data>
   <data name="MenuHistory" xml:space="preserve">
     <value>注文履歴</value>
+  </data>
+  <data name="MenuLastOrderPassed" xml:space="preserve">
+    <value>ラストオーダーの時間を過ぎました</value>
+  </data>
+  <data name="MenuLastOrderSoonFormat" xml:space="preserve">
+    <value>ラストオーダーは {0} です</value>
+  </data>
+  <data name="MenuOrderingPaused" xml:space="preserve">
+    <value>ただいまご注文を一時停止しています</value>
   </data>
   <data name="MenuSubmit" xml:space="preserve">
     <value>注文を確定する</value>
@@ -447,6 +462,27 @@
   <data name="StaffMockFailPayments" xml:space="preserve">
     <value>支払を失敗させる</value>
   </data>
+  <data name="StaffMockHallOpen" xml:space="preserve">
+    <value>ホールで来店を開く</value>
+  </data>
+  <data name="StaffMockHallOpenFormat" xml:space="preserve">
+    <value>{0} 秒後にホールで来店を開きます</value>
+  </data>
+  <data name="StaffMockHintFormat" xml:space="preserve">
+    <value>ホール・レジ・店舗の操作は、{0} 秒後に知らせが届きます (お客様の画面に戻って確かめる)</value>
+  </data>
+  <data name="StaffMockLastOrderNone" xml:space="preserve">
+    <value>ラストオーダーをなくす</value>
+  </data>
+  <data name="StaffMockLastOrderPassed" xml:space="preserve">
+    <value>ラストオーダーを過ぎたことにする</value>
+  </data>
+  <data name="StaffMockLastOrderSoon" xml:space="preserve">
+    <value>ラストオーダーをまもなくにする</value>
+  </data>
+  <data name="StaffMockNoVisit" xml:space="preserve">
+    <value>来店がありません</value>
+  </data>
   <data name="StaffMockOffline" xml:space="preserve">
     <value>通信できなくする</value>
   </data>
@@ -456,11 +492,23 @@
   <data name="StaffMockPassPayments" xml:space="preserve">
     <value>支払を戻す</value>
   </data>
+  <data name="StaffMockPause" xml:space="preserve">
+    <value>注文を一時停止する</value>
+  </data>
+  <data name="StaffMockRegisterPay" xml:space="preserve">
+    <value>レジで会計する</value>
+  </data>
+  <data name="StaffMockRegisterPayFormat" xml:space="preserve">
+    <value>{0} 秒後にレジで会計を済ませます</value>
+  </data>
   <data name="StaffMockRestock" xml:space="preserve">
     <value>在庫を戻す</value>
   </data>
   <data name="StaffMockRestockDone" xml:space="preserve">
     <value>在庫を戻しました</value>
+  </data>
+  <data name="StaffMockResume" xml:space="preserve">
+    <value>注文を再開する</value>
   </data>
   <data name="StaffMockSellOut" xml:space="preserve">
     <value>注文リストの品を売り切れにする</value>

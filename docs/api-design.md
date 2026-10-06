@@ -193,8 +193,8 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | `name` | LocalizedText | |
 | `timeZone` | string(50) | `Asia/Tokyo` |
 | `businessDate` | date | 今の営業日 |
-| `openTime` / `closeTime` | string | `HH:mm` |
-| `lastOrderTime` | string | `HH:mm`。過ぎたら注文を受け付けない (`422` `LAST_ORDER_PASSED`) |
+| `openTime` / `closeTime` | string | `HH:mm`。開店の時刻を営業日の区切りにし、閉店が開店より前なら日をまたぐ |
+| `lastOrderTime` | string? | `HH:mm`。過ぎたら注文を受け付けない (`422` `LAST_ORDER_PASSED`)。ラストオーダーのない店は null |
 | `orderingPaused` | bool | 注文の一時停止 (厨房が追いつかないときなど) |
 | `pausedMessage` | LocalizedText? | 一時停止の間にテーブル端末に出す文言 |
 | `taxRounding` | enum | `Floor` / `Round` / `Ceiling`。税額の端数 (既定 `Floor`) |
@@ -585,7 +585,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `visit.opened` | そのテーブル端末、ホール | 来店 | テーブル端末は待受から注文の画面にする |
 | `visit.updated` | そのテーブル端末、ホール | 来店 | 人数・状態 (会計中) の表示を変える |
 | `visit.moved` | 元と移動先のテーブル端末、ホール | 来店、元のテーブル | 元は待受に、移動先は注文の画面にする |
-| `visit.closed` | そのテーブル端末、ホール | 来店 | テーブル端末はお礼を出して待受に戻る |
+| `visit.closed` | そのテーブル端末、ホール | 来店 | テーブル端末は待受に戻る (お会計の画面ならお礼を出してから) |
 | `order.created` | ホール、そのテーブル端末 | 注文 | 席の一覧と注文履歴に足す |
 | `order.lines.updated` | そのテーブル端末、ホール | 明細の `id` と状態 | 注文履歴 (調理中、お持ちします) と提供の一覧を変える |
 | `ticket.created` / `ticket.updated` | その持ち場のキッチン端末 | チケット | キッチンの表示を変える |
@@ -644,7 +644,7 @@ sequenceDiagram
 ### 6.2 テーブル端末
 
 1. **登録**: 管理対象の構成 (MDM) かペアリングコードで `POST /devices/pair` を呼び、トークンとテーブルを受け取る (一度だけ)
-2. **起動**: `GET /devices/me/config`、`GET /menu` (変わっていなければ `304`)、`GET /stock`、`GET /devices/me/visit` を読み、通知につなぐ。  
+2. **起動**: `GET /devices/me/config`、`GET /store` (注文の一時停止とラストオーダー)、`GET /menu` (変わっていなければ `304`)、`GET /stock`、`GET /devices/me/visit` を読み、通知につなぐ。  
    来店がなければ待受にする
 3. **来店の開始**: `visit.opened` を受けたら注文の画面にする。  
    `selfStart` の店舗は、待受で人数を入れて `POST /visits` を呼ぶ (ホール端末ができるまでのモックはこの形)

@@ -148,7 +148,7 @@
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffMock}" />
                     <Grid Style="{StaticResource StaffButtonGrid}"
-                          RowDefinitions="Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="*,*">
                         <Button Grid.Row="0" Grid.Column="0"
                                 Style="{StaticResource StaffButton}"
@@ -170,7 +170,25 @@
                                 Style="{StaticResource StaffButton}"
                                 Command="{Binding AdvanceCommand}"
                                 Text="{x:Static strings:AppResources.StaffMockAdvance}" />
+                        <Button Grid.Row="2" Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding HallOpenCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockHallOpen}" />
+                        <Button Grid.Row="3" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding RegisterPayCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockRegisterPay}" />
+                        <Button Grid.Row="3" Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding PauseCommand}"
+                                Text="{Binding PauseText}" />
+                        <Button Grid.Row="4" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding LastOrderCommand}"
+                                Text="{Binding LastOrderText}" />
                     </Grid>
+                    <Label Style="{StaticResource StaffHintLabel}"
+                           Text="{Binding MockHintText}" />
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>

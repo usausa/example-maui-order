@@ -62,6 +62,10 @@ public sealed class StandbyViewModel : AppViewModelBase
     // お客様の画面なので、戻るでは何もしない
     protected override Task OnNotifyBackAsync() => Task.CompletedTask;
 
+    // ホール端末で来店が開いたら、注文の画面にする
+    protected override async Task OnVisitOpenedAsync() =>
+        await Navigator.ForwardAsync(ViewId.Menu);
+
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------

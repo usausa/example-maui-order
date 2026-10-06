@@ -17,6 +17,8 @@ public sealed partial class StartupViewModel : AppViewModelBase
 
     private readonly VisitState visitState;
 
+    private readonly StoreState storeState;
+
     public string VersionText { get; }
 
     [ObservableProperty]
@@ -42,13 +44,15 @@ public sealed partial class StartupViewModel : AppViewModelBase
         IOrderApi orderApi,
         Settings settings,
         MenuState menuState,
-        VisitState visitState)
+        VisitState visitState,
+        StoreState storeState)
     {
         this.log = log;
         this.orderApi = orderApi;
         this.settings = settings;
         this.menuState = menuState;
         this.visitState = visitState;
+        this.storeState = storeState;
 
         VersionText = ViewHelper.Version(appInfo);
 
@@ -88,6 +92,15 @@ public sealed partial class StartupViewModel : AppViewModelBase
             Fail(config);
             return;
         }
+
+        var store = await orderApi.GetStoreAsync();
+        if (store.Content is not { } storeContent)
+        {
+            Fail(store);
+            return;
+        }
+
+        storeState.Update(storeContent);
 
         await ReportAsync(0.55, AppResources.StartupStepMenu);
         var menu = await orderApi.GetMenuAsync();

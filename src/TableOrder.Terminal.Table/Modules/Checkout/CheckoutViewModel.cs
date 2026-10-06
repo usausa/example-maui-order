@@ -197,6 +197,20 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         }
     }
 
+    // レジで払い終えたなど、この画面の外で来店が閉じたらお礼を出す (この画面で払い終えたときはお礼を出している)
+    protected override Task OnVisitClosedAsync()
+    {
+        if (!IsCompleted)
+        {
+            StopWaiting();
+            payment = null;
+            waiting = new CancellationTokenSource();
+            _ = CompleteAsync(waiting.Token);
+        }
+
+        return Task.CompletedTask;
+    }
+
     //--------------------------------------------------------------------------------
     // Bill
     //--------------------------------------------------------------------------------
