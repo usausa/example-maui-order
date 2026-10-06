@@ -2,6 +2,7 @@
 paths:
   - "src/TableOrder.Terminal.*/MainPage.xaml"
   - "src/TableOrder.Terminal.*/Modules/**"
+  - "src/TableOrder.Terminal.*/Behaviors/**"
   - "src/TableOrder.Terminal.*/Controls/**"
   - "src/TableOrder.Terminal.*/Extender/**"
   - "src/TableOrder.Terminal.*/Markup/**"
@@ -19,6 +20,8 @@ paths:
 - ヘッダとカテゴリのタブは別の帯にする (1 本にまとめない)
 - メニューのカードは 4 列 3 段を 1 画面に見せる。高さが足りないときはカードの間隔と帯を詰め、帯は押せる面の高さより低くしない
 - カードの文字は 2 行の高さで揃える。名前の 1 行目は価格の上まで使い、価格は最後の行の右に置く (名前の後ろに価格と同じ文字を面の色で続けて幅を確保し、見える価格を重ねる)
+- カードの価格は名前と同じ行の高さにして 1 行の高さだけ下げ、名前の 2 行目にそろえる
+- 注文の内容 (選んだオプションなど) は省略 (…) せずに折り返して全部見せる
 - 起動・端末の設定・電卓はシステムの画面とし、チェーンの色ではなく System の役割の色とシステムのロゴで組む
 
 ## 色
@@ -54,6 +57,9 @@ paths:
 ## 配置
 
 - 折り返して並べるタイルは `FlexLayout` を使わず、行に分けて `HorizontalStackLayout` で並べる (`FlexLayout` は縦の大きさを誤る)
+- 表示を切り替える要素の列がある Grid は `ColumnSpacing` を使わず、要素の `Margin` で間を空ける (見えない列にも間隔が残り、隣の要素がずれる)
+- ほかの要素を行の位置にそろえるラベルは `behaviors:LabelOption.FixedLineHeight` で行の高さを固定する (和文は CJK のフォントで行が広がり、英字と行の位置が変わる)
+- 添付プロパティ (`Behaviors`) は MAUI のプロパティと同じ名前にしない (ハンドラの対応付けの同じキーに混ざり、Controls が飛ばす処理で一緒に飛ばされる)
 - `GridItemsLayout` の間隔は端の項目の外側と見出し・末尾にも半分ずつ入る。外側の余白は `CollectionView` の `Margin` と見出しの高さからその分を引いて決める
 - 画面全体のタッチ (待受など) は一番下の面に付け、上に重ねるボタンを含む親に `TapGestureRecognizer` を付けない (子のボタンのタップも拾う)
 - 全画面と専用端末 (ロックタスク、Device Owner の制限、一時的な解除) は `Components/KioskManager` にまとめ、画面から直接 Android の API を呼ばない

@@ -314,7 +314,7 @@
                                           ColumnDefinitions="Auto,*,Auto"
                                           InputTransparent="True">
                                         <Border Grid.Column="0"
-                                                Style="{StaticResource TagBorder}"
+                                                Style="{StaticResource CartTagBorder}"
                                                 IsVisible="{Binding IsAfterMeal}">
                                             <Label Style="{StaticResource TagLabel}"
                                                    Text="{x:Static strings:AppResources.AfterMealTag}" />

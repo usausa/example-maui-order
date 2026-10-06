@@ -16,6 +16,7 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 - エミュレータを起動する: `emu.py avds` で名前を見て、`emu.py boot <名前>` (起動の完了まで待つ。起動済みなら何もしない)。対象はタブレット (1920x1200、横向き) の AVD
 - `emu.py devices` で使う機器を確かめる
 - 入れる: `emu.py install` (Debug。ビルドから起動まで数分かかる)。Release は `--release`
+- 起動してすぐ落ち、logcat に `No assemblies found` が出るとき (高速配置の本体が端末にない) は、`emu.py install --embed` で本体を APK に含めて入れ直す
 
 ## 操作
 
