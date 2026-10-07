@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 管理対象の構成 (外部の EMM が配る端末の設定)。キーは Components/ManagedConfiguration と揃える -->
+<!-- 名前と説明は EMM の管理画面に出る (values/restrictions.xml が日本語、values-en が英語) -->
+<restrictions xmlns:android="http://schemas.android.com/apk/res/android">
+	<restriction
+		android:key="apiEndPoint"
+		android:title="@string/restriction_api_end_point_title"
+		android:description="@string/restriction_api_end_point_description"
+		android:restrictionType="string" />
+	<restriction
+		android:key="staffPin"
+		android:title="@string/restriction_staff_pin_title"
+		android:description="@string/restriction_staff_pin_description"
+		android:restrictionType="string" />
+</restrictions>

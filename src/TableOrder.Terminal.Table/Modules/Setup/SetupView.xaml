@@ -48,16 +48,22 @@
                            Text="{x:Static strings:AppResources.SetupTableNoHint}" />
                 </VerticalStackLayout>
 
-                <!-- endpoint -->
+                <!-- endpoint (EMM が配っているときは入力の代わりに値を出す) -->
                 <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
                     <Label Style="{StaticResource SetupFieldLabel}"
                            Text="{x:Static strings:AppResources.SetupEndpoint}" />
                     <Entry Style="{StaticResource SetupEntry}"
+                           IsVisible="{Binding IsEndPointManaged, Converter={StaticResource ReverseConverter}}"
                            Keyboard="Url"
                            Placeholder="https://"
                            Text="{Binding ApiEndPoint}" />
+                    <Border Style="{StaticResource SetupManagedBorder}"
+                            IsVisible="{Binding IsEndPointManaged}">
+                        <Label Style="{StaticResource SetupManagedLabel}"
+                               Text="{Binding ApiEndPoint}" />
+                    </Border>
                     <Label Style="{StaticResource SetupHintLabel}"
-                           Text="{x:Static strings:AppResources.SetupEndpointHint}" />
+                           Text="{Binding EndPointHintText}" />
                 </VerticalStackLayout>
 
                 <!-- save -->

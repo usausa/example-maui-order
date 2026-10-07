@@ -747,6 +747,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string SetupEndpointManaged {
+            get {
+                return ResourceManager.GetString("SetupEndpointManaged", resourceCulture);
+            }
+        }
+
         internal static string SetupNotSet {
             get {
                 return ResourceManager.GetString("SetupNotSet", resourceCulture);
@@ -888,6 +894,18 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffKioskSettings {
             get {
                 return ResourceManager.GetString("StaffKioskSettings", resourceCulture);
+            }
+        }
+
+        internal static string StaffManaged {
+            get {
+                return ResourceManager.GetString("StaffManaged", resourceCulture);
+            }
+        }
+
+        internal static string StaffManagedNone {
+            get {
+                return ResourceManager.GetString("StaffManagedNone", resourceCulture);
             }
         }
 
@@ -1068,6 +1086,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffPinLength {
             get {
                 return ResourceManager.GetString("StaffPinLength", resourceCulture);
+            }
+        }
+
+        internal static string StaffPinManaged {
+            get {
+                return ResourceManager.GetString("StaffPinManaged", resourceCulture);
             }
         }
 

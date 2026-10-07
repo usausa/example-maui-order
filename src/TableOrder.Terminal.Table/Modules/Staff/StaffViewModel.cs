@@ -33,11 +33,17 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     public string EndpointText { get; }
 
+    // EMM が配っている設定 (接続先、PIN)
+    public string ManagedText { get; }
+
     public string DeviceIdText { get; }
 
     public string VersionText { get; }
 
     public bool CanOpenVisit { get; }
+
+    // PIN を EMM が配っているときは端末で変えない
+    public bool CanChangePin { get; }
 
     [ObservableProperty]
     public partial string BatteryText { get; set; } = string.Empty;
@@ -133,6 +139,8 @@ public sealed partial class StaffViewModel : AppViewModelBase
         DeviceIdText = deviceInformation.DeviceId;
         VersionText = ViewHelper.Version(appInfo);
         CanOpenVisit = !visitState.IsOpen;
+        CanChangePin = !settings.IsStaffPinManaged;
+        ManagedText = ManagedNames(settings);
         MockHintText = ViewHelper.Format(AppResources.StaffMockHintFormat, (int)mock.EventDelay.TotalSeconds);
 
         OpenVisitCommand = MakeAsyncCommand(OpenVisitAsync);
@@ -212,6 +220,22 @@ public sealed partial class StaffViewModel : AppViewModelBase
             MockLastOrder.Passed => AppResources.StaffMockLastOrderPassed,
             _ => AppResources.StaffMockLastOrderNone
         };
+    }
+
+    private static string ManagedNames(Settings settings)
+    {
+        var names = new List<string>();
+        if (settings.IsApiEndPointManaged)
+        {
+            names.Add(AppResources.StaffEndpoint);
+        }
+
+        if (settings.IsStaffPinManaged)
+        {
+            names.Add(AppResources.StaffPin);
+        }
+
+        return names.Count > 0 ? String.Join(AppResources.ListSeparator, names) : AppResources.StaffManagedNone;
     }
 
     //--------------------------------------------------------------------------------

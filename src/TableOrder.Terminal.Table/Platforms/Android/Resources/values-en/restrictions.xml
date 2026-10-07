@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 管理対象の構成 (xml/app_restrictions.xml) の名前と説明 (英語) -->
+<resources>
+	<string name="restriction_api_end_point_title">Server (API)</string>
+	<string name="restriction_api_end_point_description">URL of the order server (http or https). When set, it overrides the device setting and cannot be changed on the device. When empty, the device setting is used.</string>
+	<string name="restriction_staff_pin_title">Staff PIN</string>
+	<string name="restriction_staff_pin_description">4-digit number for entering the staff menu. When set, all devices use the same PIN and it cannot be changed on the device. When empty, each device uses its own PIN.</string>
+</resources>

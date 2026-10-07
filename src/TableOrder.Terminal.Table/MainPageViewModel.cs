@@ -10,6 +10,8 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
 
     private readonly KioskManager kiosk;
 
+    private readonly ManagedConfiguration managedConfiguration;
+
     private readonly StartupState startup;
 
     private bool destroying;
@@ -27,11 +29,13 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
         INavigator navigator,
         IScreen screen,
         KioskManager kiosk,
+        ManagedConfiguration managedConfiguration,
         StartupState startup)
     {
         Navigator = navigator;
         this.screen = screen;
         this.kiosk = kiosk;
+        this.managedConfiguration = managedConfiguration;
         this.startup = startup;
 
         // 遷移の間は Busy にして、画面の操作と戻るを受け付けない
@@ -82,6 +86,7 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
     public void OnResumed()
     {
         kiosk.Resume();
+        managedConfiguration.Refresh();
     }
 
     public void OnDestroying()

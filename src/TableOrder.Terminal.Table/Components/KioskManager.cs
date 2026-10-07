@@ -90,7 +90,8 @@ public sealed partial class KioskManager
         log.InfoKioskRestored();
     }
 
-    public KioskStatus GetStatus() => new(mode, ResolveLocked(), IsReleased);
+    // 出すときは方式を読み直す (動いている間に EMM がロックタスクを許したり外したりする。掛け直しは画面が前に出たときに行う)
+    public KioskStatus GetStatus() => new(ResolveMode(), ResolveLocked(), IsReleased);
 
     // Device Owner なら端末の制限を掛ける (EMM のときは EMM が掛ける)
     private void ApplyMode()

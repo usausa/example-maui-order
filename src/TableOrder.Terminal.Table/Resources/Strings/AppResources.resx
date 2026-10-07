@@ -393,6 +393,9 @@
   <data name="SetupEndpointHint" xml:space="preserve">
     <value>空欄のときはモックのデータで動きます</value>
   </data>
+  <data name="SetupEndpointManaged" xml:space="preserve">
+    <value>EMM で配られた接続先を使います (この端末では変えられません)</value>
+  </data>
   <data name="SetupNotSet" xml:space="preserve">
     <value>未設定</value>
   </data>
@@ -464,6 +467,12 @@
   </data>
   <data name="StaffKioskSettings" xml:space="preserve">
     <value>Android の設定</value>
+  </data>
+  <data name="StaffManaged" xml:space="preserve">
+    <value>EMM の設定</value>
+  </data>
+  <data name="StaffManagedNone" xml:space="preserve">
+    <value>なし</value>
   </data>
   <data name="StaffMock" xml:space="preserve">
     <value>モックの操作</value>
@@ -554,6 +563,9 @@
   </data>
   <data name="StaffPinLength" xml:space="preserve">
     <value>{0} 桁で入れてください</value>
+  </data>
+  <data name="StaffPinManaged" xml:space="preserve">
+    <value>PIN は EMM で配られています (この端末では変えられません)</value>
   </data>
   <data name="StaffPinMismatch" xml:space="preserve">
     <value>PIN が合いません</value>

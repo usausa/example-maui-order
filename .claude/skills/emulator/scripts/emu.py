@@ -8,6 +8,8 @@
 #   python emu.py launch | stop              アプリを起動する / 止める
 #   python emu.py kill                       アプリのプロセスを止める (Device Owner のアプリは stop が効かない。Debug だけ)
 #   python emu.py owner set|clear|status     アプリを Device Owner にする / 外す / 今の状態 (専用端末、Debug だけ外せる)
+#   python emu.py emm set <apk> | config [key=value ...] | clear | status [--dpc パッケージ/受け口]
+#                                            外部の EMM の代わりにする DPC を入れる / 管理対象の構成を配る (値を省くと消す) / 外す / 今の状態
 #   python emu.py reboot [--timeout 秒]      エミュレータを再起動して、起動の完了まで待つ
 #   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200)
 #   python emu.py tap <x> <y>                撮った画像の座標をタップする
@@ -24,6 +26,7 @@
 import argparse
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -226,6 +229,53 @@ def owner(action):
 
 
 #--------------------------------------------------------------------------------
+# EMM
+#--------------------------------------------------------------------------------
+
+# 外部の EMM の代わりに、adb (dumpsys) から操作できる DPC を Device Owner にする
+# DPC は dumpsys の引数で set-lock-task-packages、set-app-restrictions、clear-device-owner を受けるものを使う
+def emm(action, dpc, values):
+    if not dpc:
+        sys.exit('DPC の受け口 (パッケージ/受け口) を --dpc か環境変数 EMU_DPC で渡してください')
+    package = dpc.split('/')[0]
+
+    def command(*args):
+        # DPC のサービスが動いていないと dumpsys のコマンドが届かない (Device Owner にした直後など) ので、動くまで送り直す
+        line = ' '.join(['dumpsys', 'activity', 'service', package, *(shlex.quote(x) for x in args)])
+        for _ in range(15):
+            output = shell(line).strip()
+            if 'pid=(not running)' not in output:
+                return output
+            time.sleep(1)
+        return output
+
+    if action == 'set':
+        if len(values) != 1:
+            sys.exit('emm set には DPC の APK を 1 つ渡してください')
+        # アプリ自身が Device Owner のときは先に外す (Device Owner は端末に 1 つだけ)
+        adb('install', '-r', values[0])
+        if package not in shell('dpm list-owners'):
+            print(shell(f'dpm set-device-owner {dpc}').strip())
+        print(command('set-lock-task-packages', PACKAGE))
+        print('アプリが前に出たときに、EMM が許したロックタスクに入る (emu.py stop と launch)')
+    elif action == 'config':
+        # 値を並べないと、配った構成を消す
+        print(command('set-app-restrictions', PACKAGE, *values))
+    elif action == 'clear':
+        print(command('set-app-restrictions', PACKAGE))
+        print(command('set-lock-task-packages'))
+        print(command('clear-device-owner'))
+        adb('uninstall', package)
+        print(f'外して消しました: {package}')
+    else:
+        print(shell('dpm list-owners').strip())
+        print(command('is-lock-task-permitted', PACKAGE))
+        for line in shell('dumpsys activity activities').splitlines():
+            if 'mLockTaskModeState' in line:
+                print(line.strip())
+
+
+#--------------------------------------------------------------------------------
 # Screen
 #--------------------------------------------------------------------------------
 
@@ -310,6 +360,10 @@ def main():
     sub.add_parser('kill')
     p = sub.add_parser('owner')
     p.add_argument('action', choices=['set', 'clear', 'status'])
+    p = sub.add_parser('emm')
+    p.add_argument('action', choices=['set', 'config', 'clear', 'status'])
+    p.add_argument('values', nargs='*', help='set は DPC の APK、config は key=value')
+    p.add_argument('--dpc', default=os.environ.get('EMU_DPC'), help='DPC の受け口 (パッケージ/受け口。既定は環境変数 EMU_DPC)')
     p = sub.add_parser('reboot')
     p.add_argument('--timeout', type=int, default=300)
     p = sub.add_parser('shot')
@@ -357,6 +411,8 @@ def main():
         kill()
     elif args.command == 'owner':
         owner(args.action)
+    elif args.command == 'emm':
+        emm(args.action, args.dpc, args.values)
     elif args.command == 'reboot':
         return reboot(args.timeout)
     elif args.command == 'shot':

@@ -35,7 +35,7 @@
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffInfo}" />
                     <Grid Style="{StaticResource StaffInfoGrid}"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="128,*">
                         <Label Grid.Row="0" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
@@ -57,26 +57,32 @@
                                Text="{Binding KioskText}" />
                         <Label Grid.Row="3" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffBattery}" />
+                               Text="{x:Static strings:AppResources.StaffManaged}" />
                         <Label Grid.Row="3" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding BatteryText}" />
+                               Text="{Binding ManagedText}" />
                         <Label Grid.Row="4" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffNetwork}" />
+                               Text="{x:Static strings:AppResources.StaffBattery}" />
                         <Label Grid.Row="4" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding NetworkText}" />
+                               Text="{Binding BatteryText}" />
                         <Label Grid.Row="5" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffDeviceId}" />
+                               Text="{x:Static strings:AppResources.StaffNetwork}" />
                         <Label Grid.Row="5" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding DeviceIdText}" />
+                               Text="{Binding NetworkText}" />
                         <Label Grid.Row="6" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffApp}" />
+                               Text="{x:Static strings:AppResources.StaffDeviceId}" />
                         <Label Grid.Row="6" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding DeviceIdText}" />
+                        <Label Grid.Row="7" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffApp}" />
+                        <Label Grid.Row="7" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
                                Text="{Binding VersionText}" />
                     </Grid>
@@ -117,8 +123,12 @@
                         <Button Grid.Column="1"
                                 Style="{StaticResource StaffButton}"
                                 Command="{Binding ChangePinCommand}"
+                                IsVisible="{Binding CanChangePin}"
                                 Text="{x:Static strings:AppResources.StaffChangePin}" />
                     </Grid>
+                    <Label Style="{StaticResource StaffHintLabel}"
+                           IsVisible="{Binding CanChangePin, Converter={StaticResource ReverseConverter}}"
+                           Text="{x:Static strings:AppResources.StaffPinManaged}" />
 
                     <!-- kiosk -->
                     <Label Style="{StaticResource StaffSectionLabel}"

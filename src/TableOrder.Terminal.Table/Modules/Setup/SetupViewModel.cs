@@ -17,6 +17,11 @@ public sealed partial class SetupViewModel : AppViewModelBase
     [ObservableProperty]
     public partial string ApiEndPoint { get; set; }
 
+    // 接続先を EMM が配っている (入力の代わりに値を出し、保存しない)
+    public bool IsEndPointManaged { get; }
+
+    public string EndPointHintText { get; }
+
     public IObserveCommand InputTableNoCommand { get; }
 
     public IObserveCommand SaveCommand { get; }
@@ -34,6 +39,8 @@ public sealed partial class SetupViewModel : AppViewModelBase
 
         VersionText = ViewHelper.Version(appInfo);
         ApiEndPoint = settings.ApiEndPoint;
+        IsEndPointManaged = settings.IsApiEndPointManaged;
+        EndPointHintText = IsEndPointManaged ? AppResources.SetupEndpointManaged : AppResources.SetupEndpointHint;
         UpdateTableNo(settings.TableNo);
 
         InputTableNoCommand = MakeAsyncCommand(async () =>
@@ -72,7 +79,12 @@ public sealed partial class SetupViewModel : AppViewModelBase
     private async Task SaveAsync()
     {
         settings.TableNo = TableNo;
-        settings.ApiEndPoint = ApiEndPoint.Trim();
+
+        // EMM が配っている接続先は端末の値に書かない (配られなくなったら端末の値に戻る)
+        if (!IsEndPointManaged)
+        {
+            settings.ApiEndPoint = ApiEndPoint.Trim();
+        }
 
         await Navigator.ForwardAsync(ViewId.Startup);
     }

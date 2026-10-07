@@ -61,7 +61,7 @@ TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract 
 | `Resources/` | 色 (`Colors.xaml`)、スタイル (`Styles.xaml`)、画面の文言 (`Strings/AppResources.resx`、`.en.resx`)、料理の絵、アイコン、スプラッシュ |
 | `Extender/` | 画面の切り替えとポップアップのプラグイン |
 | `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更) と処理中の覆い |
-| `Behaviors/`、`Components/`、`Diagnostics/`、`Platforms/` | プラットフォームの調整、端末の情報、異常終了の記録、Activity とマニフェスト |
+| `Behaviors/`、`Components/`、`Diagnostics/`、`Platforms/` | プラットフォームの調整、端末の情報、専用端末、EMM が配る設定、異常終了の記録、Activity とマニフェスト |
 
 ### 層
 
@@ -233,7 +233,8 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 ## 🔒 7. 専用端末
 
 `Components/KioskManager` が、端末に合わせて専用端末にする。  
-画面が前に出るたびに全画面をかけ直し、方式を読み直して、変わっていれば掛け直す。
+画面が前に出るたびに全画面をかけ直し、方式を読み直して、変わっていれば掛け直す。  
+動いている間に EMM がロックタスクを許したり外したりするので、スタッフメニューに出すときも方式を読み直す。
 
 | 方式 | 見分け方 | 行うこと |
 | --- | --- | --- |
@@ -271,3 +272,13 @@ Device Owner のときに掛ける端末の制限:
 | 再起動 | 注文の画面がホームとして起動し、ロックタスクに入る。ロック画面は出ない |
 | プロセスを止める | ホームとして起動し直し、ロックタスクに入る。ホームアプリにしていないと (ランチャーから起動しただけでは)、ランチャーに戻ってしまう |
 | Device Owner のアプリを止める | `am force-stop` と `am crash` が効かない (Debug は `run-as` で止める) |
+
+### 管理対象の構成
+
+接続先とスタッフの PIN は、外部の EMM が管理対象の構成で配れる (`Components/ManagedConfiguration`)。  
+配られた値は端末の設定より優先し (`Settings` が読む)、端末の値は書き換えないので、配られなくなると端末の値に戻る。  
+起動したときに読み、EMM が値を替えた知らせと、画面が前に出たときに読み直す。
+
+- 配られた値は画面で変えられないようにする (端末の設定の画面は入力の代わりに値を出し、スタッフメニューは PIN を変える操作を出さない)
+- スタッフメニューの端末の情報に、配られている設定を出す
+- 配り方と値は [device-management.md](device-management.md) に書いた

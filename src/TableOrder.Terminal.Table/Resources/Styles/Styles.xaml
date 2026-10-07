@@ -353,6 +353,25 @@
         <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasVariantColor}" />
     </Style>
 
+    <!-- EMM が配っている値。入力欄と同じ大きさにし、地を画面と同じ色にして入れられないことを示す -->
+    <Style x:Key="SetupManagedBorder"
+           TargetType="Border">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="Stroke" Value="{StaticResource SystemOutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{StaticResource SystemCanvasColor}" />
+    </Style>
+
+    <Style x:Key="SetupManagedLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasColor}" />
+    </Style>
+
     <Style x:Key="SetupEntry"
            TargetType="Entry">
         <Setter Property="HeightRequest" Value="64" />

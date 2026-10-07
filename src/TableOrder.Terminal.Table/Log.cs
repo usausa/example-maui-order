@@ -34,6 +34,14 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Kiosk restored.")]
     public static partial void InfoKioskRestored(this ILogger logger);
 
+    // Managed configuration
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Managed configuration. apiEndPoint=[{apiEndPoint}], staffPin=[{staffPin}]")]
+    public static partial void InfoManagedConfiguration(this ILogger logger, string apiEndPoint, bool staffPin);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Managed configuration value is invalid. key=[{key}]")]
+    public static partial void WarnManagedConfigurationInvalid(this ILogger logger, string key);
+
     // Order
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]

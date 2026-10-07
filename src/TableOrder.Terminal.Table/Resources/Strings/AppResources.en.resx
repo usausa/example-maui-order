@@ -393,6 +393,9 @@
   <data name="SetupEndpointHint" xml:space="preserve">
     <value>Leave empty to run with mock data</value>
   </data>
+  <data name="SetupEndpointManaged" xml:space="preserve">
+    <value>Uses the server set by EMM (cannot be changed on this device)</value>
+  </data>
   <data name="SetupNotSet" xml:space="preserve">
     <value>Not set</value>
   </data>
@@ -464,6 +467,12 @@
   </data>
   <data name="StaffKioskSettings" xml:space="preserve">
     <value>Android settings</value>
+  </data>
+  <data name="StaffManaged" xml:space="preserve">
+    <value>EMM settings</value>
+  </data>
+  <data name="StaffManagedNone" xml:space="preserve">
+    <value>None</value>
   </data>
   <data name="StaffMock" xml:space="preserve">
     <value>Mock controls</value>
@@ -554,6 +563,9 @@
   </data>
   <data name="StaffPinLength" xml:space="preserve">
     <value>Enter {0} digits.</value>
+  </data>
+  <data name="StaffPinManaged" xml:space="preserve">
+    <value>The PIN is set by EMM (cannot be changed on this device)</value>
   </data>
   <data name="StaffPinMismatch" xml:space="preserve">
     <value>The PINs do not match.</value>

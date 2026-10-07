@@ -235,6 +235,7 @@ public static partial class MauiProgram
         services.AddSingleton<DeviceInformation>();
         services.AddSingleton<IStorageManager, StorageManager>();
         services.AddSingleton<KioskManager>();
+        services.AddSingleton<ManagedConfiguration>();
 
         // Resource
         services.AddSingleton<ResourceDictionary>(static _ => Application.Current!.Resources);
@@ -278,6 +279,9 @@ public static partial class MauiProgram
 
         // Start device information
         services.GetRequiredService<DeviceInformation>().Start();
+
+        // EMM が配る設定を読み、替わったときの知らせを受け始める (設定を読む画面より先に)
+        services.GetRequiredService<ManagedConfiguration>().Start();
 
         // 画面の言語は端末の言語の設定によらず日本語から始める
         services.GetRequiredService<LanguageState>().Reset();
