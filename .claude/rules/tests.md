@@ -1,11 +1,11 @@
 ---
 paths:
-  - "tests/**"
+  - "*/tests/**"
 ---
 # テスト
 
 - xunit v3 (Microsoft Testing Platform)。実行は `dotnet run --project`、キャンセルは `TestContext.Current.CancellationToken`
-- テストのプロジェクトは `tests/{対象のプロジェクト名}.Tests` にし、テストは対象と同じフォルダ構成と名前空間に置く
+- テストのプロジェクトは対象の区分の `tests/` に `{対象のプロジェクト名}.Tests` で置き、テストは対象と同じフォルダ構成と名前空間に置く
 - テスト名はアンダースコアなしの PascalCase (`SplitPaymentClosesVisitWhenFullyPaid`) にし、目的はメソッドの上に日本語のコメントで書く
 - 本文は `// Arrange` / `// Act` / `// Assert` で区切る。準備がなければ `// Arrange` を省き、段階を追うシナリオは `// Act / Assert: 確かめること` を重ねる
 - テストは実行順に依存させない。モックはテストごとに作り、テストの間で状態を共有しない

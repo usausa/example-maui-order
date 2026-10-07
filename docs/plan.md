@@ -14,7 +14,7 @@
 | 会計 | テーブル端末で行う (QR コード決済、クレジットカード)。現金はレジ |
 | 言語 | 日本語と英語 (画面の文言、メニューの名前と説明) |
 | 来店の開始 | 最終的にはスタッフ (ホール端末) か受付機が人数を入れて来店を開く。ホール端末ができるまでは、テーブル端末でお客様が人数を入れて開く (`selfStart`) |
-| 構成 | モノレポ。テーブル端末・ホール端末・キッチン端末・共有のプロジェクト・サーバを `src/` に置く |
+| 構成 | モノレポ。区分 (共有、サーバ、端末) ごとのフォルダに置く ([プロジェクト](#プロジェクト)) |
 | 通信 | 要求は REST (Minimal API) か gRPC、通知・プッシュ・端末の状態は SignalR か gRPC のストリーム、テレメトリは OpenTelemetry (OTLP)。入口が違っても業務の処理は同じにする |
 | 特例の扱い | ドリンクバー、お酒、キッズ、数量限定などはコードで分けず、メニューのタグとルールの設定で表す |
 | 技術 | .NET 10 / .NET MAUI、画面の切り替えは Smart.Navigation |
@@ -224,25 +224,76 @@
 
 ### プロジェクト
 
-今あるプロジェクトと層は [architecture.md](architecture.md#-1-プロジェクト) に書いた。  
-これから次のプロジェクトを足す。
+今あるプロジェクトと名前の付け方は [architecture.md](architecture.md#-1-プロジェクト) に書いた。  
+すべてを作ったときの構成は次のとおり。
 
-| プロジェクト | 内容 |
+```
+shared/                 共有 (サーバ・端末・Web アプリ)
+  src/    TableOrder.Domain、TableOrder.Contract、TableOrder.Client
+  tests/  TableOrder.Domain.Tests、TableOrder.Client.Tests
+server/                 注文サーバと、サーバが配る Web アプリ (TableOrder.Server.slnx)
+  src/    TableOrder.Server.Core、TableOrder.Server.Web、TableOrder.Server.AppHost、TableOrder.Web.Kitchen
+  tests/  TableOrder.Server.Core.Tests、TableOrder.Server.Web.Tests
+terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
+  src/    TableOrder.Terminal.Shared、TableOrder.Terminal.Table、TableOrder.Terminal.Hall、TableOrder.Terminal.Reception
+```
+
+これから足すプロジェクト:
+
+| プロジェクト | 種類 | 内容 |
+| --- | --- | --- |
+| `TableOrder.Server.Core` | .NET | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存。入口に依存しない |
+| `TableOrder.Server.Web` | ASP.NET Core | 入口 (REST、SignalR、OTLP の受け口、外部の Webhook)、管理画面 (Blazor Server)、Web アプリの配信。受けた要求を `Server.Core` に渡すだけにする |
+| `TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口) |
+| `TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る |
+| `TableOrder.Terminal.Shared` | .NET MAUI のライブラリ | 端末に共通の部品 (専用端末、EMM の設定、端末の情報、電卓、色とスタイルの土台)。2 つ目の端末アプリを作るときに、テーブル端末から移す |
+| `TableOrder.Terminal.Hall` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ) |
+| `TableOrder.Terminal.Reception` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く) |
+| `TableOrder.Server.Core.Tests` / `TableOrder.Server.Web.Tests` | xunit | 業務の処理のテストと、API・通知のテスト |
+
+### キッチン端末
+
+キッチン端末は、表示とサーバへの操作だけなので、Web の画面を全画面で出せば足りる。  
+ただし、ブラウザの全画面 (操作が要り、戻るや通知で外れる) には頼らず、次のようにする。
+
+| 課題 | 対応 |
 | --- | --- |
-| `TableOrder.Terminal.Hall` | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ) |
-| `TableOrder.Terminal.Kitchen` | キッチン端末 (KDS。チケット、作り始め、できあがり) |
-| `TableOrder.Terminal.Shared` | 端末に共通の画面部品 (電卓、知らせ、色とスタイルの土台) |
-| `TableOrder.Server.Core` | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存 |
-| `TableOrder.Server.Web` | 入口 (REST、gRPC、SignalR)。受けた要求を `Server.Core` に渡すだけにする |
-| `TableOrder.Server.AppHost` | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口) |
-| `tests/` | `Server.Core` の業務の処理と、`Client` の実際の通信 (REST / gRPC、通知) のテスト |
+| 全画面 | EMM のキオスクのブラウザで URL を固定して開く |
+| 通信が切れたとき | 表示を保ち、つながったら `seq` で抜けた通知を取り直す。Blazor Server は切れると操作できないので、WebAssembly にする |
+| 音の知らせ | キオスクのブラウザで自動再生を許す (許せない端末は、起動したあとに 1 回触れてもらう) |
+| 画面を消さない | 画面の Wake Lock か、端末の設定 |
+| 端末の登録 | ペアリングコードを 1 回入れ、鍵はブラウザから取り出せない形で持つ |
+| バンプバー | USB のキーの入力として受ける (なくても触って操作できるようにする) |
+| 伝票のプリンタ | 扱わない (KDS を前提にする) |
+
+- EMM のキオスクのブラウザがない店や、自前の Device Owner の店のために、Web の画面を全画面で開くだけの端末アプリ (`TableOrder.Terminal.Kitchen`、WebView) を作る余地を残す
+- 端末の窓口 (`TableOrder.Client`) は WebAssembly でも動くので、テーブル端末と同じ窓口 (`IKitchenApi`、`IOrderEvents`) を使う
+
+### ほかのアプリ
+
+| アプリ | 判断 |
+| --- | --- |
+| 管理画面 (店舗と端末) | 作る。端末のペアリングとテーブルの割り当て、登録トークン、店舗の設定 (注文の一時停止、ラストオーダー、色)、端末の状態。`Server.Web` の中に置く |
+| 受付機 | 任意。予約・順番待ちのシステムを使わない店のために、テーブル端末と同じ専用端末の仕組みで作る |
+| お客様のスマートフォンからの注文 | 作らない (API の想定の範囲の外)。作るなら `TableOrder.Web` の下に置き、読み込みの軽さを優先した作りを別に考える |
+| 店舗のエッジ | 検討。サーバ (`Server.Core`、`Server.Web`) を店に置き、クラウドとの同期を足す形にする |
+| 本部の管理システム、POS、決済サービス、配膳ロボット | 外部のシステム。サーバの入口 (API、Webhook) でつなぎ、このリポジトリにアプリは作らない |
+
+### 決めたこと (サーバ)
+
+- 要求は REST (Minimal API)、通知は SignalR で作る。  
+  gRPC は必要になってから足す (業務の処理は入口によらず同じにしてある)
+- 接続先はクラウドに直接つなぐ (店舗のエッジは後で考える)
+- 端末の認証は、端末の鍵で署名した短命の JWT にする ([端末の認証](#-端末の認証-検討))
+- ホール端末は .NET MAUI、キッチン端末は Web (Blazor WebAssembly) で作る
+- データベースは template-maui-server と同じ SQLite で始め、本番のデータベースは後で決める
 
 ### 通信 (想定)
 
 | 入口 | 内容 |
 | --- | --- |
 | REST (Minimal API) | 要求 (`/api/v1`。[api-design.md](api-design.md)) |
-| gRPC | 同じ要求を gRPC のサービスでも出す (任意。後で決める) |
+| gRPC | 同じ要求を gRPC のサービスでも出す (必要になってから) |
 | SignalR | 通知 (店舗の出来事)、プッシュ (受け取りの確認と、つながっていない端末へのためおき)、端末の状態の報告 (電池、接続) |
 | OTLP | テレメトリ (ログ、メトリクス、トレース)。送れない間は端末にためて送り直す |
 
@@ -252,10 +303,10 @@
 
 ## 📡 通信の枠とモック
 
-テーブル端末が使う API ([api-design.md](api-design.md)) を `IOrderApi` (`TableOrder.Client`) にまとめた。  
+テーブル端末が使う API ([api-design.md](api-design.md)) を `ITableApi` (`TableOrder.Client`) にまとめた。  
 サーバができたら、DI の登録を替えるだけで実際の通信 (REST か gRPC) に移る。
 
-| `IOrderApi` のメソッド | API |
+| `ITableApi` のメソッド | API |
 | --- | --- |
 | `GetConfigAsync` / `GetStoreAsync` / `GetMenuAsync` / `GetStockAsync` | `GET /devices/me/config` / `GET /store` / `GET /menu` / `GET /stock` |
 | `GetCurrentVisitAsync` / `StartVisitAsync` / `ConfirmAsync` | `GET /devices/me/visit` / `POST /visits` / `POST /visits/{id}/confirmations` |
@@ -340,7 +391,7 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 ### 1. モックの基盤
 
 - [x] モノレポの共有のプロジェクト (`Domain`、`Contract`、`Client`)
-- [x] `IOrderApi` とモック、モックのデータ (料理の絵、説明、アレルギー、タグとルール、品切れ)
+- [x] `ITableApi` とモック、モックのデータ (料理の絵、説明、アレルギー、タグとルール、品切れ)
 - [x] 起動の画面 (システムのロゴと進み具合) と流れ (設定、店舗の設定、メニュー、品切れ、今の来店)、読み込めないときの再試行
 - [x] 端末の設定の画面 (テーブル番号、接続先)
 - [x] スプラッシュ、アプリのアイコン、システムのロゴ
@@ -426,10 +477,7 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 - 電子レシートの要否
 - 来店の開き方 (ホール端末だけか、受付機も使うか、お客様が始める店を残すか)
 - 子どもの区分 (小学生以下など) とキッズメニューの出し方
-- ホール端末とキッチン端末の作り (MAUI か Web か)
-- 要求を REST にするか gRPC にするか (両方を出すか)
-- 接続先 (クラウドに直接か、店舗にエッジを置くか) と予備回線の要否
-- 端末の認証の方式 (候補は端末の鍵と短命の JWT。[端末の認証](#-端末の認証-検討))
+- 予備回線の要否 (店舗のエッジを置くかと合わせて)
 
 ## 📚 参考
 

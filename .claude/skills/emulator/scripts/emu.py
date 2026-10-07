@@ -38,7 +38,7 @@ FRAMEWORK = 'net10.0-android'
 
 # 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
 APPS = {
-    'table': ('tableorder.terminal.table', 'src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj', '.AdminReceiver'),
+    'table': ('tableorder.terminal.table', 'terminal/src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj', '.AdminReceiver'),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
 

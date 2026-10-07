@@ -16,17 +16,26 @@ API の想定は [api-design.md](api-design.md) を参照。
 
 ## 📦 1. プロジェクト
 
-モノレポにし、プロジェクトは `src/`、テストは `tests/` に置く。  
-端末のソリューションは `TableOrder.Terminal.slnx`。
+モノレポにし、区分 (共有、サーバ、端末) ごとのフォルダの `src/` にプロジェクト、`tests/` にテストを置く。  
+ソリューションは区分ごとに分け、端末のソリューションは `terminal/TableOrder.Terminal.slnx`。
+
+| 区分 | フォルダ | 内容 |
+| --- | --- | --- |
+| 共有 | `shared/` | サーバ・端末・Web アプリが共に使うもの (.NET の標準のライブラリのほかに依存しない) |
+| サーバ | `server/` | 注文サーバと、サーバが配る Web アプリ (これから作る) |
+| 端末 | `terminal/` | 店の端末のアプリ (.NET MAUI、Android) |
+
+- 区分で分けるのは、ビルドに要るもの (端末は Android のワークロード) と設定が違うため。  
+  サーバの区分は Android なしでビルドできる
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
-| `TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
-| `TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
-| `TableOrder.Client` | .NET | 端末が使う API の窓口 (`IOrderApi`、`ApiResult`) とモック (`Mock/MockOrderApi`) |
-| `TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
-| `TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
-| `TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
+| `shared/src/TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
+| `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
+| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (端末の種類ごとの `ITableApi`、通知の `IOrderEvents`、`ApiResult`) とモック (`Mock/MockOrderServer`) |
+| `terminal/src/TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
+| `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
+| `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
 
 ```
 TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
@@ -34,13 +43,22 @@ TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract 
 
 ### 名前の付け方
 
-| 区分 | 名前 |
+| 区分 | 名前 (アセンブリ、ルートの名前空間、フォルダ) |
 | --- | --- |
 | 共有 | `TableOrder.{Domain\|Contract\|Client}` |
-| 端末 | `TableOrder.Terminal.{Table\|Hall\|Kitchen\|Shared}` (`Shared` は端末に共通の画面部品) |
 | サーバ | `TableOrder.Server.{Core\|Web\|AppHost}` |
-| テスト | `tests/` に `{プロジェクト名}.Tests` |
+| Web アプリ (ブラウザで動き、サーバが配る) | `TableOrder.Web.{Kitchen}` |
+| 端末 (.NET MAUI) | `TableOrder.Terminal.{Shared\|Table\|Hall\|Reception}` (`Shared` は端末に共通の部品) |
+| テスト | 区分の `tests/` に `{プロジェクト名}.Tests` |
 
+- 名前の 2 つ目は動く場所を表す (`Server` はサーバ、`Web` はブラウザ、`Terminal` は店の端末)。  
+  フォルダの区分はビルドの単位で決めるので、サーバが配る Web アプリは `server/` に置く
+- 名前空間はアセンブリの名前にフォルダの道を続ける (`TableOrder.Terminal.Table.Modules.Menu` など)
+- ファイルは 1 つの型を 1 つのファイルに置き、ファイル名を型の名前にする。  
+  Android だけの部分は `Xxx.android.cs`、端末の画面は `Modules/{画面}/{画面}View.xaml` と `{画面}ViewModel.cs` にする
+- 端末の窓口は端末の種類ごとに `I{種類}Api` (`ITableApi`。ホール端末は `IHallApi`、キッチン端末は `IKitchenApi`、受付機は `IReceptionApi`) にし、通知 (`IOrderEvents`) は共通にする。  
+  実装は通信の方式を前に付ける (`Rest{種類}Api`、`SignalROrderEvents`)
+- サーバのファイルの名前は template-maui-server に合わせる (入口は `Endpoints/{リソース}Endpoints.cs`、業務の処理は `Services/{リソース}Service.cs`、データは `Accessors/{リソース}Accessor.cs` と `Accessors/Sql/{リソース}Accessor.{メソッド}.sql`、行は `Models/Entity/{テーブル}Entity.cs`)
 - 名前空間の `TableOrder.Terminal.Table` と紛れるので、`Table` という名前の型は作らない
 - MAUI の `MenuItem` とぶつかるので、メニューの品の型は `MenuProduct` などにする
 
@@ -66,14 +84,14 @@ TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract 
 ### 層
 
 ```
-View (XAML) ──> ViewModel ──> Usecase ──> IOrderApi (Client)
+View (XAML) ──> ViewModel ──> Usecase ──> ITableApi (Client)
                     │            │
                     └────────────┴──> State (Settings / MenuState / VisitState / CartState / LanguageState / StoreState)
 
 IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
 ```
 
-- ViewModel は State を読み、通信と状態の更新を組み合わせる手順は Usecase に任せる (読むだけの通信は ViewModel から `IOrderApi` を呼ぶ)
+- ViewModel は State を読み、通信と状態の更新を組み合わせる手順は Usecase に任せる (読むだけの通信は ViewModel から `ITableApi` を呼ぶ)
 - 通信の結果は `ApiResult<T>` で受け、例外にしない。  
   失敗は `ViewHelper.ErrorMessage` でお客様向けの文言にし、`Log.WarnApiFailed` で記録する
 - ポップアップとの受け渡しは引数と戻り値で行い、ポップアップは閉じると ViewModel ごと破棄する
@@ -163,13 +181,13 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 
 ### 通信の窓口
 
-- `IOrderApi` は API の想定 ([api-design.md](api-design.md)) の要求を 1 つずつメソッドにしたもの。  
-  REST と gRPC のどちらで実装しても、端末は `IOrderApi` だけを見る
+- `ITableApi` はテーブル端末が使う要求 ([api-design.md](api-design.md)) を 1 つずつメソッドにしたもの。  
+  REST と gRPC のどちらで実装しても、端末は `ITableApi` だけを見る
 - `IOrderEvents` はサーバの通知 (来店の開始・終了、店舗の変更) を受ける窓口。  
   通知は `seq` の順に届き、同じ通知が 2 回届くことがあるので、受け手は最後に受けた `seq` 以前の通知を捨てる
 - ラストオーダーを過ぎたかは `TableOrder.Domain.StoreHours` で決める (開店の時刻を営業日の区切りにし、日をまたぐ営業も扱う)。  
   端末は知らせに、サーバは注文の受け付けに使う
-- 今は DI で `MockOrderApi` を `IOrderApi` と `IOrderEvents` に登録している
+- 今は DI で `MockOrderServer` を `ITableApi` と `IOrderEvents` に登録している
 
 ---
 
@@ -196,7 +214,7 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 
 ## 🧪 6. モックの動き
 
-`MockOrderApi` は来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る。  
+`MockOrderServer` は来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る。  
 アプリを起動し直すと消える。
 
 | 操作 | モックの動き |

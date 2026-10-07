@@ -17,10 +17,10 @@ from markdown_breaks import format_markdown
 
 ROOT = Path(__file__).resolve().parents[4]
 
-TERMINAL_SOLUTION = 'TableOrder.Terminal.slnx'
+TERMINAL_SOLUTION = 'terminal/TableOrder.Terminal.slnx'
 TEST_PROJECTS = [
-    'tests/TableOrder.Domain.Tests',
-    'tests/TableOrder.Client.Tests',
+    'shared/tests/TableOrder.Domain.Tests',
+    'shared/tests/TableOrder.Client.Tests',
 ]
 
 # 改行コードを見ない (バイナリ) ファイル

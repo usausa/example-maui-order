@@ -1,12 +1,12 @@
 ---
 paths:
-  - "src/TableOrder.Terminal.*/MainPage.xaml"
-  - "src/TableOrder.Terminal.*/Modules/**"
-  - "src/TableOrder.Terminal.*/Behaviors/**"
-  - "src/TableOrder.Terminal.*/Controls/**"
-  - "src/TableOrder.Terminal.*/Extender/**"
-  - "src/TableOrder.Terminal.*/Markup/**"
-  - "src/TableOrder.Terminal.*/Resources/**"
+  - "terminal/src/TableOrder.Terminal.*/MainPage.xaml"
+  - "terminal/src/TableOrder.Terminal.*/Modules/**"
+  - "terminal/src/TableOrder.Terminal.*/Behaviors/**"
+  - "terminal/src/TableOrder.Terminal.*/Controls/**"
+  - "terminal/src/TableOrder.Terminal.*/Extender/**"
+  - "terminal/src/TableOrder.Terminal.*/Markup/**"
+  - "terminal/src/TableOrder.Terminal.*/Resources/**"
 ---
 # 端末の画面
 

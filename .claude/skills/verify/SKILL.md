@@ -13,7 +13,7 @@ python .claude/skills/verify/scripts/verify.py
 ```
 
 - 対象を絞るときは `terminal` / `files` を並べる (例: `verify.py files`)。省くとすべて
-- `terminal`: `TableOrder.Terminal.slnx` の Release と Debug のビルド (作り直し)、`tests/TableOrder.Domain.Tests`・`tests/TableOrder.Client.Tests` の `dotnet run --project` (Release)、InspectCode
+- `terminal`: `terminal/TableOrder.Terminal.slnx` の Release と Debug のビルド (作り直し)、`shared/tests/TableOrder.Domain.Tests`・`shared/tests/TableOrder.Client.Tests` の `dotnet run --project` (Release)、InspectCode
 - `files`: 変更したファイル (git の未コミット分) の改行コード (新しいファイルは CRLF、既存のファイルは元のまま) と、`docs/*.md`・README の改行 (1 行 1 文、「。」の後に 2 スペース)
 - `--fix` で改行コードと文書の改行を直す。`--all-docs` で変更のない文書も確かめる
 - `--no-inspect` は途中の確認用。作業の単位の検証では InspectCode を省かない

@@ -1,8 +1,8 @@
 ---
 paths:
-  - "src/TableOrder.Terminal.*/Components/**"
-  - "src/TableOrder.Terminal.*/State/**"
-  - "src/TableOrder.Terminal.*/Platforms/**"
+  - "terminal/src/TableOrder.Terminal.*/Components/**"
+  - "terminal/src/TableOrder.Terminal.*/State/**"
+  - "terminal/src/TableOrder.Terminal.*/Platforms/**"
 ---
 # 端末の部品と状態
 
