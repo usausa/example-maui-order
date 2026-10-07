@@ -1,6 +1,7 @@
 # データベース設計 (想定)
 
 注文サーバ (`TableOrder.Server.Core`) が持つデータの想定。  
+サーバの骨組みのスキーマ (`server/src/TableOrder.Server.Web/Assets/Data/Schema.sql`) は、この文書のすべての表を作る。  
 サーバはまだないので、これから作るサーバはこの文書に合わせ、作ったら実装済みの設計に直す。  
 API は [api-design.md](api-design.md)、実装の計画は [plan.md](plan.md) を参照。
 
@@ -236,8 +237,8 @@ erDiagram
 | `CreatedAt` / `UpdatedAt` | datetime | |
 | `Version` | int | |
 
-- 一意: `StoreId`、`Name`
 - すべてのテナントで一意: `Id` (トークンの要求で、テナントのわからないまま端末を引く)
+- 名前は端末が送った名前で、重なってよい (管理画面で付け替える)
 - 置き場所 (テーブル、持ち場) を替えても登録し直さない (次のトークンと端末の設定に出る)
 
 ### DeviceStations (キッチン端末の持ち場)

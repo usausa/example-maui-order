@@ -1,0 +1,36 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitattributes" />
+    <File Path="../.gitignore" />
+    <File Path="../AGENTS.md" />
+    <File Path="../Analyzers.ruleset" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../Directory.Build.targets" />
+    <File Path="../LICENSE" />
+    <File Path="../README.md" />
+    <File Path="TableOrder.Server.sln.DotSettings" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="../docs/api-design.md" />
+    <File Path="../docs/architecture.md" />
+    <File Path="../docs/database.md" />
+    <File Path="../docs/plan.md" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="../shared/src/TableOrder.Contract/TableOrder.Contract.csproj" />
+    <Project Path="../shared/src/TableOrder.Domain/TableOrder.Domain.csproj" />
+  </Folder>
+  <Folder Name="/Aspire/">
+    <Project Path="src/TableOrder.Server.AppHost/TableOrder.Server.AppHost.csproj" DefaultStartup="true" />
+  </Folder>
+  <Folder Name="/Server/">
+    <Project Path="src/TableOrder.Server.Core/TableOrder.Server.Core.csproj" />
+    <Project Path="src/TableOrder.Server.Web/TableOrder.Server.Web.csproj" />
+    <Project Path="src/TableOrder.Web.Kitchen/TableOrder.Web.Kitchen.csproj" />
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="tests/TableOrder.Server.Core.Tests/TableOrder.Server.Core.Tests.csproj" />
+    <Project Path="tests/TableOrder.Server.Web.Tests/TableOrder.Server.Web.Tests.csproj" />
+  </Folder>
+</Solution>

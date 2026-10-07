@@ -1,0 +1,29 @@
+<dialog id="components-reconnect-modal" data-nosnippet>
+    <div class="components-reconnect-container">
+        <div class="components-rejoining-animation" aria-hidden="true">
+            <div></div>
+            <div></div>
+        </div>
+        <p class="components-reconnect-first-attempt-visible">
+            サーバーへ再接続しています...
+        </p>
+        <p class="components-reconnect-repeated-attempt-visible">
+            再接続に失敗しました。<span id="components-seconds-to-next-attempt"></span>秒後に再試行します。
+        </p>
+        <p class="components-reconnect-failed-visible">
+            再接続に失敗しました。<br />再試行するか、ページを再読み込みしてください。
+        </p>
+        <button id="components-reconnect-button" class="components-reconnect-failed-visible">
+            再試行
+        </button>
+        <p class="components-pause-visible">
+            セッションはサーバーによって一時停止されています。
+        </p>
+        <p class="components-resume-failed-visible">
+            セッションの再開に失敗しました。<br />再試行するか、ページを再読み込みしてください。
+        </p>
+        <button id="components-resume-button" class="components-pause-visible components-resume-failed-visible">
+            再開
+        </button>
+    </div>
+</dialog>

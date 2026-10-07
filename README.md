@@ -24,7 +24,7 @@
 | 文書 | 内容 |
 | --- | --- |
 | [docs/plan.md](docs/plan.md) | 実装計画。UI の調査、接続先と障害対策の調査、デザイン (色の役割)、画面と遷移、これから足すプロジェクトと通信の想定、専用端末化、フェーズ |
-| [docs/architecture.md](docs/architecture.md) | 構成。プロジェクト、テーブル端末の作り (画面、状態と通信、メニューのルール、多言語と色)、モックの動き |
+| [docs/architecture.md](docs/architecture.md) | 構成。プロジェクト、テーブル端末の作り (画面、状態と通信、メニューのルール、多言語と色)、モックの動き、サーバの作り (テナントの文脈、端末の認証、作った API、サンプルのデータ) |
 | [docs/device-management.md](docs/device-management.md) | 端末の配布と管理。外部の EMM と自前の Device Owner の違い、EMM で配る手順、管理対象の構成 |
 | [docs/api-design.md](docs/api-design.md) | 注文 API の想定。注文の業務 (来店、メニューのタグとルール、品切れ、注文、調理、提供、呼び出し、テーブルでの会計)、端末の認証、テナント、端末ごとの API (テーブル、ホール、キッチン、受付、外部)、リアルタイム通知、扱わないもの |
 | [docs/database.md](docs/database.md) | データベースの想定。表の一覧と関係、店舗・端末・メニュー・来店・注文・調理・呼び出し・会計・通知の表、書き込みの決まり、残す期間 |

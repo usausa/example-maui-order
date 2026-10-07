@@ -1,7 +1,7 @@
 # 構成
 
-リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.Terminal.Table`) の作り。  
-ここには作ったものだけを書き、これから作るもの (サーバ、ホール端末とキッチン端末、実際の通信) は [plan.md](plan.md) に置く。  
+リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.Terminal.Table`) とサーバの作り。  
+ここには作ったものだけを書き、これから作るもの (サーバの来店・注文などの業務、ホール端末とキッチン端末の画面、端末の実際の通信) は [plan.md](plan.md) に置く。  
 API とデータベースの想定は [api-design.md](api-design.md) と [database.md](database.md) を参照。
 
 - [1. プロジェクト](#-1-プロジェクト)
@@ -11,18 +11,19 @@ API とデータベースの想定は [api-design.md](api-design.md) と [databa
 - [5. 多言語と色](#-5-多言語と色)
 - [6. モックの動き](#-6-モックの動き)
 - [7. 専用端末](#-7-専用端末)
+- [8. サーバの作り](#-8-サーバの作り)
 
 ---
 
 ## 📦 1. プロジェクト
 
 モノレポにし、区分 (共有、サーバ、端末) ごとのフォルダの `src/` にプロジェクト、`tests/` にテストを置く。  
-ソリューションは区分ごとに分け、端末のソリューションは `terminal/TableOrder.Terminal.slnx`。
+ソリューションは区分ごとに分け、端末は `terminal/TableOrder.Terminal.slnx`、サーバは `server/TableOrder.Server.slnx`。
 
 | 区分 | フォルダ | 内容 |
 | --- | --- | --- |
 | 共有 | `shared/` | サーバ・端末・Web アプリが共に使うもの (.NET の標準のライブラリのほかに依存しない) |
-| サーバ | `server/` | 注文サーバと、サーバが配る Web アプリ (これから作る) |
+| サーバ | `server/` | 注文サーバと、サーバが配る Web アプリ |
 | 端末 | `terminal/` | 店の端末のアプリ (.NET MAUI、Android) |
 
 - 区分で分けるのは、ビルドに要るもの (端末は Android のワークロード) と設定が違うため。  
@@ -38,11 +39,19 @@ API とデータベースの想定は [api-design.md](api-design.md) と [databa
 | `terminal/src/TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
 | `terminal/src/TableOrder.Terminal.Hall` | .NET MAUI (Android) | ホール端末のアプリの枠 (起動して仮の画面を出すだけ) |
 | `terminal/src/TableOrder.Terminal.Reception` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
+| `server/src/TableOrder.Server.Core` | .NET | 業務の処理 (端末の登録と認可、店舗、メニュー、品切れ) と DB の読み書き (Accessor と 2-way SQL) |
+| `server/src/TableOrder.Server.Web` | ASP.NET Core | 入口 (REST)、端末の認証、管理画面 (Blazor Server)、キッチン端末の配信 |
+| `server/src/TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバとテレメトリ) |
+| `server/src/TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末の Web アプリの枠 (仮の画面を出すだけ) |
 | `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
 | `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
+| `server/tests/TableOrder.Server.Core.Tests` | .NET (xunit) | すべての SQL がテナントで絞っていることと、DB の型の変換のテスト |
+| `server/tests/TableOrder.Server.Web.Tests` | .NET (xunit) | API のテスト (端末の登録とトークン、端末の種類の範囲、テナントで分けられていること) |
 
 ```
 TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
+TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
+          └──> TableOrder.Web.Kitchen
 ```
 
 ### 名前の付け方
@@ -304,3 +313,73 @@ Device Owner のときに掛ける端末の制限:
 - 配られた値は画面で変えられないようにする (端末の設定の画面は入力の代わりに値を出し、スタッフメニューは PIN を変える操作を出さない)
 - スタッフメニューの端末の情報に、配られている設定を出す
 - 配り方と値は [device-management.md](device-management.md) に書いた
+
+---
+
+## 🏭 8. サーバの作り
+
+サーバは、端末の登録とトークン、店舗・メニュー・品切れ・端末の設定を読む API までを作った。  
+来店・注文・呼び出し・会計の API と通知 (SignalR) は、これから作る ([plan.md](plan.md))。
+
+### 層
+
+```
+端末 ──REST──> Server.Web (Endpoints) ──> Server.Core (Services ──> Accessors ──> SQLite)
+                   ├─ 管理画面 (Blazor Server) ──> Server.Core
+                   └─ キッチン端末 (Web.Kitchen、WebAssembly) を /kitchen で配る
+```
+
+- 入口 (`Endpoints/`) は要求の形を確かめて Service に渡し、結果を応答にするだけにする
+- Service は `TableOrder.Contract` の Request を受けて Response を返し、Accessor は 2-way SQL (`Accessors/Sql/`) で DB を読み書きする
+- データベースは SQLite で、`Assets/Data/Schema.sql` を起動のたびに実行して [database.md](database.md) のすべての表を作る
+
+### テナントの文脈
+
+- 認証のあと、アクセストークンのクレーム (`tenant_id`、`store_id`、`device_kind`、`table_id`、`station_ids`) から要求の文脈 (`ServiceContext`) を作り、Service はそこからテナントと店舗を受け取る
+- Accessor はテナントを持つ表を引数の `tenantId` で絞り、すべての SQL がテナントで絞っていることをテスト (`SqlTenantConditionTests`) で確かめる
+- テナントのわからない要求 (端末の登録、トークンの要求) で引くのは `DirectoryAccessor` だけで、引いた行のテナントで続ける
+- ログの全行に、テナント・店舗・主体 (端末) を付ける
+
+### 端末の認証
+
+| 段階 | API | 作り |
+| --- | --- | --- |
+| 登録 | `POST /api/v1/devices/pair` | ペアリングコード (か登録トークンのハッシュ) で受け口を引き、台数を数えてから端末と公開鍵 (P-256 の JWK) を記録する。接続元ごとに 1 分の回数を限る |
+| トークン | `POST /api/v1/devices/token` | 端末の鍵で署名した使い捨ての JWT を確かめ (期限 5 分以内、jti は使い捨て)、端末の記録からアクセストークン (ES256、30 分) を作る |
+| 要求 | `Authorization: Bearer` | JwtBearer で署名と期限を確かめ、端末の種類のポリシーで使える API を絞る (範囲の外は `403` `DEVICE_SCOPE`) |
+
+- 署名の鍵は設定 (`Token:SigningKey`。P-256 の秘密鍵の PEM) から読み、開発の環境で空なら起動のたびに作る
+- 端末を無効にしたときとテナントを止めたときは、次のトークンを出さない (`DEVICE_REVOKED`、`TENANT_SUSPENDED`)。  
+  出したトークンをすぐに拒む一覧は、管理画面を作るときに足す
+
+### 作った API
+
+| API | 使える端末 | 中身 |
+| --- | --- | --- |
+| `POST /api/v1/devices/pair`、`POST /api/v1/devices/token` | 匿名 | 登録とアクセストークン |
+| `GET /api/v1/devices/me/config`、`POST /api/v1/devices/me/heartbeat` | すべて | 端末の設定 (店舗の設定、呼び出しの用件、端末と置き場所) と、状態の報告 |
+| `GET /api/v1/store` | すべて | 店舗 (営業日は今の時刻と開店の時刻から求める) |
+| `GET /api/v1/menu` | テーブル、ホール、キッチン | 公開したメニューの JSON をそのまま返す。`menuVersion` を ETag にし、同じなら `304` |
+| `GET /api/v1/stock` | テーブル、ホール、キッチン | 品切れと残りの数 |
+
+### サンプルのデータ
+
+開発の環境とテストは、テナントがないときに `Assets/Data/SampleData.sql` と `Menu.json` (モックのメニュー) を入れる。  
+2 つのテナントに同じ店舗コードの店舗を置き、テナントで分けられていることを確かめられるようにしている。
+
+| ペアリングコード | テナント | 端末 |
+| --- | --- | --- |
+| `100001` / `100002` | デモ (駅前店) | テーブル端末 (テーブル 1 / 2) |
+| `100101` | デモ (駅前店) | ホール端末 |
+| `100201` | デモ (駅前店) | キッチン端末 (3 つの持ち場) |
+| `100301` | デモ (駅前店) | 受付機 |
+| `200001` | 検証用 (本店) | テーブル端末 (テーブル 1) |
+
+- 開発のコードは期限を遠くにし、何台でも登録できる (本番のコードは 10 分、1 台)
+
+### 動かし方
+
+- `dotnet run --project server/src/TableOrder.Server.Web` で、8080 番で受ける (開発の環境は Swagger UI を `/swagger` に出す)。  
+  テレメトリと一緒に動かすときは、Aspire の `server/src/TableOrder.Server.AppHost` を起動する
+- 管理画面 (`/`) は、サインインを作るまで開発の環境だけで開き、テナントの一覧を出す
+- キッチン端末 (`/kitchen`) は枠だけで、仮の画面を出す

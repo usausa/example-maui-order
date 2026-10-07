@@ -11,4 +11,12 @@ public static class Length
 
     // スタッフの PIN (電卓で入れる)
     public const int StaffPinDigits = 4;
+
+    // 端末の登録のペアリングコード (管理画面で出し、端末で入れる)
+    public const int PairingCodeDigits = 6;
+
+    // 端末が送る名前とアプリの版
+    public const int DeviceName = 50;
+
+    public const int AppVersion = 50;
 }

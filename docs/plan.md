@@ -242,10 +242,10 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
-| `TableOrder.Server.Core` | .NET | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存。入口に依存しない |
-| `TableOrder.Server.Web` | ASP.NET Core | 入口 (REST、SignalR、OTLP の受け口、外部の Webhook)、管理画面 (Blazor Server)、Web アプリの配信。受けた要求を `Server.Core` に渡すだけにする |
-| `TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口) |
-| `TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る |
+| `TableOrder.Server.Core` | .NET | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存。入口に依存しない。骨組み (端末の登録、店舗、メニュー、品切れ) はある |
+| `TableOrder.Server.Web` | ASP.NET Core | 入口 (REST、SignalR、OTLP の受け口、外部の Webhook)、管理画面 (Blazor Server)、Web アプリの配信。受けた要求を `Server.Core` に渡すだけにする。骨組みはある |
+| `TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口)。サーバを動かすだけのものはある |
+| `TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る。枠はある |
 | `TableOrder.Terminal.Shared` | .NET MAUI のライブラリ | 端末に共通の部品 (専用端末、EMM の設定、端末の情報、電卓、色とスタイルの土台)。2 つ目の端末アプリを作るときに、テーブル端末から移す |
 | `TableOrder.Terminal.Hall` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ)。枠 (起動して仮の画面を出す) はある |
 | `TableOrder.Terminal.Reception` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く)。枠はある |
@@ -480,7 +480,10 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 
 ### 9. 以降 (検討)
 
-- [ ] 注文サーバ (`Server.Core`、`Server.Web`) と実際の通信 (REST / gRPC、SignalR の通知とプッシュ、OTLP)
+- [x] サーバの骨組み (プロジェクト、DB のスキーマとサンプルのデータ、テナントの文脈、端末の登録とトークン、店舗・メニュー・品切れ・端末の設定の API、キッチン端末と管理画面の枠)
+- [ ] 来店・注文・呼び出し・会計の API と通知 (SignalR。`seq` の順に送り、抜けた分を取り直せるようにする)
+- [ ] 端末の実際の通信 (REST の窓口、通知の受け口、端末の鍵とトークン)
+- [ ] 管理画面 (サインイン、テナント・店舗・テーブル・端末、出したトークンをすぐに拒む一覧)
 - [x] ホール端末と受付機の枠 (`Terminal.Hall`、`Terminal.Reception`。起動して仮の画面を出す)
 - [ ] ホール端末と受付機の画面と、端末に共通の部品 (`Terminal.Shared`)
 - [ ] キッチン端末 (`Web.Kitchen`)

@@ -1,6 +1,6 @@
 ---
 name: verify
-description: 作業の単位の検証 (端末の Release と Debug のビルドの警告 0、テスト、InspectCode の指摘 0、変更したファイルの改行コード、文書の改行) を 1 回で行う。コードや文書を変えたあと、作業を閉じる前やコミットの前に使う。
+description: 作業の単位の検証 (端末とサーバの Release と Debug のビルドの警告 0、テスト、InspectCode の指摘 0、変更したファイルの改行コード、文書の改行) を 1 回で行う。コードや文書を変えたあと、作業を閉じる前やコミットの前に使う。
 ---
 
 # 検証
@@ -12,8 +12,9 @@ AGENTS.md の「検証」を 1 回で確かめる。
 python .claude/skills/verify/scripts/verify.py
 ```
 
-- 対象を絞るときは `terminal` / `files` を並べる (例: `verify.py files`)。省くとすべて
+- 対象を絞るときは `terminal` / `server` / `files` を並べる (例: `verify.py server files`)。省くとすべて
 - `terminal`: `terminal/TableOrder.Terminal.slnx` の Release と Debug のビルド (作り直し)、`shared/tests/TableOrder.Domain.Tests`・`shared/tests/TableOrder.Client.Tests` の `dotnet run --project` (Release)、InspectCode
+- `server`: `server/TableOrder.Server.slnx` の Release と Debug のビルド (作り直し)、`server/tests/TableOrder.Server.Core.Tests`・`server/tests/TableOrder.Server.Web.Tests` の `dotnet run --project` (Release)、InspectCode
 - `files`: 変更したファイル (git の未コミット分) の改行コード (新しいファイルは CRLF、既存のファイルは元のまま) と、`docs/*.md`・README の改行 (1 行 1 文、「。」の後に 2 スペース)
 - `--fix` で改行コードと文書の改行を直す。`--all-docs` で変更のない文書も確かめる
 - `--no-inspect` は途中の確認用。作業の単位の検証では InspectCode を省かない
@@ -21,7 +22,7 @@ python .claude/skills/verify/scripts/verify.py
 
 ## 時間の目安
 
-- 端末のビルド (Release と Debug) は数分、InspectCode も数分かかる。テストは数秒
+- 端末とサーバのビルド (Release と Debug) はそれぞれ数分、InspectCode も数分かかる。テストは数秒 (サーバの API のテストは十数秒)
 - 時間がかかるので、Claude はバックグラウンドで実行し、終わった通知を待つ
 
 ## 前提

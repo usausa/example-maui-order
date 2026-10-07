@@ -13,8 +13,23 @@ public static class StoreHours
     public static string Format(TimeOnly value) =>
         value.ToString(TimeFormat, CultureInfo.InvariantCulture);
 
-    // 店舗の現地時刻 (タイムゾーンが見つからないときは端末の時刻)
-    public static TimeOnly LocalTime(DateTimeOffset now, string timeZone)
+    // 店舗の現地時刻 (タイムゾーンが見つからないときは動いている機器の時刻)
+    public static TimeOnly LocalTime(DateTimeOffset now, string timeZone) =>
+        TimeOnly.FromDateTime(LocalDateTime(now, timeZone));
+
+    // 営業日。開店の時刻より前は、前の日の営業の続きとして数える
+    public static DateOnly BusinessDate(DateTimeOffset now, string timeZone, TimeOnly open)
+    {
+        var local = LocalDateTime(now, timeZone);
+        var date = DateOnly.FromDateTime(local);
+        return TimeOnly.FromDateTime(local) < open ? date.AddDays(-1) : date;
+    }
+
+    // ラストオーダーまでの残り。開店より前の時刻は前の営業日の続きとして数えるので、閉店後から開店までは負 (過ぎている) になる
+    public static TimeSpan UntilLastOrder(TimeOnly now, TimeOnly open, TimeOnly lastOrder) =>
+        (lastOrder - open) - (now - open);
+
+    private static DateTime LocalDateTime(DateTimeOffset now, string timeZone)
     {
         var local = now.ToLocalTime();
         try
@@ -28,10 +43,6 @@ public static class StoreHours
         {
         }
 
-        return TimeOnly.FromDateTime(local.DateTime);
+        return local.DateTime;
     }
-
-    // ラストオーダーまでの残り。開店より前の時刻は前の営業日の続きとして数えるので、閉店後から開店までは負 (過ぎている) になる
-    public static TimeSpan UntilLastOrder(TimeOnly now, TimeOnly open, TimeOnly lastOrder) =>
-        (lastOrder - open) - (now - open);
 }

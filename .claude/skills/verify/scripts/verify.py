@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # 作業の単位の検証: ビルド (警告 0)、テスト、InspectCode (指摘 0)、改行コード、文書の改行
 #
-#   python .claude/skills/verify/scripts/verify.py [terminal] [files] [--no-inspect] [--fix] [--all-docs] [--out DIR]
+#   python .claude/skills/verify/scripts/verify.py [terminal] [server] [files] [--no-inspect] [--fix] [--all-docs] [--out DIR]
 #
-# 対象を省くと terminal、files のすべてを行う。1 つでも問題があれば終了コードは 1
+# 対象を省くと terminal、server、files のすべてを行う。1 つでも問題があれば終了コードは 1
 import argparse
 import json
 import re
@@ -21,6 +21,12 @@ TERMINAL_SOLUTION = 'terminal/TableOrder.Terminal.slnx'
 TEST_PROJECTS = [
     'shared/tests/TableOrder.Domain.Tests',
     'shared/tests/TableOrder.Client.Tests',
+]
+
+SERVER_SOLUTION = 'server/TableOrder.Server.slnx'
+SERVER_TEST_PROJECTS = [
+    'server/tests/TableOrder.Server.Core.Tests',
+    'server/tests/TableOrder.Server.Web.Tests',
 ]
 
 # 改行コードを見ない (バイナリ) ファイル
@@ -216,13 +222,13 @@ def main():
     if not sys.stdout.isatty():
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser(description='ビルド・テスト・InspectCode・改行コード・文書の改行を確かめる')
-    parser.add_argument('targets', nargs='*', choices=['terminal', 'files'], help='省くとすべて')
+    parser.add_argument('targets', nargs='*', choices=['terminal', 'server', 'files'], help='省くとすべて')
     parser.add_argument('--no-inspect', action='store_true', help='InspectCode を省く (途中の確認用。作業の単位の検証では省かない)')
     parser.add_argument('--fix', action='store_true', help='改行コードと文書の改行を直す')
     parser.add_argument('--all-docs', action='store_true', help='変更のない文書も含めて docs/*.md と README.md の改行を確かめる')
     parser.add_argument('--out', help='ログの置き場所 (既定は一時フォルダの tableorder-verify)')
     args = parser.parse_args()
-    targets = args.targets or ['terminal', 'files']
+    targets = args.targets or ['terminal', 'server', 'files']
     out = Path(args.out) if args.out else Path(tempfile.gettempdir()) / 'tableorder-verify'
     out.mkdir(parents=True, exist_ok=True)
     print(f'ログ: {out}', flush=True)
@@ -234,6 +240,13 @@ def main():
         build(TERMINAL_SOLUTION, 'Debug', out)
         if not args.no_inspect:
             inspect(TERMINAL_SOLUTION, out)
+    if 'server' in targets:
+        if build(SERVER_SOLUTION, 'Release', out):
+            for project in SERVER_TEST_PROJECTS:
+                test(project, out)
+        build(SERVER_SOLUTION, 'Debug', out)
+        if not args.no_inspect:
+            inspect(SERVER_SOLUTION, out)
     if 'files' in targets:
         files = changed_files()
         check_line_endings(files, args.fix)

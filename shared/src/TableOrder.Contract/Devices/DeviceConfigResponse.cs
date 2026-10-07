@@ -20,6 +20,26 @@ public sealed class DeviceConfigResponse
     public bool ElectronicReceipt { get; set; }
 
     public TaxRounding TaxRounding { get; set; }
+
+    // 端末と置き場所 (サーバが端末の記録から返す。モックは返さず、端末の設定のテーブル番号を使う)
+    public DeviceConfigResponseDevice? Device { get; set; }
+}
+
+public sealed class DeviceConfigResponseDevice
+{
+    public Guid Id { get; set; }
+
+    public DeviceKind Kind { get; set; }
+
+    public string Name { get; set; } = default!;
+
+    // テーブル端末の置き場所
+    public Guid? TableId { get; set; }
+
+    public string? TableName { get; set; }
+
+    // キッチン端末が受け持つ持ち場
+    public IReadOnlyList<Guid> StationIds { get; set; } = default!;
 }
 
 public sealed class DeviceConfigResponseOrderRules

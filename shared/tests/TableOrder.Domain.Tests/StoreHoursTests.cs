@@ -1,5 +1,7 @@
 namespace TableOrder.Domain;
 
+using System.Globalization;
+
 public sealed class StoreHoursTests
 {
     //--------------------------------------------------------------------------------
@@ -64,7 +66,7 @@ public sealed class StoreHoursTests
         Assert.Equal(new TimeOnly(9, 0), time);
     }
 
-    // タイムゾーンが見つからないときは端末の時刻にする
+    // タイムゾーンが見つからないときは動いている機器の時刻にする
     [Fact]
     public void LocalTimeFallsBackToDevice()
     {
@@ -76,5 +78,23 @@ public sealed class StoreHoursTests
 
         // Assert
         Assert.Equal(TimeOnly.FromDateTime(now.ToLocalTime().DateTime), time);
+    }
+
+    //--------------------------------------------------------------------------------
+    // BusinessDate
+    //--------------------------------------------------------------------------------
+
+    // 営業日は店舗のタイムゾーンで決め、開店 (5:00) より前は前の日の営業にする (UTC は東京の 9 時間前)
+    // 東京の 3/1 の 12:00、3/1 の 23:30、日をまたいだ 3/2 の 4:59 (開店前)、3/2 の 5:00 (開店ちょうど)
+    [Theory]
+    [InlineData("2026-03-01T03:00:00Z", "2026-03-01")]
+    [InlineData("2026-03-01T14:30:00Z", "2026-03-01")]
+    [InlineData("2026-03-01T19:59:00Z", "2026-03-01")]
+    [InlineData("2026-03-01T20:00:00Z", "2026-03-02")]
+    public void BusinessDateStartsAtOpen(string now, string expected)
+    {
+        var date = StoreHours.BusinessDate(DateTimeOffset.Parse(now, CultureInfo.InvariantCulture), "Asia/Tokyo", StoreHours.Parse("05:00"));
+
+        Assert.Equal(DateOnly.Parse(expected, CultureInfo.InvariantCulture), date);
     }
 }

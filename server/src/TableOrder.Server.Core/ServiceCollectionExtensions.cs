@@ -1,0 +1,11 @@
+namespace TableOrder.Server.Core;
+
+using BunnyTail.ServiceRegistration;
+
+using Microsoft.Extensions.DependencyInjection;
+
+public static partial class ServiceCollectionExtensions
+{
+    [ServiceRegistration(Lifetime.Singleton, "Service$")]
+    public static partial IServiceCollection AddCoreServices(this IServiceCollection services);
+}

@@ -1,0 +1,19 @@
+@page "/"
+
+<PageTitle>Dashboard</PageTitle>
+
+<MudText Typo="Typo.h4">Dashboard</MudText>
+<MudText Class="mt-2">契約しているテナント (運営者の画面)</MudText>
+
+<MudTable Items="tenants" Dense="true" Class="mt-4">
+    <HeaderContent>
+        <MudTh>コード</MudTh>
+        <MudTh>名前</MudTh>
+        <MudTh>状態</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>@context.Code</MudTd>
+        <MudTd>@context.Name</MudTd>
+        <MudTd>@context.Status</MudTd>
+    </RowTemplate>
+</MudTable>

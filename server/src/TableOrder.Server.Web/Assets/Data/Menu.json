@@ -1,0 +1,1025 @@
+{
+  "menuVersion": "sample-1",
+  "categories": [
+    {
+      "id": "00000065-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "おすすめ",
+        "en": "Recommended"
+      },
+      "sortOrder": 101,
+      "tags": [],
+      "itemIds": [
+        "000003eb-0000-0000-0000-000000000000",
+        "000003e9-0000-0000-0000-000000000000",
+        "00000fa1-0000-0000-0000-000000000000",
+        "00000bbc-0000-0000-0000-000000000000",
+        "000007d1-0000-0000-0000-000000000000",
+        "000003ec-0000-0000-0000-000000000000",
+        "000003ea-0000-0000-0000-000000000000",
+        "000007d3-0000-0000-0000-000000000000",
+        "00000bb9-0000-0000-0000-000000000000",
+        "00000fa2-0000-0000-0000-000000000000",
+        "00000bbb-0000-0000-0000-000000000000",
+        "00001771-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "00000066-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "ハンバーグ・ステーキ",
+        "en": "Hamburg \u0026 Steak"
+      },
+      "sortOrder": 102,
+      "tags": [],
+      "itemIds": [
+        "000003e9-0000-0000-0000-000000000000",
+        "000003ea-0000-0000-0000-000000000000",
+        "000003eb-0000-0000-0000-000000000000",
+        "000003ec-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "00000067-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "パスタ・ドリア",
+        "en": "Pasta \u0026 Doria"
+      },
+      "sortOrder": 103,
+      "tags": [],
+      "itemIds": [
+        "000007d1-0000-0000-0000-000000000000",
+        "000007d2-0000-0000-0000-000000000000",
+        "000007d3-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "00000068-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "サラダ・サイド",
+        "en": "Salad \u0026 Sides"
+      },
+      "sortOrder": 104,
+      "tags": [],
+      "itemIds": [
+        "00000bb9-0000-0000-0000-000000000000",
+        "00000bba-0000-0000-0000-000000000000",
+        "00000bbb-0000-0000-0000-000000000000",
+        "00000bbc-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "00000069-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "デザート",
+        "en": "Desserts"
+      },
+      "sortOrder": 105,
+      "tags": [
+        "dessert"
+      ],
+      "itemIds": [
+        "00000fa1-0000-0000-0000-000000000000",
+        "00000fa2-0000-0000-0000-000000000000",
+        "00000fa3-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "0000006a-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "キッズ",
+        "en": "Kids"
+      },
+      "sortOrder": 106,
+      "tags": [
+        "kids"
+      ],
+      "itemIds": [
+        "00001389-0000-0000-0000-000000000000",
+        "0000138a-0000-0000-0000-000000000000"
+      ]
+    },
+    {
+      "id": "0000006b-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "ドリンク",
+        "en": "Drinks"
+      },
+      "sortOrder": 107,
+      "tags": [],
+      "itemIds": [
+        "00001771-0000-0000-0000-000000000000",
+        "00001772-0000-0000-0000-000000000000",
+        "00001773-0000-0000-0000-000000000000"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "000003e9-0000-0000-0000-000000000000",
+      "code": "1001",
+      "name": {
+        "ja": "チーズインハンバーグ",
+        "en": "Cheese-filled Hamburg Steak"
+      },
+      "description": {
+        "ja": "粗挽きの合挽き肉でとろけるチーズを包み、鉄板で焼き上げました。",
+        "en": "Coarse-ground hamburg steak with melting cheese inside, grilled on a hot plate."
+      },
+      "price": 999,
+      "taxRate": 0.10,
+      "imageName": "food_hamburg.png",
+      "badges": [
+        "Popular"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 820,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000000",
+        "00000323-0000-0000-0000-000000000000",
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000003ea-0000-0000-0000-000000000000",
+      "code": "1002",
+      "name": {
+        "ja": "目玉焼きハンバーグ",
+        "en": "Hamburg Steak with Fried Egg"
+      },
+      "description": {
+        "ja": "定番のハンバーグに半熟の目玉焼きをのせました。",
+        "en": "Our classic hamburg steak topped with a soft fried egg."
+      },
+      "price": 949,
+      "taxRate": 0.10,
+      "imageName": "food_hamburg_egg.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 860,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000000",
+        "00000323-0000-0000-0000-000000000000",
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000003eb-0000-0000-0000-000000000000",
+      "code": "1003",
+      "name": {
+        "ja": "ミックスグリル",
+        "en": "Mixed Grill"
+      },
+      "description": {
+        "ja": "ハンバーグ、グリルチキン、ソーセージを一皿で楽しめます。",
+        "en": "Hamburg steak, grilled chicken and sausages on one plate."
+      },
+      "price": 1299,
+      "taxRate": 0.10,
+      "imageName": "food_grill.png",
+      "badges": [
+        "Recommended"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 1050,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000323-0000-0000-0000-000000000000",
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000003ec-0000-0000-0000-000000000000",
+      "code": "1004",
+      "name": {
+        "ja": "サーロインステーキ",
+        "en": "Sirloin Steak"
+      },
+      "description": {
+        "ja": "やわらかなサーロインを鉄板で焼き上げます。数量限定です。",
+        "en": "Tender sirloin grilled on a hot plate. Limited quantity."
+      },
+      "price": 1899,
+      "taxRate": 0.10,
+      "imageName": "food_steak.png",
+      "badges": [
+        "Limited"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 680,
+      "tags": [
+        "one-per-guest"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000322-0000-0000-0000-000000000000",
+        "00000323-0000-0000-0000-000000000000",
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d1-0000-0000-0000-000000000000",
+      "code": "2001",
+      "name": {
+        "ja": "カルボナーラ",
+        "en": "Carbonara"
+      },
+      "description": {
+        "ja": "卵とチーズのコクを生かした濃厚なソースです。",
+        "en": "A rich sauce of egg and cheese."
+      },
+      "price": 799,
+      "taxRate": 0.10,
+      "imageName": "food_carbonara.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 780,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d2-0000-0000-0000-000000000000",
+      "code": "2002",
+      "name": {
+        "ja": "ミートソース",
+        "en": "Spaghetti Bolognese"
+      },
+      "description": {
+        "ja": "牛肉と香味野菜をじっくり煮込んだミートソースです。",
+        "en": "Beef and vegetables slow-cooked into a hearty sauce."
+      },
+      "price": 699,
+      "taxRate": 0.10,
+      "imageName": "food_meatsauce.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "milk"
+      ],
+      "calories": 690,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d3-0000-0000-0000-000000000000",
+      "code": "2003",
+      "name": {
+        "ja": "チーズドリア",
+        "en": "Cheese Doria"
+      },
+      "description": {
+        "ja": "ミートソースとホワイトソースにチーズをのせて焼きました。",
+        "en": "Rice baked with meat sauce, white sauce and cheese."
+      },
+      "price": 599,
+      "taxRate": 0.10,
+      "imageName": "food_doria.png",
+      "badges": [
+        "New"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "milk"
+      ],
+      "calories": 620,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000324-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bb9-0000-0000-0000-000000000000",
+      "code": "3001",
+      "name": {
+        "ja": "シーザーサラダ",
+        "en": "Caesar Salad"
+      },
+      "description": {
+        "ja": "ロメインレタスにベーコン、クルトン、パルメザンチーズを合わせました。",
+        "en": "Romaine lettuce with bacon, croutons and parmesan."
+      },
+      "price": 499,
+      "taxRate": 0.10,
+      "imageName": "food_salad.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 280,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bba-0000-0000-0000-000000000000",
+      "code": "3002",
+      "name": {
+        "ja": "フライドポテト",
+        "en": "French Fries"
+      },
+      "description": {
+        "ja": "皮付きのポテトをカリッと揚げました。",
+        "en": "Crispy skin-on fries."
+      },
+      "price": 349,
+      "taxRate": 0.10,
+      "imageName": "food_fries.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 420,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000325-0000-0000-0000-000000000000"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bbb-0000-0000-0000-000000000000",
+      "code": "3003",
+      "name": {
+        "ja": "コーンスープ",
+        "en": "Corn Soup"
+      },
+      "description": {
+        "ja": "北海道産のとうもろこしを使ったポタージュです。",
+        "en": "Creamy soup made with Hokkaido corn."
+      },
+      "price": 249,
+      "taxRate": 0.10,
+      "imageName": "food_soup.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "milk"
+      ],
+      "calories": 150,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bbc-0000-0000-0000-000000000000",
+      "code": "3004",
+      "name": {
+        "ja": "マルゲリータ",
+        "en": "Margherita Pizza"
+      },
+      "description": {
+        "ja": "トマトソースにモッツァレラとバジルをのせて焼きました。",
+        "en": "Tomato sauce, mozzarella and basil."
+      },
+      "price": 599,
+      "taxRate": 0.10,
+      "imageName": "food_pizza.png",
+      "badges": [
+        "New"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "milk"
+      ],
+      "calories": 640,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000fa1-0000-0000-0000-000000000000",
+      "code": "4001",
+      "name": {
+        "ja": "いちごパフェ",
+        "en": "Strawberry Parfait"
+      },
+      "description": {
+        "ja": "いちごとバニラアイス、ホイップクリームを重ねました。",
+        "en": "Strawberries layered with vanilla ice cream and whipped cream."
+      },
+      "price": 699,
+      "taxRate": 0.10,
+      "imageName": "food_parfait.png",
+      "badges": [
+        "Popular"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 520,
+      "tags": [
+        "dessert"
+      ],
+      "stationId": "0000005c-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "AfterMeal",
+      "timingSelectable": true
+    },
+    {
+      "id": "00000fa2-0000-0000-0000-000000000000",
+      "code": "4002",
+      "name": {
+        "ja": "パンケーキ",
+        "en": "Pancakes"
+      },
+      "description": {
+        "ja": "ふんわり焼いたパンケーキにメープルシロップを添えました。",
+        "en": "Fluffy pancakes served with maple syrup."
+      },
+      "price": 599,
+      "taxRate": 0.10,
+      "imageName": "food_pancake.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 610,
+      "tags": [
+        "dessert"
+      ],
+      "stationId": "0000005c-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "AfterMeal",
+      "timingSelectable": true
+    },
+    {
+      "id": "00000fa3-0000-0000-0000-000000000000",
+      "code": "4003",
+      "name": {
+        "ja": "バニラアイス",
+        "en": "Vanilla Ice Cream"
+      },
+      "description": {
+        "ja": "なめらかなバニラアイスです。",
+        "en": "Smooth vanilla ice cream."
+      },
+      "price": 299,
+      "taxRate": 0.10,
+      "imageName": "food_icecream.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "egg",
+        "milk"
+      ],
+      "calories": 210,
+      "tags": [
+        "dessert"
+      ],
+      "stationId": "0000005c-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "AfterMeal",
+      "timingSelectable": true
+    },
+    {
+      "id": "00001389-0000-0000-0000-000000000000",
+      "code": "5001",
+      "name": {
+        "ja": "キッズプレート",
+        "en": "Kids Plate"
+      },
+      "description": {
+        "ja": "ミニハンバーグ、ナポリタン、ポテト、ゼリーのプレートです。",
+        "en": "Mini hamburg steak, spaghetti, fries and jelly."
+      },
+      "price": 599,
+      "taxRate": 0.10,
+      "imageName": "food_kidsplate.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg",
+        "milk"
+      ],
+      "calories": 560,
+      "tags": [
+        "kids"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "0000138a-0000-0000-0000-000000000000",
+      "code": "5002",
+      "name": {
+        "ja": "キッズドリンクバー",
+        "en": "Kids Drink Bar"
+      },
+      "description": {
+        "ja": "小学生以下のお子様のドリンクバーです。",
+        "en": "Drink bar for children of elementary school age and under."
+      },
+      "price": 199,
+      "taxRate": 0.10,
+      "imageName": "food_drinkbar.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "tags": [
+        "drink-bar",
+        "kids"
+      ],
+      "servedBy": "Guest",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001771-0000-0000-0000-000000000000",
+      "code": "6001",
+      "name": {
+        "ja": "ドリンクバー",
+        "en": "Drink Bar"
+      },
+      "description": {
+        "ja": "ソフトドリンク、コーヒー、紅茶をご自由にお楽しみください。",
+        "en": "Unlimited soft drinks, coffee and tea."
+      },
+      "price": 459,
+      "taxRate": 0.10,
+      "imageName": "food_drinkbar.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "tags": [
+        "drink-bar"
+      ],
+      "servedBy": "Guest",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001772-0000-0000-0000-000000000000",
+      "code": "6002",
+      "name": {
+        "ja": "生ビール",
+        "en": "Draft Beer"
+      },
+      "description": {
+        "ja": "よく冷えた生ビールです。",
+        "en": "Ice-cold draft beer."
+      },
+      "price": 499,
+      "taxRate": 0.10,
+      "imageName": "food_beer.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat"
+      ],
+      "calories": 200,
+      "tags": [
+        "alcohol"
+      ],
+      "stationId": "0000005d-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001773-0000-0000-0000-000000000000",
+      "code": "6003",
+      "name": {
+        "ja": "グラスワイン (赤)",
+        "en": "Glass of Red Wine"
+      },
+      "description": {
+        "ja": "料理に合わせやすいミディアムボディの赤ワインです。",
+        "en": "A medium-bodied red wine that pairs well with our dishes."
+      },
+      "price": 399,
+      "taxRate": 0.10,
+      "imageName": "food_wine.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 110,
+      "tags": [
+        "alcohol"
+      ],
+      "stationId": "0000005d-0000-0000-0000-000000000000",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    }
+  ],
+  "optionGroups": [
+    {
+      "id": "00000321-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "ソース",
+        "en": "Sauce"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f4b-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "デミグラス",
+            "en": "Demi-glace"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f4c-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "和風おろし",
+            "en": "Japanese grated radish"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f4d-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "チーズ",
+            "en": "Cheese"
+          },
+          "priceDelta": 100,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000322-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "焼き加減",
+        "en": "Doneness"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f55-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "レア",
+            "en": "Rare"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f56-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "ミディアム",
+            "en": "Medium"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f57-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "ウェルダン",
+            "en": "Well-done"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000323-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "セット",
+        "en": "Set"
+      },
+      "minSelect": 0,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f5f-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "ライス・スープセット",
+            "en": "Rice \u0026 Soup"
+          },
+          "priceDelta": 330,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f60-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "パン・スープセット",
+            "en": "Bread \u0026 Soup"
+          },
+          "priceDelta": 330,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000324-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "ドリンク",
+        "en": "Drink"
+      },
+      "minSelect": 0,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f69-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "セットドリンクバー",
+            "en": "Drink Bar (set)"
+          },
+          "priceDelta": 299,
+          "isDefault": false,
+          "tags": [
+            "drink-bar"
+          ],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000325-0000-0000-0000-000000000000",
+      "name": {
+        "ja": "サイズ",
+        "en": "Size"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f73-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "レギュラー",
+            "en": "Regular"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f74-0000-0000-0000-000000000000",
+          "name": {
+            "ja": "ラージ",
+            "en": "Large"
+          },
+          "priceDelta": 150,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "code": "drink-bar",
+      "name": {
+        "ja": "ドリンクバー",
+        "en": "Drink bar"
+      }
+    },
+    {
+      "code": "alcohol",
+      "name": {
+        "ja": "お酒",
+        "en": "Alcohol"
+      }
+    },
+    {
+      "code": "kids",
+      "name": {
+        "ja": "キッズ",
+        "en": "Kids"
+      }
+    },
+    {
+      "code": "dessert",
+      "name": {
+        "ja": "デザート",
+        "en": "Dessert"
+      }
+    },
+    {
+      "code": "one-per-guest",
+      "name": {
+        "ja": "お一人様 1 点まで",
+        "en": "One per guest"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "000003df-0000-0000-0000-000000000000",
+      "kind": "Suggestion",
+      "targetTag": "drink-bar",
+      "basis": "Guests",
+      "suggestItemIds": [
+        "00001771-0000-0000-0000-000000000000",
+        "0000138a-0000-0000-0000-000000000000"
+      ],
+      "message": {
+        "ja": "ドリンクバーを人数分にしますか？",
+        "en": "Would you like drink bar for everyone?"
+      }
+    },
+    {
+      "id": "000003e0-0000-0000-0000-000000000000",
+      "kind": "Confirmation",
+      "targetTag": "alcohol",
+      "scope": "Visit",
+      "message": {
+        "ja": "20 歳以上で、お車を運転されない方のご注文ですか？",
+        "en": "Are you 20 or older and not driving?"
+      }
+    },
+    {
+      "id": "000003e1-0000-0000-0000-000000000000",
+      "kind": "Limit",
+      "targetTag": "one-per-guest",
+      "scope": "Guest",
+      "max": 1
+    }
+  ],
+  "allergens": [
+    {
+      "code": "shrimp",
+      "name": {
+        "ja": "えび",
+        "en": "Shrimp"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "crab",
+      "name": {
+        "ja": "かに",
+        "en": "Crab"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "walnut",
+      "name": {
+        "ja": "くるみ",
+        "en": "Walnut"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "wheat",
+      "name": {
+        "ja": "小麦",
+        "en": "Wheat"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "buckwheat",
+      "name": {
+        "ja": "そば",
+        "en": "Buckwheat"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "egg",
+      "name": {
+        "ja": "卵",
+        "en": "Egg"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "milk",
+      "name": {
+        "ja": "乳",
+        "en": "Milk"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "peanut",
+      "name": {
+        "ja": "落花生",
+        "en": "Peanut"
+      },
+      "isMandatory": true
+    }
+  ],
+  "stations": [
+    {
+      "id": "0000005b-0000-0000-0000-000000000000",
+      "name": "キッチン",
+      "sortOrder": 1
+    },
+    {
+      "id": "0000005c-0000-0000-0000-000000000000",
+      "name": "デザート",
+      "sortOrder": 2
+    },
+    {
+      "id": "0000005d-0000-0000-0000-000000000000",
+      "name": "ドリンク",
+      "sortOrder": 3
+    }
+  ]
+}

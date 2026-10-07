@@ -1,0 +1,636 @@
+namespace TableOrder.Server.Web.Application;
+
+using System.Diagnostics;
+using System.Runtime;
+using System.Runtime.InteropServices;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using System.Threading.RateLimiting;
+
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.AspNetCore.HttpLogging;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.Data.Sqlite;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.IdentityModel.Tokens;
+
+using MudBlazor;
+using MudBlazor.Services;
+
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+
+using Serilog;
+
+using TableOrder.Server.Core.Accessors;
+using TableOrder.Server.Core.Infrastructure.Json;
+using TableOrder.Server.Web.Application.Authentication;
+using TableOrder.Server.Web.Application.Context;
+using TableOrder.Server.Web.Application.ExceptionHandling;
+using TableOrder.Server.Web.Application.HealthChecks;
+using TableOrder.Server.Web.Application.Telemetry;
+using TableOrder.Server.Web.Components;
+using TableOrder.Server.Web.Endpoints;
+using TableOrder.Server.Web.Infrastructure.Logging;
+using TableOrder.Server.Web.Infrastructure.Security;
+
+public static class ApplicationExtensions
+{
+    private const string HealthEndpointPath = "/health";
+    private const string AlivenessEndpointPath = "/alive";
+
+    // キッチン端末の Web アプリ (WebAssembly) を配る場所 (TableOrder.Web.Kitchen の StaticWebAssetBasePath と合わせる)
+    private const string KitchenPath = "/kitchen";
+
+    private const string SchemaPath = "Assets/Data/Schema.sql";
+    private const string SampleDataPath = "Assets/Data/SampleData.sql";
+    private const string SampleMenuPath = "Assets/Data/Menu.json";
+
+    //--------------------------------------------------------------------------------
+    // Logging
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureLogging(this IHostApplicationBuilder builder)
+    {
+        var setting = builder.Configuration.GetSection("Log").Get<LogSetting>()!;
+        var useOtlpExporter = builder.Configuration.IsOtelExporterEnabled();
+
+        // アプリのログ。接続元と、要求のテナント・店舗・主体 (端末かクライアント) を全行に付ける (テナントごとに調べられるように)
+        builder.Logging.ClearProviders();
+        builder.Services.AddSerilog(
+            (provider, options) =>
+            {
+                var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+                options.ReadFrom.Configuration(builder.Configuration);
+                options.Enrich.With(new CallbackEnricher("RemoteIpAddress", () => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString()));
+                options.Enrich.With(new CallbackEnricher("TenantId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.TenantId)));
+                options.Enrich.With(new CallbackEnricher("StoreId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.StoreId)));
+                options.Enrich.With(new CallbackEnricher("Subject", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.Subject)));
+            },
+            writeToProviders: useOtlpExporter);
+
+        // HTTP log
+        builder.Services.AddHttpLogging(options =>
+        {
+            options.LoggingFields = HttpLoggingFields.RequestMethod |
+                                    HttpLoggingFields.RequestPath |
+                                    HttpLoggingFields.ResponseStatusCode |
+                                    HttpLoggingFields.Duration;
+            if (setting.HttpDump)
+            {
+                options.LoggingFields |= HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody;
+                options.CombineLogs = true;
+                options.RequestBodyLogLimit = setting.HttpDumpLimit;
+                options.ResponseBodyLogLimit = setting.HttpDumpLimit;
+                options.MediaTypeOptions.Clear();
+                options.MediaTypeOptions.AddText("application/json");
+                options.MediaTypeOptions.AddText("application/*+json");
+            }
+        });
+
+        return builder;
+    }
+
+    public static WebApplication UseHttpLog(this WebApplication app)
+    {
+        var setting = app.Services.GetRequiredService<LogSetting>();
+        if (setting.HttpLog)
+        {
+            app.UseWhen(
+                static context => context.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase),
+                static b => b.UseHttpLogging());
+        }
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Http
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureHttp(this IHostApplicationBuilder builder)
+    {
+        // Add services to the container
+        builder.Services.AddHttpContextAccessor();
+
+        // CSP nonce
+        builder.Services.AddScoped<CspNonce>();
+
+        // XForward
+        builder.Services.Configure<ForwardedHeadersOptions>(static options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+
+            // Do not restrict to local network/proxy
+            options.KnownIPNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
+        return builder;
+    }
+
+    public static WebApplication UseSecurityHeaders(this WebApplication app)
+    {
+        // HSTS
+        if (!app.Environment.IsDevelopment())
+        {
+            app.UseHsts();
+        }
+
+        // Headers. The nonce admits the import map that Blazor renders inline, MudBlazor needs inline styles,
+        // the kitchen app (WebAssembly) needs 'wasm-unsafe-eval' to compile the runtime,
+        // dotnet watch / Browser Link load their script from another localhost port and connect back to it
+        var development = app.Environment.IsDevelopment();
+        var scriptSources = development ? "'self' 'wasm-unsafe-eval' http://localhost:*" : "'self' 'wasm-unsafe-eval'";
+        var connectSources = development ? "'self' http://localhost:* ws://localhost:* wss://localhost:*" : "'self'";
+        app.UseMiddleware<SecurityHeadersMiddleware>(new SecurityHeadersOption
+        {
+            ReportOnly = app.Services.GetRequiredService<CspSetting>().ReportOnly,
+            ContentSecurityPolicy = $"default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'; img-src 'self' data:; font-src 'self'; style-src 'self' 'unsafe-inline'; script-src {scriptSources} 'nonce-{{nonce}}'; connect-src {connectSources}"
+        });
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // API
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureApi(this IHostApplicationBuilder builder)
+    {
+        // JSON は DB に持つ JSON (公開されたメニュー) と同じ形にし、知らない項目や重なった項目は受けない
+        builder.Services.ConfigureHttpJsonOptions(static options =>
+        {
+            JsonDefaults.Apply(options.SerializerOptions);
+            options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+            options.SerializerOptions.AllowDuplicateProperties = false;
+            options.SerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+        });
+
+        // Error handler
+        builder.Services.AddProblemDetails(static options =>
+        {
+            options.CustomizeProblemDetails = static context =>
+            {
+                context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+            };
+        });
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+        return builder;
+    }
+
+    public static WebApplication UseErrorHandler(this WebApplication app)
+    {
+        // API: ProblemDetails
+        app.UseWhen(
+            static context => context.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase),
+            static b =>
+            {
+                b.UseExceptionHandler();
+                b.UseStatusCodePages();
+            });
+
+        // Page: error page
+        app.UseWhen(
+            static context => !context.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase),
+            static b =>
+            {
+                b.UseExceptionHandler("/error", createScopeForErrors: true);
+            });
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Authentication
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureAuthentication(this IHostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer();
+
+        // 署名の鍵は SigningKeyProvider が持つので、検証の設定は登録した部品から組み立てる
+        builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+            .Configure<TokenSetting, SigningKeyProvider>(static (options, setting, keys) =>
+            {
+                // クレームの名前を変えない (tenant_id などをトークンの名前のまま読む)
+                options.MapInboundClaims = false;
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidIssuer = setting.Issuer,
+                    ValidAudience = setting.Audience,
+                    IssuerSigningKey = keys.SecurityKey,
+                    ValidAlgorithms = [SecurityAlgorithms.EcdsaSha256],
+                    ClockSkew = TimeSpan.FromSeconds(30),
+                    NameClaimType = ClaimNames.Subject
+                };
+            });
+
+        // 端末の種類で使える API を絞る (範囲の外は 403 DEVICE_SCOPE)
+        builder.Services.AddAuthorization(static options =>
+        {
+            options.AddPolicy(Policies.AnyDevice, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen, DeviceKind.Reception));
+            options.AddPolicy(Policies.MenuReader, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen));
+        });
+        builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
+
+        return builder;
+    }
+
+    private static AuthorizationPolicy DevicePolicy(params DeviceKind[] kinds) =>
+        new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .RequireClaim(ClaimNames.DeviceKind, kinds.Select(static x => x.ToString()))
+            .Build();
+
+    //--------------------------------------------------------------------------------
+    // Rate limit
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureRateLimiter(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddRateLimiter(static options =>
+        {
+            options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        });
+
+        // 匿名で受ける端末の登録は、接続元ごとに 1 分の回数を限る (推測できるコードを試させない)
+        builder.Services.AddOptions<RateLimiterOptions>()
+            .Configure<RateLimitSetting>(static (options, setting) =>
+            {
+                options.AddPolicy(RateLimits.Pairing, context => RateLimitPartition.GetFixedWindowLimiter(
+                    context.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = setting.PairingPerMinute,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0
+                    }));
+            });
+
+        return builder;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Compress
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureCompression(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddResponseCompression(static options =>
+        {
+            options.EnableForHttps = true;
+            options.Providers.Add<BrotliCompressionProvider>();
+            options.Providers.Add<GzipCompressionProvider>();
+        });
+
+        builder.Services.AddRequestDecompression();
+
+        return builder;
+    }
+
+    public static WebApplication UseCompression(this WebApplication app)
+    {
+        var setting = app.Services.GetRequiredService<CompressionSetting>();
+        if (setting.Response || setting.Request)
+        {
+            app.UseWhen(
+                static context => context.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase),
+                b =>
+                {
+                    if (setting.Response)
+                    {
+                        b.UseResponseCompression();
+                    }
+
+                    if (setting.Request)
+                    {
+                        b.UseRequestDecompression();
+                    }
+                });
+        }
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // OpenApi
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureOpenApi(this IHostApplicationBuilder builder)
+    {
+        builder.Services.AddOpenApi(static options =>
+        {
+            options.AddDocumentTransformer(static (document, _, _) =>
+            {
+                document.Info.Title = "TableOrder API";
+                document.Info.Version = "v1";
+                document.Info.Description = "Order server API for table, hall, kitchen and reception terminals.";
+                return Task.CompletedTask;
+            });
+        });
+
+        return builder;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Blazor
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureBlazor(this IHostApplicationBuilder builder)
+    {
+        // Razor components
+        builder.Services
+            .AddRazorComponents()
+            .AddInteractiveServerComponents(options =>
+            {
+                options.DetailedErrors = builder.Environment.IsDevelopment();
+            });
+
+        // Error boundary logging
+        builder.Services.AddScoped<Microsoft.AspNetCore.Components.Web.IErrorBoundaryLogger, ErrorBoundaryLogger>();
+
+        // MudBlazor
+        builder.Services.AddMudServices(static options =>
+        {
+            options.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
+            options.SnackbarConfiguration.PreventDuplicates = true;
+            options.SnackbarConfiguration.NewestOnTop = false;
+            options.SnackbarConfiguration.ShowCloseIcon = true;
+            options.SnackbarConfiguration.VisibleStateDuration = 5000;
+            options.SnackbarConfiguration.SnackbarVariant = MudBlazor.Variant.Filled;
+        });
+
+        return builder;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Health
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureHealth(this IHostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddHealthChecks()
+            .AddCheck("self", static () => HealthCheckResult.Healthy(), ["live"])
+            .AddCheck<DatabaseHealthCheck>("database");
+
+        return builder;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Telemetry
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureTelemetry(this IHostApplicationBuilder builder)
+    {
+        var useOtlpExporter = builder.Configuration.IsOtelExporterEnabled();
+
+        var telemetry = builder.Services.AddOpenTelemetry()
+            .ConfigureResource(config =>
+            {
+                config.AddService(
+                    serviceName: builder.Environment.ApplicationName,
+                    serviceVersion: typeof(Program).Assembly.GetName().Version?.ToString(),
+                    serviceInstanceId: Environment.MachineName);
+            });
+
+        if (useOtlpExporter)
+        {
+            // Log
+            builder.Logging.AddOpenTelemetry(logging =>
+            {
+                logging.IncludeFormattedMessage = true;
+                logging.IncludeScopes = true;
+            });
+            builder.Services.Configure<OpenTelemetryLoggerOptions>(static logging =>
+            {
+                logging.AddOtlpExporter();
+            });
+
+            // Metrics
+            telemetry
+                .WithMetrics(static metrics =>
+                {
+                    metrics
+                        .AddRuntimeInstrumentation()
+                        .AddHttpClientInstrumentation()
+                        .AddAspNetCoreInstrumentation()
+                        .AddApplicationInstrumentation()
+                        .AddOtlpExporter();
+                });
+
+            // Trace
+            telemetry
+                .WithTracing(tracing =>
+                {
+                    tracing
+                        .AddSource(builder.Environment.ApplicationName)
+                        .AddAspNetCoreInstrumentation(static options =>
+                        {
+                            options.Filter = static context =>
+                            {
+                                var path = context.Request.Path;
+                                return !path.StartsWithSegments(AlivenessEndpointPath, StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments(HealthEndpointPath, StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments("/openapi", StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments("/swagger", StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments("/_blazor", StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments("/_framework", StringComparison.OrdinalIgnoreCase) &&
+                                       !path.StartsWithSegments(KitchenPath, StringComparison.OrdinalIgnoreCase);
+                            };
+                        })
+                        .AddHttpClientInstrumentation()
+                        .AddApplicationInstrumentation()
+                        .AddOtlpExporter();
+                });
+        }
+
+        // Custom instrument
+        builder.Services.AddApplicationInstrument();
+
+        return builder;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Components
+    //--------------------------------------------------------------------------------
+
+    public static IHostApplicationBuilder ConfigureComponents(this IHostApplicationBuilder builder)
+    {
+        // System
+        builder.Services.AddSingleton(TimeProvider.System);
+
+        // Data
+        builder.Services.AddSingleton<IDbProvider>(static p =>
+        {
+            var connectionString = p.GetRequiredService<IConfiguration>().GetConnectionString("Default");
+            return new DelegateDbProvider(() => new SqliteConnection(connectionString));
+        });
+        builder.Services.AddSingleton<IDialect>(new DelegateDialect(
+            static ex => ex is SqliteException { SqliteErrorCode: 19 } or SqliteException { SqliteExtendedErrorCode: 1555 or 2067 },
+            static x => Regex.Replace(x, @"[%_\\]", @"\$0")));
+        builder.Services.AddDataAccessors(typeof(DataProfile).Assembly);
+
+        // Cache (トークンの要求の使い捨ての確かめ)
+        builder.Services.AddMemoryCache();
+
+        // Security
+        builder.Services.AddSingleton<SigningKeyProvider>();
+        builder.Services.AddSingleton<AccessTokenService>();
+        builder.Services.AddSingleton<DeviceAssertionValidator>();
+
+        // Service
+        builder.Services.AddSingleton<ApplicationServiceContextProvider>();
+        builder.Services.AddSingleton<ServiceContextProvider>(static p => p.GetRequiredService<ApplicationServiceContextProvider>());
+        builder.Services.AddScoped<BlazorServiceScope>();
+
+        builder.Services.AddCoreServices();
+
+        // Setting
+        builder.Services.AddSetting<TokenSetting>("Token");
+        builder.Services.AddSetting<DatabaseSetting>("Database");
+        builder.Services.AddSetting<RateLimitSetting>("RateLimit");
+        builder.Services.AddSetting<CompressionSetting>("Compression");
+        builder.Services.AddSetting<CspSetting>("Csp");
+        builder.Services.AddSetting<LogSetting>("Log");
+        builder.Services.AddSetting<TelemetrySetting>("Telemetry");
+
+        return builder;
+    }
+
+    // 設定は検証してから値を Singleton で登録する (業務の部品に IOptions を渡さない)
+    private static void AddSetting<T>(this IServiceCollection services, string section)
+        where T : class
+    {
+        services.AddOptions<T>().BindConfiguration(section).ValidateDataAnnotations().ValidateOnStart();
+        services.AddSingleton(static p => p.GetRequiredService<IOptions<T>>().Value);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Information
+    //--------------------------------------------------------------------------------
+
+    public static void LogStartupInformation(this WebApplication app)
+    {
+        ThreadPool.GetMinThreads(out var workerThreads, out var completionPortThreads);
+
+        var version = typeof(Program).Assembly.GetName().Version;
+        var otelEndpoint = app.Configuration.GetOtelExporterEndpoint();
+
+        app.Logger.InfoServiceStart();
+        app.Logger.InfoServiceSettingsRuntime(RuntimeInformation.OSDescription, RuntimeInformation.FrameworkDescription, RuntimeInformation.RuntimeIdentifier);
+        app.Logger.InfoServiceSettingsEnvironment(version, Environment.CurrentDirectory);
+        app.Logger.InfoServiceSettingsGC(GCSettings.IsServerGC, GCSettings.LatencyMode, GCSettings.LargeObjectHeapCompactionMode);
+        app.Logger.InfoServiceSettingsThreadPool(workerThreads, completionPortThreads);
+        app.Logger.InfoServiceSettingsTelemetry(otelEndpoint);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Kitchen
+    //--------------------------------------------------------------------------------
+
+    public static WebApplication UseKitchenFiles(this WebApplication app)
+    {
+        // キッチン端末の Web アプリ (WebAssembly) の _framework を、圧縮したファイルと形式を合わせて返す
+        app.UseBlazorFrameworkFiles(KitchenPath);
+        app.UseStaticFiles();
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // End point
+    //--------------------------------------------------------------------------------
+
+    public static WebApplication MapEndpoints(this WebApplication app)
+    {
+        // Develop
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapOpenApi();
+
+            // NSwag UI using MapOpenApi generated specification
+            app.UseSwaggerUi(static options =>
+            {
+                options.DocumentPath = "/openapi/v1.json";
+            });
+        }
+
+        // Static assets
+        app.MapStaticAssets();
+
+        // 管理画面 (サインインを作るまでは開発の環境だけで開く)
+        if (app.Environment.IsDevelopment())
+        {
+            app.MapRazorComponents<App>()
+                .AddInteractiveServerRenderMode(static options =>
+                {
+                    options.ContentSecurityFrameAncestorsPolicy = "'none'";
+                });
+        }
+
+        // キッチン端末 (WebAssembly)。画面の経路は index.html に戻す
+        app.MapFallbackToFile(KitchenPath + "/{*path:nonfile}", "kitchen/index.html");
+
+        // API
+        app.MapDeviceEndpoints();
+        app.MapStoreEndpoints();
+        app.MapMenuEndpoints();
+        app.MapStockEndpoints();
+
+        // API の知らない経路は 404 の Problem Details にする
+        app.MapFallback(ApiRoutes.Root + "/{**path}", static () => TypedResults.Problem(statusCode: StatusCodes.Status404NotFound));
+
+        // Health
+        app.MapHealthChecks(HealthEndpointPath);
+        app.MapHealthChecks(AlivenessEndpointPath, new HealthCheckOptions
+        {
+            Predicate = static r => r.Tags.Contains("live")
+        });
+
+        return app;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Startup
+    //--------------------------------------------------------------------------------
+
+    public static async ValueTask InitializeApplicationAsync(this WebApplication app)
+    {
+        // Prepare instrument
+        app.Services.GetRequiredService<ApplicationInstrument>();
+
+        // 署名の鍵を先に用意する (本番の環境で鍵がなければ起動を止める)
+        app.Services.GetRequiredService<SigningKeyProvider>();
+
+        // Prepare database (schema from the SQL file)
+        var database = app.Services.GetRequiredService<DatabaseService>();
+        await database.InitializeAsync(SchemaPath, CancellationToken.None);
+
+        // サンプルのデータ (開発の環境とテスト)
+        if (app.Services.GetRequiredService<DatabaseSetting>().SampleData &&
+            await database.LoadSampleDataAsync(SampleDataPath, SampleMenuPath, CancellationToken.None))
+        {
+            app.Logger.InfoSampleDataLoaded();
+        }
+    }
+
+    //--------------------------------------------------------------------------------
+    // Configuration
+    //--------------------------------------------------------------------------------
+
+    private static bool IsOtelExporterEnabled(this IConfiguration configuration) =>
+        !String.IsNullOrWhiteSpace(configuration.GetOtelExporterEndpoint());
+
+    private static string GetOtelExporterEndpoint(this IConfiguration configuration) =>
+        configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? string.Empty;
+}

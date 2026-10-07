@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <link rel="stylesheet" href="@Assets["_content/MudBlazor/MudBlazor.min.css"]" />
+    <link rel="stylesheet" href="@Assets["css/app.css"]" />
+    <ImportMap nonce="@Nonce.Value" />
+    <HeadOutlet @rendermode="PageRenderMode" />
+</head>
+
+<body>
+    <Routes @rendermode="PageRenderMode" />
+
+    <div id="blazor-error-ui" data-nosnippet>
+        予期せぬエラーが発生しました。
+        <a href="." class="reload">再読み込み</a>
+        <span class="dismiss">🗙</span>
+    </div>
+
+    <ReconnectModal />
+
+    <script type="module" src="@Assets["js/reconnect.js"]"></script>
+    <script src="@Assets["_content/MudBlazor/MudBlazor.min.js"]"></script>
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+
+</html>
+
+@code {
+    [CascadingParameter]
+    public HttpContext HttpContext { get; set; } = default!;
+
+    [Inject]
+    public required CspNonce Nonce { get; set; }
+
+    private static readonly IComponentRenderMode InteractiveServerWithoutPrerender = new InteractiveServerRenderMode(prerender: false);
+
+    // Static SSR for pages with [ExcludeFromInteractiveRouting]
+    private IComponentRenderMode? PageRenderMode =>
+        HttpContext.AcceptsInteractiveRouting() ? InteractiveServerWithoutPrerender : null;
+}

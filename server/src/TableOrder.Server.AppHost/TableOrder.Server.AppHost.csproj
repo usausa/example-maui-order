@@ -1,0 +1,15 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.5.3">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <CodeAnalysisRuleSet>..\..\..\Analyzers.ruleset</CodeAnalysisRuleSet>
+    <AspireUseCliBundle>true</AspireUseCliBundle>
+    <UserSecretsId>58807b69-ffe9-4e03-ac21-cfca410babf8</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TableOrder.Server.Web\TableOrder.Server.Web.csproj" />
+  </ItemGroup>
+
+</Project>
