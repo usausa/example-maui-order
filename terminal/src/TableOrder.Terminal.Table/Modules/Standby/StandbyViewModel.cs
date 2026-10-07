@@ -47,7 +47,7 @@ public sealed class StandbyViewModel : AppViewModelBase
 
         CanStart = menuState.Config.OrderRules.SelfStart;
         Message = CanStart ? AppResources.StandbyMessage : AppResources.StandbyWaiting;
-        TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(settings.TableNo));
+        TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(menuState.TableName));
         LanguageText = ViewHelper.LanguageName(languageState.Current);
 
         StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);

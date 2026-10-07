@@ -41,4 +41,10 @@ public interface IMockOrderControl
 
     // ラストオーダーを、まもなく / 過ぎた / なし にする (通知 store.updated)
     MockLastOrder LastOrder { get; set; }
+
+    // 管理画面で端末を無効にしたことにする (端末に知らせ、要求を DEVICE_REVOKED で断る)。登録し直すと使える
+    void RevokeDevice();
+
+    // テナントの契約を止めたことにする (端末に知らせ、その間の要求を TENANT_SUSPENDED で断る)。0 で再開する
+    void SuspendTenant(TimeSpan duration);
 }

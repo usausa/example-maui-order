@@ -211,7 +211,7 @@ public static partial class MauiProgram
         });
         services.AddComponentsPopup(static c => c.AutoRegister(DialogSource()));
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
-        services.AddSingleton<IPopupPlugin, VisitPopupClosePlugin>();
+        services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
         services.AddComponentsScreen();
         services.AddComponentsLocation();
         services.AddComponentsSpeech();
@@ -233,6 +233,7 @@ public static partial class MauiProgram
 
         // Components
         services.AddSingleton<DeviceInformation>();
+        services.AddSingleton<DeviceKey>();
         services.AddSingleton<IStorageManager, StorageManager>();
         services.AddSingleton<KioskManager>();
         services.AddSingleton<ManagedConfiguration>();
@@ -245,23 +246,27 @@ public static partial class MauiProgram
         services.AddSingleton<StartupState>();
         services.AddSingleton<DeviceState>();
         services.AddSingleton<Settings>();
+        services.AddSingleton<IDeviceContext>(static p => p.GetRequiredService<Settings>());
         services.AddSingleton<LanguageState>();
         services.AddSingleton<MenuState>();
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();
         services.AddSingleton<StoreState>();
 
-        // Service (サーバができたら REST / gRPC の実装に替える。モックはスタッフメニューから障害と進み具合を起こせる)
+        // Service (REST の窓口を作ったら、接続先があれば REST、空ならモックにする。モックはスタッフメニューから障害と進み具合を起こせる)
         services.AddSingleton<MockOrderServer>();
+        services.AddSingleton<IDeviceApi>(static p => p.GetRequiredService<MockOrderServer>());
         services.AddSingleton<ITableApi>(static p => p.GetRequiredService<MockOrderServer>());
         services.AddSingleton<IOrderEvents>(static p => p.GetRequiredService<MockOrderServer>());
         services.AddSingleton<IMockOrderControl>(static p => p.GetRequiredService<MockOrderServer>());
 
         // Usecase
+        services.AddSingleton<DeviceUsecase>();
         services.AddSingleton<OrderUsecase>();
 
         // Shell
         services.AddSingleton<OrderEventReceiver>();
+        services.AddSingleton<StatusReporter>();
     }
 
     // ------------------------------------------------------------
@@ -288,6 +293,9 @@ public static partial class MauiProgram
 
         // サーバの通知を受け始める
         services.GetRequiredService<OrderEventReceiver>().Start();
+
+        // 端末の状態の報告を始める (登録していない間は送らない)
+        services.GetRequiredService<StatusReporter>().Start();
 
 #if DEBUG
         // Diagnostics for GeneratedServiceProvider

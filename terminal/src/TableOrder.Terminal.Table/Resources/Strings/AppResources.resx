@@ -207,6 +207,9 @@
   <data name="ErrorCheckoutInProgress" xml:space="preserve">
     <value>お会計中のため、ご注文できません</value>
   </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>テーブル端末のペアリングコードではありません</value>
+  </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした。スタッフをお呼びください</value>
   </data>
@@ -219,8 +222,14 @@
   <data name="ErrorOrderingPaused" xml:space="preserve">
     <value>ただいまご注文を一時停止しています。しばらくお待ちください</value>
   </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>ペアリングコードが正しくないか、期限が切れています</value>
+  </data>
   <data name="ErrorSoldOut" xml:space="preserve">
     <value>売り切れの商品があります。ご注文リストを確かめてください</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>ご利用を停止しています。管理者にお問い合わせください</value>
   </data>
   <data name="ErrorTitle" xml:space="preserve">
     <value>お知らせ</value>
@@ -384,9 +393,6 @@
   <data name="RuleConfirmTitle" xml:space="preserve">
     <value>ご確認</value>
   </data>
-  <data name="SetupChange" xml:space="preserve">
-    <value>変更</value>
-  </data>
   <data name="SetupEndpoint" xml:space="preserve">
     <value>接続先 (API)</value>
   </data>
@@ -396,17 +402,41 @@
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>EMM で配られた接続先を使います (この端末では変えられません)</value>
   </data>
-  <data name="SetupNotSet" xml:space="preserve">
-    <value>未設定</value>
+  <data name="SetupEnrollmentHint" xml:space="preserve">
+    <value>EMM の登録トークンで、起動したときに自動で登録します</value>
+  </data>
+  <data name="SetupEnter" xml:space="preserve">
+    <value>入力</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>未入力</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>未登録</value>
+  </data>
+  <data name="SetupPairingCode" xml:space="preserve">
+    <value>ペアリングコード</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>管理画面で出した 6 桁のコードです。モックは 100001〜100012 (テーブル 1〜12) を使えます</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>登録して起動する</value>
+  </data>
+  <data name="SetupRegisterHint" xml:space="preserve">
+    <value>ペアリングコードを入れて、この端末を登録してください</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>登録済み ({0})</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>端末の登録</value>
+  </data>
+  <data name="SetupRegistrationHint" xml:space="preserve">
+    <value>登録し直すときは、ペアリングコードを入れてください</value>
   </data>
   <data name="SetupSave" xml:space="preserve">
     <value>保存して起動する</value>
-  </data>
-  <data name="SetupTableNo" xml:space="preserve">
-    <value>テーブル番号</value>
-  </data>
-  <data name="SetupTableNoHint" xml:space="preserve">
-    <value>この端末を置くテーブルの番号です</value>
   </data>
   <data name="SetupTitle" xml:space="preserve">
     <value>端末の設定</value>
@@ -438,6 +468,9 @@
   <data name="StaffDeviceId" xml:space="preserve">
     <value>端末 ID</value>
   </data>
+  <data name="StaffDeviceName" xml:space="preserve">
+    <value>端末の名前</value>
+  </data>
   <data name="StaffDisconnected" xml:space="preserve">
     <value>未接続</value>
   </data>
@@ -446,6 +479,9 @@
   </data>
   <data name="StaffEndpointMock" xml:space="preserve">
     <value>モック</value>
+  </data>
+  <data name="StaffEnrollmentToken" xml:space="preserve">
+    <value>登録トークン</value>
   </data>
   <data name="StaffInfo" xml:space="preserve">
     <value>端末の情報</value>
@@ -537,11 +573,23 @@
   <data name="StaffMockResume" xml:space="preserve">
     <value>注文を再開する</value>
   </data>
+  <data name="StaffMockRevoke" xml:space="preserve">
+    <value>端末を無効にする</value>
+  </data>
+  <data name="StaffMockRevokeFormat" xml:space="preserve">
+    <value>{0} 秒後に無効にしたことを知らせ、端末の設定に戻ります</value>
+  </data>
   <data name="StaffMockSellOut" xml:space="preserve">
     <value>注文リストの品を売り切れにする</value>
   </data>
   <data name="StaffMockSoldOutDone" xml:space="preserve">
     <value>注文リストの品を売り切れにしました</value>
+  </data>
+  <data name="StaffMockSuspend" xml:space="preserve">
+    <value>テナントを止める</value>
+  </data>
+  <data name="StaffMockSuspendFormat" xml:space="preserve">
+    <value>{0} 秒後に止めたことを知らせ、{1} 秒後に再開します</value>
   </data>
   <data name="StaffNetwork" xml:space="preserve">
     <value>ネットワーク</value>
@@ -594,6 +642,12 @@
   <data name="StandbyWelcome" xml:space="preserve">
     <value>いらっしゃいませ</value>
   </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>{0} 秒ごとに自動でもう一度試します</value>
+  </data>
+  <data name="StartupNotTable" xml:space="preserve">
+    <value>この端末はテーブル端末として登録されていません。端末の設定から登録し直してください</value>
+  </data>
   <data name="StartupRetry" xml:space="preserve">
     <value>もう一度試す</value>
   </data>
@@ -609,11 +663,17 @@
   <data name="StartupStepReady" xml:space="preserve">
     <value>準備ができました</value>
   </data>
+  <data name="StartupStepRegister" xml:space="preserve">
+    <value>端末を登録しています</value>
+  </data>
   <data name="StartupStepSettings" xml:space="preserve">
     <value>端末の設定を確かめています</value>
   </data>
   <data name="StartupStepVisit" xml:space="preserve">
     <value>ご来店の状況を確かめています</value>
+  </data>
+  <data name="StartupTableWaitingFormat" xml:space="preserve">
+    <value>管理画面で、この端末 ({0}) にテーブルを割り当ててください</value>
   </data>
   <data name="StatusCancelled" xml:space="preserve">
     <value>取消</value>

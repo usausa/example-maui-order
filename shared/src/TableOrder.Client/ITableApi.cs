@@ -1,15 +1,12 @@
 namespace TableOrder.Client;
 
 // テーブル端末が使う注文サーバの API。窓口は端末の種類 (テーブル、ホール、キッチン、受付) ごとに分ける
-// 実装は REST / gRPC / モックを DI で替える
+// 端末の登録と設定は、すべての端末に共通の IDeviceApi に置く。実装は REST / gRPC / モックを DI で替える
 public interface ITableApi
 {
     //--------------------------------------------------------------------------------
-    // Device / Menu
+    // Menu
     //--------------------------------------------------------------------------------
-
-    // GET /devices/me/config
-    ValueTask<ApiResult<DeviceConfigResponse>> GetConfigAsync(CancellationToken cancel = default);
 
     // GET /menu
     ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default);

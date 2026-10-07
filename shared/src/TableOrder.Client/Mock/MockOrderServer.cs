@@ -1,9 +1,12 @@
 namespace TableOrder.Client.Mock;
 
+using System.Globalization;
+
 // 注文サーバの代わり。来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る
 // スタッフメニューから障害 (通信できない、支払の失敗、売り切れ) と注文の進み具合、ホール端末やレジの操作 (通知) を起こせる
 // 待ち時間 (通信の遅れ、支払、通知) は作るときに替えられる (テストは 0 にして待たずに進める)
-public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
+// 端末は登録のコードで決まり (MockData.Devices)、登録していない端末の要求はサーバと同じく断る
+public sealed class MockOrderServer : IDeviceApi, ITableApi, IOrderEvents, IMockOrderControl
 {
     // 注文 (食後の品はお願い) から作り始め・できあがり・提供までの時間
     private static readonly TimeSpan CookingAfter = TimeSpan.FromSeconds(5);
@@ -20,6 +23,8 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
     private static readonly TimeSpan LastOrderPassed = TimeSpan.FromMinutes(-1);
 
     private readonly Lock sync = new();
+
+    private readonly IDeviceContext context;
 
     private readonly DeviceConfigResponse config = MockData.CreateConfig();
 
@@ -40,6 +45,9 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
     // ロックの中で作り、ロックの外で送る通知
     private readonly List<OrderEvent> raising = [];
 
+    // 無効にした端末 (登録し直すと使える)
+    private readonly HashSet<Guid> revoked = [];
+
     // 送っている通知 (次の通知は、これを送り終えてから送る)
     private Task delivering = Task.CompletedTask;
 
@@ -47,10 +55,20 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
 
     private long seq;
 
+    // テナントを止めている期限
+    private DateTimeOffset suspendedUntil;
+
+    // 登録で受けた端末の名前 (起動し直して覚えていなければ、登録のコードの名前を返す)
+    private string? deviceName;
+
     public event EventHandler<OrderEventArgs>? Received;
 
-    public MockOrderServer()
+    public event EventHandler<DeviceDeniedEventArgs>? Denied;
+
+    public MockOrderServer(IDeviceContext context)
     {
+        this.context = context;
+
         items = menu.Items.ToDictionary(static x => x.Id);
         options = menu.OptionGroups.SelectMany(static x => x.Options).ToDictionary(static x => x.Id);
         optionGroups = menu.OptionGroups.SelectMany(static g => g.Options.Select(o => (GroupId: g.Id, OptionId: o.Id))).ToDictionary(static x => x.OptionId, static x => x.GroupId);
@@ -116,16 +134,61 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
         }
     }
 
+    // 最後に受けた端末の状態の報告
+    public DeviceHeartbeatRequest? LastStatus
+    {
+        get
+        {
+            lock (sync)
+            {
+                return field;
+            }
+        }
+        private set;
+    }
+
+    public void RevokeDevice()
+    {
+        Guid id;
+        lock (sync)
+        {
+            if (context.DeviceId is not { } current)
+            {
+                return;
+            }
+
+            id = current;
+            revoked.Add(id);
+        }
+
+        RaiseDenied(id, DeviceDenial.Revoked, EventDelay);
+    }
+
+    public void SuspendTenant(TimeSpan duration)
+    {
+        Guid? id;
+        lock (sync)
+        {
+            suspendedUntil = DateTimeOffset.UtcNow + duration;
+            id = context.DeviceId;
+        }
+
+        if ((duration > TimeSpan.Zero) && (id is { } deviceId))
+        {
+            RaiseDenied(deviceId, DeviceDenial.TenantSuspended, EventDelay);
+        }
+    }
+
     public bool OpenVisit(int adults, int children)
     {
         lock (sync)
         {
-            if (visit is { Status: VisitStatus.Open or VisitStatus.Paying })
+            if ((CurrentTableName() is not { } tableName) || (visit is { Status: VisitStatus.Open or VisitStatus.Paying }))
             {
                 return false;
             }
 
-            visit = new Visit(Guid.CreateVersion7(), adults, children, VisitOpenedBy.Hall, DateTimeOffset.UtcNow);
+            visit = new Visit(Guid.CreateVersion7(), tableName, adults, children, VisitOpenedBy.Hall, DateTimeOffset.UtcNow);
             var opened = ToResponse(visit);
             AddEvent(now => new VisitOpenedEvent(++seq, now, opened));
         }
@@ -212,11 +275,84 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
     }
 
     //--------------------------------------------------------------------------------
-    // Device / Menu
+    // Device
     //--------------------------------------------------------------------------------
 
+    // 登録のコードか登録トークン (どの値でも受ける) で端末を決める。同じコードには同じ端末の id を返す
+    public ValueTask<ApiResult<DevicePairResponse>> PairAsync(DevicePairRequest request, CancellationToken cancel = default) =>
+        RespondAsync(now =>
+        {
+            if (String.IsNullOrEmpty(request.PairingCode) == String.IsNullOrEmpty(request.EnrollmentToken))
+            {
+                return Reject<DevicePairResponse>("VALIDATION_ERROR", "ペアリングコードか登録トークンのどちらかを送ってください");
+            }
+
+            if (now < suspendedUntil)
+            {
+                return Reject<DevicePairResponse>("TENANT_SUSPENDED", "ご利用を停止しています");
+            }
+
+            var code = String.IsNullOrEmpty(request.EnrollmentToken) ? request.PairingCode! : MockData.EnrollmentCode;
+            if (!MockData.Devices.TryGetValue(code, out var device))
+            {
+                return Reject<DevicePairResponse>("PAIRING_CODE_INVALID", "ペアリングコードが正しくありません");
+            }
+
+            // 登録し直した端末は、無効にしていても使えるようにする
+            revoked.Remove(device.Id);
+            deviceName = request.DeviceName;
+
+            // モックは 1 つのテーブルの来店だけを持つので、別のテーブルで登録し直したら前の来店を捨てる
+            var tableName = TableNameOf(device);
+            if ((visit is not null) && (visit.TableName != tableName))
+            {
+                visit = null;
+            }
+
+            return ApiResult.Success(new DevicePairResponse
+            {
+                DeviceId = device.Id,
+                Kind = device.Kind,
+                StoreId = store.Id
+            });
+        }, cancel, anonymous: true);
+
+    // 登録と、無効・テナントの停止は要求の前に確かめるので、ここでは何もしない
+    public ValueTask<ApiResult<NoContent>> AuthenticateAsync(CancellationToken cancel = default) =>
+        RespondAsync(() => ApiResult.Success(NoContent.Value), cancel);
+
+    public ValueTask<ApiResult<NoContent>> ReportStatusAsync(DeviceHeartbeatRequest request, CancellationToken cancel = default) =>
+        RespondAsync(() =>
+        {
+            if (request.BatteryLevel is < 0m or > 1m)
+            {
+                return Reject<NoContent>("VALIDATION_ERROR", "電池の残りは 0 から 1 で送ってください");
+            }
+
+            LastStatus = request;
+            return ApiResult.Success(NoContent.Value);
+        }, cancel);
+
     public ValueTask<ApiResult<DeviceConfigResponse>> GetConfigAsync(CancellationToken cancel = default) =>
-        RespondAsync(() => ApiResult.Success(config), cancel);
+        RespondAsync(() =>
+        {
+            var device = CurrentDevice();
+            var response = MockData.CreateConfig();
+            response.Device = new DeviceConfigResponseDevice
+            {
+                Id = device.Id,
+                Kind = device.Kind,
+                Name = deviceName ?? device.Name,
+                TableId = device.TableNo is { } no ? MockData.TableId(no) : null,
+                TableName = TableNameOf(device),
+                StationIds = []
+            };
+            return ApiResult.Success(response);
+        }, cancel);
+
+    //--------------------------------------------------------------------------------
+    // Menu
+    //--------------------------------------------------------------------------------
 
     public ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default) =>
         RespondAsync(() => ApiResult.Success(menu), cancel);
@@ -262,7 +398,12 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
                 return Reject<VisitResponse>("VALIDATION_ERROR", "人数を確かめてください");
             }
 
-            visit = new Visit(request.Id, request.Adults, request.Children, VisitOpenedBy.Table, now);
+            if (CurrentTableName() is not { } tableName)
+            {
+                return Reject<VisitResponse>("DEVICE_SCOPE", "この端末にはテーブルが割り当てられていません");
+            }
+
+            visit = new Visit(request.Id, tableName, request.Adults, request.Children, VisitOpenedBy.Table, now);
             return ApiResult.Success(ToResponse(visit));
         }, cancel);
 
@@ -528,7 +669,8 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
         RespondAsync(_ => func(), cancel);
 
     // 通信の遅れのあとに、時間の経過 (支払の完了) を反映してから応答を作る
-    private async ValueTask<ApiResult<T>> RespondAsync<T>(Func<DateTimeOffset, ApiResult<T>> func, CancellationToken cancel)
+    // 登録の前の要求 (anonymous) のほかは、端末を確かめてから応答を作る
+    private async ValueTask<ApiResult<T>> RespondAsync<T>(Func<DateTimeOffset, ApiResult<T>> func, CancellationToken cancel, bool anonymous = false)
     {
         try
         {
@@ -540,6 +682,7 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
         }
 
         ApiResult<T> result;
+        Denial? denial;
         lock (sync)
         {
             if (Offline)
@@ -549,16 +692,77 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
 
             var now = DateTimeOffset.UtcNow;
             Advance(now);
-            result = func(now);
+            denial = anonymous ? null : Authorize(now);
+            result = denial is { } denied
+                ? ApiResult.Failure<T>(ApiStatus.Unauthorized, denied.ErrorCode, denied.Detail)
+                : func(now);
         }
 
         // 時間の経過で起きたこと (テーブルで払い終えて来店が閉じた) は、待たずに知らせる
         Raise(TimeSpan.Zero);
+
+        // トークンの要求を断られた窓口と同じく、端末が使えなくなったことを知らせる
+        if ((denial?.DeviceId is { } deviceId) && (denial.Value.Reason is { } reason))
+        {
+            RaiseDenied(deviceId, reason, TimeSpan.Zero);
+        }
+
         return result;
     }
 
     private static ApiResult<T> Reject<T>(string errorCode, string detail) =>
         ApiResult.Failure<T>(ApiStatus.Rejected, errorCode, detail);
+
+    //--------------------------------------------------------------------------------
+    // Authorize
+    //--------------------------------------------------------------------------------
+
+    // 断る理由 (登録していない端末はトークンがないので、理由を返さない)
+    private readonly record struct Denial(Guid? DeviceId, string? ErrorCode, string? Detail, DeviceDenial? Reason);
+
+    // 登録していない端末、無効にした端末、止めたテナントの要求を断る (サーバのトークンの要求の 401 / 403 と同じ扱い)
+    private Denial? Authorize(DateTimeOffset now)
+    {
+        if ((context.DeviceId is not { } id) || (MockData.FindDevice(id) is null))
+        {
+            return new Denial(null, null, null, null);
+        }
+
+        if (revoked.Contains(id))
+        {
+            return new Denial(id, "DEVICE_REVOKED", "この端末は無効になっています", DeviceDenial.Revoked);
+        }
+
+        if (now < suspendedUntil)
+        {
+            return new Denial(id, "TENANT_SUSPENDED", "ご利用を停止しています", DeviceDenial.TenantSuspended);
+        }
+
+        return null;
+    }
+
+    // 確かめた端末 (Authorize の後に呼ぶ)
+    private MockDevice CurrentDevice() =>
+        MockData.FindDevice(context.DeviceId!.Value)!;
+
+    // 登録した端末のテーブル (登録していないか、テーブルを割り当てていなければ null)
+    private string? CurrentTableName() =>
+        (context.DeviceId is { } id) && (MockData.FindDevice(id) is { } device) ? TableNameOf(device) : null;
+
+    private static string? TableNameOf(MockDevice device) =>
+        device.TableNo?.ToString(CultureInfo.InvariantCulture);
+
+    // 受ける側がモックを呼び返してもよいように、ロックの外 (別のスレッド) で知らせる
+    private void RaiseDenied(Guid deviceId, DeviceDenial reason, TimeSpan delay) =>
+        _ = Task.Run(async () =>
+        {
+            if (delay > TimeSpan.Zero)
+            {
+                await Task.Delay(delay).ConfigureAwait(false);
+            }
+
+            Denied?.Invoke(this, new DeviceDeniedEventArgs(deviceId, reason));
+        });
 
     private Visit? FindVisit(Guid visitId) =>
         visit?.Id == visitId ? visit : null;
@@ -821,7 +1025,7 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
         new()
         {
             Id = source.Id,
-            TableName = string.Empty,
+            TableName = source.TableName,
             Adults = source.Adults,
             Children = source.Children,
             Status = source.Status,
@@ -905,6 +1109,8 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
     {
         public Guid Id { get; }
 
+        public string TableName { get; }
+
         public int Adults { get; }
 
         public int Children { get; }
@@ -923,9 +1129,10 @@ public sealed class MockOrderServer : ITableApi, IOrderEvents, IMockOrderControl
 
         public List<Call> Calls { get; } = [];
 
-        public Visit(Guid id, int adults, int children, VisitOpenedBy openedBy, DateTimeOffset openedAt)
+        public Visit(Guid id, string tableName, int adults, int children, VisitOpenedBy openedBy, DateTimeOffset openedAt)
         {
             Id = id;
+            TableName = tableName;
             Adults = adults;
             Children = children;
             OpenedBy = openedBy;

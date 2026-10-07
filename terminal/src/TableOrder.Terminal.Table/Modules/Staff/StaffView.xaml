@@ -35,7 +35,7 @@
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffInfo}" />
                     <Grid Style="{StaticResource StaffInfoGrid}"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="128,*">
                         <Label Grid.Row="0" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
@@ -45,44 +45,50 @@
                                Text="{Binding TableText}" />
                         <Label Grid.Row="1" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffEndpoint}" />
+                               Text="{x:Static strings:AppResources.StaffDeviceName}" />
                         <Label Grid.Row="1" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding EndpointText}" />
+                               Text="{Binding DeviceNameText}" />
                         <Label Grid.Row="2" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffKiosk}" />
+                               Text="{x:Static strings:AppResources.StaffDeviceId}" />
                         <Label Grid.Row="2" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding KioskText}" />
+                               Text="{Binding DeviceIdText}" />
                         <Label Grid.Row="3" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffManaged}" />
+                               Text="{x:Static strings:AppResources.StaffEndpoint}" />
                         <Label Grid.Row="3" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding ManagedText}" />
+                               Text="{Binding EndpointText}" />
                         <Label Grid.Row="4" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffBattery}" />
+                               Text="{x:Static strings:AppResources.StaffKiosk}" />
                         <Label Grid.Row="4" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding BatteryText}" />
+                               Text="{Binding KioskText}" />
                         <Label Grid.Row="5" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffNetwork}" />
+                               Text="{x:Static strings:AppResources.StaffManaged}" />
                         <Label Grid.Row="5" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding NetworkText}" />
+                               Text="{Binding ManagedText}" />
                         <Label Grid.Row="6" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffDeviceId}" />
+                               Text="{x:Static strings:AppResources.StaffBattery}" />
                         <Label Grid.Row="6" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
-                               Text="{Binding DeviceIdText}" />
+                               Text="{Binding BatteryText}" />
                         <Label Grid.Row="7" Grid.Column="0"
                                Style="{StaticResource StaffInfoNameLabel}"
-                               Text="{x:Static strings:AppResources.StaffApp}" />
+                               Text="{x:Static strings:AppResources.StaffNetwork}" />
                         <Label Grid.Row="7" Grid.Column="1"
+                               Style="{StaticResource StaffInfoValueLabel}"
+                               Text="{Binding NetworkText}" />
+                        <Label Grid.Row="8" Grid.Column="0"
+                               Style="{StaticResource StaffInfoNameLabel}"
+                               Text="{x:Static strings:AppResources.StaffApp}" />
+                        <Label Grid.Row="8" Grid.Column="1"
                                Style="{StaticResource StaffInfoValueLabel}"
                                Text="{Binding VersionText}" />
                     </Grid>
@@ -158,7 +164,7 @@
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffMock}" />
                     <Grid Style="{StaticResource StaffButtonGrid}"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto"
+                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
                           ColumnDefinitions="*,*">
                         <Button Grid.Row="0" Grid.Column="0"
                                 Style="{StaticResource StaffButton}"
@@ -196,6 +202,14 @@
                                 Style="{StaticResource StaffButton}"
                                 Command="{Binding LastOrderCommand}"
                                 Text="{Binding LastOrderText}" />
+                        <Button Grid.Row="4" Grid.Column="1"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding RevokeCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockRevoke}" />
+                        <Button Grid.Row="5" Grid.Column="0"
+                                Style="{StaticResource StaffButton}"
+                                Command="{Binding SuspendCommand}"
+                                Text="{x:Static strings:AppResources.StaffMockSuspend}" />
                     </Grid>
                     <Label Style="{StaticResource StaffHintLabel}"
                            Text="{Binding MockHintText}" />

@@ -8,7 +8,7 @@
              x:DataType="{x:Type module:SetupViewModel}"
              s:BindingContextResolver.Type="{x:Type module:SetupViewModel}">
 
-    <!-- 端末の設定: 置くテーブルと接続先。起動の画面と同じくシステムの色にする -->
+    <!-- 端末の設定: 接続先と端末の登録 (ペアリングコード)。起動の画面と同じくシステムの色にする -->
     <Grid Style="{StaticResource SystemScreenGrid}"
           RowDefinitions="72,1,*,Auto">
         <!-- header -->
@@ -29,25 +29,6 @@
         <ScrollView Grid.Row="2"
                     Style="{StaticResource PanelScroll}">
             <VerticalStackLayout Style="{StaticResource SetupFormStack}">
-                <!-- table -->
-                <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
-                    <Label Style="{StaticResource SetupFieldLabel}"
-                           Text="{x:Static strings:AppResources.SetupTableNo}" />
-                    <Border Style="{StaticResource SetupValueBorder}">
-                        <Grid ColumnDefinitions="*,Auto">
-                            <Label Grid.Column="0"
-                                   Style="{StaticResource SetupValueLabel}"
-                                   Text="{Binding TableNoText}" />
-                            <Button Grid.Column="1"
-                                    Style="{StaticResource SetupChangeButton}"
-                                    Command="{Binding InputTableNoCommand}"
-                                    Text="{x:Static strings:AppResources.SetupChange}" />
-                        </Grid>
-                    </Border>
-                    <Label Style="{StaticResource SetupHintLabel}"
-                           Text="{x:Static strings:AppResources.SetupTableNoHint}" />
-                </VerticalStackLayout>
-
                 <!-- endpoint (EMM が配っているときは入力の代わりに値を出す) -->
                 <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
                     <Label Style="{StaticResource SetupFieldLabel}"
@@ -66,10 +47,41 @@
                            Text="{Binding EndPointHintText}" />
                 </VerticalStackLayout>
 
-                <!-- save -->
+                <!-- registration (端末では変えられない値として出す) -->
+                <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
+                    <Label Style="{StaticResource SetupFieldLabel}"
+                           Text="{x:Static strings:AppResources.SetupRegistration}" />
+                    <Border Style="{StaticResource SetupManagedBorder}">
+                        <Label Style="{StaticResource SetupManagedLabel}"
+                               Text="{Binding RegistrationText}" />
+                    </Border>
+                    <Label Style="{StaticResource SetupHintLabel}"
+                           Text="{Binding RegistrationHintText}" />
+                </VerticalStackLayout>
+
+                <!-- pairing code -->
+                <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
+                    <Label Style="{StaticResource SetupFieldLabel}"
+                           Text="{x:Static strings:AppResources.SetupPairingCode}" />
+                    <Border Style="{StaticResource SetupValueBorder}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Style="{StaticResource SetupValueLabel}"
+                                   Text="{Binding PairingCodeText}" />
+                            <Button Grid.Column="1"
+                                    Style="{StaticResource SetupChangeButton}"
+                                    Command="{Binding InputPairingCodeCommand}"
+                                    Text="{x:Static strings:AppResources.SetupEnter}" />
+                        </Grid>
+                    </Border>
+                    <Label Style="{StaticResource SetupHintLabel}"
+                           Text="{x:Static strings:AppResources.SetupPairingCodeHint}" />
+                </VerticalStackLayout>
+
+                <!-- save (ペアリングコードを入れたときは登録してから起動する) -->
                 <Button Style="{StaticResource SetupSaveButton}"
                         Command="{Binding SaveCommand}"
-                        Text="{x:Static strings:AppResources.SetupSave}" />
+                        Text="{Binding SaveText}" />
             </VerticalStackLayout>
         </ScrollView>
 

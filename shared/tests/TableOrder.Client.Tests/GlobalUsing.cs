@@ -9,6 +9,7 @@ global using System.Threading.Tasks;
 global using Xunit;
 
 global using TableOrder.Contract.Bills;
+global using TableOrder.Contract.Devices;
 global using TableOrder.Contract.Menu;
 global using TableOrder.Contract.Orders;
 global using TableOrder.Contract.Payments;

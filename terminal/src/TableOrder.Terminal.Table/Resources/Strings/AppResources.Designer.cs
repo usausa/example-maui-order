@@ -375,6 +375,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string ErrorDeviceKind {
+            get {
+                return ResourceManager.GetString("ErrorDeviceKind", resourceCulture);
+            }
+        }
+
         internal static string ErrorGeneric {
             get {
                 return ResourceManager.GetString("ErrorGeneric", resourceCulture);
@@ -399,9 +405,21 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string ErrorPairingCodeInvalid {
+            get {
+                return ResourceManager.GetString("ErrorPairingCodeInvalid", resourceCulture);
+            }
+        }
+
         internal static string ErrorSoldOut {
             get {
                 return ResourceManager.GetString("ErrorSoldOut", resourceCulture);
+            }
+        }
+
+        internal static string ErrorTenantSuspended {
+            get {
+                return ResourceManager.GetString("ErrorTenantSuspended", resourceCulture);
             }
         }
 
@@ -729,12 +747,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string SetupChange {
-            get {
-                return ResourceManager.GetString("SetupChange", resourceCulture);
-            }
-        }
-
         internal static string SetupEndpoint {
             get {
                 return ResourceManager.GetString("SetupEndpoint", resourceCulture);
@@ -753,27 +765,75 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string SetupNotSet {
+        internal static string SetupEnrollmentHint {
             get {
-                return ResourceManager.GetString("SetupNotSet", resourceCulture);
+                return ResourceManager.GetString("SetupEnrollmentHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupEnter {
+            get {
+                return ResourceManager.GetString("SetupEnter", resourceCulture);
+            }
+        }
+
+        internal static string SetupNotEntered {
+            get {
+                return ResourceManager.GetString("SetupNotEntered", resourceCulture);
+            }
+        }
+
+        internal static string SetupNotRegistered {
+            get {
+                return ResourceManager.GetString("SetupNotRegistered", resourceCulture);
+            }
+        }
+
+        internal static string SetupPairingCode {
+            get {
+                return ResourceManager.GetString("SetupPairingCode", resourceCulture);
+            }
+        }
+
+        internal static string SetupPairingCodeHint {
+            get {
+                return ResourceManager.GetString("SetupPairingCodeHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegister {
+            get {
+                return ResourceManager.GetString("SetupRegister", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegisterHint {
+            get {
+                return ResourceManager.GetString("SetupRegisterHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegisteredFormat {
+            get {
+                return ResourceManager.GetString("SetupRegisteredFormat", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegistration {
+            get {
+                return ResourceManager.GetString("SetupRegistration", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegistrationHint {
+            get {
+                return ResourceManager.GetString("SetupRegistrationHint", resourceCulture);
             }
         }
 
         internal static string SetupSave {
             get {
                 return ResourceManager.GetString("SetupSave", resourceCulture);
-            }
-        }
-
-        internal static string SetupTableNo {
-            get {
-                return ResourceManager.GetString("SetupTableNo", resourceCulture);
-            }
-        }
-
-        internal static string SetupTableNoHint {
-            get {
-                return ResourceManager.GetString("SetupTableNoHint", resourceCulture);
             }
         }
 
@@ -837,6 +897,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StaffDeviceName {
+            get {
+                return ResourceManager.GetString("StaffDeviceName", resourceCulture);
+            }
+        }
+
         internal static string StaffDisconnected {
             get {
                 return ResourceManager.GetString("StaffDisconnected", resourceCulture);
@@ -852,6 +918,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffEndpointMock {
             get {
                 return ResourceManager.GetString("StaffEndpointMock", resourceCulture);
+            }
+        }
+
+        internal static string StaffEnrollmentToken {
+            get {
+                return ResourceManager.GetString("StaffEnrollmentToken", resourceCulture);
             }
         }
 
@@ -1035,6 +1107,18 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StaffMockRevoke {
+            get {
+                return ResourceManager.GetString("StaffMockRevoke", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockRevokeFormat {
+            get {
+                return ResourceManager.GetString("StaffMockRevokeFormat", resourceCulture);
+            }
+        }
+
         internal static string StaffMockSellOut {
             get {
                 return ResourceManager.GetString("StaffMockSellOut", resourceCulture);
@@ -1044,6 +1128,18 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffMockSoldOutDone {
             get {
                 return ResourceManager.GetString("StaffMockSoldOutDone", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockSuspend {
+            get {
+                return ResourceManager.GetString("StaffMockSuspend", resourceCulture);
+            }
+        }
+
+        internal static string StaffMockSuspendFormat {
+            get {
+                return ResourceManager.GetString("StaffMockSuspendFormat", resourceCulture);
             }
         }
 
@@ -1149,6 +1245,18 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StartupAutoRetryFormat {
+            get {
+                return ResourceManager.GetString("StartupAutoRetryFormat", resourceCulture);
+            }
+        }
+
+        internal static string StartupNotTable {
+            get {
+                return ResourceManager.GetString("StartupNotTable", resourceCulture);
+            }
+        }
+
         internal static string StartupRetry {
             get {
                 return ResourceManager.GetString("StartupRetry", resourceCulture);
@@ -1179,6 +1287,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
+        internal static string StartupStepRegister {
+            get {
+                return ResourceManager.GetString("StartupStepRegister", resourceCulture);
+            }
+        }
+
         internal static string StartupStepSettings {
             get {
                 return ResourceManager.GetString("StartupStepSettings", resourceCulture);
@@ -1188,6 +1302,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StartupStepVisit {
             get {
                 return ResourceManager.GetString("StartupStepVisit", resourceCulture);
+            }
+        }
+
+        internal static string StartupTableWaitingFormat {
+            get {
+                return ResourceManager.GetString("StartupTableWaitingFormat", resourceCulture);
             }
         }
 

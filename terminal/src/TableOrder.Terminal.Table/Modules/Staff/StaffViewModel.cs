@@ -7,6 +7,9 @@ using TableOrder.Terminal.Table.Components;
 // 端末の情報、来店を開く (ハンディのない店)、端末の設定と PIN、専用端末の一時的な解除、モックの操作を置く
 public sealed partial class StaffViewModel : AppViewModelBase
 {
+    // モックでテナントを止めておく時間 (止まっていることを出してから、再開して戻るまでを確かめる)
+    private static readonly TimeSpan MockSuspendDuration = TimeSpan.FromSeconds(30);
+
     private readonly ILogger<StaffViewModel> log;
 
     private readonly IPopupNavigator popupNavigator;
@@ -31,9 +34,12 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     public string TableText { get; }
 
+    // 登録した端末の名前 (端末の設定のもの。管理画面で付け替えられる)
+    public string DeviceNameText { get; }
+
     public string EndpointText { get; }
 
-    // EMM が配っている設定 (接続先、PIN)
+    // EMM が配っている設定 (接続先、PIN、登録トークン)
     public string ManagedText { get; }
 
     public string DeviceIdText { get; }
@@ -101,6 +107,10 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     public IObserveCommand LastOrderCommand { get; }
 
+    public IObserveCommand RevokeCommand { get; }
+
+    public IObserveCommand SuspendCommand { get; }
+
     public IObserveCommand CloseCommand { get; }
 
     //--------------------------------------------------------------------------------
@@ -111,7 +121,6 @@ public sealed partial class StaffViewModel : AppViewModelBase
         ILogger<StaffViewModel> log,
         IPopupNavigator popupNavigator,
         IAppInfo appInfo,
-        DeviceInformation deviceInformation,
         KioskManager kiosk,
         Settings settings,
         DeviceState deviceState,
@@ -134,9 +143,10 @@ public sealed partial class StaffViewModel : AppViewModelBase
         this.mock = mock;
         this.orderUsecase = orderUsecase;
 
-        TableText = ViewHelper.Table(settings.TableNo);
+        TableText = ViewHelper.Table(menuState.TableName);
+        DeviceNameText = menuState.Config.Device?.Name ?? "--";
         EndpointText = String.IsNullOrEmpty(settings.ApiEndPoint) ? AppResources.StaffEndpointMock : settings.ApiEndPoint;
-        DeviceIdText = deviceInformation.DeviceId;
+        DeviceIdText = settings.DeviceId?.ToString("D") ?? "--";
         VersionText = ViewHelper.Version(appInfo);
         CanOpenVisit = !visitState.IsOpen;
         CanChangePin = !settings.IsStaffPinManaged;
@@ -174,6 +184,8 @@ public sealed partial class StaffViewModel : AppViewModelBase
             mock.LastOrder = NextLastOrder(mock.LastOrder);
             Refresh();
         });
+        RevokeCommand = MakeAsyncCommand(RevokeAsync);
+        SuspendCommand = MakeAsyncCommand(SuspendAsync);
         CloseCommand = MakeAsyncCommand(CloseAsync);
     }
 
@@ -233,6 +245,11 @@ public sealed partial class StaffViewModel : AppViewModelBase
         if (settings.IsStaffPinManaged)
         {
             names.Add(AppResources.StaffPin);
+        }
+
+        if (settings.EnrollmentToken is not null)
+        {
+            names.Add(AppResources.StaffEnrollmentToken);
         }
 
         return names.Count > 0 ? String.Join(AppResources.ListSeparator, names) : AppResources.StaffManagedNone;
@@ -352,6 +369,20 @@ public sealed partial class StaffViewModel : AppViewModelBase
             ? ViewHelper.Format(AppResources.StaffMockRegisterPayFormat, (int)mock.EventDelay.TotalSeconds)
             : AppResources.StaffMockNoVisit;
         await popupNavigator.MessageAsync(AppResources.StaffMock, message);
+    }
+
+    // 管理画面で端末を無効にしたことにする (知らせを受けて登録を消し、端末の設定に戻る)
+    private async Task RevokeAsync()
+    {
+        mock.RevokeDevice();
+        await popupNavigator.MessageAsync(AppResources.StaffMock, ViewHelper.Format(AppResources.StaffMockRevokeFormat, (int)mock.EventDelay.TotalSeconds));
+    }
+
+    // テナントの契約を止めたことにする (知らせを受けて起動の画面で止まっていることを出し、再開したら元の画面に戻る)
+    private async Task SuspendAsync()
+    {
+        mock.SuspendTenant(MockSuspendDuration);
+        await popupNavigator.MessageAsync(AppResources.StaffMock, ViewHelper.Format(AppResources.StaffMockSuspendFormat, (int)mock.EventDelay.TotalSeconds, (int)MockSuspendDuration.TotalSeconds));
     }
 
     // ラストオーダーは なし → まもなく → 過ぎた の順に替える

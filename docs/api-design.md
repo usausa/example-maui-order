@@ -251,7 +251,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | `callReasons` | object[] | 呼び出しの用件 `{ code, name (LocalizedText), sortOrder }` (店舗で選べる。[§4.9](#-49-呼び出し-calls)) |
 | `electronicReceipt` | bool | 電子レシートを出すか |
 | `taxRounding` | enum | 税額の端数 (§4.2) |
-| `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§4.1)。置き場所はここで受け取る (今のモックは端末の設定のテーブル番号を使う) |
+| `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§4.1)。置き場所はここで受け取る |
 | `theme` | object | 色の役割の名前と色 (`{ "PrimaryColor": "#C53D13", ... }`)。端末の `Colors.xaml` と同じ名前で、ない役割は端末の既定のまま。ブランド色を替える仕組みを作るときに足す |
 
 お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§4.3](#-43-メニュー-menu)) で決める。

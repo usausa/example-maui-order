@@ -35,7 +35,7 @@ API とデータベースの想定は [api-design.md](api-design.md) と [databa
 | --- | --- | --- |
 | `shared/src/TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
 | `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
-| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (端末の種類ごとの `ITableApi`、通知の `IOrderEvents`、`ApiResult`) とモック (`Mock/MockOrderServer`) |
+| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi`、通知の `IOrderEvents`、`ApiResult`)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) とモック (`Mock/MockOrderServer`) |
 | `terminal/src/TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
 | `terminal/src/TableOrder.Terminal.Hall` | .NET MAUI (Android) | ホール端末のアプリの枠 (起動して仮の画面を出すだけ) |
 | `terminal/src/TableOrder.Terminal.Reception` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
@@ -44,9 +44,9 @@ API とデータベースの想定は [api-design.md](api-design.md) と [databa
 | `server/src/TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバとテレメトリ) |
 | `server/src/TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末の Web アプリの枠 (仮の画面を出すだけ) |
 | `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
-| `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
+| `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | 端末の鍵の値の変換と、モックの決まり (端末の登録・無効化・テナントの停止、注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
 | `server/tests/TableOrder.Server.Core.Tests` | .NET (xunit) | すべての SQL がテナントで絞っていることと、DB の型の変換のテスト |
-| `server/tests/TableOrder.Server.Web.Tests` | .NET (xunit) | API のテスト (端末の登録とトークン、端末の種類の範囲、テナントで分けられていること) |
+| `server/tests/TableOrder.Server.Web.Tests` | .NET (xunit) | API のテスト (端末の登録とトークン、端末のアプリと同じ形の鍵での登録、端末の種類の範囲、テナントで分けられていること)。端末の鍵の値の変換は `TableOrder.Client` のものを使う |
 
 ```
 TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
@@ -69,8 +69,8 @@ TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
 - 名前空間はアセンブリの名前にフォルダの道を続ける (`TableOrder.Terminal.Table.Modules.Menu` など)
 - ファイルは 1 つの型を 1 つのファイルに置き、ファイル名を型の名前にする。  
   Android だけの部分は `Xxx.android.cs`、端末の画面は `Modules/{画面}/{画面}View.xaml` と `{画面}ViewModel.cs` にする
-- 端末の窓口は端末の種類ごとに `I{種類}Api` (`ITableApi`。ホール端末は `IHallApi`、キッチン端末は `IKitchenApi`、受付機は `IReceptionApi`) にし、通知 (`IOrderEvents`) は共通にする。  
-  実装は通信の方式を前に付ける (`Rest{種類}Api`、`SignalROrderEvents`)
+- 端末の窓口は端末の種類ごとに `I{種類}Api` (`ITableApi`。ホール端末は `IHallApi`、キッチン端末は `IKitchenApi`、受付機は `IReceptionApi`) にし、端末の登録と設定 (`IDeviceApi`) と通知 (`IOrderEvents`) は共通にする。  
+  実装は通信の方式を前に付ける (`RestDeviceApi`、`Rest{種類}Api`、`SignalROrderEvents`)
 - サーバのファイルの名前は template-maui-server に合わせる (入口は `Endpoints/{リソース}Endpoints.cs`、業務の処理は `Services/{リソース}Service.cs`、データは `Accessors/{リソース}Accessor.cs` と `Accessors/Sql/{リソース}Accessor.{メソッド}.sql`、行は `Models/Entity/{テーブル}Entity.cs`)
 - 名前空間の `TableOrder.Terminal.Table` と紛れるので、`Table` という名前の型は作らない
 - MAUI の `MenuItem` とぶつかるので、メニューの品の型は `MenuProduct` などにする
@@ -85,23 +85,24 @@ TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
 | --- | --- |
 | `Modules/` | 画面とポップアップの View と ViewModel (`Startup`、`Setup`、`Standby`、`Menu`、`Checkout`、`Dialogs`) |
 | `State/` | 画面をまたぐ状態 (`Settings`、`MenuState`、`VisitState`、`CartState`、`LanguageState`、`StoreState`) |
-| `Usecase/` | 通信と状態の更新を組み合わせる手順 (`OrderUsecase`。来店の開始と終了、メニューのルールの判定、注文の送信) |
+| `Usecase/` | 通信と状態の更新を組み合わせる手順 (`OrderUsecase`。来店の開始と終了、メニューのルールの判定、注文の送信。`DeviceUsecase`。端末の登録と解除、状態の報告の中身) |
 | `Models/` | 画面で使う形 (`MenuCategory`、`MenuProduct`、`CartLine`、`ItemSelection`、`Language`) |
 | `Controls/` | 見た目の部品 (`QrCodeView`。QR コードの代わりの模様) |
 | `Markup/` | 記号 (`AppIcons`)、画面 ID の拡張 |
 | `Resources/` | 色 (`Colors.xaml`)、スタイル (`Styles.xaml`)、画面の文言 (`Strings/AppResources.resx`、`.en.resx`)、料理の絵、アイコン、スプラッシュ |
 | `Extender/` | 画面の切り替えとポップアップのプラグイン |
-| `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更) と処理中の覆い |
-| `Behaviors/`、`Components/`、`Diagnostics/`、`Platforms/` | プラットフォームの調整、端末の情報、専用端末、EMM が配る設定、異常終了の記録、Activity とマニフェスト |
+| `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更、起動からやり直す) と処理中の覆い、端末の状態の報告 (`StatusReporter`) |
+| `Behaviors/`、`Components/`、`Diagnostics/`、`Platforms/` | プラットフォームの調整、端末の情報、端末の鍵 (Keystore)、専用端末、EMM が配る設定、異常終了の記録、Activity とマニフェスト |
 
 ### 層
 
 ```
-View (XAML) ──> ViewModel ──> Usecase ──> ITableApi (Client)
+View (XAML) ──> ViewModel ──> Usecase ──> IDeviceApi / ITableApi (Client)
                     │            │
                     └────────────┴──> State (Settings / MenuState / VisitState / CartState / LanguageState / StoreState)
 
-IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
+IOrderEvents / IDeviceApi.Denied (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
+StatusReporter (Shell) ──> DeviceUsecase ──> IDeviceApi (1 分ごとの状態の報告)
 ```
 
 - ViewModel は State を読み、通信と状態の更新を組み合わせる手順は Usecase に任せる (読むだけの通信は ViewModel から `ITableApi` を呼ぶ)
@@ -110,6 +111,7 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 - ポップアップとの受け渡しは引数と戻り値で行い、ポップアップは閉じると ViewModel ごと破棄する
 - サーバの通知は `OrderEventReceiver` が受けて状態を替え、操作の途中 (Busy) と遷移の間を待ってから、表示中の画面に `ShellEvent` で知らせる。  
   扱いは各画面が決める (待受は注文の画面へ、注文は待受へ、お会計はお礼へ)
+- 端末が使えなくなったとき (無効化、テナントの停止) と、EMM が接続先を替えたときは、`OrderEventReceiver` が開いているポップアップを閉じて `ShellEvent.Restart` を出し、表示中の画面が起動からやり直す (起動と端末の設定の画面は自分で確かめるので受けない)
 
 ---
 
@@ -119,16 +121,16 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 
 | 画面 | ViewId | 内容 |
 | --- | --- | --- |
-| 起動 | `Startup` | システムのロゴ、準備の進み具合 (設定、店舗の設定と状態、メニュー、品切れ、今の来店)、失敗のときの再試行と設定 |
-| 端末の設定 | `Setup` | テーブル番号 (電卓)、接続先 (空ならモック) |
-| スタッフメニュー | `Staff` | 端末の情報 (テーブル、接続先、専用端末、電池、ネットワーク、端末 ID、アプリの版)、来店を開く、端末の設定、PIN を変える、専用端末の一時的な解除、モックの操作 |
+| 起動 | `Startup` | システムのロゴ、準備の進み具合 (登録、トークン、端末と店舗の設定、メニュー、品切れ、今の来店)、失敗のときの再試行と設定 (失敗の間は 30 秒ごとに自動でもやり直す)。テーブルの割り当て待ちとテナントの停止もここに出す |
+| 端末の設定 | `Setup` | 接続先 (空ならモック)、今の接続先での登録、ペアリングコード (電卓) |
+| スタッフメニュー | `Staff` | 端末の情報 (テーブル、端末の名前、端末の id、接続先、専用端末、EMM の設定、電池、ネットワーク、アプリの版)、来店を開く、端末の設定、PIN を変える、専用端末の一時的な解除、モックの操作 |
 | 待受 | `Standby` | チェーンの名前、いらっしゃいませ、言語 (今の言語を出し、押すと選ぶ)、ご注文をはじめる (人数を入れて来店を開く) |
 | 注文 | `Menu` | ヘッダ (チェーンの名前、テーブル、人数、言語)、カテゴリのタブ、メニューのカード、注文リスト、店舗の知らせ (注文の一時停止、ラストオーダー。注文できない間は確定を止める)、下部の操作 (注文履歴、店員呼出、お会計) |
 | お会計 | `Checkout` | 明細、内税、割り勘の目安、まだ出していない品の注意、支払方法 (QR コード決済、カード、レジ)、割り勘 (人数で割った 1 人分ずつ払い、残りがなくなるまで支払方法の選び直しに戻る)、QR の表示と待ち、お礼と電子レシートの QR |
 
 | ポップアップ | DialogId | 内容 |
 | --- | --- | --- |
-| 電卓 | `InputNumber` | テーブル番号、スタッフの PIN (入れた桁数だけ見せる) |
+| 電卓 | `InputNumber` | ペアリングコード、スタッフの PIN (入れた桁数だけ見せる) |
 | 知らせ / 確認 | `Message` / `Confirm` | 上限、失敗、年齢などの確認 (受ける / 断るは同じ大きさ) |
 | 言語 | `Language` | 言語をその言語の名前で並べ、今の言語に印を付ける (待受と注文の画面の言語のボタンから開く) |
 | 人数 | `GuestCount` | 大人と子ども (増減のボタン) |
@@ -140,7 +142,8 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 ### 遷移
 
 ```
-起動 ──(設定なし)──> 端末の設定 ──保存──> 起動
+起動 ──(登録なし、登録トークンなし)──> 端末の設定 ──登録 / 保存──> 起動
+起動 ──(登録なし、登録トークンあり)──> 登録して続ける
 起動 ──(来店なし)──> 待受 ──タッチ──> [人数] ──> 注文
 起動 ──(来店あり)──> 注文
 注文 ──お会計──> お会計 ──支払の完了──> (お礼) ──閉じる / 30 秒──> 待受
@@ -154,10 +157,11 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
      ──注文履歴──> [注文履歴]
      ──店員呼出──> [店員呼出]
 待受 / 注文 / お会計 ──ブランドの印の長押し──> [PIN] ──> スタッフメニュー ──閉じる──> 注文 (来店中) / 待受
+どの画面 ──(端末の無効化、テナントの停止、接続先の変更の知らせ)──> 起動
 ```
 
 - MainPage は画面を切り替える入れ物と処理中の覆いだけを持ち、帯 (ヘッダ、タブ、下部の操作) は各 View が持つ
-- 来店が閉じたら、お客様の画面 (注文、お会計) で開いているポップアップを `VisitPopupClosePlugin` が閉じる。  
+- 来店が閉じたときと起動からやり直すときは、開いているポップアップを `PopupClosePlugin` が閉じる (来店が閉じたときはお客様の画面 (注文、お会計) のものだけ)。  
   ポップアップの処理の途中 (注文の送信など) は終わってから閉じ、閉じるのはそのポップアップだけにする
 - 端末の戻るは表示中の画面に渡す。  
   お客様の画面 (待受、注文) では何もせず、お会計では支払方法の選び直しかメニューへ戻る
@@ -174,8 +178,8 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 
 | 状態 | 持つもの |
 | --- | --- |
-| `Settings` | テーブル番号、接続先、スタッフの PIN (`IPreferences`) |
-| `MenuState` | 店舗の設定、メニュー、品切れ。画面には選んでいる言語に直して渡す |
+| `Settings` | 接続先、登録した端末の id (登録した接続先と組で持つ)、スタッフの PIN (`IPreferences`)。API の実装は `IDeviceContext` として読む |
+| `MenuState` | 端末と店舗の設定 (端末を置いたテーブルを含む)、メニュー、品切れ。画面には選んでいる言語に直して渡す |
 | `VisitState` | 今の来店 (人数、状態、答えた確認のルール、注文した品) |
 | `CartState` | 注文する前の行。送ったが結果のわからない注文の Id (送り直しで同じ Id を使う) |
 | `LanguageState` | 画面の言語 |
@@ -196,11 +200,32 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 
 - `ITableApi` はテーブル端末が使う要求 ([api-design.md](api-design.md)) を 1 つずつメソッドにしたもの。  
   REST と gRPC のどちらで実装しても、端末は `ITableApi` だけを見る
+- `IDeviceApi` は全端末に共通の要求 (登録、トークン、状態の報告、端末の設定) の窓口。  
+  アクセストークンは窓口の中で持って画面に渡さず、トークンの要求が断られたとき (無効化、テナントの停止) は `Denied` で端末の id と理由を知らせる
+- API の実装が読む端末の側の値 (接続先、登録した端末の id、端末の鍵) は `IDeviceContext` で受ける (テーブル端末は `Settings` が持つ)
 - `IOrderEvents` はサーバの通知 (来店の開始・終了、店舗の変更) を受ける窓口。  
   通知は `seq` の順に届き、同じ通知が 2 回届くことがあるので、受け手は最後に受けた `seq` 以前の通知を捨てる
 - ラストオーダーを過ぎたかは `TableOrder.Domain.StoreHours` で決める (開店の時刻を営業日の区切りにし、日をまたぐ営業も扱う)。  
   端末は知らせに、サーバは注文の受け付けに使う
-- 今は DI で `MockOrderServer` を `ITableApi` と `IOrderEvents` に登録している
+- 今は DI で `MockOrderServer` を `IDeviceApi`、`ITableApi`、`IOrderEvents` に登録している
+
+### 端末の登録
+
+端末は自分の鍵 (`Components/DeviceKey`。Android の Keystore の P-256 で、秘密鍵は取り出せない) で登録し、サーバの端末の設定でテーブルを受け取る。  
+鍵は Keystore の形 (公開鍵は SubjectPublicKeyInfo、署名は DER) で返し、API の形 (JWK、ES256 の JWT) には `DeviceCredentials` で直す。
+
+| 場面 | 端末の動き |
+| --- | --- |
+| 登録 | 端末の設定でペアリングコードを入れて登録する。EMM が登録トークンを配っていれば、登録していない端末は起動したときに自分で登録する |
+| 起動 | トークンを取り直し、端末の設定でテーブル端末として登録されていることとテーブルを確かめる。テーブルを割り当てるまでは起動の画面で待つ |
+| 表示 | テーブルの名前は端末の設定 (`device.tableName`) のものを出す (端末ではテーブルを入れない) |
+| 状態の報告 | 登録している間、1 分ごとにアプリの版と電池を送る (`StatusReporter`) |
+| 無効化 | トークンの要求が `DEVICE_REVOKED` で断られたら、登録と鍵を消して登録からやり直す |
+| テナントの停止 | 起動の画面で止まっていることを出し、30 秒ごとにやり直す |
+| 接続先の変更 | 登録は接続先ごとなので、登録した接続先と今の接続先が違えば登録していないものとする。EMM が接続先を替えたら起動からやり直す |
+
+- 鍵は登録し直しても使い回し、無効にされたときに消す (次の登録で作り直す)
+- テーブル端末でないコード (ホール端末など) で登録しようとしたら、登録しない
 
 ---
 
@@ -240,6 +265,7 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 | 支払 | 6 秒で完了。払い終えると来店を終え、知らせる (`visit.closed`) |
 | 店舗 | ラストオーダーなし、注文の一時停止なし。一時停止の間とラストオーダーの後の注文は断る |
 | 通信の遅れ | 0.4 秒 |
+| 端末の登録 | ペアリングコードの `1000` とテーブル番号 2 桁 (`100001`〜`100012`) はテーブル 1〜12 の端末、`100101` はホール端末 (テーブル端末としては登録しない)。登録トークンはどの値でも受け、テーブルのない端末にする。登録していない端末の要求は断る |
 
 スタッフメニューから、次の障害と進み具合、ホール端末やレジの操作を起こせる (`IMockOrderControl`)。  
 知らせを送る操作は、スタッフメニューを閉じてお客様の画面に戻る間をとって、3 秒後に知らせる。  
@@ -255,6 +281,8 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 | レジで会計する | 来店を閉じ、知らせる (`visit.closed`) |
 | 注文を一時停止する / 再開する | 店舗の一時停止を替え、知らせる (`store.updated`) |
 | ラストオーダー | なし、まもなく (15 分後)、過ぎた (1 分前) の順に替え、知らせる (`store.updated`) |
+| 端末を無効にする | 端末に知らせ、要求を `DEVICE_REVOKED` で断る (端末は登録を消して端末の設定に戻る)。登録し直すと使える |
+| テナントを止める | 端末に知らせ、30 秒の間の要求を `TENANT_SUSPENDED` で断る (端末は起動の画面で止まっていることを出し、再開すると元の画面に戻る) |
 
 通信の遅れ、支払が終わるまでの時間、知らせるまでの時間はモックを作るときに替えられる。  
 テスト (`TableOrder.Client.Tests`) は 0 にして、待たずに確かめる。
@@ -306,11 +334,13 @@ Device Owner のときに掛ける端末の制限:
 
 ### 管理対象の構成
 
-接続先とスタッフの PIN は、外部の EMM が管理対象の構成で配れる (`Components/ManagedConfiguration`)。  
+接続先、スタッフの PIN、端末の登録トークンは、外部の EMM が管理対象の構成で配れる (`Components/ManagedConfiguration`)。  
 配られた値は端末の設定より優先し (`Settings` が読む)、端末の値は書き換えないので、配られなくなると端末の値に戻る。  
 起動したときに読み、EMM が値を替えた知らせと、画面が前に出たときに読み直す。
 
 - 配られた値は画面で変えられないようにする (端末の設定の画面は入力の代わりに値を出し、スタッフメニューは PIN を変える操作を出さない)
+- 登録トークンは、登録していない端末が起動したときに使う (テーブルは管理画面で割り当てる)
+- 接続先が替わったら起動からやり直してつなぎ直す (登録は接続先ごとなので、登録トークンがあれば登録し直す)
 - スタッフメニューの端末の情報に、配られている設定を出す
 - 配り方と値は [device-management.md](device-management.md) に書いた
 

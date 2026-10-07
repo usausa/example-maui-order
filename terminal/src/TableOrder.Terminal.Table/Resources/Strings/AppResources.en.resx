@@ -207,6 +207,9 @@
   <data name="ErrorCheckoutInProgress" xml:space="preserve">
     <value>You cannot order during checkout.</value>
   </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>This pairing code is not for a table tablet</value>
+  </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Something went wrong. Please call a staff member.</value>
   </data>
@@ -219,8 +222,14 @@
   <data name="ErrorOrderingPaused" xml:space="preserve">
     <value>Ordering is paused for now. Please wait a moment.</value>
   </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>The pairing code is incorrect or has expired</value>
+  </data>
   <data name="ErrorSoldOut" xml:space="preserve">
     <value>Some items are sold out. Please check your order.</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>The service is suspended. Please contact your administrator</value>
   </data>
   <data name="ErrorTitle" xml:space="preserve">
     <value>Notice</value>
@@ -384,9 +393,6 @@
   <data name="RuleConfirmTitle" xml:space="preserve">
     <value>Please confirm</value>
   </data>
-  <data name="SetupChange" xml:space="preserve">
-    <value>Change</value>
-  </data>
   <data name="SetupEndpoint" xml:space="preserve">
     <value>Server (API)</value>
   </data>
@@ -396,17 +402,41 @@
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>Uses the server set by EMM (cannot be changed on this device)</value>
   </data>
-  <data name="SetupNotSet" xml:space="preserve">
-    <value>Not set</value>
+  <data name="SetupEnrollmentHint" xml:space="preserve">
+    <value>This tablet registers itself at startup with the EMM enrollment token</value>
+  </data>
+  <data name="SetupEnter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>Not entered</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>Not registered</value>
+  </data>
+  <data name="SetupPairingCode" xml:space="preserve">
+    <value>Pairing code</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>The 6-digit code issued in the admin console. For the mock, use 100001 to 100012 (tables 1 to 12)</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>Register and start</value>
+  </data>
+  <data name="SetupRegisterHint" xml:space="preserve">
+    <value>Enter a pairing code to register this tablet</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>Registered ({0})</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="SetupRegistrationHint" xml:space="preserve">
+    <value>To register again, enter a pairing code</value>
   </data>
   <data name="SetupSave" xml:space="preserve">
     <value>Save and start</value>
-  </data>
-  <data name="SetupTableNo" xml:space="preserve">
-    <value>Table number</value>
-  </data>
-  <data name="SetupTableNoHint" xml:space="preserve">
-    <value>The table this tablet is placed at</value>
   </data>
   <data name="SetupTitle" xml:space="preserve">
     <value>Device settings</value>
@@ -438,6 +468,9 @@
   <data name="StaffDeviceId" xml:space="preserve">
     <value>Device ID</value>
   </data>
+  <data name="StaffDeviceName" xml:space="preserve">
+    <value>Device name</value>
+  </data>
   <data name="StaffDisconnected" xml:space="preserve">
     <value>Disconnected</value>
   </data>
@@ -446,6 +479,9 @@
   </data>
   <data name="StaffEndpointMock" xml:space="preserve">
     <value>Mock</value>
+  </data>
+  <data name="StaffEnrollmentToken" xml:space="preserve">
+    <value>Enrollment token</value>
   </data>
   <data name="StaffInfo" xml:space="preserve">
     <value>Device information</value>
@@ -537,11 +573,23 @@
   <data name="StaffMockResume" xml:space="preserve">
     <value>Resume ordering</value>
   </data>
+  <data name="StaffMockRevoke" xml:space="preserve">
+    <value>Revoke this tablet</value>
+  </data>
+  <data name="StaffMockRevokeFormat" xml:space="preserve">
+    <value>The tablet is notified in {0} seconds and returns to the device settings</value>
+  </data>
   <data name="StaffMockSellOut" xml:space="preserve">
     <value>Sell out cart items</value>
   </data>
   <data name="StaffMockSoldOutDone" xml:space="preserve">
     <value>Cart items are now sold out.</value>
+  </data>
+  <data name="StaffMockSuspend" xml:space="preserve">
+    <value>Suspend the tenant</value>
+  </data>
+  <data name="StaffMockSuspendFormat" xml:space="preserve">
+    <value>The tablet is notified in {0} seconds, and the tenant resumes after {1} seconds</value>
   </data>
   <data name="StaffNetwork" xml:space="preserve">
     <value>Network</value>
@@ -594,6 +642,12 @@
   <data name="StandbyWelcome" xml:space="preserve">
     <value>Welcome</value>
   </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>Retrying automatically every {0} seconds</value>
+  </data>
+  <data name="StartupNotTable" xml:space="preserve">
+    <value>This tablet is not registered as a table tablet. Register it again from the device settings</value>
+  </data>
   <data name="StartupRetry" xml:space="preserve">
     <value>Retry</value>
   </data>
@@ -609,11 +663,17 @@
   <data name="StartupStepReady" xml:space="preserve">
     <value>Ready</value>
   </data>
+  <data name="StartupStepRegister" xml:space="preserve">
+    <value>Registering this tablet</value>
+  </data>
   <data name="StartupStepSettings" xml:space="preserve">
     <value>Checking device settings</value>
   </data>
   <data name="StartupStepVisit" xml:space="preserve">
     <value>Checking the table status</value>
+  </data>
+  <data name="StartupTableWaitingFormat" xml:space="preserve">
+    <value>Assign a table to this tablet ({0}) in the admin console</value>
   </data>
   <data name="StatusCancelled" xml:space="preserve">
     <value>Cancelled</value>

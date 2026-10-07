@@ -15,6 +15,13 @@ internal static class MockData
 
     private const string StoreTimeZone = "Asia/Tokyo";
 
+    private const int TableCount = 12;
+
+    // Device
+
+    // 登録トークンで登録した端末のコード (置き場所は管理画面で割り当てるので、テーブルを持たない)
+    public const string EnrollmentCode = "000000";
+
     // Station
 
     private static readonly Guid KitchenStation = Id(91);
@@ -74,6 +81,37 @@ internal static class MockData
         [Beer] = Text("よく冷えた生ビールです。", "Ice-cold draft beer."),
         [Wine] = Text("料理に合わせやすいミディアムボディの赤ワインです。", "A medium-bodied red wine that pairs well with our dishes.")
     };
+
+    //--------------------------------------------------------------------------------
+    // Device
+    //--------------------------------------------------------------------------------
+
+    // 登録のコード (1000 とテーブル番号 2 桁はテーブル端末、100101 はホール端末) と、登録した端末
+    // 端末の id にコードを入れて返し、起動し直して登録を覚えていなくても端末の id から種類と置き場所を決める
+    public static IReadOnlyDictionary<string, MockDevice> Devices { get; } = CreateDevices();
+
+    public static MockDevice? FindDevice(Guid id) =>
+        Devices.Values.FirstOrDefault(x => x.Id == id);
+
+    public static Guid TableId(int tableNo) =>
+        new($"00000000-0000-0000-0004-{100 + tableNo:D12}");
+
+    private static Dictionary<string, MockDevice> CreateDevices()
+    {
+        var devices = new Dictionary<string, MockDevice>(StringComparer.Ordinal);
+        for (var no = 1; no <= TableCount; no++)
+        {
+            var code = $"1000{no:D2}";
+            devices[code] = new MockDevice(DeviceId(code), DeviceKind.Table, $"T{no}", no);
+        }
+
+        devices["100101"] = new MockDevice(DeviceId("100101"), DeviceKind.Hall, "ハンディ 1", null);
+        devices[EnrollmentCode] = new MockDevice(DeviceId(EnrollmentCode), DeviceKind.Table, "Tablet", null);
+        return devices;
+    }
+
+    private static Guid DeviceId(string code) =>
+        new($"00000000-0000-0000-0003-{code.PadLeft(12, '0')}");
 
     //--------------------------------------------------------------------------------
     // Config

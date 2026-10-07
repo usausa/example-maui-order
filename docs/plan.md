@@ -196,7 +196,7 @@
 +---------------------+---------------------+--------------------+---------------------+
 ```
 
-- ヘッダ: チェーンの名前、テーブル番号と人数、言語 (今の言語を出し、押すと言語を選ぶポップアップを開く)
+- ヘッダ: チェーンの名前、テーブルと人数、言語 (今の言語を出し、押すと言語を選ぶポップアップを開く)
 - カテゴリのタブ: 横にスクロールし、続きがある向きの端に送りのボタン (‹ ›) を重ねて、まだタブがあることを示す
 - カード: 写真、料理名 (2 行まで)、価格 (税込)、印 (おすすめ、人気、NEW、期間限定)、品切れの幕、すぐ入れる + (オプションのない商品だけ。写真の右下に重ねる)
 - カードの文字は 2 行の高さで揃える。  
@@ -309,12 +309,13 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 
 ## 📡 通信の枠とモック
 
-テーブル端末が使う API ([api-design.md](api-design.md)) を `ITableApi` (`TableOrder.Client`) にまとめた。  
-サーバができたら、DI の登録を替えるだけで実際の通信 (REST か gRPC) に移る。
+テーブル端末が使う API ([api-design.md](api-design.md)) を、すべての端末に共通の `IDeviceApi` とテーブル端末の `ITableApi` (`TableOrder.Client`) にまとめた。  
+REST の窓口を作ったら、DI の登録を替えるだけで実際の通信に移る (端末の登録、トークンの取り直し、無効化とテナントの停止への対応は、モックで動かして端末の側を作り終えている)。
 
-| `ITableApi` のメソッド | API |
+| メソッド | API |
 | --- | --- |
-| `GetConfigAsync` / `GetStoreAsync` / `GetMenuAsync` / `GetStockAsync` | `GET /devices/me/config` / `GET /store` / `GET /menu` / `GET /stock` |
+| `IDeviceApi` の `PairAsync` / `AuthenticateAsync` / `ReportStatusAsync` / `GetConfigAsync` | `POST /devices/pair` / `POST /devices/token` / `POST /devices/me/heartbeat` / `GET /devices/me/config` |
+| `GetStoreAsync` / `GetMenuAsync` / `GetStockAsync` | `GET /store` / `GET /menu` / `GET /stock` |
 | `GetCurrentVisitAsync` / `StartVisitAsync` / `ConfirmAsync` | `GET /devices/me/visit` / `POST /visits` / `POST /visits/{id}/confirmations` |
 | `CreateOrderAsync` / `GetOrdersAsync` / `ReleaseAsync` | `POST /visits/{id}/orders` / `GET /visits/{id}/orders` / `POST /visits/{id}/orders/release` |
 | `CreateCallAsync` / `GetCallsAsync` | `POST /visits/{id}/calls` / `GET /visits/{id}/calls` |
@@ -323,6 +324,7 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 
 - 通知 (`IOrderEvents`) は、来店の開始・終了と店舗の変更 (注文の一時停止、ラストオーダー) を受ける (今はモックが出す)。  
   注文履歴・呼び出し・支払の状態は、まだ開いている間に読み直して出している
+- サーバの通知を作るときに、端末の受け口に足す通知: 品切れ (`stock.updated`。売り切れの表示)、メニューの公開 (`menu.published`。メニューの読み直し)、来店の変更と移動 (`visit.updated` / `visit.moved`。人数の表示、待受と注文の画面の切り替え)、ホールの代わりの注文 (`order.created`。上限のルールの数え方)、追いつけない抜け (`EVENTS_EXPIRED`。今の状態の読み直し)
 - モックの動き (時間で進む調理と提供、呼び出し、支払) は [architecture.md](architecture.md#-6-モックの動き) に書いた
 - スタッフメニューから、通信できない・支払の失敗・売り切れ・注文の進みを起こせる (モックの操作は [architecture.md](architecture.md#-6-モックの動き) に書いた)
 
@@ -333,8 +335,6 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 USB デバッグは EMM のポリシーで止め、自前の Device Owner では止めない。  
 残りは次のとおり。
 
-- 端末の登録は、管理対象の構成で登録トークン (店舗と種別に限った数日有効のもの) を配り、起動したときに自分で登録できるようにする (サーバを作るときに足す。流れは [api-design.md](api-design.md#35-認証認可))
-- 実際の通信を作ったら、管理対象の構成で接続先が替わったときに起動からやり直してつなぎ直す (今はモックなので読み直すだけ)
 - 自前の Device Owner を QR コードで登録する作り (Android 12 以降の、登録の方式を返す画面とポリシーに従う画面) は作らない。  
   OS の保護の仕組みが許可されていない管理アプリを登録の途中で止めるので、使うなら許可の申請が要る
 
@@ -419,7 +419,7 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 - [x] モノレポの共有のプロジェクト (`Domain`、`Contract`、`Client`)
 - [x] `ITableApi` とモック、モックのデータ (料理の絵、説明、アレルギー、タグとルール、品切れ)
 - [x] 起動の画面 (システムのロゴと進み具合) と流れ (設定、店舗の設定、メニュー、品切れ、今の来店)、読み込めないときの再試行
-- [x] 端末の設定の画面 (テーブル番号、接続先)
+- [x] 端末の設定の画面 (接続先、端末の登録)
 - [x] スプラッシュ、アプリのアイコン、システムのロゴ
 - [x] 画面の文言の多言語化 (resx の日本語と英語、切り替え)
 - [x] 全画面 (専用端末の扱いに含めた)
@@ -482,7 +482,8 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 
 - [x] サーバの骨組み (プロジェクト、DB のスキーマとサンプルのデータ、テナントの文脈、端末の登録とトークン、店舗・メニュー・品切れ・端末の設定の API、キッチン端末と管理画面の枠)
 - [ ] 来店・注文・呼び出し・会計の API と通知 (SignalR。`seq` の順に送り、抜けた分を取り直せるようにする)
-- [ ] 端末の実際の通信 (REST の窓口、通知の受け口、端末の鍵とトークン)
+- [x] 端末の登録 (Keystore の鍵、ペアリングコードと EMM の登録トークン、端末の設定のテーブル、状態の報告、無効化とテナントの停止、接続先の変更。モックで動かす)
+- [ ] 端末の実際の通信 (REST の窓口とトークンの取得・取り直し、通知の受け口とつなぎ直し、接続先によるモックとの切り替え)
 - [ ] 管理画面 (サインイン、テナント・店舗・テーブル・端末、出したトークンをすぐに拒む一覧)
 - [x] ホール端末と受付機の枠 (`Terminal.Hall`、`Terminal.Reception`。起動して仮の画面を出す)
 - [ ] ホール端末と受付機の画面と、端末に共通の部品 (`Terminal.Shared`)

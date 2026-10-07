@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\src\TableOrder.Client\TableOrder.Client.csproj" />
     <ProjectReference Include="..\..\src\TableOrder.Server.Web\TableOrder.Server.Web.csproj" />
   </ItemGroup>
 

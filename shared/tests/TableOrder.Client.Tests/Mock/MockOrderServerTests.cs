@@ -8,6 +8,11 @@ public sealed class MockOrderServerTests
     private const string CarbonaraCode = "2001";
     private const string CaesarCode = "3001";
 
+    // テーブル 1 と 2 の端末、ホール端末のペアリングコード
+    private const string Table1Code = "100001";
+    private const string Table2Code = "100002";
+    private const string HallCode = "100101";
+
     private static CancellationToken Cancel => TestContext.Current.CancellationToken;
 
     //--------------------------------------------------------------------------------
@@ -19,7 +24,7 @@ public sealed class MockOrderServerTests
     public async Task OrderingPausedRejectsOrders()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         using var events = new EventReader(api);
         var visit = await StartVisitAsync(api, 2, 0);
         var request = await CreateOrderRequestAsync(api, CarbonaraCode);
@@ -43,7 +48,7 @@ public sealed class MockOrderServerTests
     public async Task LastOrderPassedRejectsOrders()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         using var events = new EventReader(api);
         var visit = await StartVisitAsync(api, 2, 0);
 
@@ -76,7 +81,7 @@ public sealed class MockOrderServerTests
     public async Task SplitPaymentClosesVisitWhenFullyPaid()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         using var events = new EventReader(api);
         var visit = await StartVisitAsync(api, 2, 1);
         await OrderAsync(api, visit.Id, CarbonaraCode);
@@ -107,7 +112,7 @@ public sealed class MockOrderServerTests
     public async Task CreatePaymentRejectsInvalidAmount()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         var visit = await StartVisitAsync(api, 2, 0);
         await OrderAsync(api, visit.Id, CarbonaraCode);
         var total = (await StartCheckoutAsync(api, visit.Id)).Balance;
@@ -133,7 +138,7 @@ public sealed class MockOrderServerTests
     public async Task OpenVisitRaisesVisitOpened()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         using var events = new EventReader(api);
 
         // Act / Assert: 来店を開いて知らせる
@@ -155,7 +160,7 @@ public sealed class MockOrderServerTests
     public async Task CloseVisitRaisesVisitClosed()
     {
         // Arrange
-        var api = CreateApi();
+        var api = await CreateApiAsync();
         using var events = new EventReader(api);
         var visit = await StartVisitAsync(api, 2, 0);
 
@@ -175,12 +180,7 @@ public sealed class MockOrderServerTests
     public async Task EventsArriveInSeqOrder()
     {
         // Arrange
-        var api = new MockOrderServer
-        {
-            Latency = TimeSpan.Zero,
-            PaymentAfter = TimeSpan.Zero,
-            EventDelay = TimeSpan.FromMilliseconds(200)
-        };
+        var api = await CreateApiAsync(TimeSpan.FromMilliseconds(200));
         using var events = new EventReader(api);
         var visit = await StartVisitAsync(api, 1, 0);
         await OrderAsync(api, visit.Id, CaesarCode);
@@ -197,17 +197,208 @@ public sealed class MockOrderServerTests
     }
 
     //--------------------------------------------------------------------------------
+    // Device
+    //--------------------------------------------------------------------------------
+
+    // ペアリングコードで登録すると、端末の設定にコードのテーブルが出て、来店はそのテーブルで開く
+    [Fact]
+    public async Task PairWithCodeAssignsTable()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+
+        // Act
+        var paired = await PairAsync(api, context, Table2Code);
+        context.DeviceId = paired.Content?.DeviceId;
+        var config = await api.GetConfigAsync(Cancel);
+        var visit = await StartVisitAsync(api, 2, 0);
+
+        // Assert
+        Assert.Equal(DeviceKind.Table, paired.Content?.Kind);
+        Assert.Equal(DeviceKind.Table, config.Content?.Device?.Kind);
+        Assert.NotNull(config.Content?.Device?.TableId);
+        Assert.Equal("2", config.Content?.Device?.TableName);
+        Assert.Equal("2", visit.TableName);
+    }
+
+    // 知らないコードは断り、ホール端末のコードはホール端末として登録する
+    [Fact]
+    public async Task PairWithCodeDecidesKind()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+
+        // Act
+        var unknown = await PairAsync(api, context, "999999");
+        var hall = await PairAsync(api, context, HallCode);
+
+        // Assert
+        Assert.Equal(ApiStatus.Rejected, unknown.Status);
+        Assert.Equal("PAIRING_CODE_INVALID", unknown.ErrorCode);
+        Assert.Equal(DeviceKind.Hall, hall.Content?.Kind);
+    }
+
+    // 登録トークンで登録した端末は、管理画面で割り当てるまでテーブルを持たない
+    [Fact]
+    public async Task EnrollWithoutTable()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+
+        // Act
+        var enrolled = await api.PairAsync(CreatePairRequest(context, enrollmentToken: "token"), Cancel);
+        context.DeviceId = enrolled.Content?.DeviceId;
+        var config = await api.GetConfigAsync(Cancel);
+
+        // Assert
+        Assert.Equal(DeviceKind.Table, config.Content?.Device?.Kind);
+        Assert.Null(config.Content?.Device?.TableId);
+        Assert.Null(config.Content?.Device?.TableName);
+    }
+
+    // 登録していない端末の要求は、理由を付けずに断る (トークンがない)
+    [Fact]
+    public async Task UnregisteredDeviceIsUnauthorized()
+    {
+        // Arrange
+        var api = CreateApiFor(new TestDeviceContext());
+
+        // Act
+        var authenticated = await api.AuthenticateAsync(Cancel);
+        var config = await api.GetConfigAsync(Cancel);
+
+        // Assert
+        Assert.Equal(ApiStatus.Unauthorized, authenticated.Status);
+        Assert.Null(authenticated.ErrorCode);
+        Assert.Equal(ApiStatus.Unauthorized, config.Status);
+    }
+
+    // 端末を無効にすると知らせ、要求を断る。登録し直すと使える
+    [Fact]
+    public async Task RevokedDeviceIsDeniedUntilPairedAgain()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+        await RegisterAsync(api, context, Table1Code);
+        using var denials = new DenialReader(api);
+
+        // Act / Assert: 知らせて、要求を断る
+        api.RevokeDevice();
+        Assert.Equal(DeviceDenial.Revoked, await denials.ReadAsync());
+        var revoked = await api.AuthenticateAsync(Cancel);
+        Assert.Equal(ApiStatus.Unauthorized, revoked.Status);
+        Assert.Equal("DEVICE_REVOKED", revoked.ErrorCode);
+
+        // Act / Assert: 登録し直すと使える
+        await RegisterAsync(api, context, Table1Code);
+        Assert.True((await api.AuthenticateAsync(Cancel)).IsSuccess);
+    }
+
+    // テナントを止めると知らせ、止めている間は要求と登録を断る。再開すると使える
+    [Fact]
+    public async Task SuspendedTenantIsDeniedUntilResumed()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+        await RegisterAsync(api, context, Table1Code);
+        using var denials = new DenialReader(api);
+
+        // Act / Assert: 知らせて、要求と登録を断る
+        api.SuspendTenant(TimeSpan.FromMinutes(1));
+        Assert.Equal(DeviceDenial.TenantSuspended, await denials.ReadAsync());
+        var suspended = await api.AuthenticateAsync(Cancel);
+        Assert.Equal(ApiStatus.Unauthorized, suspended.Status);
+        Assert.Equal("TENANT_SUSPENDED", suspended.ErrorCode);
+        var paired = await PairAsync(api, context, Table1Code);
+        Assert.Equal("TENANT_SUSPENDED", paired.ErrorCode);
+
+        // Act / Assert: 再開すると使える
+        api.SuspendTenant(TimeSpan.Zero);
+        Assert.True((await api.AuthenticateAsync(Cancel)).IsSuccess);
+    }
+
+    // 端末の状態の報告を受ける。電池の残りが 0〜1 の外なら断る
+    [Fact]
+    public async Task ReportStatusRecordsLastStatus()
+    {
+        // Arrange
+        var api = await CreateApiAsync();
+
+        // Act
+        var reported = await api.ReportStatusAsync(new DeviceHeartbeatRequest { AppVersion = "1.0", BatteryLevel = 0.5m, IsCharging = true }, Cancel);
+        var invalid = await api.ReportStatusAsync(new DeviceHeartbeatRequest { BatteryLevel = 1.5m }, Cancel);
+
+        // Assert
+        Assert.True(reported.IsSuccess);
+        Assert.Equal(0.5m, api.LastStatus?.BatteryLevel);
+        Assert.Equal(ApiStatus.Rejected, invalid.Status);
+        Assert.Equal("VALIDATION_ERROR", invalid.ErrorCode);
+    }
+
+    // 別のテーブルで登録し直すと、前のテーブルの来店は出さない (モックは 1 つのテーブルの来店だけを持つ)
+    [Fact]
+    public async Task PairWithAnotherTableDropsVisit()
+    {
+        // Arrange
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context);
+        await RegisterAsync(api, context, Table1Code);
+        await StartVisitAsync(api, 2, 0);
+
+        // Act
+        await RegisterAsync(api, context, Table2Code);
+
+        // Assert
+        Assert.Null(await GetCurrentVisitAsync(api));
+    }
+
+    //--------------------------------------------------------------------------------
     // Helper
     //--------------------------------------------------------------------------------
 
     // 待ち時間をなくしたモック (支払は次の要求で終わり、通知はすぐ送る)
-    private static MockOrderServer CreateApi() =>
-        new()
+    private static MockOrderServer CreateApiFor(TestDeviceContext context, TimeSpan eventDelay = default) =>
+        new(context)
         {
             Latency = TimeSpan.Zero,
             PaymentAfter = TimeSpan.Zero,
-            EventDelay = TimeSpan.Zero
+            EventDelay = eventDelay
         };
+
+    // テーブル 1 の端末として登録したモック
+    private static async Task<MockOrderServer> CreateApiAsync(TimeSpan eventDelay = default)
+    {
+        var context = new TestDeviceContext();
+        var api = CreateApiFor(context, eventDelay);
+        await RegisterAsync(api, context, Table1Code);
+        return api;
+    }
+
+    private static DevicePairRequest CreatePairRequest(TestDeviceContext context, string? pairingCode = null, string? enrollmentToken = null) =>
+        new()
+        {
+            PairingCode = pairingCode,
+            EnrollmentToken = enrollmentToken,
+            PublicKey = DeviceCredentials.CreatePublicKey(context.Key.GetPublicKey()),
+            DeviceName = "test",
+            AppVersion = "1.0"
+        };
+
+    private static ValueTask<ApiResult<DevicePairResponse>> PairAsync(MockOrderServer api, TestDeviceContext context, string code) =>
+        api.PairAsync(CreatePairRequest(context, pairingCode: code), Cancel);
+
+    // ペアリングコードで登録し、受け取った端末の id を端末の設定に入れる
+    private static async Task RegisterAsync(MockOrderServer api, TestDeviceContext context, string code)
+    {
+        var result = await PairAsync(api, context, code);
+        Assert.True(result.IsSuccess);
+        context.DeviceId = result.Content!.DeviceId;
+    }
 
     private static async Task<VisitResponse> StartVisitAsync(MockOrderServer api, int adults, int children)
     {
@@ -308,5 +499,36 @@ public sealed class MockOrderServerTests
 
         private void HandleReceived(object? sender, OrderEventArgs args) =>
             channel.Writer.TryWrite(args.Event);
+    }
+
+    // 端末が使えなくなった知らせを届いた順に読む (別のスレッドで届くので、時間を区切って待つ)
+    private sealed class DenialReader : IDisposable
+    {
+        private static readonly TimeSpan WaitLimit = TimeSpan.FromSeconds(5);
+
+        private readonly IDeviceApi api;
+
+        private readonly Channel<DeviceDenial> channel = Channel.CreateUnbounded<DeviceDenial>();
+
+        public DenialReader(IDeviceApi api)
+        {
+            this.api = api;
+            api.Denied += HandleDenied;
+        }
+
+        public void Dispose()
+        {
+            api.Denied -= HandleDenied;
+        }
+
+        public async Task<DeviceDenial> ReadAsync()
+        {
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(Cancel);
+            timeout.CancelAfter(WaitLimit);
+            return await channel.Reader.ReadAsync(timeout.Token);
+        }
+
+        private void HandleDenied(object? sender, DeviceDeniedEventArgs args) =>
+            channel.Writer.TryWrite(args.Reason);
     }
 }

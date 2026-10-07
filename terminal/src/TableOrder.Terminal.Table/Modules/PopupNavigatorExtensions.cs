@@ -16,11 +16,11 @@ public static class PopupNavigatorExtensions
             DialogId.InputNumber,
             new NumberInputParameter(title, value, maxLength));
 
-    // テーブル番号 (先頭の 0 を残し、空も許す)
-    public static ValueTask<string?> InputTableNoAsync(this IPopupNavigator popupNavigator, string value) =>
+    // ペアリングコード (先頭の 0 を残し、空も許す)
+    public static ValueTask<string?> InputPairingCodeAsync(this IPopupNavigator popupNavigator, string value) =>
         popupNavigator.PopupAsync<NumberInputParameter, string?>(
             DialogId.InputNumber,
-            new NumberInputParameter(AppResources.SetupTableNo, value, Length.TableNoDigits, digits: true));
+            new NumberInputParameter(AppResources.SetupPairingCode, value, Length.PairingCodeDigits, digits: true));
 
     // スタッフの PIN (入れた桁数だけを見せる)
     public static ValueTask<string?> InputPinAsync(this IPopupNavigator popupNavigator, string title) =>

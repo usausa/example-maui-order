@@ -12,6 +12,26 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Startup failed. status=[{status}], errorCode=[{errorCode}]")]
     public static partial void WarnStartupFailed(this ILogger logger, ApiStatus status, string? errorCode);
 
+    // Device
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Device registered. deviceId=[{deviceId}], storeId=[{storeId}]")]
+    public static partial void InfoDeviceRegistered(this ILogger logger, Guid deviceId, Guid storeId);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Device registration failed. status=[{status}], errorCode=[{errorCode}]")]
+    public static partial void WarnDeviceRegistrationFailed(this ILogger logger, ApiStatus status, string? errorCode);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Device denied. reason=[{reason}]")]
+    public static partial void WarnDeviceDenied(this ILogger logger, DeviceDenial reason);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Api end point changed. apiEndPoint=[{apiEndPoint}]")]
+    public static partial void InfoEndPointChanged(this ILogger logger, string apiEndPoint);
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Status report failed. status=[{status}], errorCode=[{errorCode}]")]
+    public static partial void DebugStatusReportFailed(this ILogger logger, ApiStatus status, string? errorCode);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Status report stopped.")]
+    public static partial void WarnStatusReportStopped(this ILogger logger, Exception exception);
+
     // State
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Screen state changed. state=[{on}]")]
@@ -36,8 +56,8 @@ internal static partial class Log
 
     // Managed configuration
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Managed configuration. apiEndPoint=[{apiEndPoint}], staffPin=[{staffPin}]")]
-    public static partial void InfoManagedConfiguration(this ILogger logger, string apiEndPoint, bool staffPin);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Managed configuration. apiEndPoint=[{apiEndPoint}], staffPin=[{staffPin}], enrollmentToken=[{enrollmentToken}]")]
+    public static partial void InfoManagedConfiguration(this ILogger logger, string apiEndPoint, bool staffPin, bool enrollmentToken);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Managed configuration value is invalid. key=[{key}]")]
     public static partial void WarnManagedConfigurationInvalid(this ILogger logger, string key);

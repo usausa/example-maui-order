@@ -1,18 +1,16 @@
 namespace TableOrder.Terminal.Table.Modules.Setup;
 
-// 端末の設定。テーブル番号は電卓で入れ、保存したら起動からやり直す
-// サーバができたら、端末の登録 (ペアリング) でテーブルと接続先が決まる形に替える
+// 端末の設定。接続先と、端末の登録 (ペアリングコードを電卓で入れる)。保存したら起動からやり直す
+// 登録は接続先ごとに行う。コードを入れずに保存したときは起動で今の登録を確かめ、なければ EMM の登録トークンで登録する
 public sealed partial class SetupViewModel : AppViewModelBase
 {
+    private readonly IPopupNavigator popupNavigator;
+
     private readonly Settings settings;
 
+    private readonly DeviceUsecase deviceUsecase;
+
     public string VersionText { get; }
-
-    [ObservableProperty]
-    public partial string TableNo { get; set; } = string.Empty;
-
-    [ObservableProperty]
-    public partial string TableNoText { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string ApiEndPoint { get; set; }
@@ -22,7 +20,21 @@ public sealed partial class SetupViewModel : AppViewModelBase
 
     public string EndPointHintText { get; }
 
-    public IObserveCommand InputTableNoCommand { get; }
+    // 今の接続先での登録 (登録済みなら端末の id)
+    public string RegistrationText { get; }
+
+    public string RegistrationHintText { get; }
+
+    [ObservableProperty]
+    public partial string PairingCode { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string PairingCodeText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial string SaveText { get; set; } = string.Empty;
+
+    public IObserveCommand InputPairingCodeCommand { get; }
 
     public IObserveCommand SaveCommand { get; }
 
@@ -33,57 +45,79 @@ public sealed partial class SetupViewModel : AppViewModelBase
     public SetupViewModel(
         IAppInfo appInfo,
         IPopupNavigator popupNavigator,
-        Settings settings)
+        Settings settings,
+        DeviceUsecase deviceUsecase)
     {
+        this.popupNavigator = popupNavigator;
         this.settings = settings;
+        this.deviceUsecase = deviceUsecase;
 
         VersionText = ViewHelper.Version(appInfo);
         ApiEndPoint = settings.ApiEndPoint;
         IsEndPointManaged = settings.IsApiEndPointManaged;
         EndPointHintText = IsEndPointManaged ? AppResources.SetupEndpointManaged : AppResources.SetupEndpointHint;
-        UpdateTableNo(settings.TableNo);
+        RegistrationText = settings.DeviceId is { } deviceId
+            ? ViewHelper.Format(AppResources.SetupRegisteredFormat, deviceId)
+            : AppResources.SetupNotRegistered;
+        RegistrationHintText = settings.IsRegistered
+            ? AppResources.SetupRegistrationHint
+            : settings.EnrollmentToken is not null ? AppResources.SetupEnrollmentHint : AppResources.SetupRegisterHint;
+        UpdatePairingCode(string.Empty);
 
-        InputTableNoCommand = MakeAsyncCommand(async () =>
+        InputPairingCodeCommand = MakeAsyncCommand(async () =>
         {
-            if (await popupNavigator.InputTableNoAsync(TableNo) is { } value)
+            if (await popupNavigator.InputPairingCodeAsync(PairingCode) is { } value)
             {
-                UpdateTableNo(value);
+                UpdatePairingCode(value);
             }
         });
-        SaveCommand = MakeAsyncCommand(SaveAsync, () => !String.IsNullOrEmpty(TableNo));
+        SaveCommand = MakeAsyncCommand(SaveAsync, () => PairingCode.Length is 0 or Length.PairingCodeDigits);
     }
 
     //--------------------------------------------------------------------------------
     // Navigation
     //--------------------------------------------------------------------------------
 
-    // 設定済みなら変えずに起動へ戻る (設定がなければ戻る先がない)
+    // 登録済みなら変えずに起動へ戻る (登録がなければ戻る先がない)
     protected override async Task OnNotifyBackAsync()
     {
-        if (settings.IsConfigured)
+        if (settings.IsRegistered)
         {
             await Navigator.ForwardAsync(ViewId.Startup);
         }
     }
 
+    // 登録の失敗はこの画面で出すので、起動からやり直す知らせは受けない
+    protected override Task OnRestartAsync() => Task.CompletedTask;
+
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------
 
-    private void UpdateTableNo(string value)
+    private void UpdatePairingCode(string value)
     {
-        TableNo = value;
-        TableNoText = String.IsNullOrEmpty(value) ? AppResources.SetupNotSet : value;
+        PairingCode = value;
+        PairingCodeText = String.IsNullOrEmpty(value) ? AppResources.SetupNotEntered : value;
+        SaveText = String.IsNullOrEmpty(value) ? AppResources.SetupSave : AppResources.SetupRegister;
     }
 
     private async Task SaveAsync()
     {
-        settings.TableNo = TableNo;
-
         // EMM が配っている接続先は端末の値に書かない (配られなくなったら端末の値に戻る)
         if (!IsEndPointManaged)
         {
             settings.ApiEndPoint = ApiEndPoint.Trim();
+        }
+
+        // 登録できなければ、この画面に残ってコードを入れ直せるようにする
+        if (PairingCode.Length > 0)
+        {
+            var result = await deviceUsecase.PairAsync(PairingCode);
+            if (!result.IsSuccess)
+            {
+                await popupNavigator.MessageAsync(AppResources.SetupRegistration, ViewHelper.ErrorMessage(result));
+                return;
+            }
         }
 
         await Navigator.ForwardAsync(ViewId.Startup);

@@ -17,6 +17,9 @@ public sealed class MenuState
 
     public MenuResponse Menu { get; private set; } = default!;
 
+    // この端末を置いたテーブル (管理画面で割り当て、端末の設定で受け取る)
+    public string? TableName => Config.Device?.TableName;
+
     public void Update(DeviceConfigResponse config, MenuResponse menu, StockResponse stock)
     {
         Config = config;

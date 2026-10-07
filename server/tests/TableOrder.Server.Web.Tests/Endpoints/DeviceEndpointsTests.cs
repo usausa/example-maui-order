@@ -3,6 +3,7 @@ namespace TableOrder.Server.Web.Endpoints;
 using System.Security.Cryptography;
 using System.Text.Json;
 
+using TableOrder.Client;
 using TableOrder.Contract.Devices;
 
 public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
@@ -91,6 +92,30 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         var token = await response.Content.ReadFromJsonAsync<DeviceTokenResponse>(TestDevice.JsonOptions, TestContext.Current.CancellationToken);
         Assert.False(String.IsNullOrEmpty(token!.AccessToken));
         Assert.Equal(1800, token.ExpiresIn);
+    }
+
+    // 端末のアプリと同じ形の鍵 (公開鍵は SubjectPublicKeyInfo、署名は DER) を、端末のアプリの変換 (DeviceCredentials) で送って登録し、トークンを受け取れる
+    [Fact]
+    public async Task TokenIsIssuedForDeviceCredentials()
+    {
+        // Arrange
+        using var client = factory.CreateClient();
+        var key = new DerSignatureKey();
+        var request = new DevicePairRequest
+        {
+            PairingCode = SampleData.DemoTableCode,
+            PublicKey = DeviceCredentials.CreatePublicKey(key.GetPublicKey()),
+            DeviceName = "test"
+        };
+        using var pair = await client.PostAsJsonAsync("/api/v1/devices/pair", request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        var device = await pair.Content.ReadFromJsonAsync<DevicePairResponse>(TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+
+        // Act
+        var assertion = DeviceCredentials.CreateAssertion(key, device!.DeviceId, DateTimeOffset.UtcNow);
+        using var response = await client.PostAsJsonAsync("/api/v1/devices/token", new DeviceTokenRequest { Assertion = assertion }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     // ほかの鍵で署名した要求は 401 (端末があるかどうかを見せない)
@@ -243,5 +268,31 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
     {
         using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
         return document.RootElement.TryGetProperty("errorCode", out var value) ? value.GetString() : null;
+    }
+
+    // 端末の鍵 (Android の Keystore と同じく、公開鍵は SubjectPublicKeyInfo、署名は DER で返す)
+    private sealed class DerSignatureKey : IDeviceKey
+    {
+        private ECParameters parameters = Generate();
+
+        public byte[] GetPublicKey()
+        {
+            using var key = ECDsa.Create(parameters);
+            return key.ExportSubjectPublicKeyInfo();
+        }
+
+        public byte[] Sign(byte[] data)
+        {
+            using var key = ECDsa.Create(parameters);
+            return key.SignData(data, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence);
+        }
+
+        public void Delete() => parameters = Generate();
+
+        private static ECParameters Generate()
+        {
+            using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+            return key.ExportParameters(true);
+        }
     }
 }

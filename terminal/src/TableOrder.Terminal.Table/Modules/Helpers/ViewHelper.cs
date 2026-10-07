@@ -22,8 +22,9 @@ public static class ViewHelper
     public static string Format(string format, params object[] args) =>
         String.Format(CultureInfo.CurrentCulture, format, args);
 
-    public static string Table(string tableNo) =>
-        String.IsNullOrEmpty(tableNo) ? "--" : tableNo;
+    // テーブルの名前 (割り当てていなければ --)
+    public static string Table(string? tableName) =>
+        String.IsNullOrEmpty(tableName) ? "--" : tableName;
 
     public static string Guests(int guests) =>
         Format(AppResources.GuestsFormat, guests);
@@ -103,12 +104,12 @@ public static class ViewHelper
     // Error
     //--------------------------------------------------------------------------------
 
-    // 通信の失敗をお客様向けの文言にする
+    // 通信の失敗をお客様向けの文言にする (端末の登録の失敗は、スタッフが読む端末の設定と起動の画面に出す)
     public static string ErrorMessage<T>(ApiResult<T> result) =>
         result.Status switch
         {
             ApiStatus.Unavailable => AppResources.ErrorUnavailable,
-            ApiStatus.Unauthorized => AppResources.ErrorUnauthorized,
+            ApiStatus.Unauthorized => result.ErrorCode == "TENANT_SUSPENDED" ? AppResources.ErrorTenantSuspended : AppResources.ErrorUnauthorized,
             ApiStatus.Rejected => result.ErrorCode switch
             {
                 "ITEM_SOLD_OUT" or "STOCK_INSUFFICIENT" => AppResources.ErrorSoldOut,
@@ -116,6 +117,9 @@ public static class ViewHelper
                 "LIMIT_EXCEEDED" or "QUANTITY_EXCEEDED" => AppResources.ErrorLimit,
                 "ORDERING_PAUSED" => AppResources.ErrorOrderingPaused,
                 "LAST_ORDER_PASSED" => AppResources.ErrorLastOrderPassed,
+                "PAIRING_CODE_INVALID" => AppResources.ErrorPairingCodeInvalid,
+                "TENANT_SUSPENDED" => AppResources.ErrorTenantSuspended,
+                DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric

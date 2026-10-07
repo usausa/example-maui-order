@@ -113,7 +113,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         this.orderUsecase = orderUsecase;
 
         var language = languageState.Current;
-        TableText = ViewHelper.Table(settings.TableNo);
+        TableText = ViewHelper.Table(menuState.TableName);
         GuestsText = ViewHelper.Guests(visitState.Guests);
         LanguageText = ViewHelper.LanguageName(language);
         Categories = menuState.GetCategories(language)

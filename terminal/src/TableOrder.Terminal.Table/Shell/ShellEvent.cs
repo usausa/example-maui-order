@@ -13,5 +13,8 @@ public enum ShellEvent
     VisitClosed,
 
     // 店舗が変わった (注文の一時停止、ラストオーダー)
-    StoreUpdated
+    StoreUpdated,
+
+    // 起動からやり直す (端末を無効にされた、テナントを止められた、EMM が接続先を替えた)
+    Restart
 }

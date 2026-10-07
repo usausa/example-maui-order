@@ -79,6 +79,7 @@ public abstract class AppViewModelBase :
             ShellEvent.VisitOpened => OnVisitOpenedAsync(),
             ShellEvent.VisitClosed => OnVisitClosedAsync(),
             ShellEvent.StoreUpdated => OnStoreUpdatedAsync(),
+            ShellEvent.Restart => OnRestartAsync(),
             _ => Task.CompletedTask
         };
         await task.ConfigureAwait(true);
@@ -94,4 +95,8 @@ public abstract class AppViewModelBase :
     protected virtual Task OnVisitClosedAsync() => Task.CompletedTask;
 
     protected virtual Task OnStoreUpdatedAsync() => Task.CompletedTask;
+
+    // 起動からやり直す (起動で登録・トークン・店舗の設定を確かめ直す)。起動と端末の設定の画面は自分で確かめるので受けない
+    protected virtual async Task OnRestartAsync() =>
+        await Navigator.ForwardAsync(ViewId.Startup);
 }

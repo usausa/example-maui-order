@@ -185,7 +185,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
-        TableText = ViewHelper.Table(settings.TableNo);
+        TableText = ViewHelper.Table(menuState.TableName);
         GuestsText = ViewHelper.Guests(visitState.Guests);
         CanUseQrCode = menuState.Config.PaymentMethods.Contains(PaymentMethod.QrCode);
         CanUseCreditCard = menuState.Config.PaymentMethods.Contains(PaymentMethod.CreditCard);

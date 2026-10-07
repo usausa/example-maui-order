@@ -280,6 +280,13 @@
         <Setter Property="ColumnSpacing" Value="16" />
     </Style>
 
+    <Style x:Key="StartupHintLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{StaticResource OnSystemCanvasVariantColor}" />
+    </Style>
+
     <!-- Setup -->
 
     <Style x:Key="SetupFormStack"

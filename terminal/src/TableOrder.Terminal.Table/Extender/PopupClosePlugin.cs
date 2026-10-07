@@ -4,17 +4,17 @@ using System.ComponentModel;
 
 using CommunityToolkit.Maui.Views;
 
-// 来店が閉じたら、お客様の画面で開いているポップアップを閉じる (前のお客様の注文履歴などを残さないように)
+// 来店が閉じたときと起動からやり直すときに、開いているポップアップを閉じる (前のお客様の注文履歴などを残さないように)
 // ポップアップの処理の途中 (注文の送信など) は待ち、終わってから閉じる。重なったポップアップは内側から閉じる (外側は内側の結果を待つ間 Busy)
 // 閉じるのはそのポップアップだけにし、先に閉じていたら何もしない (ほかのポップアップを閉じないように)
-public sealed class VisitPopupClosePlugin : IPopupPlugin
+public sealed class PopupClosePlugin : IPopupPlugin
 {
-    private readonly ILogger<VisitPopupClosePlugin> log;
+    private readonly ILogger<PopupClosePlugin> log;
 
     private readonly IReactiveMessenger messenger;
 
-    public VisitPopupClosePlugin(
-        ILogger<VisitPopupClosePlugin> log,
+    public PopupClosePlugin(
+        ILogger<PopupClosePlugin> log,
         IReactiveMessenger messenger)
     {
         this.log = log;
@@ -53,7 +53,7 @@ public sealed class VisitPopupClosePlugin : IPopupPlugin
         public static void Watch(ILogger log, IReactiveMessenger messenger, Popup popup)
         {
             var closer = new PopupCloser(log, popup);
-            closer.subscription = messenger.Observe<VisitClosedMessage>().Subscribe(_ => closer.Request());
+            closer.subscription = messenger.Observe<PopupCloseMessage>().Subscribe(_ => closer.Request());
             popup.Closed += closer.HandleClosed;
         }
 

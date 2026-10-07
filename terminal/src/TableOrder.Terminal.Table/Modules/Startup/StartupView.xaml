@@ -9,6 +9,7 @@
              s:BindingContextResolver.Type="{x:Type module:StartupViewModel}">
 
     <!-- 起動: システムのロゴと準備の進み具合。チェーンの色を使わず、スプラッシュと同じ地にする -->
+    <!-- 失敗したとき (通信できない、テーブルの割り当て待ち、テナントの停止) は、しばらくごとに自動でやり直す -->
     <Grid Style="{StaticResource SystemScreenGrid}"
           RowDefinitions="*,Auto,*,Auto">
         <VerticalStackLayout Grid.Row="1"
@@ -49,6 +50,9 @@
                         Command="{Binding RetryCommand}"
                         Text="{x:Static strings:AppResources.StartupRetry}" />
             </Grid>
+            <Label Style="{StaticResource StartupHintLabel}"
+                   IsVisible="{Binding IsFailed}"
+                   Text="{Binding RetryHintText}" />
         </VerticalStackLayout>
 
         <!-- version -->
