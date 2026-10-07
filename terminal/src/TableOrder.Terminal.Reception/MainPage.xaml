@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:navigation="http://smart/navigation"
+             xmlns:local="clr-namespace:TableOrder.Terminal.Reception"
+             xmlns:shell="clr-namespace:TableOrder.Terminal.Reception.Shell"
+             x:Class="TableOrder.Terminal.Reception.MainPage"
+             x:DataType="{x:Type local:MainPageViewModel}"
+             s:BindingContextResolver.Type="{x:Type local:MainPageViewModel}"
+             SafeAreaEdges="Default">
+
+    <ContentPage.Behaviors>
+        <s:AppLifecycleBehavior />
+    </ContentPage.Behaviors>
+
+    <!-- MainPage は画面を切り替える入れ物と、全体に重ねる処理中の覆いだけを持つ (画面の枠は各 View が持つ) -->
+    <Grid Style="{StaticResource MainGrid}">
+        <!-- view container -->
+        <AbsoluteLayout Style="{StaticResource ContainerLayout}"
+                        IsClippedToBounds="True">
+            <AbsoluteLayout.Behaviors>
+                <navigation:NavigationContainerBehavior Navigator="{Binding Navigator}" />
+            </AbsoluteLayout.Behaviors>
+        </AbsoluteLayout>
+
+        <!-- overlay -->
+        <Rectangle shell:ShellProperty.BusyOverlay="True"
+                   IsVisible="{Binding BusyState.IsBusy}" />
+    </Grid>
+
+</ContentPage>

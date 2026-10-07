@@ -247,8 +247,8 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 | `TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口) |
 | `TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る |
 | `TableOrder.Terminal.Shared` | .NET MAUI のライブラリ | 端末に共通の部品 (専用端末、EMM の設定、端末の情報、電卓、色とスタイルの土台)。2 つ目の端末アプリを作るときに、テーブル端末から移す |
-| `TableOrder.Terminal.Hall` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ) |
-| `TableOrder.Terminal.Reception` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く) |
+| `TableOrder.Terminal.Hall` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ)。枠 (起動して仮の画面を出す) はある |
+| `TableOrder.Terminal.Reception` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く)。枠はある |
 | `TableOrder.Server.Core.Tests` / `TableOrder.Server.Web.Tests` | xunit | 業務の処理のテストと、API・通知のテスト |
 
 ### キッチン端末
@@ -274,7 +274,7 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 | アプリ | 判断 |
 | --- | --- |
 | 管理画面 (店舗と端末) | 作る。端末のペアリングとテーブルの割り当て、登録トークン、店舗の設定 (注文の一時停止、ラストオーダー、色)、端末の状態。`Server.Web` の中に置く |
-| 受付機 | 任意。予約・順番待ちのシステムを使わない店のために、テーブル端末と同じ専用端末の仕組みで作る |
+| 受付機 | 任意。予約・順番待ちのシステムを使わない店のために、テーブル端末と同じ専用端末の仕組みで作る (枠は先に用意した) |
 | お客様のスマートフォンからの注文 | 作らない (API の想定の範囲の外)。作るなら `TableOrder.Web` の下に置き、読み込みの軽さを優先した作りを別に考える |
 | 店舗のエッジ | 検討。サーバ (`Server.Core`、`Server.Web`) を店に置き、クラウドとの同期を足す形にする |
 | 本部の管理システム、POS、決済サービス、配膳ロボット | 外部のシステム。サーバの入口 (API、Webhook) でつなぎ、このリポジトリにアプリは作らない |
@@ -455,7 +455,9 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 ### 9. 以降 (検討)
 
 - [ ] 注文サーバ (`Server.Core`、`Server.Web`) と実際の通信 (REST / gRPC、SignalR の通知とプッシュ、OTLP)
-- [ ] ホール端末とキッチン端末 (`Terminal.Hall`、`Terminal.Kitchen`、`Terminal.Shared`)
+- [x] ホール端末と受付機の枠 (`Terminal.Hall`、`Terminal.Reception`。起動して仮の画面を出す)
+- [ ] ホール端末と受付機の画面と、端末に共通の部品 (`Terminal.Shared`)
+- [ ] キッチン端末 (`Web.Kitchen`)
 - [ ] 店舗のエッジ (回線が切れても店内で注文を回す)
 - [ ] 決済サービスと決済端末の接続、本物の QR コードの生成
 - [ ] 料理の写真の取得と保存

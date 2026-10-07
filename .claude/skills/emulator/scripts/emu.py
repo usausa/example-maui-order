@@ -37,8 +37,11 @@ ROOT = Path(__file__).resolve().parents[4]
 FRAMEWORK = 'net10.0-android'
 
 # 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
+# 受け口のないアプリ (枠だけのホール端末と受付機) は None にし、Device Owner の操作をしない
 APPS = {
     'table': ('tableorder.terminal.table', 'terminal/src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj', '.AdminReceiver'),
+    'hall': ('tableorder.terminal.hall', 'terminal/src/TableOrder.Terminal.Hall/TableOrder.Terminal.Hall.csproj', None),
+    'reception': ('tableorder.terminal.reception', 'terminal/src/TableOrder.Terminal.Reception/TableOrder.Terminal.Reception.csproj', None),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
 
@@ -196,6 +199,8 @@ def kill():
 #--------------------------------------------------------------------------------
 
 def owner(action):
+    if ADMIN is None:
+        sys.exit(f'{PACKAGE} は Device Owner の受け口を持っていません')
     component = f'{PACKAGE}/{ADMIN}'
     if action == 'set':
         # 端末にアカウントやほかの利用者があると設定できない (エミュレータはアカウントを足さずに使う)

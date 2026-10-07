@@ -27,6 +27,8 @@ API の想定は [api-design.md](api-design.md) を参照。
 
 - 区分で分けるのは、ビルドに要るもの (端末は Android のワークロード) と設定が違うため。  
   サーバの区分は Android なしでビルドできる
+- ホール端末と受付機は、骨組み (画面の入れ物、遷移、処理中の覆い) だけをテーブル端末と同じ形で置いている。  
+  端末に共通の部品 (専用端末、EMM の設定、端末の情報など) は、画面を作るときに `TableOrder.Terminal.Shared` に移す
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
@@ -34,6 +36,8 @@ API の想定は [api-design.md](api-design.md) を参照。
 | `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
 | `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (端末の種類ごとの `ITableApi`、通知の `IOrderEvents`、`ApiResult`) とモック (`Mock/MockOrderServer`) |
 | `terminal/src/TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
+| `terminal/src/TableOrder.Terminal.Hall` | .NET MAUI (Android) | ホール端末のアプリの枠 (起動して仮の画面を出すだけ) |
+| `terminal/src/TableOrder.Terminal.Reception` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
 | `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
 | `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
 

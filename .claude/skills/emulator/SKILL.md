@@ -7,6 +7,7 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 
 操作はリポジトリのルートで `python .claude/skills/emulator/scripts/emu.py <コマンド>` を使う (Windows では `python`、他では `python3`)。
 対象の端末アプリは `--app` で選ぶ (既定は `table`。例: `emu.py --app table install`)。
+ホール端末は `hall`、受付機は `reception` (どちらも枠だけで、Device Owner の受け口はない)。
 端末アプリを足したら、スクリプトの `APPS` にパッケージ名とプロジェクトを足す。
 スクリプトはエミュレータ (`emulator-` で始まる機器) だけを選び、実機が接続されていても使わない。
 `adb` や `dotnet build -t:Run` を直接使うときも、必ず `-s emulator-xxxx` / `-p:AdbTarget=-s emulator-xxxx` でエミュレータを指定する。

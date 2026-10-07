@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:strings="clr-namespace:TableOrder.Terminal.Hall.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.Terminal.Hall.Modules.Home"
+             x:Class="TableOrder.Terminal.Hall.Modules.Home.HomeView"
+             x:DataType="{x:Type module:HomeViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:HomeViewModel}">
+
+    <!-- 仮の画面 (枠)。画面を作るまで、アプリの名前と版だけを出す -->
+    <Grid Style="{StaticResource SystemScreenGrid}"
+          RowDefinitions="72,1,*,Auto">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource SystemHeaderGrid}"
+              ColumnDefinitions="Auto,*">
+            <Image Grid.Column="0"
+                   Style="{StaticResource SystemHeaderLogoImage}"
+                   Source="system_logo.png" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource SystemHeaderLabel}"
+                   Text="{x:Static strings:AppResources.AppTitle}" />
+        </Grid>
+        <BoxView Grid.Row="1"
+                 Style="{StaticResource SystemRule}" />
+
+        <!-- message -->
+        <Label Grid.Row="2"
+               Style="{StaticResource HomeMessageLabel}"
+               Text="{x:Static strings:AppResources.HomeMessage}" />
+
+        <!-- version -->
+        <Label Grid.Row="3"
+               Style="{StaticResource SystemFooterLabel}"
+               Text="{Binding VersionText}" />
+    </Grid>
+
+</ContentView>

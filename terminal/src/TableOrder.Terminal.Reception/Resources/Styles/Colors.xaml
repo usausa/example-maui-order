@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<?xaml-comp compile="true" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+
+    <!-- テーマの色。スタイル・画面はここにある役割の名前だけを使い、色の値を直接書かない -->
+    <!-- 枠の間はシステムの画面の色だけを置く (テーブル端末の System の節と同じ色) -->
+
+    <!-- ================================================================================ -->
+    <!-- System -->
+    <!-- ================================================================================ -->
+
+    <!-- 地と面 (SystemCanvas はスプラッシュの地と同じ色) -->
+    <Color x:Key="SystemCanvasColor">#F4F5F7</Color>
+    <Color x:Key="SystemSurfaceColor">#FFFFFF</Color>
+
+    <!-- 地と面の上の文字 (本文、補足) -->
+    <Color x:Key="OnSystemCanvasColor">#1F2328</Color>
+    <Color x:Key="OnSystemCanvasVariantColor">#656D76</Color>
+
+    <!-- 罫線 -->
+    <Color x:Key="SystemOutlineColor">#D0D7DE</Color>
+
+</ResourceDictionary>
