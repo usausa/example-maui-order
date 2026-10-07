@@ -2,7 +2,7 @@
 
 リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.Terminal.Table`) の作り。  
 ここには作ったものだけを書き、これから作るもの (サーバ、ホール端末とキッチン端末、実際の通信) は [plan.md](plan.md) に置く。  
-API の想定は [api-design.md](api-design.md) を参照。
+API とデータベースの想定は [api-design.md](api-design.md) と [database.md](database.md) を参照。
 
 - [1. プロジェクト](#-1-プロジェクト)
 - [2. テーブル端末の作り](#-2-テーブル端末の作り)

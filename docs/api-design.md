@@ -1,16 +1,16 @@
 # 注文 API 設計 (想定)
 
-ファミリーレストランのチェーンで、テーブル端末 (このリポジトリのアプリ) と、店内の注文に関わる端末 (ホール、キッチン、受付) が使う注文サーバの API の想定。  
+ファミリーレストランのチェーンを運営する会社 (テナント) が契約して使う注文サーバの API の想定で、テーブル端末 (このリポジトリのアプリ) と、店内の注文に関わる端末 (ホール、キッチン、受付) が使う。  
 サーバはまだないので、テーブル端末のモック (`MockOrderServer`) とこれから作るサーバはこの文書に合わせる。  
 POS の一般の業務とメニューのマスタ管理は扱わず、扱わないものは [§10](#-10-扱わないもの) にまとめた。  
-画面と実装の計画は [plan.md](plan.md) を参照。
+データベースの想定は [database.md](database.md)、画面と実装の計画は [plan.md](plan.md) を参照。
 
 - [1. 前提](#-1-前提)
 - [2. 端末と業務](#-2-端末と業務)
 - [3. 共通仕様](#-3-共通仕様)
 - [4. リソース別 API](#-4-リソース別-api)
 - [5. リアルタイム通知](#-5-リアルタイム通知)
-- [6. 端末ごとの流れ](#-6-端末ごとの流れ)
+- [6. 端末ごとの API](#-6-端末ごとの-api)
 - [7. 金額と税](#-7-金額と税)
 - [8. エラーコード](#-8-エラーコード)
 - [9. 参考にした考え方](#-9-参考にした考え方)
@@ -24,14 +24,15 @@ POS の一般の業務とメニューのマスタ管理は扱わず、扱わな�
 | --- | --- |
 | 業態 | ファミリーレストランのチェーン。店内飲食だけ |
 | 範囲 | 注文と、注文に関わる店内の業務 (来店の開始、調理、提供、呼び出し、品切れ、テーブルでの会計) |
-| 利用者 | テーブル端末 (お客様) / ホール端末 (スタッフのハンディ) / キッチン端末 (KDS) / 受付機 (任意) / 外部 (本部の管理システム、POS、決済サービス) |
+| テナント | 複数の会社が契約して使う。テナントの中に店舗を持ち、端末は 1 つの店舗に属する ([§3.6](#36-テナント)) |
+| 利用者 | テーブル端末 (お客様) / ホール端末 (スタッフのハンディ) / キッチン端末 (KDS) / 受付機 (任意) / 外部 (本部の管理システム、POS、決済サービス)。店舗と端末の設定は管理画面 (サーバの中の Web の画面) で行う |
 | 来店 | テーブルの開始から会計までを 1 つの来店とし、その中に注文が何回か入る。人数は来店に持つ |
 | 金額 | 価格は税込 (総額表示)。店内飲食の税率 10% で、会計のときに税率ごとに税額を出す ([§7](#-7-金額と税)) |
 | 会計 | テーブル端末で行う (QR コード決済、クレジットカード)。現金はレジ |
 | 言語 | 日本語と英語。メニューの名前と説明、呼び出しの用件は両方の言語で返す |
 | 特例 | ドリンクバー、お酒、キッズ、数量限定などは、商品とオプションのタグとメニューのルールで表す ([§4.3](#-43-メニュー-menu)) |
 | 通知 | 状態の変化はサーバから端末へすぐに知らせる ([§5](#-5-リアルタイム通知)) |
-| 実装基盤 | ASP.NET Core。要求は REST (Minimal API) を基本にし、同じ要求を gRPC でも出せるようにする。入口が違っても業務の処理は同じにする |
+| 実装基盤 | ASP.NET Core。要求は REST (Minimal API)、通知は SignalR。gRPC は必要になってから足す (入口が違っても業務の処理は同じにする) |
 
 ---
 
@@ -44,6 +45,7 @@ POS の一般の業務とメニューのマスタ管理は扱わず、扱わな�
 | キッチン端末 | 厨房・デザート・ドリンクの持ち場 | チケットの表示、作り始め・できあがり・下げる、品切れ |
 | 受付機 (任意) | お客様 (入口) | 人数を入れて来店を開く (席はスタッフが決めるか空席から選ぶ) |
 | 外部 | 本部の管理システム、POS、決済サービス | メニューの公開、来店の明細と支払の受け取り、決済の完了の通知 |
+| 管理画面 | 店長・本部 (サーバの中の Web の画面) | 店舗の設定、テーブル、端末の登録と割り当て、外部のクライアントと Webhook (API を通さない。[§6.7](#67-管理画面)) |
 
 ### 2.1 来店と人数
 
@@ -80,7 +82,7 @@ Open / Paying --レジで払った (ホール / POS)--> Closed
 | 日時 | UTC の `yyyy-MM-ddTHH:mm:ss.fffZ`。営業日は `yyyy-MM-dd`、営業時間と時間帯は店舗の現地時刻の `HH:mm` |
 | 金額 (`money`) | `decimal` (円の整数)。価格は税込 |
 | 率 (`rate`) | `decimal` (`0.10` = 10%) |
-| ID | GUID。端末で起きる登録 (来店、注文、明細、呼び出し、支払) は端末が GUID v7 を採番し、再送で重複しない |
+| ID | GUID (すべてのテナントで一意)。端末で起きる登録 (来店、注文、明細、呼び出し、支払) は端末が GUID v7 を採番し、再送で重複しない |
 | 言語の文字 (`LocalizedText`) | `{ "ja": "ハンバーグ", "en": "Hamburg Steak" }`。`ja` は必須で、ない言語は `ja` を出す |
 | 通信データ | `XxxRequest` / `XxxResponse` (一覧は `XxxListResponse`、要素は `XxxListResponseItem`)。サーバを作るときに共有のプロジェクトに置く |
 
@@ -121,18 +123,88 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 | 利用者 | 方式 | 使える範囲 |
 | --- | --- | --- |
-| テーブル端末 | `Authorization: Bearer {端末のトークン}` | 自分のテーブルの来店と、その注文・呼び出し・会計。メニュー・品切れ・店舗の読み取り |
-| ホール端末 | 端末のトークン | 店舗のすべてのテーブルと来店、呼び出し、提供、品切れ、注文の一時停止 |
-| キッチン端末 | 端末のトークン | 受け持つ持ち場のチケット、品切れ |
-| 受付機 | 端末のトークン | 来店の開始、空いているテーブルの参照 |
-| 外部 (本部、POS) | `X-Api-Key` | メニューの公開、来店の終了 (レジで払ったとき) |
+| テーブル端末 | `Authorization: Bearer {アクセストークン}` | 自分のテーブルの来店と、その注文・呼び出し・会計。メニュー・品切れ・店舗の読み取り |
+| ホール端末 | アクセストークン | 店舗のすべてのテーブルと来店、注文、提供、呼び出し、品切れ、注文の一時停止 |
+| キッチン端末 | アクセストークン | 受け持つ持ち場のチケット、品切れ、メニューと店舗の読み取り |
+| 受付機 | アクセストークン | 来店の開始、空いているテーブルの参照 |
+| 外部 (本部、POS) | アクセストークン (OAuth 2.0 の client credentials で受け取る) | 本部はメニューの公開と写真、POS はテーブルと会計の参照と来店の終了 (レジで払ったとき)。クライアントごとに範囲 (`scope`) を決める |
 | 外部 (決済サービス) | 決済サービスの署名 | 決済の完了の通知 |
 
-- 端末のトークンは `POST /devices/pair` で受け取る ([§4.1](#-41-端末-devices))。  
-  端末の種類 (`Table` / `Hall` / `Kitchen` / `Reception`) と置き場所 (テーブル、持ち場) は端末に結び付いていて、範囲の外の要求は `403` (`DEVICE_SCOPE`)
-- トークンがない・登録を解除した端末の要求は `401`。  
-  端末は `401` を受けたら初期設定に戻る
+端末は自分の鍵で署名して、短命のアクセストークン (JWT) を受け取る。
+
+1. **登録**: 端末は取り出せない鍵 (P-256。Android は Keystore、キッチン端末はブラウザの取り出せない鍵) を作り、`POST /devices/pair` でペアリングコードか登録トークンと公開鍵 (JWK) を送る ([§4.1](#-41-端末-devices))。  
+   サーバは端末 (テナント、店舗、種類、置き場所、公開鍵) を記録する
+2. **トークン**: 端末は自分の鍵で署名した使い捨ての JWT (期限 5 分以内) を `POST /devices/token` に送り、アクセストークン (JWT、30 分) を受け取る。  
+   アクセストークンには端末、テナント、店舗、種類、置き場所 (テーブル、持ち場) を入れ、端末は期限の前に取り直す
+3. **要求**: アクセストークンを `Authorization: Bearer` で送る。  
+   サーバは署名と期限を確かめるだけで、要求ごとに端末を照会しない。  
+   通知のハブ (`/hubs/store`) も同じトークンでつなぐ
+4. **取り消し**: 管理画面で端末を無効にすると、次のトークンを出さない (`403` `DEVICE_REVOKED`)。  
+   すぐに止めるときは、無効にした端末のトークンを拒み (`401`)、ハブの接続も切る
+
+外部のシステムは、管理画面で発行したクライアント (`client_id` と `client_secret`) で `POST /oauth/token` (OAuth 2.0 の client credentials) を呼び、アクセストークン (JWT、30 分) を受け取る。  
+要求と応答は OAuth の決まりの形 (フォームの本文、`access_token`、`expires_in`) にする。  
+クライアントは 1 つのテナントに属し、POS のように 1 つの店舗に限ることもできる。
+
+アクセストークンのクレーム:
+
+| クレーム | 端末 | 外部 | 中身 |
+| --- | :---: | :---: | --- |
+| `iss` / `aud` | ✅ | ✅ | 出したサーバと、この API |
+| `sub` | ✅ | ✅ | 端末の `id`。外部はクライアントの `id` |
+| `exp` / `iat` | ✅ | ✅ | 期限 (30 分) と出した時刻 |
+| `tenant_id` | ✅ | ✅ | テナント ([§3.6](#36-テナント)) |
+| `store_id` | ✅ | 店舗に限るクライアント | 店舗 |
+| `device_kind` | ✅ | | `Table` / `Hall` / `Kitchen` / `Reception` |
+| `table_id` / `station_ids` | テーブル端末 / キッチン端末 | | 置き場所 (テーブル、持ち場) |
+| `scope` | | ✅ | 使える範囲 (`menu.publish`、`visits.read`、`visits.close` など) |
+
+- クレームの値はサーバが端末とクライアントの記録から入れ、端末が送った値は使わない
+- 署名の鍵は環境ごとに持ち、鍵を替えられるようにトークンに `kid` を付ける (テナントごとには分けない)
+- 端末の種類 (`Table` / `Hall` / `Kitchen` / `Reception`) と置き場所の範囲の外の要求は `403` (`DEVICE_SCOPE`)
+- `401` を受けた端末は、トークンを取り直して 1 回だけ送り直す。  
+  トークンの要求が `DEVICE_REVOKED` で断られたときだけ初期設定に戻る (期限切れや一時的な不具合で店の端末が外れないように)
+- 置き場所 (テーブル、持ち場) は端末の記録に持ち、席替えで登録し直さない (次のトークンと `GET /devices/me/config` に出る)
 - 取消や来店の終了などスタッフの操作は、任意で `staffId` を付けて記録する (スタッフの管理は扱わない。[§10](#-10-扱わないもの))
+
+### 3.6 テナント
+
+注文サーバは、複数の会社 (テナント) が契約して使う。  
+テナントは契約の単位 (チェーンを運営する会社・グループ) で、その中に店舗を持つ。  
+端末は 1 つの店舗に、外部のクライアントは 1 つのテナント (か、その中の 1 つの店舗) に属する。
+
+```
+テナント ─┬─ 店舗 ─┬─ テーブル、持ち場
+          │        └─ 端末
+          └─ 外部のクライアント (テナント全体か 1 つの店舗)
+```
+
+| 項目 | 決まり |
+| --- | --- |
+| 見分け方 | テナントと店舗は、アクセストークンのクレーム (`tenant_id`、`store_id`) で決める。URL・ヘッダ・本文にテナントは入れず、店舗を指すのはテナント全体のクライアントだけ (店舗コードで指す)。接続先はすべてのテナントで同じにする (Web の画面のキッチン端末と管理画面も同じ) |
+| 認証のあと | 署名・発行者 (`iss`)・対象 (`aud`)・期限を確かめたトークンのテナント・店舗・端末の種類・置き場所は、その要求の間の前提として信用し、要求ごとにデータベースで引き直さない |
+| 要求の中の `id` | パス・クエリ・本文の `id` (来店、注文、チケット、支払など) は、トークンのテナントと店舗の中で引く。ほかのテナントや店舗のものは `404` (`NOT_FOUND`) にして、あるかどうかも見せない |
+| 店舗の中の範囲 | テーブル端末は自分のテーブル、キッチン端末は受け持つ持ち場の範囲だけを使える。範囲の外は `403` (`DEVICE_SCOPE`) |
+| 一意の範囲 | `id` (GUID) はすべてのテナントで一意。店舗コードと商品コードはテナントの中、テーブルの名前は店舗の中で一意 |
+| 匿名の要求 | 端末の登録 (`POST /devices/pair`) はトークンがないので、ペアリングコードと登録トークンをすべてのテナントで一意にし、そこからテナントと店舗を決める |
+| 外部のクライアント | 複数のテナントとつなぐ相手は、テナントごとにクライアントを持つ。テナント全体のクライアントは、店舗をテナントの中の店舗コードで指す (メニューの公開の `storeCodes`) |
+| 決済サービスの通知 | 取引番号で支払を引き、その支払のテナントの決済サービスの設定で署名を確かめる (要求の中のテナントの値は使わない) |
+| 通知 | ハブはトークンの店舗の通知だけを送り、どの通知を受けるかを端末に選ばせない。Webhook はテナントごとに送り先を登録し、本文にテナントと店舗を付ける |
+| 管理画面 | 利用者はテナントに属し、自分のテナントだけを扱う。サービスの運営者は、テナントを選んで扱う ([§6.7](#67-管理画面)) |
+| 上限 | 要求の数を端末・クライアントごとと、テナントごとに限る (`429`)。1 つのテナントの負荷で、ほかのテナントを遅くしない |
+| 記録 | ログ・メトリクス・トレースにテナントと店舗を付ける (問い合わせの調べと、テナントごとの使用量のため) |
+| 停止 | 契約を止めたテナントにはトークンを出さず (`403` `TENANT_SUSPENDED`)、出したトークンも拒む (`401`) |
+| 専用の環境 | 大きなテナントを別の環境に分けるときも API は変えず、接続先 (EMM で配る `apiEndPoint`) を替える |
+
+トークンのテナントを信用するために、次のことを守る。
+
+- トークンは 30 分で切れる。  
+  置き場所の変更 (席替え、持ち場) と契約の変更は、次のトークンで反映する
+- すぐに止めるもの (端末の無効化、テナントの停止) は、サーバが覚えている一覧で要求ごとに拒む (データベースは引かない)
+- テナントがあって止まっていないかは、トークンを出すときに確かめる
+- トークンを信用していても、要求の中の `id` は毎回テナントと店舗で絞って引く (オブジェクト単位の認可)
+- 業務の処理はテナントと店舗を要求の文脈で受け取り、データの読み書きで必ず絞る (データベースはすべての表に `TenantId` を持つ。[database.md](database.md#テナントの持ち方))。  
+  絞り忘れは、SQL がテナントで絞っているかを調べるテストで見つける
 
 ---
 
@@ -149,9 +221,9 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | `storeId` | guid | |
 | `kind` | enum | `Table` / `Hall` / `Kitchen` / `Reception` |
 | `name` | string(50) | 例: `T12`、`ハンディ 1`、`キッチン 1` |
-| `tableId` | guid? | テーブル端末の置き場所 |
+| `tableId` | guid? | テーブル端末の置き場所 (管理画面で替える) |
 | `stationIds` | guid[] | キッチン端末が受け持つ持ち場 |
-| `appVersion` | string(50)? | 端末が送る |
+| `appVersion` | string(50)? | 端末が送る (登録と状態の報告) |
 | `batteryLevel` | rate? | 電池の残り (`0`〜`1`)。充電が切れそうなテーブル端末に気付くため |
 | `isCharging` | bool? | |
 | `lastSeenAt` | datetime? | 最後に通信した時刻 (サーバが付ける) |
@@ -159,12 +231,14 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| POST | `/devices/pair` | 全端末 (匿名) | 端末の登録 `DevicePairRequest { pairingCode, deviceName, appVersion }` → `200` `DevicePairResponse { token, device, store }`。コードの不一致・期限切れ・使用済みは `422` (`PAIRING_CODE_INVALID`)。接続元ごとに 1 分 10 回まで |
-| POST | `/devices/me/heartbeat` | 全端末 | `DeviceHeartbeatRequest { appVersion, batteryLevel, isCharging }` → `204` |
+| POST | `/devices/pair` | 全端末 (匿名) | 端末の登録 `DevicePairRequest { pairingCode か enrollmentToken, publicKey, deviceName, appVersion }` → `201` `DevicePairResponse { deviceId, kind, storeId }`。コードの不一致・期限切れ・使用済みは `422` (`PAIRING_CODE_INVALID`)。接続元ごとに 1 分 10 回まで |
+| POST | `/devices/token` | 全端末 (端末の鍵の署名) | アクセストークンの取得 `DeviceTokenRequest { assertion }` (端末の鍵で署名した JWT) → `200` `DeviceTokenResponse { accessToken, expiresIn }`。無効にした端末は `403` (`DEVICE_REVOKED`) |
+| POST | `/devices/me/heartbeat` | 全端末 | 端末の状態 `DeviceHeartbeatRequest { appVersion, batteryLevel, isCharging }` → `204`。1 分ごと |
 | GET | `/devices/me/config` | 全端末 | 端末の設定 (`DeviceConfigResponse`)。起動のときと `store.updated` を受けたときに読む |
 
 ペアリングコード (6 桁、10 分、一度だけ) は管理画面で発行し、そのときに端末の種類と置き場所 (テーブル、持ち場) を決める。  
-専用端末として MDM から配るときは、管理対象の構成 (Managed configurations) で接続先とペアリングコードを渡し、端末が起動したときに自分で登録する。
+専用端末として EMM から配るときは、管理対象の構成 (Managed configurations) で接続先と登録トークン (店舗と種類に限った数日有効のもの) を渡し、端末が起動したときに自分で登録する。  
+登録トークンで登録した端末の置き場所は、管理画面で割り当てる。
 
 `DeviceConfigResponse` の項目:
 
@@ -177,7 +251,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | `callReasons` | object[] | 呼び出しの用件 `{ code, name (LocalizedText), sortOrder }` (店舗で選べる。[§4.9](#-49-呼び出し-calls)) |
 | `electronicReceipt` | bool | 電子レシートを出すか |
 | `taxRounding` | enum | 税額の端数 (§4.2) |
-| `device` / `table` | object | 端末とテーブル (§4.1、§4.2)。端末の登録を作るときに足す (今のモックは端末の設定のテーブル番号を使う) |
+| `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§4.1)。置き場所はここで受け取る (今のモックは端末の設定のテーブル番号を使う) |
 | `theme` | object | 色の役割の名前と色 (`{ "PrimaryColor": "#C53D13", ... }`)。端末の `Colors.xaml` と同じ名前で、ない役割は端末の既定のまま。ブランド色を替える仕組みを作るときに足す |
 
 お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§4.3](#-43-メニュー-menu)) で決める。
@@ -214,7 +288,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | --- | --- | --- | --- |
 | GET | `/store` | 全端末 | 店舗 (`StoreResponse`) |
 | PUT | `/store/ordering` | ホール | 注文の一時停止と再開 `StoreOrderingRequest { paused, message? }` → `204`。通知 `store.updated` |
-| GET | `/tables?status` | ホール / 受付 | テーブルと今の来店の要約 (`TableListResponse`)。`status` = `Vacant` / `Occupied` / `Paying` |
+| GET | `/tables?status` | ホール / 受付 / 外部 (POS) | テーブルと今の来店の要約 (`TableListResponse`)。`status` = `Vacant` / `Occupied` / `Paying` |
 
 ### 📖 4.3 メニュー (Menu)
 
@@ -223,9 +297,10 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/menu` | 全端末 | メニュー (`MenuResponse`)。`If-None-Match` に `menuVersion` を付けると、変わっていなければ `304` |
-| GET | `/menu/images/{name}` | 全端末 | 料理の写真。名前は内容が変わると変わるので、端末は保存して使い回す |
-| POST | `/menu/publications` | 外部 (本部) | 本部で編集したメニューの公開 (`MenuPublishRequest`。`MenuResponse` と同じ形) → `202`。通知 `menu.published` |
+| GET | `/menu` | テーブル / ホール / キッチン | メニュー (`MenuResponse`)。`If-None-Match` に `menuVersion` を付けると、変わっていなければ `304` |
+| GET | `/menu/images/{name}` | テーブル / ホール / キッチン | 料理の写真。名前は内容が変わると変わるので、端末は保存して使い回す |
+| PUT | `/menu/images/{name}` | 外部 (本部) | 料理の写真を置く (`image/jpeg` / `image/webp`) → `204`。公開の前に置き、商品の `imageName` で指す |
+| POST | `/menu/publications` | 外部 (本部) | 本部で編集したメニューの公開 `MenuPublishRequest { storeCodes, menu }` (`menu` は `MenuResponse` から `menuVersion` を除いた形) → `202` `{ menuVersion }`。通知 `menu.published` |
 
 `MenuResponse` の項目:
 
@@ -352,7 +427,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/stock` | 全端末 | `Available` でないものの一覧 (`StockResponse`) |
+| GET | `/stock` | テーブル / ホール / キッチン | `Available` でないものの一覧 (`StockResponse`) |
 | PUT | `/stock/{targetId}` | ホール / キッチン | 品切れ・残りの数の設定 `StockUpdateRequest { targetKind, status, remaining? }` → `204`。通知 `stock.updated` |
 | POST | `/stock/reset` | ホール | すべて `Available` に戻す (営業日の始めなど) |
 
@@ -378,7 +453,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
 | POST | `/visits` | ホール / 受付 / テーブル (`selfStart` のとき) | 来店の開始 `VisitCreateRequest { id, tableId, adults, children }` → `201`。テーブル端末は `tableId` を省く (端末の置き場所)。テーブルに `Open` / `Paying` の来店があれば `409` (`TABLE_OCCUPIED`)。通知 `visit.opened` |
-| GET | `/visits/{id}` | 全端末 (テーブルは自分の来店) | 来店 |
+| GET | `/visits/{id}` | テーブル (自分の来店) / ホール / 外部 (POS) | 来店 |
 | GET | `/devices/me/visit` | テーブル | 自分のテーブルの今の来店。なければ `204` (待受にする) |
 | PATCH | `/visits/{id}` | ホール | 人数の変更 `VisitUpdateRequest { adults, children, version }` |
 | POST | `/visits/{id}/move` | ホール | テーブルの移動 `{ toTableId, version }`。移動先に来店があれば `409` (`TABLE_OCCUPIED`)。通知 `visit.moved` (元のテーブル端末は待受に、移動先は注文の画面になる) |
@@ -424,7 +499,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§8](#-8-�
 
 ```
 Held (食後まで止めている) --お願いする--> Ordered --作り始め--> Cooking --できあがり--> Ready --提供--> Served
-作らない品 (ドリンクバー) は、注文を受けたときに Served にする
+お客様がとる品 (ドリンクバー) は注文を受けたときに Served、作らない品 (持ち場なし) でスタッフが運ぶものは Ready にする
 Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 ```
 
@@ -474,11 +549,11 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/kitchen/tickets?stationId&status` | キッチン | チケットの一覧 (`KitchenTicketListResponse`。`status` の既定は `Open`、古い順) |
+| GET | `/kitchen/tickets?stationId&status` | キッチン | チケットの一覧 (`KitchenTicketListResponse`。`status` の既定は `Open` で古い順。`Done` は下げた新しい順に直近のもの) |
 | POST | `/kitchen/tickets/{id}/lines/{lineId}/start` | キッチン | 作り始め (`Cooking`) |
 | POST | `/kitchen/tickets/{id}/lines/{lineId}/ready` | キッチン | できあがり (`Ready`) |
 | POST | `/kitchen/tickets/{id}/bump` | キッチン | すべての明細をできあがりにして下げる (`Done`) |
-| POST | `/kitchen/tickets/{id}/recall` | キッチン | 下げたチケットを戻す (押し間違い) |
+| POST | `/kitchen/tickets/{id}/recall` | キッチン | 下げたチケットを戻す (押し間違い)。まだ出していない明細は `Cooking` に戻す |
 
 明細の状態が変わると `order.lines.updated` を送り、テーブル端末の注文履歴とホール端末の提供の一覧に出す。
 
@@ -503,7 +578,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| POST | `/visits/{visitId}/calls` | テーブル | 呼び出し `{ id, reasonCode }` → `201`。同じ用件の `Open` の呼び出しがあれば `200` でそれを返す (続けて押しても増やさない)。通知 `call.created` |
+| POST | `/visits/{visitId}/calls` | テーブル | 呼び出し `{ id, reasonCode }` → `201`。同じ用件の終わっていない (`Open` / `Acknowledged`) 呼び出しがあれば `200` でそれを返す (続けて押しても増やさない)。通知 `call.created` |
 | GET | `/visits/{visitId}/calls` | テーブル | 来店の呼び出しと状態 |
 | GET | `/calls?status` | ホール | 呼び出しの一覧 (古い順。`status` の既定は `Open` と `Acknowledged`) |
 | POST | `/calls/{id}/acknowledge` | ホール | 向かう (`Acknowledged`)。テーブル端末に「スタッフが向かっています」と出す |
@@ -545,7 +620,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/visits/{visitId}/bill` | テーブル / ホール | 会計の明細と合計 (`BillResponse`) |
+| GET | `/visits/{visitId}/bill` | テーブル / ホール / 外部 (POS) | 会計の明細と合計 (`BillResponse`) |
 | POST | `/visits/{visitId}/checkout` | テーブル / ホール | 会計を始める `{ billVersion, version }` → 来店を `Paying` にする。`billVersion` が違えば `422` (`BILL_CHANGED`)。通知 `visit.updated` (ホールの席の一覧に「会計中」) |
 | POST | `/visits/{visitId}/checkout/cancel` | テーブル / ホール | 会計をやめる `{ version }` (支払がなければ `Open` に戻す) |
 | POST | `/visits/{visitId}/payments` | テーブル | 支払を始める `PaymentCreateRequest { id, method, amount }` → `201` (`PaymentResponse`)。`QrCode` は `qrCode` を返し、`CreditCard` はテーブルの決済端末で払う |
@@ -555,7 +630,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | POST | `/payments/{id}/cancel` | テーブル | 待っている支払をやめる (`Pending` だけ) |
 | GET | `/visits/{visitId}/receipt` | テーブル | 領収の内容と電子レシートの URL (`ReceiptResponse`。画面に QR で出す) |
 
-- 支払は残り (`balance`) を超えない (`422` `PAYMENT_AMOUNT_INVALID`)。  
+- 支払は残り (`balance` から、期限内の待っている支払も引いた額) を超えない (`422` `PAYMENT_AMOUNT_INVALID`)。  
   割り勘は、目安の額で支払を何回かに分けて行う
 - 支払が揃う (`balance` = 0) と、来店を `Closed` (`closedBy` = `TablePayment`) にして `visit.closed` を送る。  
   テーブル端末はお礼と電子レシートの QR を出し、待受に戻る
@@ -568,10 +643,11 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 ### 5.1 接続
 
-- 端末は WebSocket (`/hubs/store`。ASP.NET Core SignalR を想定) に端末のトークンでつなぐ。  
-  サーバは端末の種類と置き場所に合う通知だけを送る。  
+- 端末は WebSocket (`/hubs/store`。ASP.NET Core SignalR) にアクセストークンでつなぐ。  
+  サーバはトークンの店舗の通知のうち、端末の種類と置き場所に合うものだけを送る。  
   要求を gRPC にするときは、同じ通知を gRPC のサーバストリームでも出す
-- 端末の状態 (電池、接続、アプリの版) は同じ接続で送り、テレメトリ (ログ、メトリクス、トレース) は OpenTelemetry (OTLP) で送る
+- 端末の状態 (電池、アプリの版) は `POST /devices/me/heartbeat` で送り、つながっているかはハブの接続で見る。  
+  テレメトリ (ログ、メトリクス、トレース) は OpenTelemetry (OTLP) で送る
 - 通知は `{ "seq": 1234, "type": "visit.opened", "occurredAt": "...", "data": { ... } }`。  
   `seq` は店舗の中で増える通し番号
 - 切れてつなぎ直したときは `GET /events?after={最後に受けた seq}` で抜けた分を受け取る。  
@@ -583,16 +659,16 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 | `type` | 送る先 | `data` | 受けた端末の動き |
 | --- | --- | --- | --- |
-| `visit.opened` | そのテーブル端末、ホール | 来店 | テーブル端末は待受から注文の画面にする |
+| `visit.opened` | そのテーブル端末、ホール、受付 | 来店 | テーブル端末は待受から注文の画面にする。受付機は空席から外す |
 | `visit.updated` | そのテーブル端末、ホール | 来店 | 人数・状態 (会計中) の表示を変える |
-| `visit.moved` | 元と移動先のテーブル端末、ホール | 来店、元のテーブル | 元は待受に、移動先は注文の画面にする |
-| `visit.closed` | そのテーブル端末、ホール | 来店 | テーブル端末は待受に戻る (お会計の画面ならお礼を出してから) |
+| `visit.moved` | 元と移動先のテーブル端末、ホール、受付 | 来店、元のテーブル | 元は待受に、移動先は注文の画面にする。受付機は空席を替える |
+| `visit.closed` | そのテーブル端末、ホール、受付 | 来店 | テーブル端末は待受に戻る (お会計の画面ならお礼を出してから)。受付機は空席に戻す |
 | `order.created` | ホール、そのテーブル端末 | 注文 | 席の一覧と注文履歴に足す |
 | `order.lines.updated` | そのテーブル端末、ホール | 明細の `id` と状態 | 注文履歴 (調理中、お持ちします) と提供の一覧を変える |
 | `ticket.created` / `ticket.updated` | その持ち場のキッチン端末 | チケット | キッチンの表示を変える |
 | `call.created` / `call.updated` | ホール、そのテーブル端末 | 呼び出し | ホールは知らせる (音)。テーブル端末は「向かっています」 |
-| `stock.updated` | 全端末 | 品切れ | 売り切れの表示を変える |
-| `menu.published` | 全端末 | `menuVersion` | メニューを読み直す (カートの価格は注文のときに確かめる) |
+| `stock.updated` | テーブル、ホール、キッチン | 品切れ | 売り切れの表示を変える |
+| `menu.published` | テーブル、ホール、キッチン | `menuVersion` | メニューを読み直す (カートの価格は注文のときに確かめる) |
 | `store.updated` | 全端末 | 店舗 | 一時停止の表示、ラストオーダー、設定 |
 | `payment.updated` | そのテーブル端末、ホール | 支払 | QR の支払の完了を画面に出す |
 
@@ -606,15 +682,141 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `visit.closed` | 来店、会計の明細、支払 (POS の売上として取り込む) |
 | `stock.updated` | 品切れ (他のチャネルの販売を止めるため) |
 
-- 本文は §5.1 の通知と同じ形。  
-  `X-Signature` に共有の鍵による HMAC-SHA256 を付ける
+- 送り先はテナントごとに管理画面で登録する (店舗に限ることもできる)
+- 本文は §5.1 の通知にテナントと店舗 (`tenantId`、`storeId`、`storeCode`) を足した形。  
+  `X-Signature` に送り先ごとの鍵による HMAC-SHA256 を付ける
 - `2xx` を受けるまで指数バックオフで送り直す (受け取る側は `seq` で重複を捨てる)
 
 ---
 
-## 🔄 6. 端末ごとの流れ
+## 📲 6. 端末ごとの API
 
-### 6.1 着席から会計まで
+URL はリソースごとに 1 つにし、端末の種類ごとに使える範囲を認可で絞る ([§3.5](#35-認証認可))。  
+端末のアプリの窓口は種類ごとに分け (`ITableApi`、`IHallApi`、`IKitchenApi`、`IReceptionApi`)、それぞれが使う API だけを持つ。  
+通知の窓口 (`IOrderEvents`) は共通にし、受ける通知は送る先で絞る ([§5.2](#52-通知の種類))。
+
+- テナントと店舗はトークンで決まるので、URL に入れない ([§3.6](#36-テナント))
+- 端末ごとに URL を分けない (同じ業務の処理を入口ごとに作らない)
+- テーブル端末も来店の `id` をパスに入れる (来店が替わったあとに前の来店の送り直しが届いても、新しい来店に入れない)
+
+### 6.1 一覧
+
+端末の種類ごとに使える API:
+
+| API | テーブル | ホール | キッチン | 受付 | 外部 |
+| --- | :---: | :---: | :---: | :---: | :---: |
+| `POST /devices/pair`、`POST /devices/token`、`POST /devices/me/heartbeat`、`GET /devices/me/config` | ✅ | ✅ | ✅ | ✅ | |
+| `POST /oauth/token` | | | | | ✅ 本部・POS |
+| `GET /store` | ✅ | ✅ | ✅ | ✅ | |
+| `PUT /store/ordering` | | ✅ | | | |
+| `GET /tables` | | ✅ | | ✅ | ✅ POS |
+| `GET /menu`、`GET /menu/images/{name}`、`GET /stock` | ✅ | ✅ | ✅ | | |
+| `PUT /menu/images/{name}`、`POST /menu/publications` | | | | | ✅ 本部 |
+| `PUT /stock/{targetId}` | | ✅ | ✅ | | |
+| `POST /stock/reset` | | ✅ | | | |
+| `GET /devices/me/visit`、`POST /visits/{id}/confirmations` | ✅ | | | | |
+| `POST /visits` | ✅ `selfStart` の店 | ✅ | | ✅ | |
+| `GET /visits/{id}` | ✅ 自分の来店 | ✅ | | | ✅ POS |
+| `PATCH /visits/{id}`、`POST /visits/{id}/move`、`POST /visits/{id}/cancel` | | ✅ | | | |
+| `POST /visits/{id}/close` | | ✅ | | | ✅ POS |
+| `POST /visits/{id}/orders`、`GET /visits/{id}/orders`、`POST /visits/{id}/orders/release` | ✅ | ✅ | | | |
+| `POST /orders/{orderId}/lines/{lineId}/cancel` | | ✅ | | | |
+| `GET /kitchen/tickets`、`POST /kitchen/tickets/{id}/...` | | | ✅ | | |
+| `GET /serving`、`POST /serving/serve` | | ✅ | | | |
+| `POST /visits/{id}/calls`、`GET /visits/{id}/calls` | ✅ | | | | |
+| `GET /calls`、`POST /calls/{id}/acknowledge`、`POST /calls/{id}/done` | | ✅ | | | |
+| `GET /visits/{id}/bill` | ✅ | ✅ | | | ✅ POS |
+| `POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel` | ✅ | ✅ | | | |
+| `POST /visits/{id}/payments`、`POST /payments/{id}/result`、`GET /payments/{id}`、`POST /payments/{id}/cancel`、`GET /visits/{id}/receipt` | ✅ | | | | |
+| `POST /payments/callbacks/{provider}` | | | | | ✅ 決済 |
+| `GET /events`、`/hubs/store` | ✅ | ✅ | ✅ | ✅ | |
+
+テーブル端末とキッチン端末は、自分の置き場所 (テーブル、持ち場) の範囲だけを使える。
+
+### 6.2 テーブル端末 (`ITableApi`)
+
+| 場面 | API | 受ける通知 |
+| --- | --- | --- |
+| 登録 (一度だけ) | `POST /devices/pair` | |
+| 起動 | `POST /devices/token`、`GET /devices/me/config`、`GET /store`、`GET /menu` (変わっていなければ `304`)、`GET /stock`、`GET /devices/me/visit`、`/hubs/store` | |
+| 待受 | `POST /visits` (`selfStart` の店だけ) | `visit.opened` (注文の画面へ) |
+| 注文 | `POST /visits/{id}/confirmations`、`POST /visits/{id}/orders` | `stock.updated`、`menu.published`、`store.updated` (一時停止、ラストオーダー)、`visit.updated` |
+| 注文履歴 | `GET /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` (ホールの代わりの注文)、`order.lines.updated` |
+| 店員呼出 | `POST /visits/{id}/calls`、`GET /visits/{id}/calls` | `call.updated` (向かっています) |
+| お会計 | `GET /visits/{id}/bill`、`POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel`、`POST /visits/{id}/payments`、`POST /payments/{id}/result` (カード)、`GET /payments/{id}`、`POST /payments/{id}/cancel`、`GET /visits/{id}/receipt` | `payment.updated`、`visit.closed` (お礼と電子レシート) |
+| 来店の終わり | | `visit.closed` (待受へ)、`visit.moved` (移った先は注文の画面、元は待受) |
+| 定期 | `POST /devices/me/heartbeat` (1 分ごと)、`POST /devices/token` (期限の前) | |
+| つなぎ直し | `GET /events?after=` (抜けた通知) | |
+
+- 注文が送れないときはカートを残し、同じ `id` で送り直す (送れたかわからないまま新しい `id` にしない)
+- 確認のルールの品は、入れる前に確かめて `POST /visits/{id}/confirmations` で記録する
+
+### 6.3 ホール端末 (`IHallApi`)
+
+| 場面 | API | 受ける通知 |
+| --- | --- | --- |
+| 登録 (一度だけ) | `POST /devices/pair` | |
+| 起動 | `POST /devices/token`、`GET /devices/me/config`、`GET /store`、`GET /menu`、`GET /stock`、`GET /tables`、`GET /calls`、`GET /serving`、`/hubs/store` | |
+| 席の一覧 | `GET /tables` | `visit.opened` / `visit.updated` / `visit.moved` / `visit.closed`、`order.created`、`call.created` / `call.updated` |
+| 案内 | `POST /visits` (テーブルと人数) | |
+| 来店の操作 | `GET /visits/{id}`、`PATCH /visits/{id}` (人数)、`POST /visits/{id}/move`、`POST /visits/{id}/cancel`、`POST /visits/{id}/close` (レジで払った) | |
+| 代わりの注文 | `GET /visits/{id}/orders`、`POST /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` |
+| 取消 | `POST /orders/{orderId}/lines/{lineId}/cancel` | |
+| 提供 | `GET /serving`、`POST /serving/serve` | `order.lines.updated` (できあがり) |
+| 呼び出し | `GET /calls`、`POST /calls/{id}/acknowledge`、`POST /calls/{id}/done` | `call.created` (音で知らせる) |
+| 会計の手伝い | `GET /visits/{id}/bill`、`POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel` | `payment.updated` |
+| 品切れと一時停止 | `PUT /stock/{targetId}`、`POST /stock/reset`、`PUT /store/ordering` | `stock.updated`、`store.updated` |
+| 定期とつなぎ直し | `POST /devices/me/heartbeat`、`POST /devices/token`、`GET /events?after=` | |
+
+### 6.4 キッチン端末 (`IKitchenApi`)
+
+キッチン端末はサーバが配る Web アプリ (`TableOrder.Web.Kitchen`) で、受け持つ持ち場は端末の記録で決める。
+
+| 場面 | API | 受ける通知 |
+| --- | --- | --- |
+| 登録 (一度だけ) | `POST /devices/pair` | |
+| 起動 | `POST /devices/token`、`GET /devices/me/config` (受け持つ持ち場)、`GET /store`、`GET /menu` (品切れにする品)、`GET /stock`、`GET /kitchen/tickets?stationId=`、`/hubs/store` | |
+| 調理 | `POST /kitchen/tickets/{id}/lines/{lineId}/start`、`POST /kitchen/tickets/{id}/lines/{lineId}/ready`、`POST /kitchen/tickets/{id}/bump` | `ticket.created`、`ticket.updated` (取消) |
+| 押し間違い | `GET /kitchen/tickets?stationId=&status=Done` (下げたチケット)、`POST /kitchen/tickets/{id}/recall` | |
+| 品切れ | `PUT /stock/{targetId}` | `stock.updated` |
+| 定期とつなぎ直し | `POST /devices/me/heartbeat`、`POST /devices/token`、`GET /events?after=` | `menu.published`、`store.updated` |
+
+### 6.5 受付機 (`IReceptionApi`)
+
+| 場面 | API | 受ける通知 |
+| --- | --- | --- |
+| 登録 (一度だけ) | `POST /devices/pair` | |
+| 起動 | `POST /devices/token`、`GET /devices/me/config`、`GET /store`、`GET /tables?status=Vacant`、`/hubs/store` | |
+| 受付 | `GET /tables?status=Vacant` (人数に合う空席)、`POST /visits` | `visit.opened` / `visit.moved` / `visit.closed` (空席を替える)、`store.updated` |
+| 定期とつなぎ直し | `POST /devices/me/heartbeat`、`POST /devices/token`、`GET /events?after=` | |
+
+### 6.6 外部
+
+| 相手 | API | 受ける通知 (Webhook。送り先ごとに種類を選ぶ) |
+| --- | --- | --- |
+| 本部の管理システム | `POST /oauth/token`、`PUT /menu/images/{name}`、`POST /menu/publications` | `order.created`、`stock.updated` |
+| POS | `POST /oauth/token`、`GET /tables`、`GET /visits/{id}`、`GET /visits/{id}/bill`、`POST /visits/{id}/close` | `visit.closed` (会計の明細と支払) |
+| 決済サービス | `POST /payments/callbacks/{provider}` | |
+
+- POS は、レジで払うお客様のテーブルから来店を探し、会計の明細で精算して来店を終える
+- クライアントは、本部にはテナント全体、POS には店舗ごとに管理画面で発行する。  
+  複数のテナントとつなぐ相手 (POS を提供する会社など) は、テナントごとにクライアントを持つ
+
+### 6.7 管理画面
+
+管理画面はサーバ (`TableOrder.Server.Web`) の中の Web の画面で、API を通さずに業務の処理を直接呼ぶ。  
+利用者はテナントに属して自分のテナントだけを扱い、サービスの運営者はテナントを選んで扱う。
+
+| 画面 | できること |
+| --- | --- |
+| 店舗 | 営業時間とラストオーダー、注文の上限、支払方法、呼び出しの用件、電子レシート、色 |
+| テーブル | 追加、名前、席の数、並び、使わなくする |
+| 端末 | ペアリングコードと登録トークンの発行、置き場所 (テーブル、持ち場) の割り当て、無効化、状態 (電池、最後の通信、アプリの版) |
+| 外部 | 外部のクライアントの発行と無効化、Webhook の送り先 |
+| 店内の今 | テーブルと来店、注文と明細の状態、呼び出し、品切れ、通知の記録 |
+| テナント (運営者だけ) | テナントの登録と停止、専用の環境への移し替え |
+
+### 6.8 着席から会計まで
 
 ```mermaid
 sequenceDiagram
@@ -641,36 +843,6 @@ sequenceDiagram
     S-->>T: payment.updated、visit.closed
     Note over T: お礼と電子レシートの QR、待受へ
 ```
-
-### 6.2 テーブル端末
-
-1. **登録**: 管理対象の構成 (MDM) かペアリングコードで `POST /devices/pair` を呼び、トークンとテーブルを受け取る (一度だけ)
-2. **起動**: `GET /devices/me/config`、`GET /store` (注文の一時停止とラストオーダー)、`GET /menu` (変わっていなければ `304`)、`GET /stock`、`GET /devices/me/visit` を読み、通知につなぐ。  
-   来店がなければ待受にする
-3. **来店の開始**: `visit.opened` を受けたら注文の画面にする。  
-   `selfStart` の店舗は、待受で人数を入れて `POST /visits` を呼ぶ (ホール端末ができるまでのモックはこの形)
-4. **注文**: 確認のルールの品は入れる前に確かめて `POST /visits/{id}/confirmations` で記録し、確認の画面で `POST /visits/{id}/orders` を送る。  
-   通信できないときはカートを残し、同じ `id` で送り直す (送れたかわからないまま新しい `id` にしない)
-5. **注文履歴**: `GET /visits/{id}/orders` と `order.lines.updated` で状態を出し、食後の品は `POST /visits/{id}/orders/release` でお願いする
-6. **呼び出し**: `POST /visits/{id}/calls`。  
-   `call.updated` で「向かっています」を出す
-7. **会計**: `GET /visits/{id}/bill` で確かめ、`POST /visits/{id}/checkout`、`POST /visits/{id}/payments` で払う。  
-   `visit.closed` で待受に戻る
-8. **定期**: 1 分ごとに `POST /devices/me/heartbeat` (電池の残りを含む)
-
-### 6.3 ホール端末
-
-1. 席の一覧 (`GET /tables`) で空席を見て、案内したら人数を入れて `POST /visits`
-2. `call.created` を受けたら知らせ、向かうときに `acknowledge`、終えたら `done`
-3. `order.lines.updated` で提供の一覧 (`GET /serving`) を変え、運んだら `POST /serving/serve`
-4. 品切れ (`PUT /stock/{id}`)、注文の一時停止 (`PUT /store/ordering`)、取消 (`POST /orders/{id}/lines/{lineId}/cancel`)、人数の変更と移動、レジで払った来店の終了 (`POST /visits/{id}/close`)
-
-### 6.4 キッチン端末
-
-1. `GET /kitchen/tickets?stationId=` で開いているチケットを出し、`ticket.created` で足す
-2. 作り始めとできあがりを明細ごとに送り、全部できたら `bump`。  
-   押し間違いは `recall`
-3. 材料が切れたら品切れ (`PUT /stock/{id}`)
 
 ---
 
@@ -703,9 +875,11 @@ sequenceDiagram
 | HTTP | `errorCode` | 発生箇所 |
 | --- | --- | --- |
 | 400 | `VALIDATION_ERROR` | 入力の形式・必須の項目 (詳細は `errors`) |
-| 401 | (本文なし) | トークンがない、登録を解除した・無効な端末 |
+| 401 | (本文なし) | アクセストークンがない・期限切れ・署名が合わない、無効にした端末か止めたテナントのトークン |
 | 403 | `DEVICE_SCOPE` | 端末の種類や置き場所の範囲の外 (テーブル端末から他のテーブルの来店、キッチン端末から来店の開始など) |
-| 404 | `NOT_FOUND` | 対象がない |
+| 403 | `DEVICE_REVOKED` | トークンの要求で、無効にした端末 (端末は初期設定に戻る) |
+| 403 | `TENANT_SUSPENDED` | トークンの要求で、契約を止めたテナント (端末は止まっていることを出し、間をおいて取り直す) |
+| 404 | `NOT_FOUND` | 対象がない (ほかのテナントや店舗のものも同じ) |
 | 409 | `DUPLICATE_ID_MISMATCH` | 同じ `id` で内容が違う再送 |
 | 409 | `VERSION_MISMATCH` | 来店の楽観ロックの失敗 |
 | 409 | `TABLE_OCCUPIED` | 来店のあるテーブルでの開始・移動 |
@@ -727,14 +901,15 @@ sequenceDiagram
 | 422 | `BILL_CHANGED` | 会計を始めるときの明細が変わっている |
 | 422 | `PAYMENT_AMOUNT_INVALID` | 支払の額が 0 以下・残りを超える |
 | 422 | `PAYMENT_METHOD_UNAVAILABLE` | 店舗で使えない支払方法 |
-| 429 | (本文なし) | ペアリングの試行の上限 |
+| 429 | (本文なし) | 要求の数の上限 (端末・クライアントごと、テナントごと)、ペアリングの試行の上限。`Retry-After` を付ける |
 | 500 | (なし) | 想定していない例外 (Problem Details。`errorCode` は付けない) |
 
 ---
 
 ## 🔍 9. 参考にした考え方
 
-テーブルオーダー・POS・注文の取り次ぎのクラウドのサービスで広く使われている API の形を参考にした。
+テーブルオーダー・POS・注文の取り次ぎのクラウドのサービスで広く使われている API の形を参考にした。  
+テナントの扱いは、クラウドのマルチテナントの設計の指針も参考にした。
 
 | 考え方 | よくある API の形 | 本書 |
 | --- | --- | --- |
@@ -747,6 +922,9 @@ sequenceDiagram
 | 注文の一時停止 | 店舗の受付を一時的に止める (混雑のとき) | 店舗の `orderingPaused` |
 | メニューの配信と状態の外部への通知 | メニューをプッシュで配り、注文の状態を Webhook で知らせる | `POST /menu/publications`、Webhook |
 | テーブルでの会計 | 客席の端末で QR コード決済、アプリでクレジット | 会計 (QR は店舗が見せ、カードは決済端末) |
+| テナントの見分け方 | 契約・加盟店・店舗の `id` をパスかヘッダで指し、使えるテナントと店舗はトークンで限る。指す値は、1 つの資格情報で複数の店舗を扱う連携のため | トークンのテナントと店舗で決め、URL に入れない (端末とクライアントは 1 つのテナントに属するので、選ぶ値が要らない) |
+| 要求の中の `id` の確かめ | `id` がトークンの範囲のものかを毎回確かめる (オブジェクト単位の認可) | トークンのテナントと店舗の中で引き、ほかは `404` |
+| 外部の連携の認証 | OAuth 2.0 の client credentials で、契約・加盟店ごとのトークン | テナントごと (POS は店舗ごと) のクライアント |
 
 ---
 
@@ -768,9 +946,9 @@ POS の一般の業務と、注文に関わらない店舗・本部の業務は�
 | 持ち帰り・デリバリー・モバイルオーダー | お客様のスマホからの注文、持ち帰りの税率 (8%) | 本書は店内飲食 (10%) だけ |
 | 食材の在庫と発注 | 原材料の在庫、仕入れ | 品切れ (売れるかどうか) だけを扱う |
 | スタッフの管理 | スタッフの登録、PIN、権限、勤怠 | 操作の記録に `staffId` を任意で付けるだけ |
-| 端末の管理画面 | ペアリングコードの発行、端末とテーブルの割り当て、MDM の設定 | 管理画面。本書は端末の登録と設定の取得だけ |
+| 管理画面 | 店舗の設定、ペアリングコードの発行、端末とテーブルの割り当て | サーバの中の Web の画面で、API を通さない ([§6.7](#67-管理画面))。EMM の設定は EMM の管理画面 |
 | キッチンプリンタ | 伝票の印刷とプリンタの制御 | キッチン端末 (KDS) を前提にする |
 | 配膳ロボット | 配膳の依頼と到着の連絡 | 将来の拡張 (`Ready` の明細を渡す形になる) |
 | 時間制のコース | 食べ放題・飲み放題の制限時間 | ファミリーレストランでは使わない (ドリンクバーは時間を区切らない) |
 | 分析・レポート | 時間帯の売れ方、提供までの時間、呼び出しへの応答の時間 | 通知と記録から別に集計する |
-| 複数の会社 | 会社・ブランドをまたぐ管理 | 1 つのチェーンを前提にする (ブランドの色は店舗の設定の `theme` で替える) |
+| テナントをまたぐもの | テナントをまたぐ集計、メニューや設定の共有、テナントの中のブランド・地域の階層 | テナントごとに閉じる。ブランドの色は店舗の設定の `theme` で替える |
