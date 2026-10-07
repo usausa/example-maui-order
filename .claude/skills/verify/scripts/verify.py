@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# 作業の単位の検証: ビルド (警告 0)、InspectCode (指摘 0)、改行コード、文書の改行
+# 作業の単位の検証: ビルド (警告 0)、テスト、InspectCode (指摘 0)、改行コード、文書の改行
 #
 #   python .claude/skills/verify/scripts/verify.py [terminal] [files] [--no-inspect] [--fix] [--all-docs] [--out DIR]
 #
@@ -18,6 +18,10 @@ from markdown_breaks import format_markdown
 ROOT = Path(__file__).resolve().parents[4]
 
 TERMINAL_SOLUTION = 'TableOrder.Terminal.slnx'
+TEST_PROJECTS = [
+    'tests/TableOrder.Domain.Tests',
+    'tests/TableOrder.Client.Tests',
+]
 
 # 改行コードを見ない (バイナリ) ファイル
 BINARY_SUFFIXES = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.otf', '.woff', '.woff2', '.pfx', '.snk', '.keystore', '.jar', '.db', '.zip', '.pdf'}
@@ -66,6 +70,23 @@ def build(solution, configuration, out):
     for line in (errors + warnings)[:20]:
         print('    ' + line[:240])
     return code == 0 and not errors
+
+
+#--------------------------------------------------------------------------------
+# Test
+#--------------------------------------------------------------------------------
+
+def test(project, out):
+    # xunit v3 は実行形式なので、dotnet test ではなく dotnet run で実行する (ビルドは済ませておく)
+    log_path = out / f'test-{Path(project).name}.log'
+    code = run(['dotnet', 'run', '--project', project, '-c', 'Release', '--no-build'], log_path)
+    text = log_path.read_text(encoding='utf-8', errors='replace')
+    summary = [line.strip() for line in text.splitlines() if re.match(r'\s*(合計|失敗|成功|スキップ[^:]*|Total|Failed|Succeeded|Passed|Skipped)\s*:', line)]
+    detail = '、'.join(summary[-4:]) if summary else f'結果の行がありません (ログ {log_path})'
+    report(f'test {Path(project).name}', code == 0, detail)
+    if code != 0:
+        for line in [line.rstrip() for line in text.splitlines() if line.lstrip().startswith(('失敗 ', 'failed '))][:20]:
+            print('    ' + line.strip()[:240])
 
 
 #--------------------------------------------------------------------------------
@@ -194,7 +215,7 @@ def main():
     # パイプやファイルへの出力は UTF-8 にする (Windows の既定のコードページでは文字化けする)
     if not sys.stdout.isatty():
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-    parser = argparse.ArgumentParser(description='ビルド・InspectCode・改行コード・文書の改行を確かめる')
+    parser = argparse.ArgumentParser(description='ビルド・テスト・InspectCode・改行コード・文書の改行を確かめる')
     parser.add_argument('targets', nargs='*', choices=['terminal', 'files'], help='省くとすべて')
     parser.add_argument('--no-inspect', action='store_true', help='InspectCode を省く (途中の確認用。作業の単位の検証では省かない)')
     parser.add_argument('--fix', action='store_true', help='改行コードと文書の改行を直す')
@@ -207,7 +228,9 @@ def main():
     print(f'ログ: {out}', flush=True)
 
     if 'terminal' in targets:
-        build(TERMINAL_SOLUTION, 'Release', out)
+        if build(TERMINAL_SOLUTION, 'Release', out):
+            for project in TEST_PROJECTS:
+                test(project, out)
         build(TERMINAL_SOLUTION, 'Debug', out)
         if not args.no_inspect:
             inspect(TERMINAL_SOLUTION, out)

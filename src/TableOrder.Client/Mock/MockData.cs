@@ -11,6 +11,10 @@ internal static class MockData
     private const string DessertTag = "dessert";
     private const string OnePerGuestTag = "one-per-guest";
 
+    // Store
+
+    private const string StoreTimeZone = "Asia/Tokyo";
+
     // Station
 
     private static readonly Guid KitchenStation = Id(91);
@@ -76,16 +80,17 @@ internal static class MockData
     //--------------------------------------------------------------------------------
 
     // 開店は今の時刻より前にし、ラストオーダー (今の時刻の前後で決める) が営業日の区切りにかからないようにする
+    // 時刻はラストオーダーと同じく店舗のタイムゾーンで決める (端末の時刻で決めると、端末のタイムゾーンによっては区切りにかかる)
     public static StoreResponse CreateStore(DateTimeOffset now)
     {
-        var open = TimeOnly.FromDateTime(now.ToLocalTime().DateTime).AddHours(-6);
+        var open = StoreHours.LocalTime(now, StoreTimeZone).AddHours(-6);
         var openTime = new TimeOnly(open.Hour, 0);
         return new StoreResponse
         {
             Id = Id(1),
             Code = "001",
             Name = Text("駅前店", "Ekimae"),
-            TimeZone = "Asia/Tokyo",
+            TimeZone = StoreTimeZone,
             BusinessDate = DateOnly.FromDateTime(now.ToLocalTime().DateTime),
             OpenTime = StoreHours.Format(openTime),
             CloseTime = StoreHours.Format(openTime.AddHours(18)),

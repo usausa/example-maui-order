@@ -235,7 +235,7 @@
 | `TableOrder.Server.Core` | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存 |
 | `TableOrder.Server.Web` | 入口 (REST、gRPC、SignalR)。受けた要求を `Server.Core` に渡すだけにする |
 | `TableOrder.Server.AppHost` | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口) |
-| `tests/` | `Domain` の計算、`Server.Core` の業務の処理、`Client` の窓口のテスト |
+| `tests/` | `Server.Core` の業務の処理と、`Client` の実際の通信 (REST / gRPC、通知) のテスト |
 
 ### 通信 (想定)
 
@@ -345,6 +345,7 @@
 - [x] スプラッシュ、アプリのアイコン、システムのロゴ
 - [x] 画面の文言の多言語化 (resx の日本語と英語、切り替え)
 - [x] 全画面 (専用端末の扱いに含めた)
+- [x] テスト (`Domain` の計算、モックの注文の受け付け・割り勘の支払・通知の順)
 
 ### 2. 注文の画面
 
@@ -411,7 +412,7 @@
 
 ## ✅ 確認の方法
 
-- ビルドと解析: `python .claude/skills/verify/scripts/verify.py` (Release と Debug の警告 0、InspectCode 0 件、改行コード、文書の改行)
+- ビルド・テスト・解析: `python .claude/skills/verify/scripts/verify.py` (Release と Debug の警告 0、テスト、InspectCode 0 件、改行コード、文書の改行)
 - 画面: `emu.py boot Tablet_1920x1200_Android15`、`emu.py install`、`emu.py shot` で撮って確かめる (`.claude/skills/emulator/`)
 - フェーズの終わりに主な画面を撮って README の画像にする
 

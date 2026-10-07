@@ -2,10 +2,9 @@ namespace TableOrder.Client.Mock;
 
 // 注文サーバの代わり。来店・注文・呼び出し・支払をメモリに持ち、時間の経過でキッチン・ホール・決済サービスの動きを真似る
 // スタッフメニューから障害 (通信できない、支払の失敗、売り切れ) と注文の進み具合、ホール端末やレジの操作 (通知) を起こせる
+// 待ち時間 (通信の遅れ、支払、通知) は作るときに替えられる (テストは 0 にして待たずに進める)
 public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
 {
-    private static readonly TimeSpan Latency = TimeSpan.FromMilliseconds(400);
-
     // 注文 (食後の品はお願い) から作り始め・できあがり・提供までの時間
     private static readonly TimeSpan CookingAfter = TimeSpan.FromSeconds(5);
     private static readonly TimeSpan ReadyAfter = TimeSpan.FromSeconds(15);
@@ -13,9 +12,6 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
 
     // 呼び出しにスタッフが応えるまでの時間
     private static readonly TimeSpan AcknowledgeAfter = TimeSpan.FromSeconds(5);
-
-    // 支払が終わるまでの時間 (QR を読み取る、カードを差し込む)
-    private static readonly TimeSpan PaymentAfter = TimeSpan.FromSeconds(6);
 
     private static readonly TimeSpan QrLifetime = TimeSpan.FromMinutes(5);
 
@@ -44,6 +40,9 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
     // ロックの中で作り、ロックの外で送る通知
     private readonly List<OrderEvent> raising = [];
 
+    // 送っている通知 (次の通知は、これを送り終えてから送る)
+    private Task delivering = Task.CompletedTask;
+
     private Visit? visit;
 
     private long seq;
@@ -62,7 +61,13 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
     // Control
     //--------------------------------------------------------------------------------
 
-    public TimeSpan EventDelay { get; } = TimeSpan.FromSeconds(3);
+    // 通信の遅れ
+    public TimeSpan Latency { get; init; } = TimeSpan.FromMilliseconds(400);
+
+    // 支払が終わるまでの時間 (QR を読み取る、カードを差し込む)
+    public TimeSpan PaymentAfter { get; init; } = TimeSpan.FromSeconds(6);
+
+    public TimeSpan EventDelay { get; init; } = TimeSpan.FromSeconds(3);
 
     public bool Offline { get; set; }
 
@@ -85,7 +90,7 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
                 AddEvent(now => new StoreUpdatedEvent(++seq, now, CopyStore()));
             }
 
-            RaiseLater();
+            Raise(EventDelay);
         }
     }
 
@@ -107,7 +112,7 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
                 AddEvent(at => new StoreUpdatedEvent(++seq, at, CopyStore()));
             }
 
-            RaiseLater();
+            Raise(EventDelay);
         }
     }
 
@@ -125,7 +130,7 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
             AddEvent(now => new VisitOpenedEvent(++seq, now, opened));
         }
 
-        RaiseLater();
+        Raise(EventDelay);
         return true;
     }
 
@@ -144,7 +149,7 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
             AddEvent(now => new VisitClosedEvent(++seq, now, closed));
         }
 
-        RaiseLater();
+        Raise(EventDelay);
         return true;
     }
 
@@ -548,7 +553,7 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
         }
 
         // 時間の経過で起きたこと (テーブルで払い終えて来店が閉じた) は、待たずに知らせる
-        Raise();
+        Raise(TimeSpan.Zero);
         return result;
     }
 
@@ -590,41 +595,39 @@ public sealed class MockOrderApi : IOrderApi, IOrderEvents, IMockOrderControl
     private void AddEvent(Func<DateTimeOffset, OrderEvent> create) =>
         raising.Add(create(DateTimeOffset.UtcNow));
 
-    // 受ける側がモックを呼び返してもよいように、ロックの外で送る
-    private void Raise()
-    {
-        foreach (var e in TakeEvents())
-        {
-            Received?.Invoke(this, new OrderEventArgs(e));
-        }
-    }
-
-    // スタッフメニューの操作の通知は、お客様の画面に戻る間をとってから送る
-    private void RaiseLater()
-    {
-        var events = TakeEvents();
-        if (events.Count > 0)
-        {
-            _ = RaiseLaterAsync(events);
-        }
-    }
-
-    private async Task RaiseLaterAsync(List<OrderEvent> events)
-    {
-        await Task.Delay(EventDelay).ConfigureAwait(false);
-        foreach (var e in events)
-        {
-            Received?.Invoke(this, new OrderEventArgs(e));
-        }
-    }
-
-    private List<OrderEvent> TakeEvents()
+    // 作った通知を delay の後に送る (スタッフメニューの操作の通知は、お客様の画面に戻る間をとる)
+    // 送るのは前の通知を送り終えてから。受け手は seq の古い通知を捨てるので、遅らせた通知を後から起きた通知に追い越させない
+    private void Raise(TimeSpan delay)
     {
         lock (sync)
         {
+            if (raising.Count == 0)
+            {
+                return;
+            }
+
+            var previous = delivering;
             var events = raising.ToList();
+            var due = DateTimeOffset.UtcNow + delay;
             raising.Clear();
-            return events;
+
+            // 受ける側がモックを呼び返してもよいように、ロックの外 (別のスレッド) で送る
+            delivering = Task.Run(() => DeliverAsync(previous, events, due));
+        }
+    }
+
+    private async Task DeliverAsync(Task previous, List<OrderEvent> events, DateTimeOffset due)
+    {
+        await previous.ConfigureAwait(ConfigureAwaitOptions.SuppressThrowing);
+        var wait = due - DateTimeOffset.UtcNow;
+        if (wait > TimeSpan.Zero)
+        {
+            await Task.Delay(wait).ConfigureAwait(false);
+        }
+
+        foreach (var e in events)
+        {
+            Received?.Invoke(this, new OrderEventArgs(e));
         }
     }
 

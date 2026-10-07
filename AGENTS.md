@@ -25,7 +25,8 @@
 
 ## 検証
 
-- 作業の単位ごとに、Release と Debug のビルド (警告 0)、InspectCode (0 件)、改行コードを確かめる (手順とスクリプトは `.claude/skills/verify/`)
+- 作業の単位ごとに、Release と Debug のビルド (警告 0)、テスト、InspectCode (0 件)、改行コードを確かめる (手順とスクリプトは `.claude/skills/verify/`)
+- テストは `dotnet run --project` で実行する。`dotnet test` は使わない
 - UI の変更はタブレットのエミュレータ (1920x1200、横) で動作を確かめ、画面を撮って見る (手順とスクリプトは `.claude/skills/emulator/`)。実機には入れない
 
 ## 進め方

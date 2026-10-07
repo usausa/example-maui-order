@@ -21,10 +21,12 @@ API の想定は [api-design.md](api-design.md) を参照。
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
-| `TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方)。サーバと端末で同じ計算を使う |
+| `TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
 | `TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
 | `TableOrder.Client` | .NET | 端末が使う API の窓口 (`IOrderApi`、`ApiResult`) とモック (`Mock/MockOrderApi`) |
 | `TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
+| `TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
+| `TableOrder.Client.Tests` | .NET (xunit) | モックの決まり (注文の一時停止とラストオーダー、割り勘の支払、通知とその順) のテスト |
 
 ```
 TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
@@ -164,7 +166,7 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 - `IOrderApi` は API の想定 ([api-design.md](api-design.md)) の要求を 1 つずつメソッドにしたもの。  
   REST と gRPC のどちらで実装しても、端末は `IOrderApi` だけを見る
 - `IOrderEvents` はサーバの通知 (来店の開始・終了、店舗の変更) を受ける窓口。  
-  同じ通知が 2 回届くことがあるので、受け手が `seq` で重複を捨てる
+  通知は `seq` の順に届き、同じ通知が 2 回届くことがあるので、受け手は最後に受けた `seq` 以前の通知を捨てる
 - ラストオーダーを過ぎたかは `TableOrder.Domain.StoreHours` で決める (開店の時刻を営業日の区切りにし、日をまたぐ営業も扱う)。  
   端末は知らせに、サーバは注文の受け付けに使う
 - 今は DI で `MockOrderApi` を `IOrderApi` と `IOrderEvents` に登録している
@@ -209,7 +211,8 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 | 通信の遅れ | 0.4 秒 |
 
 スタッフメニューから、次の障害と進み具合、ホール端末やレジの操作を起こせる (`IMockOrderControl`)。  
-知らせを送る操作は、スタッフメニューを閉じてお客様の画面に戻る間をとって、3 秒後に知らせる。
+知らせを送る操作は、スタッフメニューを閉じてお客様の画面に戻る間をとって、3 秒後に知らせる。  
+待っている間に起きた知らせ (払い終えて来店が閉じたなど) は、その後に送る (`seq` の順を崩さない)。
 
 | 操作 | モックの動き |
 | --- | --- |
@@ -221,6 +224,9 @@ IOrderEvents (Client) ──> OrderEventReceiver (Shell) ──> State、表示�
 | レジで会計する | 来店を閉じ、知らせる (`visit.closed`) |
 | 注文を一時停止する / 再開する | 店舗の一時停止を替え、知らせる (`store.updated`) |
 | ラストオーダー | なし、まもなく (15 分後)、過ぎた (1 分前) の順に替え、知らせる (`store.updated`) |
+
+通信の遅れ、支払が終わるまでの時間、知らせるまでの時間はモックを作るときに替えられる。  
+テスト (`TableOrder.Client.Tests`) は 0 にして、待たずに確かめる。
 
 ---
 

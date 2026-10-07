@@ -27,4 +27,8 @@
       <Deploy />
     </Project>
   </Folder>
+  <Folder Name="/Test/">
+    <Project Path="tests/TableOrder.Client.Tests/TableOrder.Client.Tests.csproj" />
+    <Project Path="tests/TableOrder.Domain.Tests/TableOrder.Domain.Tests.csproj" />
+  </Folder>
 </Solution>

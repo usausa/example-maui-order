@@ -458,6 +458,14 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
         SetStep(CheckoutStep.Completed);
 
+        // 割り勘で分けて払ったときも、払い終えたら残りと払った額ではなく明細の合計を出す (分けずに払ったときと同じ)
+        if (bill is not null)
+        {
+            TotalText = ViewHelper.Price(bill.Total);
+        }
+
+        HasPaid = false;
+
         var receipt = await orderApi.GetReceiptAsync(visitState.Id, token);
         if (token.IsCancellationRequested)
         {
