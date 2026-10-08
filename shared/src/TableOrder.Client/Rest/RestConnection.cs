@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-// 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi) と通知 (SignalROrderEvents) が使う
+// 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi、RestHallApi) と通知 (SignalROrderEvents) が使う
 // アクセストークンは中で持ち、期限の前と 401 を受けたときに取り直す (送り直しは 1 回だけ)。トークンの要求が断られたら (無効化、テナントの停止) Denied で知らせる
 // 結果は例外を投げずに ApiResult で返す。接続先と端末は要求のたびに IDeviceContext から読む (端末の設定で替えても、作り直さずに次の要求から使う)
 public sealed class RestConnection : IDisposable
@@ -178,10 +178,34 @@ public sealed class RestConnection : IDisposable
             path,
             cancel);
 
+    // 一部を変える操作 (人数の変更)
+    internal ValueTask<ApiResult<T>> PatchAsync<TBody, T>(string path, TBody body, JsonTypeInfo<TBody> bodyType, JsonTypeInfo<T> resultType, CancellationToken cancel) =>
+        SendWithTokenAsync(
+            uri => new HttpRequestMessage(HttpMethod.Patch, uri) { Content = JsonContent.Create(body, bodyType) },
+            (response, token) => ReadAsync(response, resultType, token),
+            path,
+            cancel);
+
     // 応答のない操作 (204)
     internal ValueTask<ApiResult<NoContent>> PostNoContentAsync<TBody>(string path, TBody body, JsonTypeInfo<TBody> bodyType, CancellationToken cancel) =>
         SendWithTokenAsync(
             uri => new HttpRequestMessage(HttpMethod.Post, uri) { Content = JsonContent.Create(body, bodyType) },
+            static (_, _) => ValueTask.FromResult(NoContent.Value),
+            path,
+            cancel);
+
+    // 本文も応答もない操作 (すべて戻す)
+    internal ValueTask<ApiResult<NoContent>> PostEmptyNoContentAsync(string path, CancellationToken cancel) =>
+        SendWithTokenAsync(
+            uri => new HttpRequestMessage(HttpMethod.Post, uri),
+            static (_, _) => ValueTask.FromResult(NoContent.Value),
+            path,
+            cancel);
+
+    // 置き換える操作で、応答のないもの (204。品切れ、注文の一時停止)
+    internal ValueTask<ApiResult<NoContent>> PutNoContentAsync<TBody>(string path, TBody body, JsonTypeInfo<TBody> bodyType, CancellationToken cancel) =>
+        SendWithTokenAsync(
+            uri => new HttpRequestMessage(HttpMethod.Put, uri) { Content = JsonContent.Create(body, bodyType) },
             static (_, _) => ValueTask.FromResult(NoContent.Value),
             path,
             cancel);

@@ -39,15 +39,15 @@ public sealed class TableEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(visit.Version, summary.Version);
     }
 
-    // 受付機は空いているテーブルだけを読む
+    // 受付機は空いているテーブルだけを読む (受付機が開いた来店の席は空きから外れる)
     [Fact]
     public async Task ReceptionReadsVacantTables()
     {
         // Arrange
-        var store = await factory.CreateStoreAsync();
+        var store = await factory.CreateStoreAsync(VisitOpening.Reception);
         using var reception = new TestDevice(factory.CreateClient());
         await reception.SignInAsync(store.ReceptionCode);
-        using var opened = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
         opened.EnsureSuccessStatusCode();
 
         // Act

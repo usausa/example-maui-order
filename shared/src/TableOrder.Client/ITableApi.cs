@@ -28,6 +28,9 @@ public interface ITableApi
     // GET /devices/me/visit (来店がなければ内容が null)
     ValueTask<ApiResult<VisitResponse?>> GetCurrentVisitAsync(CancellationToken cancel = default);
 
+    // POST /visits (来店の開き方が席の店だけ。テーブルは送らず、自分のテーブルに開く)
+    ValueTask<ApiResult<VisitResponse>> StartVisitAsync(VisitCreateRequest request, CancellationToken cancel = default);
+
     // POST /visits/{visitId}/confirmations
     ValueTask<ApiResult<VisitResponse>> ConfirmAsync(Guid visitId, VisitConfirmationRequest request, CancellationToken cancel = default);
 

@@ -34,6 +34,10 @@ public sealed partial class StoreAccessor
     [QueryFirst]
     public partial ValueTask<DiningTableEntity?> QueryActiveTableAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid id, CancellationToken cancellationToken);
 
+    // 書き込みの中で、人数の入る空席のうち定員の小さいテーブル (同じなら表示順) を選ぶ (受付機の来店の開始)
+    [QueryFirst]
+    public partial ValueTask<DiningTableEntity?> QueryVacantTableByGuestsAsync(DbTransaction tx, Guid tenantId, Guid storeId, int guests, CancellationToken cancellationToken);
+
     // 使っているテーブルと今の来店の要約 (表示順)
     [Query]
     public partial ValueTask<List<TableSummaryEntity>> QueryTableSummaryListAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);

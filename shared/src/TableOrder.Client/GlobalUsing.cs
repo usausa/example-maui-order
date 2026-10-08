@@ -12,6 +12,7 @@ global using TableOrder.Contract.Devices;
 global using TableOrder.Contract.Menu;
 global using TableOrder.Contract.Orders;
 global using TableOrder.Contract.Payments;
+global using TableOrder.Contract.Serving;
 global using TableOrder.Contract.Stores;
 global using TableOrder.Contract.Visits;
 global using TableOrder.Domain;

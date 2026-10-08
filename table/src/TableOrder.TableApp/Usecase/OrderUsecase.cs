@@ -44,6 +44,25 @@ public sealed class OrderUsecase
         visitState.Open(visit);
     }
 
+    // お客様が人数を入れて来店を始める (来店の開き方が席の店)。テーブルは送らず、サーバが端末のテーブルに開く
+    // 人数を入れている間にスタッフが同じテーブルを開いていたら、その来店で始める
+    public async ValueTask<ApiResult<VisitResponse>> StartVisitAsync(int adults, int children)
+    {
+        var result = await tableApi.StartVisitAsync(new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = adults, Children = children });
+        if ((result.Status == ApiStatus.Rejected) && (result.ErrorCode == ErrorCodes.TableOccupied) &&
+            ((await tableApi.GetCurrentVisitAsync()).Content is { } current))
+        {
+            result = ApiResult.Success(current);
+        }
+
+        if (result.Content is { } visit)
+        {
+            OpenVisit(visit);
+        }
+
+        return result;
+    }
+
     // ほかのテーブルから移ってきた来店を開き、移る前の注文を読む (上限のルールに数える)
     public async ValueTask<ApiResult<OrderListResponse>> OpenMovedVisitAsync(VisitResponse visit)
     {

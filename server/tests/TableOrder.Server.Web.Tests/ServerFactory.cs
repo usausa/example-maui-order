@@ -124,8 +124,8 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         return (tenantId, code);
     }
 
-    // ほかのテストに関わらない店舗。テーブルを 3 つ置き、今のメニューはデモの店舗と同じにして、呼び出しの用件 (Staff、Water) と端末の種類ごとのペアリングコードを出す
-    public async ValueTask<TestStore> CreateStoreAsync()
+    // ほかのテストに関わらない店舗。テーブルを 3 つ (定員は 4、4、6) 置き、今のメニューはデモの店舗と同じにして、呼び出しの用件 (Staff、Water) と端末の種類ごとのペアリングコードを出す
+    public async ValueTask<TestStore> CreateStoreAsync(VisitOpening visitOpening = VisitOpening.Hall)
     {
         var tenantId = Guid.CreateVersion7();
         var storeId = Guid.CreateVersion7();
@@ -143,7 +143,7 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
             INSERT INTO Tenants (Id, Code, Name, BrandName, Status, CreatedAt, UpdatedAt, Version)
                 VALUES (@tenantId, @tenantCode, 'test', '{"ja":"チェーン"}', 'Active', @now, @now, 1);
             INSERT INTO Stores (TenantId, Id, Code, Name, TimeZone, OpenTime, CloseTime, OrderingPaused, TaxRounding, MaxQuantityPerLine, MaxLinesPerOrder, Languages, PaymentMethods, ElectronicReceipt, Features, StaffPinHash, SettingsVersion, MenuPublicationId, IsActive, CreatedAt, UpdatedAt, Version)
-                VALUES (@tenantId, @storeId, '001', '{"ja":"店"}', 'Asia/Tokyo', '05:00', '04:00', 0, 'Floor', 9, 20, '["ja"]', '["QrCode","CreditCard"]', 1, '{}', @staffPinHash, 1, @publicationId, 1, @now, @now, 1);
+                VALUES (@tenantId, @storeId, '001', '{"ja":"店"}', 'Asia/Tokyo', '05:00', '04:00', 0, 'Floor', 9, 20, '["ja"]', '["QrCode","CreditCard"]', 1, @features, @staffPinHash, 1, @publicationId, 1, @now, @now, 1);
             INSERT INTO CallReasons (TenantId, StoreId, Code, Name, SortOrder, IsActive)
                 VALUES (@tenantId, @storeId, 'Staff', '{"ja":"店員を呼ぶ"}', 1, 1),
                        (@tenantId, @storeId, 'Water', '{"ja":"お水"}', 2, 1);
@@ -166,6 +166,7 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         command.Parameters.AddWithValue("@tenantCode", tenantId.ToString("N"));
         command.Parameters.AddWithValue("@storeId", storeId.ToString("D"));
         command.Parameters.AddWithValue("@publicationId", publicationId.ToString("D"));
+        command.Parameters.AddWithValue("@features", $$"""{"visitOpening":"{{visitOpening}}"}""");
         command.Parameters.AddWithValue("@staffPinHash", StaffPinHash);
         for (var i = 0; i < tableIds.Length; i++)
         {

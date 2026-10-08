@@ -56,6 +56,9 @@
   <data name="BadgeRecommended" xml:space="preserve">
     <value>おすすめ</value>
   </data>
+  <data name="CallAcknowledged" xml:space="preserve">
+    <value>スタッフが向かっています</value>
+  </data>
   <data name="CallMessage" xml:space="preserve">
     <value>ご用件をお選びください</value>
   </data>
@@ -232,6 +235,21 @@
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>通信できませんでした。しばらくしてからもう一度お試しください</value>
+  </data>
+  <data name="GuestAdults" xml:space="preserve">
+    <value>大人</value>
+  </data>
+  <data name="GuestChildren" xml:space="preserve">
+    <value>お子様</value>
+  </data>
+  <data name="GuestChildrenHint" xml:space="preserve">
+    <value>小学生以下</value>
+  </data>
+  <data name="GuestStart" xml:space="preserve">
+    <value>はじめる</value>
+  </data>
+  <data name="GuestTitle" xml:space="preserve">
+    <value>人数を入力してください</value>
   </data>
   <data name="GuestsFormat" xml:space="preserve">
     <value>{0} 名</value>
@@ -499,6 +517,15 @@
   </data>
   <data name="StaffTitle" xml:space="preserve">
     <value>スタッフメニュー</value>
+  </data>
+  <data name="StandbyReception" xml:space="preserve">
+    <value>入口の受付機で受付をしてください</value>
+  </data>
+  <data name="StandbyStart" xml:space="preserve">
+    <value>ご注文をはじめる</value>
+  </data>
+  <data name="StandbyTable" xml:space="preserve">
+    <value>タブレットからご注文いただけます</value>
   </data>
   <data name="StandbyWaiting" xml:space="preserve">
     <value>スタッフがご案内します。少々お待ちください</value>

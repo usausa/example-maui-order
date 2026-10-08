@@ -56,6 +56,9 @@
   <data name="BadgeRecommended" xml:space="preserve">
     <value>Recommended</value>
   </data>
+  <data name="CallAcknowledged" xml:space="preserve">
+    <value>On the way</value>
+  </data>
   <data name="CallMessage" xml:space="preserve">
     <value>What can we help you with?</value>
   </data>
@@ -232,6 +235,21 @@
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>
+  </data>
+  <data name="GuestAdults" xml:space="preserve">
+    <value>Adults</value>
+  </data>
+  <data name="GuestChildren" xml:space="preserve">
+    <value>Children</value>
+  </data>
+  <data name="GuestChildrenHint" xml:space="preserve">
+    <value>Elementary school age and under</value>
+  </data>
+  <data name="GuestStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="GuestTitle" xml:space="preserve">
+    <value>How many in your party?</value>
   </data>
   <data name="GuestsFormat" xml:space="preserve">
     <value>{0}</value>
@@ -499,6 +517,15 @@
   </data>
   <data name="StaffTitle" xml:space="preserve">
     <value>Staff menu</value>
+  </data>
+  <data name="StandbyReception" xml:space="preserve">
+    <value>Please check in at the reception kiosk at the entrance</value>
+  </data>
+  <data name="StandbyStart" xml:space="preserve">
+    <value>Start ordering</value>
+  </data>
+  <data name="StandbyTable" xml:space="preserve">
+    <value>You can order from this tablet</value>
   </data>
   <data name="StandbyWaiting" xml:space="preserve">
     <value>A staff member will be with you shortly</value>

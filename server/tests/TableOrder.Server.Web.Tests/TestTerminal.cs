@@ -26,6 +26,8 @@ public sealed class TestTerminal : IAsyncDisposable
 
     public RestTableApi Table { get; }
 
+    public RestHallApi Hall { get; }
+
     public SignalROrderEvents Events { get; }
 
     private TestTerminal(ServerFactory factory)
@@ -39,6 +41,7 @@ public sealed class TestTerminal : IAsyncDisposable
         connection = new RestConnection(Context, options, TimeProvider.System);
         Device = new RestDeviceApi(connection);
         Table = new RestTableApi(Context, connection);
+        Hall = new RestHallApi(Context, connection);
         Events = new SignalROrderEvents(Context, options, connection);
         Device.Denied += (_, e) => denied.Writer.TryWrite(e);
         Events.Received += (_, e) => received.Writer.TryWrite(e.Event);

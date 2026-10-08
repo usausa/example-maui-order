@@ -48,7 +48,7 @@ public static class VisitEndpoints
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         group.MapPost("/{id:guid}/confirmations", HandleConfirmAsync)
-            .RequireAuthorization(Policies.TableDevice)
+            .RequireAuthorization(Policies.VisitReader)
             .WithName("VisitConfirm")
             .Produces<VisitResponse>()
             .ProducesValidationProblem()

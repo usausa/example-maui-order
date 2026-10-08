@@ -13,6 +13,8 @@ public static class ErrorCodes
 
     public const string TenantSuspended = "TENANT_SUSPENDED";
 
+    public const string VisitOpeningDisabled = "VISIT_OPENING_DISABLED";
+
     // 404
     public const string NotFound = "NOT_FOUND";
 
@@ -22,6 +24,8 @@ public static class ErrorCodes
     public const string VersionMismatch = "VERSION_MISMATCH";
 
     public const string TableOccupied = "TABLE_OCCUPIED";
+
+    public const string NoVacantTable = "NO_VACANT_TABLE";
 
     // 410
     public const string EventsExpired = "EVENTS_EXPIRED";

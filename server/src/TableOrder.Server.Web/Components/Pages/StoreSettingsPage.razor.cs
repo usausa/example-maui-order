@@ -7,12 +7,14 @@ using MudBlazor;
 using TableOrder.Contract.Devices;
 using TableOrder.Server.Web.Application.Context;
 
-// 店舗の設定 (選んだ店舗の機能の有無、言語、支払方法、呼び出しの用件、スタッフの PIN)。保存すると店舗のテーブル端末に知らせる
+// 店舗の設定 (選んだ店舗の来店の開き方、機能の有無、言語、支払方法、呼び出しの用件、スタッフの PIN)。保存すると店舗のテーブル端末に知らせる
 public sealed partial class StoreSettingsPage : IDisposable
 {
     private List<ReasonChoice> reasons = [];
 
     private int? version;
+
+    private VisitOpening visitOpening;
 
     private bool registerCheckout;
 
@@ -78,6 +80,7 @@ public sealed partial class StoreSettingsPage : IDisposable
             return;
         }
 
+        visitOpening = settings.Features.VisitOpening;
         registerCheckout = settings.Features.RegisterCheckout;
         splitPayment = settings.Features.SplitPayment;
         lastOrderNoticeMinutes = settings.Features.LastOrderNoticeMinutes;
@@ -107,7 +110,8 @@ public sealed partial class StoreSettingsPage : IDisposable
                 RegisterCheckout = registerCheckout,
                 SplitPayment = splitPayment,
                 LastOrderNoticeMinutes = lastOrderNoticeMinutes,
-                FinishSeconds = finishSeconds
+                FinishSeconds = finishSeconds,
+                VisitOpening = visitOpening
             },
             Choose(("ja", japanese), ("en", english)),
             Choose((PaymentMethod.QrCode, qrCode), (PaymentMethod.CreditCard, creditCard)),

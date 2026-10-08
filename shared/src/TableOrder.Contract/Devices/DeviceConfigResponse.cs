@@ -70,6 +70,9 @@ public sealed class DeviceConfigResponseFeatures
 
     // お礼の画面から待受に戻るまでの秒数
     public int FinishSeconds { get; set; } = 30;
+
+    // 来店の開き方 (テーブル端末は待受の文言と、人数を入れて始めるかを替える)
+    public VisitOpening VisitOpening { get; set; } = VisitOpening.Hall;
 }
 
 // PBKDF2-HMAC-SHA256 の回数と、Base64 の塩とハッシュ (店舗の設定に持つ JSON の形も兼ねる)

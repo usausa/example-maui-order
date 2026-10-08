@@ -9,6 +9,8 @@ public static class AppIcons
 
     private const double ActionSize = 30d;
 
+    private const double StandbySize = 36d;
+
     // Header
 
     public static FontImageSource Language => Create(MaterialIcons.Language, HeaderSize, "OnSurfaceColor");
@@ -26,6 +28,8 @@ public static class AppIcons
     // Standby
 
     public static FontImageSource StandbyLanguage => Create(MaterialIcons.Language, HeaderSize, "OnSecondaryColor");
+
+    public static FontImageSource StandbyStart => Create(MaterialIcons.Touch_app, StandbySize, "OnPrimaryColor");
 
     private static FontImageSource Create(string glyph, double size, string colorKey) =>
         new()

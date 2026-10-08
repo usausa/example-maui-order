@@ -25,6 +25,6 @@ paths:
 - 開発の環境の自動の進行は、`SimulationService` を DI から取り、時間を 0 にして店舗の文脈で呼んで確かめる (テストのサーバは自動の進行を止める)
 - 管理画面の操作 (端末の管理、案内、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
 - テストのサーバの店舗の PIN は `ServerFactory.StaffPin` で、ハッシュの回数を少なくしている (テストを遅くしない)
-- テーブル端末のテストの来店は、ホール端末で開く (`ServerFactory.OpenVisitAsync`。テーブル端末からは開けない)
+- テーブル端末のテストの来店は、ホール端末で開く (`ServerFactory.OpenVisitAsync`。テーブル端末と受付機は、来店の開き方を替えた店舗 (`CreateStoreAsync(VisitOpening.Xxx)`) でだけ開ける)
 - 画像は、サンプルの写真 (起動で `Assets/Images` から写したもの) か、`IImageStore` に直接置いたもので確かめる (テストのサーバの置き場はクラスごとの一時のフォルダ)
 - テナントで分けられていることは、サンプルの 2 つのテナント (同じ店舗コード) の端末で、それぞれの店舗の値だけが返ることで確かめる

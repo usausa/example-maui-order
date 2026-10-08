@@ -69,8 +69,9 @@ public sealed class VisitService
     // Open
     //--------------------------------------------------------------------------------
 
-    // 来店の開始。案内するスタッフ (ホール端末、管理画面の案内) か受付機が開き、テーブル端末からは開かない
-    // 同じ Id の送り直しは、同じテーブルなら開いた来店を返す (201 ではなく 200)
+    // 来店の開始。スタッフ (ホール端末、管理画面の案内) はいつでも開き、受付機とテーブル端末は来店の開き方で許した店だけ開く
+    // 受付機はテーブルを送らず、サーバが人数の入る空席を選ぶ。テーブル端末は自分のテーブルにだけ開く
+    // 同じ Id の送り直しは、同じテーブル (受付機は同じ端末) なら開いた来店を返す (201 ではなく 200)
     public async ValueTask<ServiceResult<VisitResponse>> CreateAsync(VisitCreateRequest request, CancellationToken cancellationToken)
     {
         if (request.Id == Guid.Empty)
@@ -83,11 +84,6 @@ public sealed class VisitService
             return new(invalid);
         }
 
-        if (request.TableId is not { } tableId)
-        {
-            return new(ServiceError.Validation("tableId", "テーブルを送ってください"));
-        }
-
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
@@ -97,7 +93,18 @@ public sealed class VisitService
             return new(ServiceError.NotFound);
         }
 
-        var openedBy = context.DeviceKind == DeviceKind.Reception ? VisitOpenedBy.Reception : VisitOpenedBy.Hall;
+        var openedBy = context.DeviceKind switch
+        {
+            DeviceKind.Reception => VisitOpenedBy.Reception,
+            DeviceKind.Table => VisitOpenedBy.Table,
+            _ => VisitOpenedBy.Hall
+        };
+        var (requestedTableId, rejected) = ResolveTable(context, openedBy, SettingsService.ReadFeatures(store.Features).VisitOpening, request.TableId);
+        if (rejected is not null)
+        {
+            return new(rejected);
+        }
+
         var businessDate = StoreHours.BusinessDate(context.Now, store.TimeZone, StoreHours.Parse(store.OpenTime));
 
         return await eventService.WriteAsync<ServiceResult<VisitResponse>>(tenantId, storeId, async transaction =>
@@ -105,19 +112,38 @@ public sealed class VisitService
             var existing = await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, request.Id, cancellationToken);
             if (existing is not null)
             {
-                return existing.TableId == tableId
+                // 受付機はテーブルを送らないので、同じ端末が開いたかで送り直しを見分ける
+                var resent = requestedTableId is { } requested ? existing.TableId == requested : existing.OpenedDeviceId == context.DeviceId;
+                return resent
                     ? new(await ToResponseAsync(existing, cancellationToken))
                     : new(new ServiceError(ErrorCodes.DuplicateIdMismatch));
             }
 
-            if (await storeAccessor.QueryActiveTableAsync(transaction.Tx, tenantId, storeId, tableId, cancellationToken) is null)
+            Guid tableId;
+            if (requestedTableId is { } requestedId)
             {
-                return new(ServiceError.NotFound);
-            }
+                if (await storeAccessor.QueryActiveTableAsync(transaction.Tx, tenantId, storeId, requestedId, cancellationToken) is null)
+                {
+                    return new(ServiceError.NotFound);
+                }
 
-            if (await visitAccessor.QueryOpenByTableAsync(transaction.Tx, tenantId, storeId, tableId, cancellationToken) is not null)
+                if (await visitAccessor.QueryOpenByTableAsync(transaction.Tx, tenantId, storeId, requestedId, cancellationToken) is not null)
+                {
+                    return new(new ServiceError(ErrorCodes.TableOccupied));
+                }
+
+                tableId = requestedId;
+            }
+            else
             {
-                return new(new ServiceError(ErrorCodes.TableOccupied));
+                // 書き込みは店舗ごとに順に並ぶので、選んだ空席に開くまでの間にほかの来店は入らない
+                var vacant = await storeAccessor.QueryVacantTableByGuestsAsync(transaction.Tx, tenantId, storeId, request.Adults + request.Children, cancellationToken);
+                if (vacant is null)
+                {
+                    return new(new ServiceError(ErrorCodes.NoVacantTable));
+                }
+
+                tableId = vacant.Id;
             }
 
             await visitAccessor.InsertAsync(transaction.Tx, tenantId, request.Id, storeId, tableId, businessDate, request.Adults, request.Children, openedBy, context.DeviceId, context.Now, cancellationToken);
@@ -212,6 +238,7 @@ public sealed class VisitService
     }
 
     // 確認のルール (お酒の年齢など) にお客様が答えた記録。来店で 1 回だけ持つ (答え直しても増やさない)
+    // ホール端末は、代わりの注文でスタッフがお客様に確かめたときに記録する
     public async ValueTask<ServiceResult<VisitResponse>> ConfirmAsync(Guid id, VisitConfirmationRequest request, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
@@ -322,6 +349,40 @@ public sealed class VisitService
     // テーブル端末は自分のテーブルの来店だけを扱える
     internal static bool InScope(ServiceContext context, VisitEntity visit) =>
         (context.DeviceKind != DeviceKind.Table) || (visit.TableId == context.TableId);
+
+    // 来店の開き方から、来店を開くテーブルを決める (null は受付機で、サーバが空席から選ぶ)
+    private static (Guid? TableId, ServiceError? Error) ResolveTable(ServiceContext context, VisitOpenedBy openedBy, VisitOpening opening, Guid? requestedTableId)
+    {
+        switch (openedBy)
+        {
+            case VisitOpenedBy.Reception:
+                if (opening != VisitOpening.Reception)
+                {
+                    return (null, new ServiceError(ErrorCodes.VisitOpeningDisabled));
+                }
+
+                return requestedTableId is null
+                    ? (null, null)
+                    : (null, ServiceError.Validation("tableId", "受付機はテーブルを送らないでください (空席はサーバが選びます)"));
+            case VisitOpenedBy.Table:
+                if (opening != VisitOpening.Table)
+                {
+                    return (null, new ServiceError(ErrorCodes.VisitOpeningDisabled));
+                }
+
+                // 置き場所のないテーブル端末と、ほかのテーブルを送ったテーブル端末は開けない
+                if ((context.TableId is not { } ownTableId) || ((requestedTableId is { } other) && (other != ownTableId)))
+                {
+                    return (null, ServiceError.DeviceScope);
+                }
+
+                return (ownTableId, null);
+            default:
+                return requestedTableId is null
+                    ? (null, ServiceError.Validation("tableId", "テーブルを送ってください"))
+                    : (requestedTableId, null);
+        }
+    }
 
     // 大人と子どもを合わせて 1 人以上
     private static ServiceError? ValidateGuests(int adults, int children)

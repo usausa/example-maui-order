@@ -435,6 +435,36 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string GuestAdults {
+            get {
+                return ResourceManager.GetString("GuestAdults", resourceCulture);
+            }
+        }
+
+        internal static string GuestChildren {
+            get {
+                return ResourceManager.GetString("GuestChildren", resourceCulture);
+            }
+        }
+
+        internal static string GuestChildrenHint {
+            get {
+                return ResourceManager.GetString("GuestChildrenHint", resourceCulture);
+            }
+        }
+
+        internal static string GuestStart {
+            get {
+                return ResourceManager.GetString("GuestStart", resourceCulture);
+            }
+        }
+
+        internal static string GuestTitle {
+            get {
+                return ResourceManager.GetString("GuestTitle", resourceCulture);
+            }
+        }
+
         internal static string GuestsFormat {
             get {
                 return ResourceManager.GetString("GuestsFormat", resourceCulture);
@@ -966,6 +996,24 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string StaffTitle {
             get {
                 return ResourceManager.GetString("StaffTitle", resourceCulture);
+            }
+        }
+
+        internal static string StandbyReception {
+            get {
+                return ResourceManager.GetString("StandbyReception", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStart {
+            get {
+                return ResourceManager.GetString("StandbyStart", resourceCulture);
+            }
+        }
+
+        internal static string StandbyTable {
+            get {
+                return ResourceManager.GetString("StandbyTable", resourceCulture);
             }
         }
 

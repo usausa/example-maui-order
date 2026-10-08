@@ -1,6 +1,6 @@
 ---
 name: emulator
-description: 端末アプリ (MAUI Android、タブレット横向き) をエミュレータに入れて動作を確かめる。エミュレータの起動、ビルドと配置、画面の撮影・タップ・文字とキーの入力、遷移のログ、アプリの設定の読み書きを行う。画面や動きを変えたときに使う。実機には入れない。
+description: 端末アプリ (MAUI Android。テーブル端末はタブレット横向き、ホール端末はスマートフォン縦向き) をエミュレータに入れて動作を確かめる。エミュレータの起動と選択、ビルドと配置、画面の撮影・タップ・文字とキーの入力、遷移のログ、アプリの設定の読み書きを行う。画面や動きを変えたときに使う。実機には入れない。
 ---
 
 # エミュレータでの確認
@@ -9,15 +9,24 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 対象の端末アプリは `--app` で選ぶ (既定は `table`。例: `emu.py --app table install`)。
 ホール端末は `hall`、受付機は `reception` (どちらも枠だけで、Device Owner の受け口はない)。
 端末アプリを足したら、スクリプトの `APPS` にパッケージ名とプロジェクトを足す。
+テーブル端末と受付機はタブレット (1920x1200、横向き)、ホール端末はスマートフォン (1080x2400、縦向き) の AVD で確かめる。
 スクリプトはエミュレータ (`emulator-` で始まる機器) だけを選び、実機が接続されていても使わない。
 `adb` や `dotnet build -t:Run` を直接使うときも、必ず `-s emulator-xxxx` / `-p:AdbTarget=-s emulator-xxxx` でエミュレータを指定する。
 
 ## 準備
 
-- エミュレータを起動する: `emu.py avds` で名前を見て、`emu.py boot <名前>` (起動の完了まで待つ。起動済みなら何もしない)。対象はタブレット (1920x1200、横向き) の AVD
-- `emu.py devices` で使う機器を確かめる
+- エミュレータを起動する: `emu.py avds` で名前を見て、`emu.py boot <名前>` (起動の完了まで待つ。その AVD が起動済みなら何もしない)
+- `emu.py devices` で使う機器を確かめる (エミュレータは AVD の名前つきで出る)
 - 入れる: `emu.py install` (Debug。ビルドから起動まで数分かかる)。Release は `--release`
 - 起動してすぐ落ち、logcat に `No assemblies found` が出るとき (高速配置の本体が端末にない) は、`emu.py install --embed` で本体を APK に含めて入れ直す
+
+## タブレットとスマートフォンを並べる
+
+- テーブル端末とホール端末を一緒に確かめるときは、タブレットとスマートフォンの AVD を両方 `boot` する
+- エミュレータが複数動いているときは、どのコマンドにも `--avd <AVD の名前>` を付けて選ぶ (付けないと止まる。環境変数 `EMU_AVD` でも選べる)
+- 例: `emu.py --avd <スマートフォンの AVD> --app hall install`、`emu.py --avd <タブレットの AVD> shot <一時フォルダ>/table.png`
+- スマートフォンの画面は 1080x2400 (縦向き)。座標は撮った画像の画素で読む
+- 並べるために起動したエミュレータは、使い終わったら `emu.py --avd <名前> poweroff` で止める
 
 ## 操作
 
@@ -49,6 +58,7 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 ## 後片付け
 
 - `emu.py stop` でアプリを止める (Device Owner のときは `emu.py kill`)
+- 並べるために起動したエミュレータは `emu.py --avd <名前> poweroff` で止める
 - Device Owner にしたら `emu.py owner clear` で外す
 - EMM の代わりの DPC を入れたら `emu.py emm clear` で外す
 - 変えた設定は控えた値に戻す

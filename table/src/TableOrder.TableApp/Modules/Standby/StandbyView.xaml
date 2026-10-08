@@ -10,7 +10,7 @@
              x:DataType="{x:Type module:StandbyViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StandbyViewModel}">
 
-    <!-- 待受: 席にお客様がいないときと会計の後に出す。来店はスタッフが開き、開いた知らせで注文の画面に進む -->
+    <!-- 待受: 席にお客様がいないときと会計の後に出す。来店の開き方が席の店は人数を入れて始め、ほかの店は開いた知らせで注文の画面に進む -->
     <Grid Style="{StaticResource StandbyGrid}"
           RowDefinitions="Auto,*,Auto">
         <!-- brand / language -->
@@ -57,7 +57,13 @@
             <Label Style="{StaticResource StandbyTitleLabel}"
                    Text="{x:Static strings:AppResources.StandbyWelcome}" />
             <Label Style="{StaticResource StandbyMessageLabel}"
-                   Text="{x:Static strings:AppResources.StandbyWaiting}" />
+                   Text="{Binding Message}" />
+            <Button Style="{StaticResource StandbyStartButton}"
+                    Command="{Binding StartCommand}"
+                    IsVisible="{Binding CanStart}"
+                    ContentLayout="Left,16"
+                    ImageSource="{x:Static markup:AppIcons.StandbyStart}"
+                    Text="{x:Static strings:AppResources.StandbyStart}" />
         </VerticalStackLayout>
 
         <!-- table -->

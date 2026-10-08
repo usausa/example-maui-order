@@ -2,57 +2,26 @@ namespace TableOrder.Client.Rest;
 
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 
 // テーブル端末の要求の REST の窓口
 public sealed class RestTableApi : ITableApi
 {
-    private readonly IDeviceContext context;
-
     private readonly RestConnection connection;
 
-    // 前に読んだメニュー (版が変わっていなければ 304 を受けて使い回す)
-    private volatile CachedMenu? menu;
+    private readonly RestMenuCache menu;
 
     public RestTableApi(IDeviceContext context, RestConnection connection)
     {
-        this.context = context;
         this.connection = connection;
+        menu = new RestMenuCache(context, connection);
     }
 
     //--------------------------------------------------------------------------------
     // Menu
     //--------------------------------------------------------------------------------
 
-    // 版が変わっていなければ (304)、前に読んだメニューを使う (接続先と端末が同じときだけ)
-    public async ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default)
-    {
-        var endPoint = context.ApiEndPoint;
-        var deviceId = context.DeviceId;
-        var cached = (menu is { } previous) && (previous.EndPoint == endPoint) && (previous.DeviceId == deviceId) ? previous : null;
-        var result = await connection.SendWithTokenAsync(
-            uri =>
-            {
-                var request = new HttpRequestMessage(HttpMethod.Get, uri);
-                if (cached is not null)
-                {
-                    request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue($"\"{cached.Menu.MenuVersion}\""));
-                }
-
-                return request;
-            },
-            async (response, token) => (response.StatusCode == HttpStatusCode.NotModified) && (cached is not null)
-                ? cached.Menu
-                : await RestConnection.ReadAsync(response, ClientJsonContext.Default.MenuResponse, token),
-            "menu",
-            cancel);
-        if ((result.Content is { } content) && (deviceId is { } id))
-        {
-            menu = new CachedMenu(endPoint, id, content);
-        }
-
-        return result;
-    }
+    public ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default) =>
+        menu.GetAsync(cancel);
 
     public ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default) =>
         connection.GetAsync("stock", ClientJsonContext.Default.StockResponse, cancel);
@@ -77,6 +46,9 @@ public sealed class RestTableApi : ITableApi
                 : await RestConnection.ReadAsync(response, ClientJsonContext.Default.VisitResponse, token),
             "devices/me/visit",
             cancel);
+
+    public ValueTask<ApiResult<VisitResponse>> StartVisitAsync(VisitCreateRequest request, CancellationToken cancel = default) =>
+        connection.PostAsync("visits", request, ClientJsonContext.Default.VisitCreateRequest, ClientJsonContext.Default.VisitResponse, cancel);
 
     public ValueTask<ApiResult<VisitResponse>> ConfirmAsync(Guid visitId, VisitConfirmationRequest request, CancellationToken cancel = default) =>
         connection.PostAsync($"visits/{visitId}/confirmations", request, ClientJsonContext.Default.VisitConfirmationRequest, ClientJsonContext.Default.VisitResponse, cancel);
@@ -128,6 +100,4 @@ public sealed class RestTableApi : ITableApi
 
     public ValueTask<ApiResult<ReceiptResponse>> GetReceiptAsync(Guid visitId, CancellationToken cancel = default) =>
         connection.GetAsync($"visits/{visitId}/receipt", ClientJsonContext.Default.ReceiptResponse, cancel);
-
-    private sealed record CachedMenu(string EndPoint, Guid DeviceId, MenuResponse Menu);
 }

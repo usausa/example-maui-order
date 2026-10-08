@@ -29,6 +29,10 @@ html, body {
     max-width: 240px;
 }
 
+.opening-field {
+    max-width: 560px;
+}
+
 /* Device */
 .pairing-code {
     font-size: 1.5rem;

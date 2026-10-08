@@ -71,7 +71,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
     }
 
-    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・言語・支払方法・呼び出しの用件・PIN になる
+    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・言語・支払方法・呼び出しの用件・PIN になる
     [Fact]
     public async Task StoreSettingsUpdateChangesConfig()
     {
@@ -90,7 +90,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
             error = await Settings.UpdateStoreSettingsAsync(
                 settings with
                 {
-                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10 },
+                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception },
                     Languages = ["ja", "en"],
                     PaymentMethods = [PaymentMethod.QrCode],
                     CallReasons = settings.CallReasons.Select(static x => x with { IsActive = x.Code == "Water" }).ToList()
@@ -104,13 +104,14 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.IsType<StoreUpdatedEvent>(await terminal.NextAsync());
         var config = (await terminal.Device.GetConfigAsync(cancel)).Content!;
         Assert.Equal((false, false, 0, 10), (config.Features.RegisterCheckout, config.Features.SplitPayment, config.Features.LastOrderNoticeMinutes, config.Features.FinishSeconds));
+        Assert.Equal(VisitOpening.Reception, config.Features.VisitOpening);
         Assert.Equal(["ja", "en"], config.Languages);
         Assert.Equal([PaymentMethod.QrCode], config.PaymentMethods);
         Assert.Equal("Water", Assert.Single(config.CallReasons).Code);
         Assert.True(StaffPins.Verify("9876", config.StaffPin.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
     }
 
-    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、古い版は受けない
+    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、古い版は受けない
     [Fact]
     public async Task StoreSettingsKeepPinAndRejectInvalidSettings()
     {
@@ -127,6 +128,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         var noWayToPay = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { RegisterCheckout = false }, PaymentMethods = [], Version = settings.Version + 1 }, null, cancel);
         var badPin = await Settings.UpdateStoreSettingsAsync(settings with { Version = settings.Version + 1 }, "12a4", cancel);
         var noLanguage = await Settings.UpdateStoreSettingsAsync(settings with { Languages = [], Version = settings.Version + 1 }, null, cancel);
+        var badOpening = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { VisitOpening = (VisitOpening)99 }, Version = settings.Version + 1 }, null, cancel);
         var stale = await Settings.UpdateStoreSettingsAsync(settings, null, cancel);
 
         // Assert
@@ -136,6 +138,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.ValidationError, noWayToPay!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, badPin!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, noLanguage!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, badOpening!.ErrorCode);
         Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
     }
 }

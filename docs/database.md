@@ -178,7 +178,7 @@ erDiagram
 | `Languages` | json | 画面で選べる言語 (`["ja", "en"]`) |
 | `PaymentMethods` | json | テーブルで使える支払方法 (`["QrCode", "CreditCard"]`) |
 | `ElectronicReceipt` | bool | 電子レシートを出すか |
-| `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30 }`)。増えていくので列にせず、ない項目は既定の値にする |
+| `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30, "visitOpening": "Hall" }`)。増えていくので列にせず、ない項目は既定の値にする |
 | `StaffPinHash` | json | スタッフの PIN のハッシュ (`{ "iterations": 100000, "salt": "...", "hash": "..." }`。PBKDF2-HMAC-SHA256)。平文は持たない |
 | `SettingsVersion` | int | チェーンと店舗の設定の版。設定を替えるたびに上げる (`Version` は一時停止でも上がるので分ける) |
 | `MenuPublicationId` | guid? | 今のメニュー |
@@ -365,7 +365,7 @@ erDiagram
 | `BusinessDate` | date | 開いたときの営業日 |
 | `Adults` / `Children` | int | 合わせて 1 以上 |
 | `Status` | enum | `Open` / `Paying` / `Closed` / `Cancelled` |
-| `OpenedBy` | enum | `Hall` (ホール端末と管理画面の案内) / `Reception` |
+| `OpenedBy` | enum | `Hall` (ホール端末と管理画面の案内) / `Reception` (受付機) / `Table` (テーブル端末) |
 | `OpenedDeviceId` | guid? | 開いた端末 (管理画面の案内は null) |
 | `OpenedAt` | datetime | |
 | `ClosedBy` | enum? | `TablePayment` / `Register` / `Hall` |

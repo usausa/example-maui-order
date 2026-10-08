@@ -2,6 +2,7 @@ namespace TableOrder.TableApp.Modules;
 
 using TableOrder.TableApp.Modules.Dialogs;
 using TableOrder.TableApp.Modules.Menu;
+using TableOrder.TableApp.Modules.Standby;
 
 // ポップアップの種類ごとにメソッドを置く (表題と桁数を画面側で持たない)。null = キャンセル
 public static class PopupNavigatorExtensions
@@ -70,6 +71,14 @@ public static class PopupNavigatorExtensions
     // 言語を選ぶ (今の言語に印を付ける)
     public static ValueTask<Language?> LanguageAsync(this IPopupNavigator popupNavigator) =>
         popupNavigator.PopupAsync<Language?>(DialogId.Language);
+
+    //--------------------------------------------------------------------------------
+    // 待受
+    //--------------------------------------------------------------------------------
+
+    // 来店の人数 (来店の開き方が席の店で、お客様が始めるとき)
+    public static ValueTask<GuestCountResult?> GuestCountAsync(this IPopupNavigator popupNavigator) =>
+        popupNavigator.PopupAsync<GuestCountResult?>(DialogId.GuestCount);
 
     //--------------------------------------------------------------------------------
     // 注文

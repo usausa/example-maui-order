@@ -204,6 +204,11 @@ public sealed class SettingsService
             return ServiceError.Validation("finishSeconds", "お礼の画面の時間は 5 から 300 秒で入れてください");
         }
 
+        if (!Enum.IsDefined(features.VisitOpening))
+        {
+            return ServiceError.Validation("visitOpening", "来店の開き方を選び直してください");
+        }
+
         if ((newStaffPin is not null) && !StaffPins.IsValid(newStaffPin))
         {
             return ServiceError.Validation("staffPin", $"PIN は {Length.StaffPinDigits} 桁の数字で入れてください");

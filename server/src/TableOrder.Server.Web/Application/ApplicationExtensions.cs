@@ -267,7 +267,7 @@ public static class ApplicationExtensions
             options.AddPolicy(Policies.MenuReader, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen));
             options.AddPolicy(Policies.StockWriter, DevicePolicy(DeviceKind.Hall, DeviceKind.Kitchen));
             options.AddPolicy(Policies.TableReader, DevicePolicy(DeviceKind.Hall, DeviceKind.Reception));
-            options.AddPolicy(Policies.VisitOpener, DevicePolicy(DeviceKind.Hall, DeviceKind.Reception));
+            options.AddPolicy(Policies.VisitOpener, DevicePolicy(DeviceKind.Hall, DeviceKind.Reception, DeviceKind.Table));
             options.AddPolicy(Policies.VisitReader, DevicePolicy(DeviceKind.Table, DeviceKind.Hall));
             options.AddPolicy(Policies.TableDevice, DevicePolicy(DeviceKind.Table));
             options.AddPolicy(Policies.HallDevice, DevicePolicy(DeviceKind.Hall));

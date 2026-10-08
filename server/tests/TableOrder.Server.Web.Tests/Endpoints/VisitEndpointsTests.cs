@@ -98,20 +98,91 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(response));
     }
 
-    // テーブル端末は自分のテーブルでも来店を開けない (来店はスタッフが案内して開く)
+    // 来店の開き方がスタッフの店では、テーブル端末と受付機は来店を開けない
     [Fact]
-    public async Task TableDeviceCannotOpenVisit()
+    public async Task TableAndReceptionCannotOpenVisitInHallStore()
     {
         // Arrange
         var store = await factory.CreateStoreAsync();
         using var table = await SignInAsync(store.TableCodes[0]);
+        using var reception = await SignInAsync(store.ReceptionCode);
 
         // Act
-        using var response = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
+        using var byTable = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
+        using var byReception = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
 
         // Assert
-        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(response));
+        Assert.Equal(HttpStatusCode.Forbidden, byTable.StatusCode);
+        Assert.Equal("VISIT_OPENING_DISABLED", await TestDevice.ReadErrorCodeAsync(byTable));
+        Assert.Equal(HttpStatusCode.Forbidden, byReception.StatusCode);
+        Assert.Equal("VISIT_OPENING_DISABLED", await TestDevice.ReadErrorCodeAsync(byReception));
+    }
+
+    // 来店の開き方が席の店では、テーブル端末は自分のテーブルに来店を開き、ほかのテーブルには開けない
+    [Fact]
+    public async Task TableDeviceOpensVisitOnOwnTable()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync(VisitOpening.Table);
+        using var table = await SignInAsync(store.TableCodes[1]);
+
+        // Act
+        using var other = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var created = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2, Children = 1 });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, other.StatusCode);
+        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(other));
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        var visit = await TestDevice.ReadAsync<VisitResponse>(created);
+        Assert.Equal(store.TableIds[1], visit.TableId);
+        Assert.Equal(VisitOpenedBy.Table, visit.OpenedBy);
+        Assert.Equal((2, 1), (visit.Adults, visit.Children));
+    }
+
+    // 来店の開き方が受付機の店では、人数の入る空席のうち定員の小さいテーブル (同じなら並びの順) に開き、同じ Id の送り直しは開いた来店を返す
+    [Fact]
+    public async Task ReceptionOpensVisitOnSmallestVacantTable()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync(VisitOpening.Reception);
+        using var reception = await SignInAsync(store.ReceptionCode);
+        var request = new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 };
+
+        // Act
+        using var first = await reception.PostAsync("/api/v1/visits", request);
+        using var resent = await reception.PostAsync("/api/v1/visits", request);
+        using var large = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 4, Children = 1 });
+        using var small = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, first.StatusCode);
+        var visit = await TestDevice.ReadAsync<VisitResponse>(first);
+        Assert.Equal((store.TableIds[0], VisitOpenedBy.Reception), (visit.TableId, visit.OpenedBy));
+        Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        Assert.Equal(visit.Id, (await TestDevice.ReadAsync<VisitResponse>(resent)).Id);
+        Assert.Equal(store.TableIds[2], (await TestDevice.ReadAsync<VisitResponse>(large)).TableId);
+        Assert.Equal(store.TableIds[1], (await TestDevice.ReadAsync<VisitResponse>(small)).TableId);
+    }
+
+    // 受付機は、人数の入る空席がなければ開かず、テーブルを送っても開かない (ホール端末はどの形の店でも開ける)
+    [Fact]
+    public async Task ReceptionRejectsFullStoreAndChosenTable()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync(VisitOpening.Reception);
+        using var reception = await SignInAsync(store.ReceptionCode);
+        await factory.OpenVisitAsync(store, 2);
+
+        // Act
+        using var full = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 5 });
+        using var chosen = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Conflict, full.StatusCode);
+        Assert.Equal("NO_VACANT_TABLE", await TestDevice.ReadErrorCodeAsync(full));
+        Assert.Equal(HttpStatusCode.BadRequest, chosen.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(chosen));
     }
 
     // キッチン端末は来店を開けない
@@ -250,6 +321,26 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(second)).ConfirmedRuleIds);
         Assert.Equal(HttpStatusCode.BadRequest, suggestion.StatusCode);
         Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(suggestion));
+    }
+
+    // ホール端末も、代わりの注文でスタッフがお客様に確かめた確認のルールを記録できる (キッチン端末は記録できない)
+    [Fact]
+    public async Task HallRecordsConfirmationRule()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        using var kitchen = await SignInAsync(store.KitchenCode);
+        var visit = await factory.OpenVisitAsync(store, 0);
+
+        // Act
+        using var byHall = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+        using var byKitchen = await kitchen.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+
+        // Assert
+        Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(byHall)).ConfirmedRuleIds);
+        Assert.Equal(HttpStatusCode.Forbidden, byKitchen.StatusCode);
+        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(byKitchen));
     }
 
     //--------------------------------------------------------------------------------

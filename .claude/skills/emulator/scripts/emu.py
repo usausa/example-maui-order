@@ -2,8 +2,9 @@
 # 端末アプリをエミュレータで動かして確かめるための adb の操作 (実機は使わない)
 #
 #   python emu.py avds                       作成済みの AVD の名前
-#   python emu.py boot <avd> [--timeout 秒]  エミュレータを起動して、起動の完了まで待つ (起動済みなら何もしない)
-#   python emu.py devices                    機器の一覧と、使うエミュレータ
+#   python emu.py boot <avd> [--timeout 秒]  エミュレータを起動して、起動の完了まで待つ (その AVD が起動済みなら何もしない)
+#   python emu.py poweroff                   エミュレータを止める
+#   python emu.py devices                    機器の一覧 (エミュレータは AVD の名前つき) と、使うエミュレータ
 #   python emu.py install [--release] [--embed]   ビルドしてエミュレータに入れて起動する (--embed は Device Owner の間に使う)
 #   python emu.py launch | stop              アプリを起動する / 止める
 #   python emu.py kill                       アプリのプロセスを止める (Device Owner のアプリは stop が効かない。Debug だけ)
@@ -11,7 +12,7 @@
 #   python emu.py emm set <apk> | config [key=value ...] | clear | status [--dpc パッケージ/受け口]
 #                                            外部の EMM の代わりにする DPC を入れる / 管理対象の構成を配る (値を省くと消す) / 外す / 今の状態
 #   python emu.py reboot [--timeout 秒]      エミュレータを再起動して、起動の完了まで待つ
-#   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200)
+#   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200、スマートフォンは 1080x2400)
 #   python emu.py tap <x> <y>                撮った画像の座標をタップする
 #   python emu.py text <ascii>               文字を入力する (英数字と記号だけ)
 #   python emu.py key <BACK|ENTER|DEL|...> [--repeat N]   キーを送る (入力欄を消すときは DEL を繰り返す)
@@ -22,7 +23,8 @@
 #   python emu.py pref set <key> <value>     アプリの設定の文字列を書き換える (アプリを止めてから)
 #
 # 対象の端末アプリは --app で選ぶ (既定は table。例: python emu.py --app table install)
-# 使う機器は ANDROID_SERIAL (emulator- で始まるものだけ) か、接続中の最初のエミュレータ。adb と emulator の場所は ADB / EMULATOR で変えられる
+# 使う機器は --avd で選んだ AVD のエミュレータ、ANDROID_SERIAL (emulator- で始まるものだけ)、ただ 1 台動いているエミュレータの順に決める
+# エミュレータが複数動いているとき (タブレットとスマートフォンを並べるとき) は --avd で選ぶ。adb と emulator の場所は ADB / EMULATOR で変えられる
 import argparse
 import os
 import re
@@ -44,6 +46,10 @@ APPS = {
     'reception': ('tableorder.terminal.reception', 'reception/src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj', None),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
+
+# --avd で選んだ AVD の名前と、決めたエミュレータ (1 回の実行の中で使い回す)
+AVD = None
+SELECTED = None
 
 
 def sdk_candidates(*parts):
@@ -74,24 +80,47 @@ def devices():
     return [line.split('\t') for line in output.splitlines()[1:] if '\t' in line]
 
 
-def running_emulator():
+def emulators():
+    # 動いているエミュレータ (起動の途中を含む)
+    return [serial for serial, _ in devices() if serial.startswith('emulator-')]
+
+
+def avd_name(serial):
+    # エミュレータのコンソールに AVD の名前を聞く (答えられないときは None)
+    result = subprocess.run([ADB, '-s', serial, 'emu', 'avd', 'name'], capture_output=True, text=True, check=False)
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return lines[0] if (result.returncode == 0) and lines and (lines[0] != 'KO') else None
+
+
+def candidates():
+    # 使う候補のエミュレータ。--avd で選んだらその AVD のものだけにする
+    if AVD:
+        return [serial for serial in emulators() if avd_name(serial) == AVD]
     serial = os.environ.get('ANDROID_SERIAL')
     if serial:
-        return serial if serial.startswith('emulator-') else None
-    for serial, state in devices():
-        if serial.startswith('emulator-') and state == 'device':
-            return serial
-    return None
+        return [serial] if serial.startswith('emulator-') else []
+    return [serial for serial, state in devices() if serial.startswith('emulator-') and state == 'device']
+
+
+def running_emulator():
+    found = candidates()
+    if len(found) > 1:
+        sys.exit('エミュレータが複数動いています。--avd <AVD の名前> で選んでください: ' + '、'.join(f'{x} ({avd_name(x)})' for x in found))
+    return found[0] if found else None
 
 
 def emulator_serial():
     # 実機に入れたり操作したりしないように、エミュレータ (emulator-) だけを選ぶ
+    global SELECTED
+    if SELECTED is not None:
+        return SELECTED
     serial = os.environ.get('ANDROID_SERIAL')
-    if serial and not serial.startswith('emulator-'):
+    if serial and not serial.startswith('emulator-') and not AVD:
         sys.exit(f'ANDROID_SERIAL がエミュレータではありません: {serial}')
     serial = running_emulator()
     if serial is None:
-        sys.exit('起動しているエミュレータがありません (emu.py boot <avd> で起動する)')
+        sys.exit(f'{AVD} のエミュレータが動いていません (emu.py boot {AVD} で起動する)' if AVD else '起動しているエミュレータがありません (emu.py boot <avd> で起動する)')
+    SELECTED = serial
     return serial
 
 
@@ -125,31 +154,41 @@ def avds():
 def boot(avd, timeout):
     if avd not in avds():
         sys.exit(f'AVD がありません: {avd} (emu.py avds で名前を見る)')
-    if running_emulator() is None:
+    # ほかの AVD のエミュレータが動いていても、この AVD が動いていなければ起動する
+    if not any(avd_name(serial) == avd for serial in emulators()):
         emulator = find_tool('EMULATOR', 'emulator', 'emulator', 'emulator.exe' if os.name == 'nt' else 'emulator')
         # このスクリプトが終わってもエミュレータは動き続けるように切り離して起動する
         flags = (subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP) if os.name == 'nt' else 0
         subprocess.Popen([emulator, '-avd', avd, '-no-boot-anim'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL, creationflags=flags, start_new_session=os.name != 'nt')
         print(f'{avd} を起動しています', flush=True)
-    return wait_boot(timeout)
+    return wait_boot(timeout, avd)
 
 
 def reboot(timeout):
     # 電源を入れたときの動き (専用端末のホームアプリ、ロック画面) を確かめる
-    adb('reboot')
-    adb('wait-for-device')
-    return wait_boot(timeout)
+    serial = emulator_serial()
+    avd = avd_name(serial)
+    subprocess.run([ADB, '-s', serial, 'reboot'], check=True)
+    subprocess.run([ADB, '-s', serial, 'wait-for-device'], check=True)
+    return wait_boot(timeout, avd)
 
 
-def wait_boot(timeout):
+def poweroff():
+    serial = emulator_serial()
+    subprocess.run([ADB, '-s', serial, 'emu', 'kill'], capture_output=True, check=False)
+    print(f'止めました: {serial}')
+
+
+def wait_boot(timeout, avd):
+    # その AVD のエミュレータが、起動の完了 (sys.boot_completed) を返すまで待つ
     deadline = time.time() + timeout
     while time.time() < deadline:
-        serial = running_emulator()
-        if serial is not None:
-            completed = subprocess.run([ADB, '-s', serial, 'shell', 'getprop', 'sys.boot_completed'], capture_output=True, text=True, check=False).stdout.strip()
-            if completed == '1':
-                print(f'起動しました: {serial}')
-                return 0
+        for serial, state in devices():
+            if serial.startswith('emulator-') and (state == 'device') and (avd_name(serial) == avd):
+                completed = subprocess.run([ADB, '-s', serial, 'shell', 'getprop', 'sys.boot_completed'], capture_output=True, text=True, check=False).stdout.strip()
+                if completed == '1':
+                    print(f'起動しました: {serial} ({avd})')
+                    return 0
         time.sleep(3)
     sys.exit(f'{timeout} 秒で起動が終わりませんでした')
 
@@ -349,14 +388,18 @@ def pref_set(key, value):
 def main():
     if not sys.stdout.isatty():
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+    if not sys.stderr.isatty():
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser(description='端末アプリをエミュレータで確かめるための adb の操作')
     parser.add_argument('--app', choices=sorted(APPS), default='table', help='対象の端末アプリ (既定は table)')
+    parser.add_argument('--avd', default=os.environ.get('EMU_AVD'), help='使うエミュレータの AVD の名前 (エミュレータが複数動いているときに選ぶ。既定は環境変数 EMU_AVD)')
     sub = parser.add_subparsers(dest='command', required=True)
     sub.add_parser('avds')
     p = sub.add_parser('boot')
     p.add_argument('avd')
     p.add_argument('--timeout', type=int, default=300)
     sub.add_parser('devices')
+    sub.add_parser('poweroff')
     p = sub.add_parser('install')
     p.add_argument('--release', action='store_true')
     p.add_argument('--embed', action='store_true')
@@ -394,8 +437,9 @@ def main():
     p.add_argument('value', nargs='?')
     args = parser.parse_args()
 
-    global PACKAGE, PROJECT, ADMIN
+    global PACKAGE, PROJECT, ADMIN, AVD
     PACKAGE, PROJECT, ADMIN = APPS[args.app]
+    AVD = args.avd
 
     if args.command == 'avds':
         for name in avds():
@@ -404,8 +448,11 @@ def main():
         return boot(args.avd, args.timeout)
     elif args.command == 'devices':
         for serial, state in devices():
-            print(f'{serial}\t{state}\t{"(使わない)" if not serial.startswith("emulator-") else ""}')
-        print(f'使うエミュレータ: {running_emulator() or "(なし)"}')
+            print(f'{serial}\t{state}\t{(avd_name(serial) or "") if serial.startswith("emulator-") else "(使わない)"}')
+        found = candidates()
+        print(f'使うエミュレータ: {found[0] if len(found) == 1 else ("(--avd で選ぶ)" if found else "(なし)")}')
+    elif args.command == 'poweroff':
+        poweroff()
     elif args.command == 'install':
         return install(args.release, args.embed)
     elif args.command == 'launch':

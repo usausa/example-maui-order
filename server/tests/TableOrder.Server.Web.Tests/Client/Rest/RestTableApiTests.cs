@@ -41,6 +41,31 @@ public sealed class RestTableApiTests : IClassFixture<ServerFactory>
         Assert.Null(visit.Content);
     }
 
+    // 来店の開き方が席の店では、テーブル端末が人数を入れて自分のテーブルに来店を開く。スタッフの店では断られる
+    [Fact]
+    public async Task StartVisitThroughRest()
+    {
+        // Arrange
+        var tableStore = await factory.CreateStoreAsync(VisitOpening.Table);
+        var hallStore = await factory.CreateStoreAsync();
+        await using var terminal = TestTerminal.Create(factory);
+        await terminal.PairAsync(tableStore.TableCodes[0]);
+        await using var other = TestTerminal.Create(factory);
+        await other.PairAsync(hallStore.TableCodes[0]);
+        var cancel = TestContext.Current.CancellationToken;
+
+        // Act
+        var started = await terminal.Table.StartVisitAsync(new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2, Children = 1 }, cancel);
+        var rejected = await other.Table.StartVisitAsync(new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 }, cancel);
+
+        // Assert
+        var visit = started.Content!;
+        Assert.Equal((tableStore.TableIds[0], VisitOpenedBy.Table), (visit.TableId, visit.OpenedBy));
+        Assert.Equal(visit.Id, (await terminal.Table.GetCurrentVisitAsync(cancel)).Content!.Id);
+        Assert.Equal(ApiStatus.Rejected, rejected.Status);
+        Assert.Equal("VISIT_OPENING_DISABLED", rejected.ErrorCode);
+    }
+
     // テーブル端末の流れ (来店、確認、注文、呼び出し、会計、支払、電子レシート) を REST の窓口で通す
     [Fact]
     public async Task TableFlowThroughRest()

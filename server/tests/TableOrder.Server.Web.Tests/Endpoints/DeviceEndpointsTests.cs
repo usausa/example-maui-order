@@ -214,7 +214,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("1", config.Device.TableName);
     }
 
-    // チェーンの設定 (名前・ロゴ・色) と店舗の設定 (機能、スタッフの PIN、言語、支払方法) は、テナントと店舗ごとに返る
+    // チェーンの設定 (名前・ロゴ・色) と店舗の設定 (機能、来店の開き方、スタッフの PIN、言語、支払方法) は、テナントと店舗ごとに返る
     [Fact]
     public async Task ConfigReturnsChainAndStoreSettings()
     {
@@ -235,6 +235,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.True(demoConfig.Features.RegisterCheckout);
         Assert.True(demoConfig.Features.SplitPayment);
         Assert.Equal((30, 30), (demoConfig.Features.LastOrderNoticeMinutes, demoConfig.Features.FinishSeconds));
+        Assert.Equal(VisitOpening.Hall, demoConfig.Features.VisitOpening);
         Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
 
         Assert.Equal("あおぞら食堂", testConfig.Brand.Name.Ja);
@@ -244,6 +245,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal([PaymentMethod.QrCode], testConfig.PaymentMethods);
         Assert.False(testConfig.Features.SplitPayment);
         Assert.Equal((15, 20), (testConfig.Features.LastOrderNoticeMinutes, testConfig.Features.FinishSeconds));
+        Assert.Equal(VisitOpening.Table, testConfig.Features.VisitOpening);
         Assert.True(StaffPins.Verify("5678", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
         Assert.False(StaffPins.Verify("1234", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
     }

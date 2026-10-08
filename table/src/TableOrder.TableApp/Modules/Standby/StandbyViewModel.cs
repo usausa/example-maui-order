@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Standby;
 
 using TableOrder.TableApp.Components;
 
-// 待受。来店は案内するスタッフが開き (ホール端末、管理画面の案内)、開いた知らせで注文の画面に進む
+// 待受。来店の開き方が席の店はお客様が人数を入れて始め、ほかの店はスタッフ (ホール端末、管理画面の案内) か受付機が開いた知らせで注文の画面に進む
 // チェーンと店舗の設定が替わったら (設定の版)、来店のないここで起動からやり直して反映する
 public sealed class StandbyViewModel : AppViewModelBase
 {
@@ -20,13 +20,21 @@ public sealed class StandbyViewModel : AppViewModelBase
 
     private readonly StoreState storeState;
 
+    private readonly OrderUsecase orderUsecase;
+
     public BrandMark Brand { get; }
+
+    public string Message { get; }
+
+    public bool CanStart { get; }
 
     public string TableText { get; }
 
     public string LanguageText { get; }
 
     public bool HasLanguages { get; }
+
+    public IObserveCommand StartCommand { get; }
 
     public IObserveCommand LanguageCommand { get; }
 
@@ -43,7 +51,8 @@ public sealed class StandbyViewModel : AppViewModelBase
         StaffLock staffLock,
         MenuState menuState,
         LanguageState languageState,
-        StoreState storeState)
+        StoreState storeState,
+        OrderUsecase orderUsecase)
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
@@ -52,12 +61,21 @@ public sealed class StandbyViewModel : AppViewModelBase
         this.menuState = menuState;
         this.languageState = languageState;
         this.storeState = storeState;
+        this.orderUsecase = orderUsecase;
 
         Brand = ViewHelper.Brand(menuState, imageCache, languageState.Current);
+        CanStart = menuState.Features.VisitOpening == VisitOpening.Table;
+        Message = menuState.Features.VisitOpening switch
+        {
+            VisitOpening.Table => AppResources.StandbyTable,
+            VisitOpening.Reception => AppResources.StandbyReception,
+            _ => AppResources.StandbyWaiting
+        };
         TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(menuState.TableName));
         LanguageText = ViewHelper.LanguageName(languageState.Current);
         HasLanguages = languageState.HasChoice;
 
+        StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);
         LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
     }
@@ -81,7 +99,7 @@ public sealed class StandbyViewModel : AppViewModelBase
     // お客様の画面なので、戻るでは何もしない
     protected override Task OnNotifyBackAsync() => Task.CompletedTask;
 
-    // スタッフが来店を開いたら、注文の画面にする
+    // スタッフか受付機が来店を開いたら、注文の画面にする
     protected override async Task OnVisitOpenedAsync() =>
         await Navigator.ForwardAsync(ViewId.Menu);
 
@@ -101,6 +119,25 @@ public sealed class StandbyViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------
+
+    // 人数を入れて来店を始める (来店の開き方が席の店)。自分で開いた来店の知らせは、注文の画面に進んでから届く
+    private async Task StartAsync()
+    {
+        if (await popupNavigator.GuestCountAsync() is not { } guests)
+        {
+            return;
+        }
+
+        var result = await orderUsecase.StartVisitAsync(guests.Adults, guests.Children);
+        if (!result.IsSuccess)
+        {
+            log.WarnApiFailed(nameof(ITableApi.StartVisitAsync), result.Status, result.ErrorCode);
+            await popupNavigator.MessageAsync(AppResources.ErrorTitle, ViewHelper.ErrorMessage(result));
+            return;
+        }
+
+        await Navigator.ForwardAsync(ViewId.Menu);
+    }
 
     // 言語を選び、替えたら文言を引き直すために画面を作り直す
     private async Task SelectLanguageAsync()

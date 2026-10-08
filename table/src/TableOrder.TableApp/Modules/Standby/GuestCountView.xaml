@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+           xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Standby"
+           x:Class="TableOrder.TableApp.Modules.Standby.GuestCountView"
+           x:DataType="{x:Type module:GuestCountViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:GuestCountViewModel}"
+           WidthRequest="720">
+
+    <!-- 人数: 大人と子ども (小学生以下) を増減のボタンで入れる -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{x:Static strings:AppResources.GuestTitle}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <VerticalStackLayout Style="{StaticResource DialogBodyStack}">
+            <!-- adults -->
+            <Grid Style="{StaticResource GuestRowGrid}"
+                  ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Style="{StaticResource GuestNameLabel}"
+                       Text="{x:Static strings:AppResources.GuestAdults}" />
+                <Grid Grid.Column="1"
+                      Style="{StaticResource StepperGrid}"
+                      ColumnDefinitions="72,96,72">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding DecreaseAdultsCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Remove}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource StepperValueLabel}"
+                           Text="{Binding Adults}" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding IncreaseAdultsCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Add}" />
+                </Grid>
+            </Grid>
+            <BoxView Style="{StaticResource HorizontalVariantRule}" />
+
+            <!-- children -->
+            <Grid Style="{StaticResource GuestRowGrid}"
+                  ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0"
+                                     VerticalOptions="Center">
+                    <Label Style="{StaticResource GuestNameLabel}"
+                           Text="{x:Static strings:AppResources.GuestChildren}" />
+                    <Label Style="{StaticResource GuestHintLabel}"
+                           Text="{x:Static strings:AppResources.GuestChildrenHint}" />
+                </VerticalStackLayout>
+                <Grid Grid.Column="1"
+                      Style="{StaticResource StepperGrid}"
+                      ColumnDefinitions="72,96,72">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding DecreaseChildrenCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Remove}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource StepperValueLabel}"
+                           Text="{Binding Children}" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding IncreaseChildrenCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Add}" />
+                </Grid>
+            </Grid>
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource PrimaryActionButton}"
+                    Command="{Binding CommitCommand}"
+                    Text="{x:Static strings:AppResources.GuestStart}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>
