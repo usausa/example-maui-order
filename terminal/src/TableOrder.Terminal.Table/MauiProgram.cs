@@ -18,7 +18,8 @@ using Smart.Mvvm.Resolver;
 
 using Syncfusion.Maui.Toolkit.Hosting;
 
-using TableOrder.Client.Mock;
+using TableOrder.Client.Rest;
+using TableOrder.Client.SignalR;
 using TableOrder.Terminal.Table.Behaviors;
 using TableOrder.Terminal.Table.Components;
 using TableOrder.Terminal.Table.Diagnostics;
@@ -234,6 +235,8 @@ public static partial class MauiProgram
         // Components
         services.AddSingleton<DeviceInformation>();
         services.AddSingleton<DeviceKey>();
+        services.AddSingleton<ImageCache>();
+        services.AddSingleton<ThemeManager>();
         services.AddSingleton<IStorageManager, StorageManager>();
         services.AddSingleton<KioskManager>();
         services.AddSingleton<ManagedConfiguration>();
@@ -246,6 +249,7 @@ public static partial class MauiProgram
         services.AddSingleton<StartupState>();
         services.AddSingleton<DeviceState>();
         services.AddSingleton<Settings>();
+        services.AddSingleton<StaffLock>();
         services.AddSingleton<IDeviceContext>(static p => p.GetRequiredService<Settings>());
         services.AddSingleton<LanguageState>();
         services.AddSingleton<MenuState>();
@@ -253,12 +257,13 @@ public static partial class MauiProgram
         services.AddSingleton<CartState>();
         services.AddSingleton<StoreState>();
 
-        // Service (REST の窓口を作ったら、接続先があれば REST、空ならモックにする。モックはスタッフメニューから障害と進み具合を起こせる)
-        services.AddSingleton<MockOrderServer>();
-        services.AddSingleton<IDeviceApi>(static p => p.GetRequiredService<MockOrderServer>());
-        services.AddSingleton<ITableApi>(static p => p.GetRequiredService<MockOrderServer>());
-        services.AddSingleton<IOrderEvents>(static p => p.GetRequiredService<MockOrderServer>());
-        services.AddSingleton<IMockOrderControl>(static p => p.GetRequiredService<MockOrderServer>());
+        // Service (注文サーバの REST の窓口と SignalR の通知)
+        services.AddSingleton(TimeProvider.System);
+        services.AddSingleton(new OrderServerOptions());
+        services.AddSingleton<RestConnection>();
+        services.AddSingleton<IDeviceApi, RestDeviceApi>();
+        services.AddSingleton<ITableApi, RestTableApi>();
+        services.AddSingleton<IOrderEvents, SignalROrderEvents>();
 
         // Usecase
         services.AddSingleton<DeviceUsecase>();

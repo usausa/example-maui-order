@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Web.Endpoints;
 
 using TableOrder.Contract.Devices;
+using TableOrder.Contract.Visits;
 using TableOrder.Server.Web.Application.Authentication;
 
 public static class DeviceEndpoints
@@ -41,6 +42,12 @@ public static class DeviceEndpoints
             .WithName("DeviceHeartbeat")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem();
+
+        group.MapGet("/me/visit", HandleVisitAsync)
+            .RequireAuthorization(Policies.TableDevice)
+            .WithName("DeviceVisit")
+            .Produces<VisitResponse>()
+            .Produces(StatusCodes.Status204NoContent);
     }
 
     //--------------------------------------------------------------------------------
@@ -147,4 +154,10 @@ public static class DeviceEndpoints
         await deviceService.ReportStatusAsync(request, cancellationToken);
         return TypedResults.NoContent();
     }
+
+    // テーブル端末のテーブルの今の来店。なければ 204 (端末は待受にする)
+    private static async ValueTask<IResult> HandleVisitAsync(
+        VisitService visitService,
+        CancellationToken cancellationToken) =>
+        await visitService.GetCurrentAsync(cancellationToken) is { } visit ? TypedResults.Ok(visit) : TypedResults.NoContent();
 }

@@ -9,6 +9,15 @@ public enum Language
 
 public static class LanguageExtensions
 {
+    // 店舗の設定の言語のコード ("ja"、"en")。知らないコードは null
+    public static Language? FromCode(string code) =>
+        code switch
+        {
+            "ja" => Language.Japanese,
+            "en" => Language.English,
+            _ => null
+        };
+
     // 英語がなければ日本語を出す
     public static string Get(this LocalizedText text, Language language) =>
         (language == Language.English) && !String.IsNullOrEmpty(text.En) ? text.En : text.Ja;

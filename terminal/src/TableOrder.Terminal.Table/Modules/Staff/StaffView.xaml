@@ -102,21 +102,6 @@
             <ScrollView Grid.Column="2"
                         Style="{StaticResource PanelScroll}">
                 <VerticalStackLayout Style="{StaticResource StaffPanelStack}">
-                    <!-- visit -->
-                    <Label Style="{StaticResource StaffSectionLabel}"
-                           Text="{x:Static strings:AppResources.StaffVisit}" />
-                    <Grid Style="{StaticResource StaffButtonGrid}"
-                          ColumnDefinitions="*,*"
-                          IsVisible="{Binding CanOpenVisit}">
-                        <Button Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding OpenVisitCommand}"
-                                Text="{x:Static strings:AppResources.StaffOpenVisit}" />
-                    </Grid>
-                    <Label Style="{StaticResource StaffHintLabel}"
-                           IsVisible="{Binding CanOpenVisit, Converter={StaticResource ReverseConverter}}"
-                           Text="{x:Static strings:AppResources.StaffVisitOpen}" />
-
                     <!-- device -->
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffDevice}" />
@@ -126,15 +111,7 @@
                                 Style="{StaticResource StaffButton}"
                                 Command="{Binding SetupCommand}"
                                 Text="{x:Static strings:AppResources.SetupTitle}" />
-                        <Button Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding ChangePinCommand}"
-                                IsVisible="{Binding CanChangePin}"
-                                Text="{x:Static strings:AppResources.StaffChangePin}" />
                     </Grid>
-                    <Label Style="{StaticResource StaffHintLabel}"
-                           IsVisible="{Binding CanChangePin, Converter={StaticResource ReverseConverter}}"
-                           Text="{x:Static strings:AppResources.StaffPinManaged}" />
 
                     <!-- kiosk -->
                     <Label Style="{StaticResource StaffSectionLabel}"
@@ -159,60 +136,6 @@
                     </Grid>
                     <Label Style="{StaticResource StaffHintLabel}"
                            Text="{x:Static strings:AppResources.StaffKioskHint}" />
-
-                    <!-- mock -->
-                    <Label Style="{StaticResource StaffSectionLabel}"
-                           Text="{x:Static strings:AppResources.StaffMock}" />
-                    <Grid Style="{StaticResource StaffButtonGrid}"
-                          RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto"
-                          ColumnDefinitions="*,*">
-                        <Button Grid.Row="0" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding OfflineCommand}"
-                                Text="{Binding OfflineText}" />
-                        <Button Grid.Row="0" Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding PaymentCommand}"
-                                Text="{Binding PaymentText}" />
-                        <Button Grid.Row="1" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding SellOutCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockSellOut}" />
-                        <Button Grid.Row="1" Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding RestockCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockRestock}" />
-                        <Button Grid.Row="2" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding AdvanceCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockAdvance}" />
-                        <Button Grid.Row="2" Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding HallOpenCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockHallOpen}" />
-                        <Button Grid.Row="3" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding RegisterPayCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockRegisterPay}" />
-                        <Button Grid.Row="3" Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding PauseCommand}"
-                                Text="{Binding PauseText}" />
-                        <Button Grid.Row="4" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding LastOrderCommand}"
-                                Text="{Binding LastOrderText}" />
-                        <Button Grid.Row="4" Grid.Column="1"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding RevokeCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockRevoke}" />
-                        <Button Grid.Row="5" Grid.Column="0"
-                                Style="{StaticResource StaffButton}"
-                                Command="{Binding SuspendCommand}"
-                                Text="{x:Static strings:AppResources.StaffMockSuspend}" />
-                    </Grid>
-                    <Label Style="{StaticResource StaffHintLabel}"
-                           Text="{Binding MockHintText}" />
                 </VerticalStackLayout>
             </ScrollView>
         </Grid>

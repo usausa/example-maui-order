@@ -7,4 +7,7 @@ public sealed partial class MenuAccessor
     // 店舗の今のメニュー (店舗の MenuPublicationId が指す公開)
     [QueryFirst]
     public partial ValueTask<MenuPublicationEntity?> QueryCurrentAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
+
+    [QueryFirst]
+    public partial ValueTask<MenuPublicationEntity?> QueryAsync(Guid tenantId, Guid id, CancellationToken cancellationToken);
 }

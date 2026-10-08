@@ -56,13 +56,6 @@
   <data name="BadgeRecommended" xml:space="preserve">
     <value>Recommended</value>
   </data>
-  <data name="BrandName" xml:space="preserve">
-    <value>Bunny's</value>
-    <comment>チェーンの名前。チェーンの色 (Colors.xaml の Brand の節) と印 (AppIcons の BrandGlyph) と合わせて替える</comment>
-  </data>
-  <data name="CallAcknowledged" xml:space="preserve">
-    <value>On the way</value>
-  </data>
   <data name="CallMessage" xml:space="preserve">
     <value>What can we help you with?</value>
   </data>
@@ -240,21 +233,6 @@
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>
   </data>
-  <data name="GuestAdults" xml:space="preserve">
-    <value>Adults</value>
-  </data>
-  <data name="GuestChildren" xml:space="preserve">
-    <value>Children</value>
-  </data>
-  <data name="GuestChildrenHint" xml:space="preserve">
-    <value>Elementary school age and under</value>
-  </data>
-  <data name="GuestStart" xml:space="preserve">
-    <value>Start</value>
-  </data>
-  <data name="GuestTitle" xml:space="preserve">
-    <value>How many in your party?</value>
-  </data>
   <data name="GuestsFormat" xml:space="preserve">
     <value>{0}</value>
   </data>
@@ -311,6 +289,9 @@
   </data>
   <data name="ListSeparator" xml:space="preserve">
     <value>, </value>
+  </data>
+  <data name="MaxLinesFormat" xml:space="preserve">
+    <value>You can order up to {0} items at a time. Please place this order first.</value>
   </data>
   <data name="MenuCall" xml:space="preserve">
     <value>Call staff</value>
@@ -397,7 +378,7 @@
     <value>Server (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>Leave empty to run with mock data</value>
+    <value>Enter the order server URL (http or https)</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>Uses the server set by EMM (cannot be changed on this device)</value>
@@ -418,7 +399,7 @@
     <value>Pairing code</value>
   </data>
   <data name="SetupPairingCodeHint" xml:space="preserve">
-    <value>The 6-digit code issued in the admin console. For the mock, use 100001 to 100012 (tables 1 to 12)</value>
+    <value>The 6-digit code issued in the admin console.</value>
   </data>
   <data name="SetupRegister" xml:space="preserve">
     <value>Register and start</value>
@@ -456,9 +437,6 @@
   <data name="StaffBatteryFormat" xml:space="preserve">
     <value>{0}%</value>
   </data>
-  <data name="StaffChangePin" xml:space="preserve">
-    <value>Change PIN</value>
-  </data>
   <data name="StaffConnected" xml:space="preserve">
     <value>Connected</value>
   </data>
@@ -476,9 +454,6 @@
   </data>
   <data name="StaffEndpoint" xml:space="preserve">
     <value>Server</value>
-  </data>
-  <data name="StaffEndpointMock" xml:space="preserve">
-    <value>Mock</value>
   </data>
   <data name="StaffEnrollmentToken" xml:space="preserve">
     <value>Enrollment token</value>
@@ -510,131 +485,20 @@
   <data name="StaffManagedNone" xml:space="preserve">
     <value>None</value>
   </data>
-  <data name="StaffMock" xml:space="preserve">
-    <value>Mock controls</value>
-  </data>
-  <data name="StaffMockAdvance" xml:space="preserve">
-    <value>Advance orders</value>
-  </data>
-  <data name="StaffMockAdvanceDone" xml:space="preserve">
-    <value>Orders have advanced one step.</value>
-  </data>
-  <data name="StaffMockCartEmpty" xml:space="preserve">
-    <value>The cart is empty.</value>
-  </data>
-  <data name="StaffMockFailPayments" xml:space="preserve">
-    <value>Fail payments</value>
-  </data>
-  <data name="StaffMockHallOpen" xml:space="preserve">
-    <value>Open a visit from the hall</value>
-  </data>
-  <data name="StaffMockHallOpenFormat" xml:space="preserve">
-    <value>A visit will be opened from the hall in {0} seconds.</value>
-  </data>
-  <data name="StaffMockHintFormat" xml:space="preserve">
-    <value>Hall, register and store actions send a notification after {0} seconds (check it on the customer screen).</value>
-  </data>
-  <data name="StaffMockLastOrderNone" xml:space="preserve">
-    <value>No last order</value>
-  </data>
-  <data name="StaffMockLastOrderPassed" xml:space="preserve">
-    <value>Last order passed</value>
-  </data>
-  <data name="StaffMockLastOrderSoon" xml:space="preserve">
-    <value>Last order soon</value>
-  </data>
-  <data name="StaffMockNoVisit" xml:space="preserve">
-    <value>There is no visit.</value>
-  </data>
-  <data name="StaffMockOffline" xml:space="preserve">
-    <value>Go offline</value>
-  </data>
-  <data name="StaffMockOnline" xml:space="preserve">
-    <value>Go online</value>
-  </data>
-  <data name="StaffMockPassPayments" xml:space="preserve">
-    <value>Restore payments</value>
-  </data>
-  <data name="StaffMockPause" xml:space="preserve">
-    <value>Pause ordering</value>
-  </data>
-  <data name="StaffMockRegisterPay" xml:space="preserve">
-    <value>Pay at the register</value>
-  </data>
-  <data name="StaffMockRegisterPayFormat" xml:space="preserve">
-    <value>The bill will be paid at the register in {0} seconds.</value>
-  </data>
-  <data name="StaffMockRestock" xml:space="preserve">
-    <value>Restock</value>
-  </data>
-  <data name="StaffMockRestockDone" xml:space="preserve">
-    <value>Stock has been restored.</value>
-  </data>
-  <data name="StaffMockResume" xml:space="preserve">
-    <value>Resume ordering</value>
-  </data>
-  <data name="StaffMockRevoke" xml:space="preserve">
-    <value>Revoke this tablet</value>
-  </data>
-  <data name="StaffMockRevokeFormat" xml:space="preserve">
-    <value>The tablet is notified in {0} seconds and returns to the device settings</value>
-  </data>
-  <data name="StaffMockSellOut" xml:space="preserve">
-    <value>Sell out cart items</value>
-  </data>
-  <data name="StaffMockSoldOutDone" xml:space="preserve">
-    <value>Cart items are now sold out.</value>
-  </data>
-  <data name="StaffMockSuspend" xml:space="preserve">
-    <value>Suspend the tenant</value>
-  </data>
-  <data name="StaffMockSuspendFormat" xml:space="preserve">
-    <value>The tablet is notified in {0} seconds, and the tenant resumes after {1} seconds</value>
-  </data>
   <data name="StaffNetwork" xml:space="preserve">
     <value>Network</value>
-  </data>
-  <data name="StaffNewPin" xml:space="preserve">
-    <value>New PIN</value>
-  </data>
-  <data name="StaffNewPinAgain" xml:space="preserve">
-    <value>New PIN (again)</value>
-  </data>
-  <data name="StaffOpenVisit" xml:space="preserve">
-    <value>Open a visit</value>
   </data>
   <data name="StaffPin" xml:space="preserve">
     <value>Staff PIN</value>
   </data>
-  <data name="StaffPinChanged" xml:space="preserve">
-    <value>The PIN has been changed.</value>
-  </data>
-  <data name="StaffPinLength" xml:space="preserve">
-    <value>Enter {0} digits.</value>
-  </data>
-  <data name="StaffPinManaged" xml:space="preserve">
-    <value>The PIN is set by EMM (cannot be changed on this device)</value>
-  </data>
-  <data name="StaffPinMismatch" xml:space="preserve">
-    <value>The PINs do not match.</value>
+  <data name="StaffPinLocked" xml:space="preserve">
+    <value>Too many wrong attempts. Please try again later.</value>
   </data>
   <data name="StaffPinWrong" xml:space="preserve">
     <value>Incorrect PIN.</value>
   </data>
   <data name="StaffTitle" xml:space="preserve">
     <value>Staff menu</value>
-  </data>
-  <data name="StaffVisit" xml:space="preserve">
-    <value>Visit</value>
-  </data>
-  <data name="StaffVisitOpen" xml:space="preserve">
-    <value>A visit is in progress (it ends at checkout).</value>
-  </data>
-  <data name="StandbyMessage" xml:space="preserve">
-    <value>You can order from this tablet</value>
-  </data>
-  <data name="StandbyStart" xml:space="preserve">
-    <value>Start ordering</value>
   </data>
   <data name="StandbyWaiting" xml:space="preserve">
     <value>A staff member will be with you shortly</value>
@@ -656,6 +520,9 @@
   </data>
   <data name="StartupStepConnect" xml:space="preserve">
     <value>Connecting to the server</value>
+  </data>
+  <data name="StartupStepImages" xml:space="preserve">
+    <value>Downloading the photos</value>
   </data>
   <data name="StartupStepMenu" xml:space="preserve">
     <value>Loading the menu</value>

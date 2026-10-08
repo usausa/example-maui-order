@@ -73,6 +73,10 @@ public static class ViewHelper
             _ => AppResources.KioskNone
         };
 
+    // ヘッダと待受のチェーンの名前と印 (ロゴは保存したもの)
+    public static BrandMark Brand(MenuState menuState, ImageCache imageCache, Language language) =>
+        new(menuState.BrandName(language), imageCache.PathOf(menuState.LogoImageName));
+
     // 他の言語の名前 (言語の切り替えのボタンに出す)
     // 言語の名前はその言語で書く (どの言語の画面でも読めるように)
     public static string LanguageName(Language language) =>

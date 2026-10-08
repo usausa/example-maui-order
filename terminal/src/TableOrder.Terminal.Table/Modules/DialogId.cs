@@ -8,9 +8,6 @@ public enum DialogId
     Confirm,
     Language,
 
-    // 来店
-    GuestCount,
-
     // 注文
     ItemDetail,
     OrderConfirm,

@@ -5,6 +5,8 @@ public sealed class VisitResponse
 {
     public Guid Id { get; set; }
 
+    public Guid TableId { get; set; }
+
     public string TableName { get; set; } = default!;
 
     public int Adults { get; set; }
@@ -16,6 +18,14 @@ public sealed class VisitResponse
     public VisitOpenedBy OpenedBy { get; set; }
 
     public DateTimeOffset OpenedAt { get; set; }
+
+    // 終えたところと時刻 (Open と Paying の間は null)
+    public VisitClosedBy? ClosedBy { get; set; }
+
+    public DateTimeOffset? ClosedAt { get; set; }
+
+    // 来店を開いたときの営業日
+    public DateOnly BusinessDate { get; set; }
 
     // 来店で答えた確認のルール
     public IReadOnlyList<Guid> ConfirmedRuleIds { get; set; } = default!;

@@ -30,6 +30,10 @@ public sealed class CartState
         PendingOrderId = null;
     }
 
+    // 入れると行が増えるか (同じ品・オプション・出す時機の行がなければ増える)
+    public bool AddsLine(ItemSelection selection) =>
+        !lines.Exists(x => x.IsSameSelection(selection.ItemId, selection.OptionIds, selection.Timing));
+
     // 行の内容を詳細で直したとき
     public void Replace(Guid lineId, ItemSelection selection, decimal unitPrice)
     {

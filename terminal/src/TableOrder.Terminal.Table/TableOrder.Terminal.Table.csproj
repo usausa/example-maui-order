@@ -44,11 +44,12 @@
   -->
 
   <!-- Device Owner は adb から外せないので、Debug だけ testOnly にして外せるようにする (Release は端末の初期化でしか外せない) -->
+  <!-- 開発のサーバ (http) につなぐため、Debug だけ暗号化しない通信を許す (Release の接続先は https にする) -->
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <AndroidManifestPlaceholders>testOnly=true</AndroidManifestPlaceholders>
+    <AndroidManifestPlaceholders>testOnly=true;cleartext=true</AndroidManifestPlaceholders>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' != 'Debug'">
-    <AndroidManifestPlaceholders>testOnly=false</AndroidManifestPlaceholders>
+    <AndroidManifestPlaceholders>testOnly=false;cleartext=false</AndroidManifestPlaceholders>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
@@ -64,9 +65,8 @@
     <MauiIcon Include="Resources\AppIcon\appicon.svg" ForegroundFile="Resources\AppIcon\appiconfg.svg" ForegroundScale="1" />
     <!-- Splash Screen (起動の画面の地 SystemCanvasColor と同じ色) -->
     <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#F4F5F7" BaseSize="128,128" />
-    <!-- Images (料理の絵は商品の詳細で大きく出すので、基準の大きさを大きくする) -->
-    <MauiImage Include="Resources\Images\*" Exclude="Resources\Images\food_*.svg" />
-    <MauiImage Include="Resources\Images\food_*.svg" BaseSize="480,360" />
+    <!-- Images -->
+    <MauiImage Include="Resources\Images\*" />
     <!-- Custom Fonts -->
     <MauiFont Include="Resources\Fonts\*" />
     <!-- Raw Assets (also remove the "Resources\Raw" prefix) -->

@@ -16,6 +16,18 @@ public static class StockEndpoints
             .RequireAuthorization(Policies.MenuReader)
             .WithName("StockGet")
             .Produces<StockResponse>();
+
+        group.MapPut("/{targetId:guid}", HandleUpdateAsync)
+            .RequireAuthorization(Policies.StockWriter)
+            .WithName("StockUpdate")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPost("/reset", HandleResetAsync)
+            .RequireAuthorization(Policies.HallDevice)
+            .WithName("StockReset")
+            .Produces(StatusCodes.Status204NoContent);
     }
 
     //--------------------------------------------------------------------------------
@@ -26,4 +38,23 @@ public static class StockEndpoints
         StockService stockService,
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await stockService.GetStockAsync(cancellationToken));
+
+    //--------------------------------------------------------------------------------
+    // Update
+    //--------------------------------------------------------------------------------
+
+    private static async ValueTask<IResult> HandleUpdateAsync(
+        StockService stockService,
+        Guid targetId,
+        StockUpdateRequest request,
+        CancellationToken cancellationToken) =>
+        ApiResults.NoContent(await stockService.UpdateAsync(targetId, request, cancellationToken));
+
+    private static async ValueTask<NoContent> HandleResetAsync(
+        StockService stockService,
+        CancellationToken cancellationToken)
+    {
+        await stockService.ResetAsync(cancellationToken);
+        return TypedResults.NoContent();
+    }
 }

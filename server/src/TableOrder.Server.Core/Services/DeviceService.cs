@@ -3,6 +3,8 @@ namespace TableOrder.Server.Core.Services;
 using System.Security.Cryptography;
 
 using TableOrder.Contract.Devices;
+using TableOrder.Contract.Events;
+using TableOrder.Contract.Menu;
 using TableOrder.Server.Core.Accessors;
 using TableOrder.Server.Core.Infrastructure.Json;
 
@@ -24,6 +26,9 @@ public enum DeviceAuthorizeStatus
 
 public sealed record DeviceAuthorizeResult(DeviceAuthorizeStatus Status, DeviceIdentity? Identity = null);
 
+// 管理画面の端末の一覧の行 (端末と、キッチン端末の持ち場)
+public sealed record DeviceSummaryResult(DeviceSummaryEntity Device, IReadOnlyList<Guid> StationIds);
+
 public sealed class DeviceService
 {
     private readonly ServiceContextProvider contextProvider;
@@ -36,9 +41,15 @@ public sealed class DeviceService
 
     private readonly StoreAccessor storeAccessor;
 
+    private readonly SettingsAccessor settingsAccessor;
+
     private readonly DeviceAccessor deviceAccessor;
 
     private readonly DeviceEnrollmentAccessor enrollmentAccessor;
+
+    private readonly MenuService menuService;
+
+    private readonly EventService eventService;
 
     public DeviceService(
         ServiceContextProvider contextProvider,
@@ -46,16 +57,22 @@ public sealed class DeviceService
         DirectoryAccessor directoryAccessor,
         TenantAccessor tenantAccessor,
         StoreAccessor storeAccessor,
+        SettingsAccessor settingsAccessor,
         DeviceAccessor deviceAccessor,
-        DeviceEnrollmentAccessor enrollmentAccessor)
+        DeviceEnrollmentAccessor enrollmentAccessor,
+        MenuService menuService,
+        EventService eventService)
     {
         this.contextProvider = contextProvider;
         this.provider = provider;
         this.directoryAccessor = directoryAccessor;
         this.tenantAccessor = tenantAccessor;
         this.storeAccessor = storeAccessor;
+        this.settingsAccessor = settingsAccessor;
         this.deviceAccessor = deviceAccessor;
         this.enrollmentAccessor = enrollmentAccessor;
+        this.menuService = menuService;
+        this.eventService = eventService;
     }
 
     //--------------------------------------------------------------------------------
@@ -161,13 +178,15 @@ public sealed class DeviceService
     }
 
     // 要求した端末の設定。置き場所はトークンではなく今の端末の記録から返す (席替えをすぐに出す)
+    // チェーンの設定 (名前・ロゴ・色) はテナントの行から、機能の有無とスタッフの PIN は店舗の行から入れる
     public async ValueTask<DeviceConfigResponse?> GetConfigAsync(CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var store = await storeAccessor.QueryAsync(tenantId, context.RequireStoreId(), cancellationToken);
         var device = await deviceAccessor.QueryAsync(tenantId, context.RequireDeviceId(), cancellationToken);
-        if ((store is null) || (device is null))
+        var brand = await settingsAccessor.QueryBrandAsync(tenantId, cancellationToken);
+        if ((store is null) || (device is null) || (brand is null))
         {
             return null;
         }
@@ -182,8 +201,7 @@ public sealed class DeviceService
             OrderRules = new DeviceConfigResponseOrderRules
             {
                 MaxQuantityPerLine = store.MaxQuantityPerLine,
-                MaxLinesPerOrder = store.MaxLinesPerOrder,
-                SelfStart = store.SelfStart
+                MaxLinesPerOrder = store.MaxLinesPerOrder
             },
             PaymentMethods = JsonSerializer.Deserialize<List<PaymentMethod>>(store.PaymentMethods, JsonDefaults.Options) ?? [],
             CallReasons = reasons.Select(static x => new DeviceConfigResponseCallReason
@@ -202,7 +220,140 @@ public sealed class DeviceService
                 TableId = device.TableId,
                 TableName = table?.Name,
                 StationIds = stations.Select(static x => x.StationId).ToList()
-            }
+            },
+            Brand = new DeviceConfigResponseBrand
+            {
+                Name = brand.BrandName,
+                LogoImageName = brand.LogoImageName,
+                Theme = SettingsService.ReadTheme(brand.Theme)
+            },
+            Features = SettingsService.ReadFeatures(store.Features),
+            StaffPin = SettingsService.ReadStaffPin(store.StaffPinHash),
+            SettingsVersion = store.SettingsVersion
         };
+    }
+
+    //--------------------------------------------------------------------------------
+    // Management
+    //--------------------------------------------------------------------------------
+
+    // 店舗の端末の一覧 (管理画面。有効な端末を先に並べる)
+    public async ValueTask<List<DeviceSummaryResult>> GetSummaryListAsync(CancellationToken cancellationToken)
+    {
+        var context = contextProvider.Current;
+        var tenantId = context.RequireTenantId();
+        var storeId = context.RequireStoreId();
+        var devices = await deviceAccessor.QuerySummaryListAsync(tenantId, storeId, cancellationToken);
+        var stations = (await deviceAccessor.QueryStationListByStoreAsync(tenantId, storeId, cancellationToken)).ToLookup(static x => x.DeviceId, static x => x.StationId);
+        return devices.Select(x => new DeviceSummaryResult(x, stations[x.Id].ToList())).ToList();
+    }
+
+    // 今のメニューの持ち場 (キッチン端末の置き場所を選ぶ)
+    public async ValueTask<List<MenuResponseStation>> GetStationListAsync(CancellationToken cancellationToken)
+    {
+        var context = contextProvider.Current;
+        var store = await storeAccessor.QueryAsync(context.RequireTenantId(), context.RequireStoreId(), cancellationToken);
+        var catalog = store is null ? null : await menuService.GetCatalogAsync(store, cancellationToken);
+        return catalog?.Menu.Stations.OrderBy(static x => x.SortOrder).ToList() ?? [];
+    }
+
+    // 端末の種類に合う置き場所か。テーブル端末は店舗の使っているテーブル、キッチン端末は今のメニューの持ち場にし、ほかの種類は置き場所を持たない
+    // 置き場所は決めなくてもよい (端末は置き場所を割り当てるまで起動の画面で待つ)
+    public async ValueTask<ServiceError?> ValidatePlacementAsync(DeviceKind kind, Guid? tableId, IReadOnlyList<Guid> stationIds, CancellationToken cancellationToken)
+    {
+        if ((tableId is not null) && (kind != DeviceKind.Table))
+        {
+            return ServiceError.Validation("tableId", "テーブルはテーブル端末にだけ割り当てられます");
+        }
+
+        if ((stationIds.Count > 0) && (kind != DeviceKind.Kitchen))
+        {
+            return ServiceError.Validation("stationIds", "持ち場はキッチン端末にだけ割り当てられます");
+        }
+
+        var context = contextProvider.Current;
+        var tenantId = context.RequireTenantId();
+        var storeId = context.RequireStoreId();
+        if ((tableId is { } table) && (await storeAccessor.QueryActiveTableAsync(tenantId, storeId, table, cancellationToken) is null))
+        {
+            return ServiceError.Validation("tableId", "店舗の使っているテーブルを選んでください");
+        }
+
+        if (stationIds.Count > 0)
+        {
+            var known = (await GetStationListAsync(cancellationToken)).Select(static x => x.Id).ToHashSet();
+            if (!stationIds.All(known.Contains))
+            {
+                return ServiceError.Validation("stationIds", "今のメニューの持ち場を選んでください");
+            }
+        }
+
+        return null;
+    }
+
+    // 名前と置き場所を替え、端末に知らせる (端末は起動からやり直して、新しいトークンと設定を受け取る)
+    public async ValueTask<ServiceError?> UpdateAsync(Guid deviceId, string name, Guid? tableId, IReadOnlyList<Guid> stationIds, int version, CancellationToken cancellationToken)
+    {
+        var trimmed = name.Trim();
+        if ((trimmed.Length == 0) || (trimmed.Length > Length.DeviceName))
+        {
+            return ServiceError.Validation("name", $"名前は {Length.DeviceName} 文字までで入れてください");
+        }
+
+        var context = contextProvider.Current;
+        var tenantId = context.RequireTenantId();
+        var storeId = context.RequireStoreId();
+        var device = await deviceAccessor.QueryAsync(tenantId, deviceId, cancellationToken);
+        if ((device is null) || (device.StoreId != storeId))
+        {
+            return ServiceError.NotFound;
+        }
+
+        if (await ValidatePlacementAsync(device.Kind, tableId, stationIds, cancellationToken) is { } invalid)
+        {
+            return invalid;
+        }
+
+        return await eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
+        {
+            // 表示していた版でなければ (ほかで替えた、無効にした)、読み直してもらう
+            if (await deviceAccessor.UpdateAsync(transaction.Tx, tenantId, storeId, deviceId, trimmed, tableId, version, context.Now, cancellationToken) == 0)
+            {
+                return new ServiceError(ErrorCodes.VersionMismatch);
+            }
+
+            if (device.Kind == DeviceKind.Kitchen)
+            {
+                await deviceAccessor.DeleteStationAsync(transaction.Tx, tenantId, deviceId, cancellationToken);
+                foreach (var stationId in stationIds.Distinct())
+                {
+                    await deviceAccessor.InsertStationAsync(transaction.Tx, tenantId, deviceId, stationId, cancellationToken);
+                }
+            }
+
+            await transaction.AppendEventAsync(EventTypes.DeviceUpdated, new DeviceUpdatedEventData { DeviceId = deviceId }, null, null, context.Now, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return null;
+        }, cancellationToken);
+    }
+
+    // 無効にして端末に知らせる (端末は次のトークンの要求で断られて、登録からやり直す)
+    public ValueTask<ServiceError?> RevokeAsync(Guid deviceId, int version, CancellationToken cancellationToken)
+    {
+        var context = contextProvider.Current;
+        var tenantId = context.RequireTenantId();
+        var storeId = context.RequireStoreId();
+        return eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
+        {
+            if (await deviceAccessor.UpdateRevokedAsync(transaction.Tx, tenantId, storeId, deviceId, version, context.Now, cancellationToken) == 0)
+            {
+                var device = await deviceAccessor.QueryAsync(transaction.Tx, tenantId, deviceId, cancellationToken);
+                return (device is not null) && (device.StoreId == storeId) ? new ServiceError(ErrorCodes.VersionMismatch) : ServiceError.NotFound;
+            }
+
+            await transaction.AppendEventAsync(EventTypes.DeviceUpdated, new DeviceUpdatedEventData { DeviceId = deviceId }, null, null, context.Now, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+            return null;
+        }, cancellationToken);
     }
 }

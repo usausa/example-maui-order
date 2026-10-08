@@ -25,7 +25,7 @@ public sealed partial class ManagedConfiguration
     {
         var manager = (RestrictionsManager?)Application.Context.GetSystemService(Context.RestrictionsService);
         using var bundle = manager?.ApplicationRestrictions;
-        return new RawValues(bundle?.GetString(ApiEndPointKey), bundle?.GetString(StaffPinKey), bundle?.GetString(EnrollmentTokenKey));
+        return new RawValues(bundle?.GetString(ApiEndPointKey), bundle?.GetString(EnrollmentTokenKey));
     }
 
     // EMM が値を替えた知らせは、動いている間に登録した受け口にだけ届く (マニフェストに書いた受け口には届かない)

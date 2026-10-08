@@ -25,6 +25,9 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Sample data loaded.")]
     public static partial void InfoSampleDataLoaded(this ILogger logger);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Sample images copied. tenant=[{tenant}], count=[{count}]")]
+    public static partial void InfoSampleImagesCopied(this ILogger logger, string tenant, int count);
+
     // Security
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Signing key is not configured. An ephemeral key is generated for development.")]
@@ -34,6 +37,30 @@ internal static partial class Log
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Long execution. method=[{method}], route=[{route}], elapsed=[{elapsed}]")]
     public static partial void WarnLongExecution(this ILogger logger, string method, string route, long elapsed);
+
+    // Event
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Event dispatch failed.")]
+    public static partial void ErrorEventDispatch(this ILogger logger, Exception ex);
+
+    // Cleanup
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Expired events deleted. count=[{count}]")]
+    public static partial void InfoEventCleanup(this ILogger logger, int count);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Expired pairing codes deleted. count=[{count}]")]
+    public static partial void InfoPairingCodeCleanup(this ILogger logger, int count);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Cleanup failed.")]
+    public static partial void ErrorCleanup(this ILogger logger, Exception ex);
+
+    // Simulation
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Simulation start.")]
+    public static partial void InfoSimulationStart(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Simulation failed.")]
+    public static partial void ErrorSimulation(this ILogger logger, Exception ex);
 
     // Error
 

@@ -13,4 +13,5 @@ global using System.Threading.Tasks;
 global using Xunit;
 
 global using TableOrder.Contract;
+global using TableOrder.Domain;
 global using TableOrder.Domain.Enums;

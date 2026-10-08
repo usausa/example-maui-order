@@ -14,4 +14,8 @@ public sealed partial class DirectoryAccessor
 
     [QueryFirst]
     public partial ValueTask<DeviceEnrollmentEntity?> QueryEnrollmentByTokenHashAsync(byte[] tokenHash, CancellationToken cancellationToken);
+
+    // 決済サービスの結果の通知で、テナントのわからないまま取引番号で支払を引く
+    [QueryFirst]
+    public partial ValueTask<PaymentEntity?> QueryPaymentByProviderReferenceAsync(string provider, string providerReference, CancellationToken cancellationToken);
 }

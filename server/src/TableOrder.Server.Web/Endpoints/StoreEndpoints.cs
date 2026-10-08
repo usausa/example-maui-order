@@ -17,6 +17,13 @@ public static class StoreEndpoints
             .WithName("StoreGet")
             .Produces<StoreResponse>()
             .ProducesProblem(StatusCodes.Status404NotFound);
+
+        group.MapPut("/ordering", HandleOrderingAsync)
+            .RequireAuthorization(Policies.HallDevice)
+            .WithName("StoreOrdering")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     //--------------------------------------------------------------------------------
@@ -27,4 +34,14 @@ public static class StoreEndpoints
         StoreService storeService,
         CancellationToken cancellationToken) =>
         await storeService.GetStoreAsync(cancellationToken) is { } store ? TypedResults.Ok(store) : ApiProblems.NotFound();
+
+    //--------------------------------------------------------------------------------
+    // Ordering
+    //--------------------------------------------------------------------------------
+
+    private static async ValueTask<IResult> HandleOrderingAsync(
+        StoreService storeService,
+        StoreOrderingRequest request,
+        CancellationToken cancellationToken) =>
+        ApiResults.NoContent(await storeService.SetOrderingAsync(request, cancellationToken));
 }

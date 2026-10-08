@@ -128,7 +128,7 @@
       },
       "price": 999,
       "taxRate": 0.10,
-      "imageName": "food_hamburg.png",
+      "imageName": "hamburg.93a3ef9c.png",
       "badges": [
         "Popular"
       ],
@@ -163,7 +163,7 @@
       },
       "price": 949,
       "taxRate": 0.10,
-      "imageName": "food_hamburg_egg.png",
+      "imageName": "hamburg-egg.c20c6b51.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -196,7 +196,7 @@
       },
       "price": 1299,
       "taxRate": 0.10,
-      "imageName": "food_grill.png",
+      "imageName": "grill.f568061c.png",
       "badges": [
         "Recommended"
       ],
@@ -230,7 +230,7 @@
       },
       "price": 1899,
       "taxRate": 0.10,
-      "imageName": "food_steak.png",
+      "imageName": "steak.215a9219.png",
       "badges": [
         "Limited"
       ],
@@ -263,7 +263,7 @@
       },
       "price": 799,
       "taxRate": 0.10,
-      "imageName": "food_carbonara.png",
+      "imageName": "carbonara.cc7338d6.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -294,7 +294,7 @@
       },
       "price": 699,
       "taxRate": 0.10,
-      "imageName": "food_meatsauce.png",
+      "imageName": "meatsauce.3f1407ab.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -324,7 +324,7 @@
       },
       "price": 599,
       "taxRate": 0.10,
-      "imageName": "food_doria.png",
+      "imageName": "doria.4b6544ef.png",
       "badges": [
         "New"
       ],
@@ -356,7 +356,7 @@
       },
       "price": 499,
       "taxRate": 0.10,
-      "imageName": "food_salad.png",
+      "imageName": "salad.b4c5e862.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -385,7 +385,7 @@
       },
       "price": 349,
       "taxRate": 0.10,
-      "imageName": "food_fries.png",
+      "imageName": "fries.79c44a25.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [],
@@ -412,7 +412,7 @@
       },
       "price": 249,
       "taxRate": 0.10,
-      "imageName": "food_soup.png",
+      "imageName": "soup.40695002.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -439,7 +439,7 @@
       },
       "price": 599,
       "taxRate": 0.10,
-      "imageName": "food_pizza.png",
+      "imageName": "pizza.55b9c52c.png",
       "badges": [
         "New"
       ],
@@ -469,7 +469,7 @@
       },
       "price": 699,
       "taxRate": 0.10,
-      "imageName": "food_parfait.png",
+      "imageName": "parfait.ee4d5658.png",
       "badges": [
         "Popular"
       ],
@@ -502,7 +502,7 @@
       },
       "price": 599,
       "taxRate": 0.10,
-      "imageName": "food_pancake.png",
+      "imageName": "pancake.c5cc301a.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -533,7 +533,7 @@
       },
       "price": 299,
       "taxRate": 0.10,
-      "imageName": "food_icecream.png",
+      "imageName": "icecream.4e0315e0.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -563,7 +563,7 @@
       },
       "price": 599,
       "taxRate": 0.10,
-      "imageName": "food_kidsplate.png",
+      "imageName": "kidsplate.5b7559d2.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -594,7 +594,7 @@
       },
       "price": 199,
       "taxRate": 0.10,
-      "imageName": "food_drinkbar.png",
+      "imageName": "drinkbar.89089146.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [],
@@ -620,7 +620,7 @@
       },
       "price": 459,
       "taxRate": 0.10,
-      "imageName": "food_drinkbar.png",
+      "imageName": "drinkbar.89089146.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [],
@@ -645,7 +645,7 @@
       },
       "price": 499,
       "taxRate": 0.10,
-      "imageName": "food_beer.png",
+      "imageName": "beer.73643b5b.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [
@@ -674,7 +674,7 @@
       },
       "price": 399,
       "taxRate": 0.10,
-      "imageName": "food_wine.png",
+      "imageName": "wine.f3aa7e31.png",
       "badges": [],
       "spiceLevel": 0,
       "allergenCodes": [],

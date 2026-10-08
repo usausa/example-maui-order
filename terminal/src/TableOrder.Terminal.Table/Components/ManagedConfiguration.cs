@@ -6,8 +6,6 @@ public sealed partial class ManagedConfiguration : IDisposable
 {
     private const string ApiEndPointKey = "apiEndPoint";
 
-    private const string StaffPinKey = "staffPin";
-
     private const string EnrollmentTokenKey = "enrollmentToken";
 
     // 登録トークンの長さの上限 (ほかの値を取り違えて配ったときに使わないように)
@@ -24,9 +22,6 @@ public sealed partial class ManagedConfiguration : IDisposable
 
     // 注文サーバの URL (http / https の絶対 URL)
     public string? ApiEndPoint { get; private set; }
-
-    // スタッフメニューに入る PIN (決まった桁数の数字)
-    public string? StaffPin { get; private set; }
 
     // 端末の登録トークン (店舗と種類に限った数日有効の値。空白を含まない)
     public string? EnrollmentToken { get; private set; }
@@ -68,9 +63,8 @@ public sealed partial class ManagedConfiguration : IDisposable
 
         current = values;
         ApiEndPoint = Accept(ApiEndPointKey, values.ApiEndPoint, IsValidEndPoint);
-        StaffPin = Accept(StaffPinKey, values.StaffPin, IsValidPin);
         EnrollmentToken = Accept(EnrollmentTokenKey, values.EnrollmentToken, IsValidToken);
-        log.InfoManagedConfiguration(ApiEndPoint ?? string.Empty, StaffPin is not null, EnrollmentToken is not null);
+        log.InfoManagedConfiguration(ApiEndPoint ?? string.Empty, EnrollmentToken is not null);
 
         Changed?.Invoke(this, EventArgs.Empty);
     }
@@ -96,14 +90,11 @@ public sealed partial class ManagedConfiguration : IDisposable
     private static bool IsValidEndPoint(string value) =>
         Uri.TryCreate(value, UriKind.Absolute, out var uri) && ((uri.Scheme == Uri.UriSchemeHttp) || (uri.Scheme == Uri.UriSchemeHttps));
 
-    private static bool IsValidPin(string value) =>
-        (value.Length == Length.StaffPinDigits) && value.All(Char.IsAsciiDigit);
-
     private static bool IsValidToken(string value) =>
         (value.Length <= MaxEnrollmentTokenLength) && !value.Any(Char.IsWhiteSpace);
 
     // 配られたままの値
-    private readonly record struct RawValues(string? ApiEndPoint, string? StaffPin, string? EnrollmentToken);
+    private readonly record struct RawValues(string? ApiEndPoint, string? EnrollmentToken);
 
     private static partial RawValues ReadValues();
 

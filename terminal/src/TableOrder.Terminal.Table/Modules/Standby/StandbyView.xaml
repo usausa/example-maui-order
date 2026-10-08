@@ -10,27 +10,14 @@
              x:DataType="{x:Type module:StandbyViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StandbyViewModel}">
 
-    <!-- 待受: 席にお客様がいないときと会計の後に出す。お客様が始められる店 (selfStart) はどこをタッチしても始められる -->
-    <!-- タッチで始める面は一番下に敷き、言語の切り替えと始めるボタン以外はタッチを下の面へ通す -->
+    <!-- 待受: 席にお客様がいないときと会計の後に出す。来店はスタッフが開き、開いた知らせで注文の画面に進む -->
     <Grid Style="{StaticResource StandbyGrid}"
           RowDefinitions="Auto,*,Auto">
-        <!-- touch -->
-        <BoxView Grid.Row="0" Grid.RowSpan="3"
-                 Margin="{StaticResource StandbyTouchMargin}">
-            <BoxView.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding StartCommand}" />
-            </BoxView.GestureRecognizers>
-        </BoxView>
-
         <!-- brand / language -->
         <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto"
-              CascadeInputTransparent="False"
-              InputTransparent="True">
+              ColumnDefinitions="*,Auto">
             <HorizontalStackLayout Grid.Column="0"
-                                   Style="{StaticResource StandbyBrandStack}"
-                                   CascadeInputTransparent="False"
-                                   InputTransparent="True">
+                                   Style="{StaticResource StandbyBrandStack}">
                 <!-- ブランドの印 (長押しで PIN を確かめてスタッフメニューに入る、隠れた入口) -->
                 <!-- TouchBehavior は付けた要素の BindingContext を受け継がないので、印の BindingContext を渡す -->
                 <Border x:Name="BrandMark"
@@ -42,17 +29,23 @@
                                            LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
                     </Border.Behaviors>
                     <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                    <Label Style="{StaticResource StandbyMarkLabel}"
-                           InputTransparent="True"
-                           Text="{x:Static markup:AppIcons.BrandGlyph}" />
+                    <!-- ロゴがなければ名前の頭の文字 -->
+                    <Grid InputTransparent="True">
+                        <Label Style="{StaticResource StandbyInitialLabel}"
+                               IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
+                               Text="{Binding Brand.Initial}" />
+                        <Image Style="{StaticResource BrandLogoImage}"
+                               IsVisible="{Binding Brand.HasLogo}"
+                               Source="{Binding Brand.LogoPath}" />
+                    </Grid>
                 </Border>
                 <Label Style="{StaticResource StandbyBrandLabel}"
-                       InputTransparent="True"
-                       Text="{x:Static strings:AppResources.BrandName}" />
+                       Text="{Binding Brand.Name}" />
             </HorizontalStackLayout>
             <Button Grid.Column="1"
                     Style="{StaticResource StandbyLanguageButton}"
                     Command="{Binding LanguageCommand}"
+                    IsVisible="{Binding HasLanguages}"
                     ContentLayout="Left,12"
                     ImageSource="{x:Static markup:AppIcons.StandbyLanguage}"
                     Text="{Binding LanguageText}" />
@@ -60,27 +53,16 @@
 
         <!-- message -->
         <VerticalStackLayout Grid.Row="1"
-                             Style="{StaticResource StandbyStack}"
-                             CascadeInputTransparent="False"
-                             InputTransparent="True">
+                             Style="{StaticResource StandbyStack}">
             <Label Style="{StaticResource StandbyTitleLabel}"
-                   InputTransparent="True"
                    Text="{x:Static strings:AppResources.StandbyWelcome}" />
             <Label Style="{StaticResource StandbyMessageLabel}"
-                   InputTransparent="True"
-                   Text="{Binding Message}" />
-            <Button Style="{StaticResource StandbyStartButton}"
-                    Command="{Binding StartCommand}"
-                    ContentLayout="Left,16"
-                    ImageSource="{x:Static markup:AppIcons.Touch}"
-                    IsVisible="{Binding CanStart}"
-                    Text="{x:Static strings:AppResources.StandbyStart}" />
+                   Text="{x:Static strings:AppResources.StandbyWaiting}" />
         </VerticalStackLayout>
 
         <!-- table -->
         <Label Grid.Row="2"
                Style="{StaticResource StandbyFooterLabel}"
-               InputTransparent="True"
                Text="{Binding TableText}" />
     </Grid>
 

@@ -1,6 +1,6 @@
 namespace TableOrder.Terminal.Table.State;
 
-// 起動のときに読んだ店舗の設定・メニュー・品切れ。画面には選んでいる言語に直した形で渡す
+// 起動のときに読んだ店舗の設定・メニュー・品切れ (品切れは通知で替える)。画面には選んでいる言語に直した形で渡す
 public sealed class MenuState
 {
     private Dictionary<Guid, MenuResponseItem> items = [];
@@ -20,6 +20,17 @@ public sealed class MenuState
     // この端末を置いたテーブル (管理画面で割り当て、端末の設定で受け取る)
     public string? TableName => Config.Device?.TableName;
 
+    // 店舗で選べる言語 (知らないコードは使わない)
+    public IReadOnlyList<Language> Languages =>
+        Config.Languages.Select(LanguageExtensions.FromCode).OfType<Language>().Distinct().ToList();
+
+    // 機能の有無 (店舗の設定)
+    public DeviceConfigResponseFeatures Features => Config.Features;
+
+    public string BrandName(Language language) => Config.Brand.Name.Get(language);
+
+    public string? LogoImageName => Config.Brand.LogoImageName;
+
     public void Update(DeviceConfigResponse config, MenuResponse menu, StockResponse stock)
     {
         Config = config;
@@ -38,6 +49,22 @@ public sealed class MenuState
         stocks = stock.Items.ToDictionary(static x => x.TargetId);
     }
 
+    // 通知で受けた変わった品だけを入れる (売れるように戻した品は除く)
+    public void ApplyStock(IEnumerable<StockResponseItem> changes)
+    {
+        foreach (var change in changes)
+        {
+            if (change.Status == StockStatus.Available)
+            {
+                stocks.Remove(change.TargetId);
+            }
+            else
+            {
+                stocks[change.TargetId] = change;
+            }
+        }
+    }
+
     //--------------------------------------------------------------------------------
     // Display
     //--------------------------------------------------------------------------------
@@ -54,6 +81,10 @@ public sealed class MenuState
                     .Select(id => ToProduct(items[id], language))
                     .ToList()))
             .ToList();
+
+    // 今のメニューで使う写真とチェーンのロゴの名前 (端末に保存しておくもの)
+    public IReadOnlyList<string> ImageNames =>
+        Menu.Items.Select(static x => x.ImageName).Append(LogoImageName).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
 
     private MenuProduct ToProduct(MenuResponseItem item, Language language) =>
         new(item.Id, item.Name.Get(language), item.Price, item.ImageName, item.Badges, IsSoldOut(item.Id));

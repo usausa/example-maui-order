@@ -1,27 +1,32 @@
 namespace TableOrder.Terminal.Table.Modules.Standby;
 
-// 待受。来店はホール端末で開く想定だが、ホール端末ができるまではお客様が人数を入れて始める (selfStart)
+using TableOrder.Terminal.Table.Components;
+
+// 待受。来店は案内するスタッフが開き (ホール端末、管理画面の案内)、開いた知らせで注文の画面に進む
+// チェーンと店舗の設定が替わったら (設定の版)、来店のないここで起動からやり直して反映する
 public sealed class StandbyViewModel : AppViewModelBase
 {
     private readonly ILogger<StandbyViewModel> log;
 
     private readonly IPopupNavigator popupNavigator;
 
-    private readonly Settings settings;
+    private readonly ImageCache imageCache;
+
+    private readonly StaffLock staffLock;
+
+    private readonly MenuState menuState;
 
     private readonly LanguageState languageState;
 
-    private readonly OrderUsecase orderUsecase;
+    private readonly StoreState storeState;
 
-    public string Message { get; }
+    public BrandMark Brand { get; }
 
     public string TableText { get; }
 
     public string LanguageText { get; }
 
-    public bool CanStart { get; }
-
-    public IObserveCommand StartCommand { get; }
+    public bool HasLanguages { get; }
 
     public IObserveCommand LanguageCommand { get; }
 
@@ -34,23 +39,25 @@ public sealed class StandbyViewModel : AppViewModelBase
     public StandbyViewModel(
         ILogger<StandbyViewModel> log,
         IPopupNavigator popupNavigator,
-        Settings settings,
+        ImageCache imageCache,
+        StaffLock staffLock,
         MenuState menuState,
         LanguageState languageState,
-        OrderUsecase orderUsecase)
+        StoreState storeState)
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
-        this.settings = settings;
+        this.imageCache = imageCache;
+        this.staffLock = staffLock;
+        this.menuState = menuState;
         this.languageState = languageState;
-        this.orderUsecase = orderUsecase;
+        this.storeState = storeState;
 
-        CanStart = menuState.Config.OrderRules.SelfStart;
-        Message = CanStart ? AppResources.StandbyMessage : AppResources.StandbyWaiting;
+        Brand = ViewHelper.Brand(menuState, imageCache, languageState.Current);
         TableText = ViewHelper.Format(AppResources.TableFormat, ViewHelper.Table(menuState.TableName));
         LanguageText = ViewHelper.LanguageName(languageState.Current);
+        HasLanguages = languageState.HasChoice;
 
-        StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);
         LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
     }
@@ -59,34 +66,41 @@ public sealed class StandbyViewModel : AppViewModelBase
     // Navigation
     //--------------------------------------------------------------------------------
 
+    // 設定が替わっていたら起動からやり直す。受け取れなかった料理の写真があれば、待たずに取り直す
+    public override async Task OnNavigatedToAsync(INavigationContext context)
+    {
+        if (IsSettingsChanged())
+        {
+            await Navigator.PostActionAsync(RestartForSettingsAsync);
+            return;
+        }
+
+        imageCache.RetryInBackground(menuState.ImageNames);
+    }
+
     // お客様の画面なので、戻るでは何もしない
     protected override Task OnNotifyBackAsync() => Task.CompletedTask;
 
-    // ホール端末で来店が開いたら、注文の画面にする
+    // スタッフが来店を開いたら、注文の画面にする
     protected override async Task OnVisitOpenedAsync() =>
         await Navigator.ForwardAsync(ViewId.Menu);
+
+    // 管理画面でチェーンや店舗の設定を替えたら、起動からやり直して読み直す
+    protected override Task OnStoreUpdatedAsync() =>
+        IsSettingsChanged() ? RestartForSettingsAsync() : Task.CompletedTask;
+
+    private bool IsSettingsChanged() =>
+        storeState.SettingsVersion != menuState.Config.SettingsVersion;
+
+    private async Task RestartForSettingsAsync()
+    {
+        log.InfoSettingsChanged(storeState.SettingsVersion);
+        await Navigator.ForwardAsync(ViewId.Startup);
+    }
 
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------
-
-    private async Task StartAsync()
-    {
-        if (await popupNavigator.GuestCountAsync() is not { } guests)
-        {
-            return;
-        }
-
-        var result = await orderUsecase.StartVisitAsync(guests.Adults, guests.Children);
-        if (!result.IsSuccess)
-        {
-            log.WarnApiFailed(nameof(ITableApi.StartVisitAsync), result.Status, result.ErrorCode);
-            await popupNavigator.MessageAsync(AppResources.ErrorTitle, ViewHelper.ErrorMessage(result));
-            return;
-        }
-
-        await Navigator.ForwardAsync(ViewId.Menu);
-    }
 
     // 言語を選び、替えたら文言を引き直すために画面を作り直す
     private async Task SelectLanguageAsync()
@@ -107,7 +121,7 @@ public sealed class StandbyViewModel : AppViewModelBase
     // ブランドの印の長押しで、PIN を確かめてスタッフメニューに入る
     private async Task OpenStaffAsync()
     {
-        if (await popupNavigator.VerifyStaffAsync(settings))
+        if (await popupNavigator.VerifyStaffAsync(staffLock))
         {
             await Navigator.ForwardAsync(ViewId.Staff);
         }

@@ -3,8 +3,6 @@
 <resources>
 	<string name="restriction_api_end_point_title">Server (API)</string>
 	<string name="restriction_api_end_point_description">URL of the order server (http or https). When set, it overrides the device setting and cannot be changed on the device. When empty, the device setting is used.</string>
-	<string name="restriction_staff_pin_title">Staff PIN</string>
-	<string name="restriction_staff_pin_description">4-digit number for entering the staff menu. When set, all devices use the same PIN and it cannot be changed on the device. When empty, each device uses its own PIN.</string>
 	<string name="restriction_enrollment_token_title">Enrollment token</string>
 	<string name="restriction_enrollment_token_description">Value used to register the device (issued in the admin console for a store and device type). An unregistered device registers itself with this value at startup. Assign the table in the admin console.</string>
 </resources>

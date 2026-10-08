@@ -32,6 +32,31 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Status report stopped.")]
     public static partial void WarnStatusReportStopped(this ILogger logger, Exception exception);
 
+    // Theme
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Theme color ignored. role=[{role}], color=[{color}]")]
+    public static partial void WarnThemeColorIgnored(this ILogger logger, string role, string color);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Settings changed. Restart to apply the chain and store settings. version=[{version}]")]
+    public static partial void InfoSettingsChanged(this ILogger logger, int version);
+
+    // Image
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Images synced. saved=[{saved}], missing=[{missing}]")]
+    public static partial void InfoImagesSynced(this ILogger logger, int saved, int missing);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Image download failed. name=[{name}], status=[{status}], errorCode=[{errorCode}]")]
+    public static partial void WarnImageFailed(this ILogger logger, string name, ApiStatus status, string? errorCode);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Image save failed. name=[{name}]")]
+    public static partial void WarnImageSaveFailed(this ILogger logger, string name, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Image cleanup failed.")]
+    public static partial void WarnImageCleanupFailed(this ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Image sync stopped.")]
+    public static partial void WarnImageSyncStopped(this ILogger logger, Exception exception);
+
     // State
 
     [LoggerMessage(Level = LogLevel.Debug, Message = "Screen state changed. state=[{on}]")]
@@ -56,8 +81,8 @@ internal static partial class Log
 
     // Managed configuration
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Managed configuration. apiEndPoint=[{apiEndPoint}], staffPin=[{staffPin}], enrollmentToken=[{enrollmentToken}]")]
-    public static partial void InfoManagedConfiguration(this ILogger logger, string apiEndPoint, bool staffPin, bool enrollmentToken);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Managed configuration. apiEndPoint=[{apiEndPoint}], enrollmentToken=[{enrollmentToken}]")]
+    public static partial void InfoManagedConfiguration(this ILogger logger, string apiEndPoint, bool enrollmentToken);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Managed configuration value is invalid. key=[{key}]")]
     public static partial void WarnManagedConfigurationInvalid(this ILogger logger, string key);
@@ -74,6 +99,12 @@ internal static partial class Log
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Event delivery failed.")]
     public static partial void WarnEventDeliveryFailed(this ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Events expired. Restart to reload the current state.")]
+    public static partial void WarnEventsExpired(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Device updated by the admin console. Restart to reload the token and settings.")]
+    public static partial void InfoDeviceUpdated(this ILogger logger);
 
     // Popup
 

@@ -31,12 +31,19 @@
                                        LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
                 </Border.Behaviors>
                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                <Image Style="{StaticResource BrandMarkImage}"
-                       Source="{x:Static markup:AppIcons.Brand}" />
+                <!-- ロゴがなければ名前の頭の文字 -->
+                <Grid InputTransparent="True">
+                    <Label Style="{StaticResource BrandInitialLabel}"
+                           IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
+                           Text="{Binding Brand.Initial}" />
+                    <Image Style="{StaticResource BrandLogoImage}"
+                           IsVisible="{Binding Brand.HasLogo}"
+                           Source="{Binding Brand.LogoPath}" />
+                </Grid>
             </Border>
             <Label Grid.Column="1"
                    Style="{StaticResource BrandLabel}"
-                   Text="{x:Static strings:AppResources.BrandName}" />
+                   Text="{Binding Brand.Name}" />
             <VerticalStackLayout Grid.Column="2"
                                  Style="{StaticResource HeaderItemStack}">
                 <Label Style="{StaticResource HeaderCaptionLabel}"
@@ -54,10 +61,12 @@
                        Text="{Binding GuestsText}" />
             </VerticalStackLayout>
             <BoxView Grid.Column="5"
-                     Style="{StaticResource VerticalRule}" />
+                     Style="{StaticResource VerticalRule}"
+                     IsVisible="{Binding HasLanguages}" />
             <Button Grid.Column="6"
                     Style="{StaticResource HeaderButton}"
                     Command="{Binding LanguageCommand}"
+                    IsVisible="{Binding HasLanguages}"
                     ContentLayout="Left,10"
                     ImageSource="{x:Static markup:AppIcons.Language}"
                     Text="{Binding LanguageText}" />
@@ -174,8 +183,14 @@
                                     <Grid Grid.Row="0"
                                           Style="{StaticResource MenuCardImageGrid}"
                                           InputTransparent="True">
+                                        <Label Style="{StaticResource PhotoPlaceholderLabel}"
+                                               IsVisible="{Binding ShowsGlyph}"
+                                               Text="{x:Static fonts:MaterialIcons.Restaurant}" />
+                                        <Image Style="{StaticResource PhotoPlaceholderImage}"
+                                               IsVisible="{Binding ShowsLogo}"
+                                               Source="{Binding LogoPath}" />
                                         <Image Style="{StaticResource MenuCardImage}"
-                                               Source="{Binding ImageName}" />
+                                               Source="{Binding ImagePath}" />
                                         <Border Style="{StaticResource MenuBadgeBorder}"
                                                 IsVisible="{Binding HasBadge}">
                                             <Label Style="{StaticResource MenuBadgeLabel}"
@@ -231,6 +246,7 @@
                       Style="{StaticResource ActionBarGrid}"
                       ColumnDefinitions="*,*,*">
                     <Button Grid.Column="0"
+                            Grid.ColumnSpan="{Binding HistorySpan}"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding HistoryCommand}"
                             ContentLayout="Left,12"
@@ -239,6 +255,7 @@
                     <Button Grid.Column="1"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding CallCommand}"
+                            IsVisible="{Binding CanCall}"
                             ContentLayout="Left,12"
                             ImageSource="{x:Static markup:AppIcons.Call}"
                             Text="{x:Static strings:AppResources.MenuCall}" />

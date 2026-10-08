@@ -44,4 +44,7 @@ public abstract class AppPageBase : ComponentBase, IHandleEvent
         using var scope = ServiceScope.Begin();
         await base.SetParametersAsync(parameters);
     }
+
+    // 画面のイベントの外 (ほかの部品からの知らせ) で業務の処理を呼ぶときに、文脈を始める
+    protected IDisposable BeginServiceScope() => ServiceScope.Begin();
 }

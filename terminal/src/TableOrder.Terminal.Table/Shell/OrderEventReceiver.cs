@@ -5,7 +5,7 @@ using TableOrder.Terminal.Table.Modules;
 
 // 注文サーバの通知を受けて状態を替え、表示中の画面に知らせる (画面での扱いは各画面が決める)
 // 操作の途中 (Busy) と遷移の間は待ち、終わってから届いた順に渡す (お客様の操作と重ならないように)
-// 端末が使えなくなったとき (無効化、テナントの停止) と EMM が接続先を替えたときは、起動からやり直すように知らせる
+// 端末が使えなくなったとき (無効化、テナントの停止)、管理画面で端末を替えたとき、EMM が接続先を替えたとき、通知を追いかけられなくなったときは、起動からやり直すように知らせる
 public sealed class OrderEventReceiver
 {
     private readonly ILogger<OrderEventReceiver> log;
@@ -19,6 +19,8 @@ public sealed class OrderEventReceiver
     private readonly IBusyState busyState;
 
     private readonly Settings settings;
+
+    private readonly MenuState menuState;
 
     private readonly VisitState visitState;
 
@@ -54,6 +56,7 @@ public sealed class OrderEventReceiver
         ManagedConfiguration managedConfiguration,
         IBusyState busyState,
         Settings settings,
+        MenuState menuState,
         VisitState visitState,
         StoreState storeState,
         IDeviceApi deviceApi,
@@ -67,6 +70,7 @@ public sealed class OrderEventReceiver
         this.managedConfiguration = managedConfiguration;
         this.busyState = busyState;
         this.settings = settings;
+        this.menuState = menuState;
         this.visitState = visitState;
         this.storeState = storeState;
         this.deviceApi = deviceApi;
@@ -80,6 +84,7 @@ public sealed class OrderEventReceiver
         managedEndPoint = managedConfiguration.ApiEndPoint;
 
         events.Received += HandleReceived;
+        events.Expired += HandleExpired;
         deviceApi.Denied += HandleDenied;
         managedConfiguration.Changed += HandleManagedChanged;
         busyState.PropertyChanged += (_, _) => Deliver();
@@ -112,9 +117,27 @@ public sealed class OrderEventReceiver
             lastSeq = e.Seq;
             log.DebugEventReceived(e.GetType().Name, e.Seq, e.OccurredAt);
 
-            // 来店が閉じたら、お客様の画面で開いているポップアップを先に閉じる (開いている間は画面が Busy のままで、知らせを渡せない)
+            // 管理画面で置き場所を替えたか無効にした端末は、起動からやり直して新しいトークンと設定を受け取る (ほかの端末の知らせは使わない)
+            if (e is DeviceUpdatedEvent updated)
+            {
+                if (updated.DeviceId == settings.DeviceId)
+                {
+                    log.InfoDeviceUpdated();
+                    RequestRestart();
+                }
+
+                return;
+            }
+
+            // 来店が閉じたか、ほかのテーブルに移ったら、お客様の画面で開いているポップアップを先に閉じる (開いている間は画面が Busy のままで、知らせを渡せない)
             // スタッフメニューのポップアップは閉じない
-            if ((e is VisitClosedEvent closed) && visitState.IsOpen && (visitState.Id == closed.Visit.Id) &&
+            var leaving = e switch
+            {
+                VisitClosedEvent closed => closed.Visit.Id,
+                VisitMovedEvent moved => moved.Visit.Id,
+                _ => (Guid?)null
+            };
+            if ((leaving is { } visitId) && visitState.IsOpen && (visitState.Id == visitId) &&
                 (navigator.CurrentViewId is ViewId.Menu or ViewId.Checkout))
             {
                 messenger.Send(new PopupCloseMessage());
@@ -145,6 +168,14 @@ public sealed class OrderEventReceiver
                 deviceUsecase.Unregister();
             }
 
+            RequestRestart();
+        });
+
+    // 抜けた通知を追いかけられなくなったら (長く切れていた)、起動からやり直して今の状態を読み直す
+    private void HandleExpired(object? sender, EventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            log.WarnEventsExpired();
             RequestRestart();
         });
 
@@ -233,6 +264,34 @@ public sealed class OrderEventReceiver
 
                 await navigator.NotifyAsync(ShellEvent.VisitOpened).ConfigureAwait(true);
                 break;
+            case VisitUpdatedEvent updated:
+                // 人数と会計中の変化を状態に入れる (人数は表示中の画面が出し直す)
+                if (visitState.IsOpen && (visitState.Id == updated.Visit.Id))
+                {
+                    visitState.Update(updated.Visit);
+                    await navigator.NotifyAsync(ShellEvent.VisitUpdated).ConfigureAwait(true);
+                }
+
+                break;
+            case VisitMovedEvent moved:
+                // このテーブルから移ったら待受に戻し、このテーブルに移ってきたら注文の画面にする
+                if (visitState.IsOpen && (visitState.Id == moved.Visit.Id))
+                {
+                    await navigator.NotifyAsync(ShellEvent.VisitMoved).ConfigureAwait(true);
+                }
+                else if (!visitState.IsOpen)
+                {
+                    // 移る前の注文が読めなくても注文の画面にする (上限を超える注文はサーバが断る)
+                    var orders = await orderUsecase.OpenMovedVisitAsync(moved.Visit).ConfigureAwait(true);
+                    if (!orders.IsSuccess)
+                    {
+                        log.WarnApiFailed(nameof(ITableApi.GetOrdersAsync), orders.Status, orders.ErrorCode);
+                    }
+
+                    await navigator.NotifyAsync(ShellEvent.VisitOpened).ConfigureAwait(true);
+                }
+
+                break;
             case VisitClosedEvent closed:
                 // 来店を終えるのは画面が行う (お会計はお礼を出してから終える)
                 if (visitState.IsOpen && (visitState.Id == closed.Visit.Id))
@@ -245,6 +304,29 @@ public sealed class OrderEventReceiver
             case StoreUpdatedEvent updated:
                 storeState.Update(updated.Store);
                 await navigator.NotifyAsync(ShellEvent.StoreUpdated).ConfigureAwait(true);
+                break;
+            case StockUpdatedEvent stock:
+                menuState.ApplyStock(stock.Items);
+                await navigator.NotifyAsync(ShellEvent.StockUpdated).ConfigureAwait(true);
+                break;
+            case OrderCreatedEvent created:
+                // ホール端末で代わりに受けた注文も上限のルールに数える (この端末で送った注文は置き換わるだけ)
+                if (visitState.IsOpen && (visitState.Id == created.Order.VisitId))
+                {
+                    visitState.SetOrdered(created.Order);
+                }
+
+                break;
+            case OrderLinesUpdatedEvent lines:
+                // 取り消した明細を上限のルールの数から外す
+                if (visitState.IsOpen && (visitState.Id == lines.VisitId))
+                {
+                    foreach (var order in lines.Orders)
+                    {
+                        visitState.SetOrdered(order);
+                    }
+                }
+
                 break;
         }
     }

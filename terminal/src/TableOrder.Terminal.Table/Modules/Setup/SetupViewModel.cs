@@ -1,6 +1,6 @@
 namespace TableOrder.Terminal.Table.Modules.Setup;
 
-// 端末の設定。接続先と、端末の登録 (ペアリングコードを電卓で入れる)。保存したら起動からやり直す
+// 端末の設定。接続先 (注文サーバの URL) と、端末の登録 (ペアリングコードを電卓で入れる)。保存したら起動からやり直す
 // 登録は接続先ごとに行う。コードを入れずに保存したときは起動で今の登録を確かめ、なければ EMM の登録トークンで登録する
 public sealed partial class SetupViewModel : AppViewModelBase
 {
@@ -71,7 +71,7 @@ public sealed partial class SetupViewModel : AppViewModelBase
                 UpdatePairingCode(value);
             }
         });
-        SaveCommand = MakeAsyncCommand(SaveAsync, () => PairingCode.Length is 0 or Length.PairingCodeDigits);
+        SaveCommand = MakeAsyncCommand(SaveAsync, () => (IsEndPointManaged || IsValidEndPoint(ApiEndPoint)) && (PairingCode.Length is 0 or Length.PairingCodeDigits));
     }
 
     //--------------------------------------------------------------------------------
@@ -93,6 +93,10 @@ public sealed partial class SetupViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------
+
+    // 接続先は http か https の URL にする (空では保存しない)
+    private static bool IsValidEndPoint(string value) =>
+        Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) && ((uri.Scheme == Uri.UriSchemeHttp) || (uri.Scheme == Uri.UriSchemeHttps));
 
     private void UpdatePairingCode(string value)
     {

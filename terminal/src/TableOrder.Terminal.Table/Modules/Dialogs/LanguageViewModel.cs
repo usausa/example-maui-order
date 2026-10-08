@@ -13,7 +13,7 @@ public sealed class LanguageViewModel : AppDialogViewModelBase
         IPopupNavigator popupNavigator,
         LanguageState languageState)
     {
-        Languages = Enum.GetValues<Language>().Select(x => new LanguageChoice(x, x == languageState.Current)).ToList();
+        Languages = languageState.Available.Select(x => new LanguageChoice(x, x == languageState.Current)).ToList();
 
         // 結果は開く側と同じ型 (Language?) で返す (値の型は Nullable と別の型になり、型が違うと結果が渡らない)
         SelectCommand = MakeAsyncCommand<LanguageChoice>(async x => await popupNavigator.CloseAsync<Language?>(x.Language));

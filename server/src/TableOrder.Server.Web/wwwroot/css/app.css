@@ -7,6 +7,36 @@ html, body {
     max-width: 400px;
 }
 
+.nowrap-table .mud-table-cell {
+    white-space: nowrap;
+}
+
+/* Brand */
+.brand-logo {
+    width: 96px;
+    height: 96px;
+}
+
+.color-swatch {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+}
+
+/* Store settings */
+.pin-field {
+    max-width: 240px;
+}
+
+/* Device */
+.pairing-code {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+}
+
+
 /* Blazor error UI */
 #blazor-error-ui {
     color-scheme: light only;

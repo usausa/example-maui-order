@@ -37,31 +37,27 @@ public sealed class OrderUsecase
     // Visit
     //--------------------------------------------------------------------------------
 
-    // お客様がテーブル端末で人数を入れて来店を開く (ホール端末ができるまで)
-    public async ValueTask<ApiResult<VisitResponse>> StartVisitAsync(int adults, int children)
-    {
-        var result = await tableApi.StartVisitAsync(new VisitCreateRequest
-        {
-            Id = Guid.CreateVersion7(),
-            Adults = adults,
-            Children = children
-        });
-        if (result.Content is { } visit)
-        {
-            OpenVisit(visit);
-        }
-
-        return result;
-    }
-
-    // 会計を終えた、または来店が閉じられた
-    // 来店を開く (待受で人数を入れたとき、ホール端末で開いた知らせを受けたとき)
+    // 来店を開く (スタッフが来店を開いた知らせを受けたとき)
     public void OpenVisit(VisitResponse visit)
     {
         cartState.Clear();
         visitState.Open(visit);
     }
 
+    // ほかのテーブルから移ってきた来店を開き、移る前の注文を読む (上限のルールに数える)
+    public async ValueTask<ApiResult<OrderListResponse>> OpenMovedVisitAsync(VisitResponse visit)
+    {
+        OpenVisit(visit);
+        var result = await tableApi.GetOrdersAsync(visit.Id);
+        if (result.Content is { } content)
+        {
+            visitState.UpdateOrdered(content.Items);
+        }
+
+        return result;
+    }
+
+    // 会計を終えた、または来店が閉じられた
     public void FinishVisit()
     {
         visitState.Close();
@@ -191,7 +187,7 @@ public sealed class OrderUsecase
         var result = await tableApi.CreateOrderAsync(visitState.Id, request);
         if (result.Content is { } order)
         {
-            visitState.AddOrdered(order);
+            visitState.SetOrdered(order);
             cartState.Clear();
         }
         else if (result.Status == ApiStatus.Rejected)

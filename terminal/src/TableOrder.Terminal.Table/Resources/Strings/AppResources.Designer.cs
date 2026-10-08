@@ -75,12 +75,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string BrandName {
-            get {
-                return ResourceManager.GetString("BrandName", resourceCulture);
-            }
-        }
-
         internal static string CallAcknowledged {
             get {
                 return ResourceManager.GetString("CallAcknowledged", resourceCulture);
@@ -441,36 +435,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string GuestAdults {
-            get {
-                return ResourceManager.GetString("GuestAdults", resourceCulture);
-            }
-        }
-
-        internal static string GuestChildren {
-            get {
-                return ResourceManager.GetString("GuestChildren", resourceCulture);
-            }
-        }
-
-        internal static string GuestChildrenHint {
-            get {
-                return ResourceManager.GetString("GuestChildrenHint", resourceCulture);
-            }
-        }
-
-        internal static string GuestStart {
-            get {
-                return ResourceManager.GetString("GuestStart", resourceCulture);
-            }
-        }
-
-        internal static string GuestTitle {
-            get {
-                return ResourceManager.GetString("GuestTitle", resourceCulture);
-            }
-        }
-
         internal static string GuestsFormat {
             get {
                 return ResourceManager.GetString("GuestsFormat", resourceCulture);
@@ -582,6 +546,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string ListSeparator {
             get {
                 return ResourceManager.GetString("ListSeparator", resourceCulture);
+            }
+        }
+
+        internal static string MaxLinesFormat {
+            get {
+                return ResourceManager.GetString("MaxLinesFormat", resourceCulture);
             }
         }
 
@@ -873,12 +843,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string StaffChangePin {
-            get {
-                return ResourceManager.GetString("StaffChangePin", resourceCulture);
-            }
-        }
-
         internal static string StaffConnected {
             get {
                 return ResourceManager.GetString("StaffConnected", resourceCulture);
@@ -912,12 +876,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffEndpoint {
             get {
                 return ResourceManager.GetString("StaffEndpoint", resourceCulture);
-            }
-        }
-
-        internal static string StaffEndpointMock {
-            get {
-                return ResourceManager.GetString("StaffEndpointMock", resourceCulture);
             }
         }
 
@@ -981,189 +939,9 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string StaffMock {
-            get {
-                return ResourceManager.GetString("StaffMock", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockAdvance {
-            get {
-                return ResourceManager.GetString("StaffMockAdvance", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockAdvanceDone {
-            get {
-                return ResourceManager.GetString("StaffMockAdvanceDone", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockCartEmpty {
-            get {
-                return ResourceManager.GetString("StaffMockCartEmpty", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockFailPayments {
-            get {
-                return ResourceManager.GetString("StaffMockFailPayments", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockHallOpen {
-            get {
-                return ResourceManager.GetString("StaffMockHallOpen", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockHallOpenFormat {
-            get {
-                return ResourceManager.GetString("StaffMockHallOpenFormat", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockHintFormat {
-            get {
-                return ResourceManager.GetString("StaffMockHintFormat", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockLastOrderNone {
-            get {
-                return ResourceManager.GetString("StaffMockLastOrderNone", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockLastOrderPassed {
-            get {
-                return ResourceManager.GetString("StaffMockLastOrderPassed", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockLastOrderSoon {
-            get {
-                return ResourceManager.GetString("StaffMockLastOrderSoon", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockNoVisit {
-            get {
-                return ResourceManager.GetString("StaffMockNoVisit", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockOffline {
-            get {
-                return ResourceManager.GetString("StaffMockOffline", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockOnline {
-            get {
-                return ResourceManager.GetString("StaffMockOnline", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockPassPayments {
-            get {
-                return ResourceManager.GetString("StaffMockPassPayments", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockPause {
-            get {
-                return ResourceManager.GetString("StaffMockPause", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRegisterPay {
-            get {
-                return ResourceManager.GetString("StaffMockRegisterPay", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRegisterPayFormat {
-            get {
-                return ResourceManager.GetString("StaffMockRegisterPayFormat", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRestock {
-            get {
-                return ResourceManager.GetString("StaffMockRestock", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRestockDone {
-            get {
-                return ResourceManager.GetString("StaffMockRestockDone", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockResume {
-            get {
-                return ResourceManager.GetString("StaffMockResume", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRevoke {
-            get {
-                return ResourceManager.GetString("StaffMockRevoke", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockRevokeFormat {
-            get {
-                return ResourceManager.GetString("StaffMockRevokeFormat", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockSellOut {
-            get {
-                return ResourceManager.GetString("StaffMockSellOut", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockSoldOutDone {
-            get {
-                return ResourceManager.GetString("StaffMockSoldOutDone", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockSuspend {
-            get {
-                return ResourceManager.GetString("StaffMockSuspend", resourceCulture);
-            }
-        }
-
-        internal static string StaffMockSuspendFormat {
-            get {
-                return ResourceManager.GetString("StaffMockSuspendFormat", resourceCulture);
-            }
-        }
-
         internal static string StaffNetwork {
             get {
                 return ResourceManager.GetString("StaffNetwork", resourceCulture);
-            }
-        }
-
-        internal static string StaffNewPin {
-            get {
-                return ResourceManager.GetString("StaffNewPin", resourceCulture);
-            }
-        }
-
-        internal static string StaffNewPinAgain {
-            get {
-                return ResourceManager.GetString("StaffNewPinAgain", resourceCulture);
-            }
-        }
-
-        internal static string StaffOpenVisit {
-            get {
-                return ResourceManager.GetString("StaffOpenVisit", resourceCulture);
             }
         }
 
@@ -1173,27 +951,9 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
             }
         }
 
-        internal static string StaffPinChanged {
+        internal static string StaffPinLocked {
             get {
-                return ResourceManager.GetString("StaffPinChanged", resourceCulture);
-            }
-        }
-
-        internal static string StaffPinLength {
-            get {
-                return ResourceManager.GetString("StaffPinLength", resourceCulture);
-            }
-        }
-
-        internal static string StaffPinManaged {
-            get {
-                return ResourceManager.GetString("StaffPinManaged", resourceCulture);
-            }
-        }
-
-        internal static string StaffPinMismatch {
-            get {
-                return ResourceManager.GetString("StaffPinMismatch", resourceCulture);
+                return ResourceManager.GetString("StaffPinLocked", resourceCulture);
             }
         }
 
@@ -1206,30 +966,6 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StaffTitle {
             get {
                 return ResourceManager.GetString("StaffTitle", resourceCulture);
-            }
-        }
-
-        internal static string StaffVisit {
-            get {
-                return ResourceManager.GetString("StaffVisit", resourceCulture);
-            }
-        }
-
-        internal static string StaffVisitOpen {
-            get {
-                return ResourceManager.GetString("StaffVisitOpen", resourceCulture);
-            }
-        }
-
-        internal static string StandbyMessage {
-            get {
-                return ResourceManager.GetString("StandbyMessage", resourceCulture);
-            }
-        }
-
-        internal static string StandbyStart {
-            get {
-                return ResourceManager.GetString("StandbyStart", resourceCulture);
             }
         }
 
@@ -1272,6 +1008,12 @@ namespace TableOrder.Terminal.Table.Resources.Strings {
         internal static string StartupStepConnect {
             get {
                 return ResourceManager.GetString("StartupStepConnect", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepImages {
+            get {
+                return ResourceManager.GetString("StartupStepImages", resourceCulture);
             }
         }
 

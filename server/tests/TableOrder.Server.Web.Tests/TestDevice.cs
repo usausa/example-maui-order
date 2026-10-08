@@ -26,6 +26,8 @@ public sealed class TestDevice : IDisposable
 
     public Guid DeviceId { get; private set; }
 
+    public string AccessToken => Client.DefaultRequestHeaders.Authorization?.Parameter ?? string.Empty;
+
     public TestDevice(HttpClient client)
     {
         Client = client;
@@ -104,5 +106,28 @@ public sealed class TestDevice : IDisposable
         using var response = await Client.GetAsync(new Uri(path, UriKind.Relative), TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<T>(JsonOptions, TestContext.Current.CancellationToken))!;
+    }
+
+    public Task<HttpResponseMessage> PostAsync<T>(string path, T body) =>
+        Client.PostAsJsonAsync(path, body, JsonOptions, TestContext.Current.CancellationToken);
+
+    public Task<HttpResponseMessage> PutAsync<T>(string path, T body) =>
+        Client.PutAsJsonAsync(path, body, JsonOptions, TestContext.Current.CancellationToken);
+
+    public Task<HttpResponseMessage> PatchAsync<T>(string path, T body) =>
+        Client.PatchAsJsonAsync(path, body, JsonOptions, TestContext.Current.CancellationToken);
+
+    // 成功を確かめて本文を読む
+    public static async Task<T> ReadAsync<T>(HttpResponseMessage response)
+    {
+        response.EnsureSuccessStatusCode();
+        return (await response.Content.ReadFromJsonAsync<T>(JsonOptions, TestContext.Current.CancellationToken))!;
+    }
+
+    // Problem Details の errorCode
+    public static async Task<string?> ReadErrorCodeAsync(HttpResponseMessage response)
+    {
+        using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
+        return document.RootElement.TryGetProperty("errorCode", out var value) ? value.GetString() : null;
     }
 }

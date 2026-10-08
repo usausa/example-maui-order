@@ -1,0 +1,140 @@
+@page "/devices"
+
+<PageTitle>端末</PageTitle>
+
+<MudText Typo="Typo.h4">端末</MudText>
+<MudText Class="mt-2">店舗の端末の登録 (ペアリングコード)、置き場所と名前の変更、無効化</MudText>
+
+@if (Selection.StoreId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">ペアリングコードを出す</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">端末の設定の画面で入れる 6 桁のコードです (10 分、1 台)。置き場所は登録のあとに替えられます。</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="3">
+                <MudSelect T="DeviceKind" Value="issueKind" ValueChanged="SelectIssueKind" Label="端末の種類">
+                    @foreach (var kind in Kinds)
+                    {
+                        <MudSelectItem T="DeviceKind" Value="@kind">@KindName(kind)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            @if (issueKind == DeviceKind.Table)
+            {
+                <MudItem xs="12" sm="3">
+                    <MudSelect T="Guid?" @bind-Value="issueTableId" Label="テーブル" Clearable="true">
+                        @foreach (var table in tables)
+                        {
+                            <MudSelectItem T="Guid?" Value="@table.Id">@table.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            @if (issueKind == DeviceKind.Kitchen)
+            {
+                <MudItem xs="12" sm="5">
+                    <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="issueStationIds" Label="持ち場" ToStringFunc="StationName">
+                        @foreach (var station in stations)
+                        {
+                            <MudSelectItem T="Guid" Value="@station.Id">@station.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IssueAsync">コードを出す</MudButton>
+            </MudItem>
+        </MudGrid>
+        @if (issued is not null)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">
+                ペアリングコード <span class="pairing-code">@issued.Code</span> (@FormatTime(issued.ExpiresAt) まで)
+            </MudAlert>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <div class="d-flex align-center">
+            <MudText Typo="Typo.h6">登録した端末</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+        </div>
+        <MudTable Items="devices" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
+            <HeaderContent>
+                <MudTh>名前</MudTh>
+                <MudTh>種類</MudTh>
+                <MudTh>置き場所</MudTh>
+                <MudTh>最後の通信</MudTh>
+                <MudTh>電池</MudTh>
+                <MudTh>アプリの版</MudTh>
+                <MudTh>状態</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Device.Name</MudTd>
+                <MudTd>@KindName(context.Device.Kind)</MudTd>
+                <MudTd>@PlacementText(context)</MudTd>
+                <MudTd>@(context.Device.LastSeenAt is { } seen ? FormatTime(seen) : "--")</MudTd>
+                <MudTd>@BatteryText(context.Device)</MudTd>
+                <MudTd>@(context.Device.AppVersion ?? "--")</MudTd>
+                <MudTd>@(context.Device.IsActive ? "有効" : "無効")</MudTd>
+                <MudTd>
+                    @if (context.Device.IsActive)
+                    {
+                        <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (context.Device.Id == editing?.Device.Id)
+                {
+                    <MudTr>
+                        <td colspan="8" class="pa-4">
+                            <MudText Typo="Typo.body2">保存すると端末に知らせ、端末は起動からやり直して新しい置き場所で動きます。無効にすると、端末は登録を消して端末の設定の画面に戻ります。</MudText>
+                            <MudGrid Class="mt-2" Spacing="2">
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField T="string" @bind-Value="editName" Label="名前" MaxLength="@Length.DeviceName" />
+                                </MudItem>
+                                @if (context.Device.Kind == DeviceKind.Table)
+                                {
+                                    <MudItem xs="12" sm="3">
+                                        <MudSelect T="Guid?" @bind-Value="editTableId" Label="テーブル" Clearable="true">
+                                            @foreach (var table in tables)
+                                            {
+                                                <MudSelectItem T="Guid?" Value="@table.Id">@table.Name</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                }
+                                @if (context.Device.Kind == DeviceKind.Kitchen)
+                                {
+                                    <MudItem xs="12" sm="5">
+                                        <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="editStationIds" Label="持ち場" ToStringFunc="StationName">
+                                            @foreach (var station in stations)
+                                            {
+                                                <MudSelectItem T="Guid" Value="@station.Id">@station.Name</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                            <div class="d-flex gap-2 mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+                                <MudButton OnClick="CancelEdit">やめる</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RevokeAsync">無効にする</MudButton>
+                            </div>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+            <NoRecordsContent>
+                <MudText>登録した端末はありません。</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}

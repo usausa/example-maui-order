@@ -148,12 +148,16 @@ erDiagram
 | `Id` | guid | |
 | `Code` | string | テナントのコード (運営と契約で使う) |
 | `Name` | string | 会社の名前 (管理画面に出す) |
+| `BrandName` | LocalizedText | チェーンの名前 (テーブル端末に出す) |
+| `LogoImageName` | string? | ロゴの画像の名前 (画像の置き場。正方形で地の色を含む) |
+| `Theme` | json? | 替える色 (`[{ "role": "PrimaryColor", "color": "#1E5FA8" }]`。ない役割は端末の既定) |
 | `Status` | enum | `Active` / `Suspended` (契約を止めた) / `Closed` (解約した) |
 | `SuspendedAt` / `ClosedAt` | datetime? | |
 | `CreatedAt` / `UpdatedAt` | datetime | |
-| `Version` | int | |
+| `Version` | int | 管理画面の編集の楽観ロック |
 
 - 主キー: `Id`、一意: `Code` (この表だけは `TenantId` を持たない)
+- チェーンはテナントと同じ単位にし、チェーンの設定 (`BrandName`、`LogoImageName`、`Theme`) を替えたらテナントのすべての店舗の `SettingsVersion` を上げる
 - サーバは止めたテナントの一覧を覚えて要求ごとに拒み、`Status` を替えたら一覧も替える
 
 ### Stores (店舗)
@@ -170,19 +174,20 @@ erDiagram
 | `OrderingPaused` | bool | 注文の一時停止 |
 | `PausedMessage` | LocalizedText? | 一時停止の間にテーブル端末に出す文言 |
 | `TaxRounding` | enum | `Floor` / `Round` / `Ceiling` |
-| `SelfStart` | bool | テーブル端末から来店を開けるか |
 | `MaxQuantityPerLine` / `MaxLinesPerOrder` | int | 1 明細の数量と、1 回の注文の明細の上限 |
 | `Languages` | json | 画面で選べる言語 (`["ja", "en"]`) |
 | `PaymentMethods` | json | テーブルで使える支払方法 (`["QrCode", "CreditCard"]`) |
 | `ElectronicReceipt` | bool | 電子レシートを出すか |
-| `Theme` | json? | ブランドの色 (色の役割の名前と色) |
+| `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30 }`)。増えていくので列にせず、ない項目は既定の値にする |
+| `StaffPinHash` | json | スタッフの PIN のハッシュ (`{ "iterations": 100000, "salt": "...", "hash": "..." }`。PBKDF2-HMAC-SHA256)。平文は持たない |
+| `SettingsVersion` | int | チェーンと店舗の設定の版。設定を替えるたびに上げる (`Version` は一時停止でも上がるので分ける) |
 | `MenuPublicationId` | guid? | 今のメニュー |
 | `IsActive` | bool | |
 | `CreatedAt` / `UpdatedAt` | datetime | |
 | `Version` | int | 管理画面の編集の楽観ロック |
 
 - 一意: `Code`
-- `GET /store` と `GET /devices/me/config` は、この行と `CallReasons` から作る。  
+- `GET /store` と `GET /devices/me/config` は、この行と `CallReasons` (と、端末の設定はテナントのチェーンの設定) から作る。  
   営業日 (`businessDate`) は今の時刻と `OpenTime` から求める
 
 ### CallReasons (呼び出しの用件)
@@ -326,7 +331,7 @@ erDiagram
 - 一意: `StoreId`、`MenuVersion`
 - メニューは本部が編集して丸ごと公開するので、商品やオプションの表に分けず、公開の内容をそのまま持つ。  
   サーバは店舗の今のメニューを読み込んで覚え (公開で替える)、`GET /menu` と注文の確かめ (価格、オプション、タグとルール、持ち場) に使う
-- 料理の写真はファイルの置き場 (ストレージ) に置き、データベースには持たない
+- 料理の写真は画像の置き場 (テナントごと。開発はファイル、本番は Amazon S3) に置き、データベースにはメニューの `imageName` (画像の名前) だけを持つ
 
 ### Stocks (品切れ)
 
@@ -354,14 +359,14 @@ erDiagram
 | 列 | 型 | 中身 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
-| `Id` | guid | 来店を開いた端末が採番 |
+| `Id` | guid | 来店を開いた端末 (管理画面の案内はサーバ) が採番 |
 | `StoreId` | guid | |
 | `TableId` | guid | 移動で替わる |
 | `BusinessDate` | date | 開いたときの営業日 |
 | `Adults` / `Children` | int | 合わせて 1 以上 |
 | `Status` | enum | `Open` / `Paying` / `Closed` / `Cancelled` |
-| `OpenedBy` | enum | `Hall` / `Reception` / `Table` |
-| `OpenedDeviceId` | guid? | 開いた端末 |
+| `OpenedBy` | enum | `Hall` (ホール端末と管理画面の案内) / `Reception` |
+| `OpenedDeviceId` | guid? | 開いた端末 (管理画面の案内は null) |
 | `OpenedAt` | datetime | |
 | `ClosedBy` | enum? | `TablePayment` / `Register` / `Hall` |
 | `ClosedAt` | datetime? | 閉じたか取りやめた時刻 |
@@ -565,10 +570,13 @@ erDiagram
 | `Type` | string | `visit.opened` など |
 | `OccurredAt` | datetime | |
 | `Data` | json | 通知の `data` |
+| `TableIds` | json? | 送る先のテーブル (テーブル端末には、そのテーブルの通知だけを送る)。null は店舗のすべてのテーブル |
+| `StationId` | guid? | 送る先の持ち場 (キッチン端末には、受け持つ持ち場の通知だけを送る)。null はすべての持ち場 |
 
 - 主キー: `StoreId`、`Seq`
 - 索引: `OccurredAt` (`TenantId` を付けない。テナントをまたいで古いものを消す)
-- 送る先 (テーブル端末にはそのテーブル、キッチン端末には受け持つ持ち場) は種類と `Data` から決め、ハブの送り分けと `GET /events` で同じ判定を使う
+- 送る先は、通知の種類ごとに決めた端末の種類と、`TableIds`・`StationId` で決める。  
+  ハブの送り分けと `GET /events` で同じ判定を使う
 
 ### WebhookEndpoints (Webhook の送り先)
 
@@ -614,7 +622,8 @@ erDiagram
 - 店舗の中の状態を変える書き込みは、最初に店舗の `EventSequences` の行をロックして 1 つずつ行う。  
   来店の状態と注文・会計の確かめが食い違わず、通知の `seq` の順とコミットの順が揃う (店の規模なら待ちは短い)
 - 状態を変えたら、同じトランザクションで `EventSequences` の `LastSeq` を増やして、`Events` に通知を書く。  
-  コミットのあと、店舗ごとの送り手が `Events` を `seq` の順に読んで、ハブと Webhook に送る
+  コミットのあと、サーバごとの送り手が `Events` を店舗ごとに `seq` の順に読んで、ハブに送る。  
+  送り手は、書いたサーバが知らせた店舗のほか、一定の間隔ですべての店舗の `LastSeq` を見て、ほかのサーバが書いた通知も送る
 - 端末が採番する `id` (来店、注文、明細、呼び出し、支払) は主キーで重複を防ぐ。  
   同じ `id` の送り直しは書いた行を返し、主な項目が違えば `409` (`DUPLICATE_ID_MISMATCH`。注文は `RequestHash` で比べる)
 - 楽観ロックの `Version` は、管理画面で編集する表 (`Stores`、`DiningTables`、`Devices`、`WebhookEndpoints`) と来店 (`Visits`) に持つ。  

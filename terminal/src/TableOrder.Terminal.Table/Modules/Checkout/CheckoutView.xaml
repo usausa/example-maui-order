@@ -31,12 +31,19 @@
                                        LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
                 </Border.Behaviors>
                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                <Image Style="{StaticResource BrandMarkImage}"
-                       Source="{x:Static markup:AppIcons.Brand}" />
+                <!-- ロゴがなければ名前の頭の文字 -->
+                <Grid InputTransparent="True">
+                    <Label Style="{StaticResource BrandInitialLabel}"
+                           IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
+                           Text="{Binding Brand.Initial}" />
+                    <Image Style="{StaticResource BrandLogoImage}"
+                           IsVisible="{Binding Brand.HasLogo}"
+                           Source="{Binding Brand.LogoPath}" />
+                </Grid>
             </Border>
             <Label Grid.Column="1"
                    Style="{StaticResource BrandLabel}"
-                   Text="{x:Static strings:AppResources.BrandName}" />
+                   Text="{Binding Brand.Name}" />
             <VerticalStackLayout Grid.Column="2"
                                  Style="{StaticResource HeaderItemStack}">
                 <Label Style="{StaticResource HeaderCaptionLabel}"
@@ -251,7 +258,8 @@
                                 </VerticalStackLayout>
                             </Grid>
                         </Border>
-                        <Border Style="{StaticResource MethodTileBorder}">
+                        <Border Style="{StaticResource MethodTileBorder}"
+                                IsVisible="{Binding CanUseRegister}">
                             <Border.GestureRecognizers>
                                 <TapGestureRecognizer Command="{Binding RegisterCommand}" />
                             </Border.GestureRecognizers>

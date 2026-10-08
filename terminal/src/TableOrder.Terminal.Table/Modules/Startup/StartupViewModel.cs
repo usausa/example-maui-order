@@ -1,7 +1,11 @@
 namespace TableOrder.Terminal.Table.Modules.Startup;
 
-// 起動の準備 (端末の登録、トークン、端末と店舗の設定・メニュー・品切れ・今の来店の読み込み) を進み具合を出しながら行う
-// 登録していなければ EMM の登録トークンで登録し、なければ端末の設定へ進む。来店があれば注文の画面へ、なければ待受へ進む
+using TableOrder.Terminal.Table.Components;
+
+// 起動の準備 (端末の登録、トークン、端末の設定、通知の接続、店舗の設定・メニュー・品切れ・料理の写真・今の来店の読み込み) を進み具合を出しながら行う
+// 通知は今の状態を読む前に受け始め、読んでいる間の変化を取りこぼさない
+// チェーンと店舗の設定 (色、PIN、言語) はここで入れ、替わったら待受からここに戻って入れ直す
+// 接続先がなければ端末の設定へ進む。登録していなければ EMM の登録トークンで登録し、なければ端末の設定へ進む。来店があれば注文の画面へ、なければ待受へ進む
 // 失敗したとき (通信できない、テーブルの割り当て待ち、テナントの停止) は、しばらくごとにやり直す
 public sealed partial class StartupViewModel : AppViewModelBase
 {
@@ -11,11 +15,24 @@ public sealed partial class StartupViewModel : AppViewModelBase
     // 失敗したときにやり直すまでの時間
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
 
+    // 料理の写真とロゴを受け取るのを待つ時間 (過ぎたら代わりの絵で始め、待受に戻ったときに取り直す)
+    private static readonly TimeSpan ImageTimeout = TimeSpan.FromSeconds(30);
+
     private readonly ILogger<StartupViewModel> log;
+
+    private readonly IPopupNavigator popupNavigator;
+
+    private readonly ImageCache imageCache;
+
+    private readonly ThemeManager themeManager;
 
     private readonly Settings settings;
 
+    private readonly StaffLock staffLock;
+
     private readonly MenuState menuState;
+
+    private readonly LanguageState languageState;
 
     private readonly VisitState visitState;
 
@@ -24,6 +41,8 @@ public sealed partial class StartupViewModel : AppViewModelBase
     private readonly IDeviceApi deviceApi;
 
     private readonly ITableApi tableApi;
+
+    private readonly IOrderEvents events;
 
     private readonly DeviceUsecase deviceUsecase;
 
@@ -52,29 +71,41 @@ public sealed partial class StartupViewModel : AppViewModelBase
 
     public StartupViewModel(
         ILogger<StartupViewModel> log,
+        IPopupNavigator popupNavigator,
         IAppInfo appInfo,
+        ImageCache imageCache,
+        ThemeManager themeManager,
         Settings settings,
+        StaffLock staffLock,
         MenuState menuState,
+        LanguageState languageState,
         VisitState visitState,
         StoreState storeState,
         IDeviceApi deviceApi,
         ITableApi tableApi,
+        IOrderEvents events,
         DeviceUsecase deviceUsecase)
     {
         this.log = log;
+        this.popupNavigator = popupNavigator;
+        this.imageCache = imageCache;
+        this.themeManager = themeManager;
         this.settings = settings;
+        this.staffLock = staffLock;
         this.menuState = menuState;
+        this.languageState = languageState;
         this.visitState = visitState;
         this.storeState = storeState;
         this.deviceApi = deviceApi;
         this.tableApi = tableApi;
+        this.events = events;
         this.deviceUsecase = deviceUsecase;
 
         VersionText = ViewHelper.Version(appInfo);
         RetryHintText = ViewHelper.Format(AppResources.StartupAutoRetryFormat, (int)RetryInterval.TotalSeconds);
 
         RetryCommand = MakeAsyncCommand(InitializeAsync);
-        SetupCommand = MakeAsyncCommand(() => Navigator.ForwardAsync(ViewId.Setup));
+        SetupCommand = MakeAsyncCommand(OpenSetupAsync);
     }
 
     protected override void Dispose(bool disposing)
@@ -109,8 +140,15 @@ public sealed partial class StartupViewModel : AppViewModelBase
         StopRetry();
         IsFailed = false;
 
-        // 登録していなければ、EMM が配った登録トークンで登録する (なければ端末の設定で登録する)
+        // 接続先がなければ (EMM も配っていなければ)、端末の設定で入れる
         await ReportAsync(0.1, AppResources.StartupStepSettings);
+        if (String.IsNullOrWhiteSpace(settings.ApiEndPoint))
+        {
+            await Navigator.ForwardAsync(ViewId.Setup);
+            return;
+        }
+
+        // 登録していなければ、EMM が配った登録トークンで登録する (なければ端末の設定で登録する)
         if (!settings.IsRegistered)
         {
             if (settings.EnrollmentToken is not { } token)
@@ -151,6 +189,10 @@ public sealed partial class StartupViewModel : AppViewModelBase
             return;
         }
 
+        // PIN はサーバにつながらないときにも確かめられるように、登録と一緒に保存する
+        settings.StaffPin = new StaffPinHash(configContent.StaffPin.Iterations, configContent.StaffPin.Salt, configContent.StaffPin.Hash);
+        themeManager.Apply(configContent.Brand.Theme);
+
         // テーブル端末として登録し、管理画面でテーブルを割り当てるまでは進まない
         if (configContent.Device is not { Kind: DeviceKind.Table } device)
         {
@@ -161,6 +203,13 @@ public sealed partial class StartupViewModel : AppViewModelBase
         if (device.TableId is null)
         {
             Fail(ViewHelper.Format(AppResources.StartupTableWaitingFormat, device.Name));
+            return;
+        }
+
+        var connected = await events.ConnectAsync();
+        if (!connected.IsSuccess)
+        {
+            Fail(connected);
             return;
         }
 
@@ -189,6 +238,14 @@ public sealed partial class StartupViewModel : AppViewModelBase
         }
 
         menuState.Update(configContent, menuContent, stockContent);
+        languageState.SetAvailable(menuState.Languages);
+
+        // まだ保存していない料理の写真とロゴを受け取る (受け取れなくても止めない)
+        await ReportAsync(0.65, AppResources.StartupStepImages);
+        using (var timeout = new CancellationTokenSource(ImageTimeout))
+        {
+            await imageCache.SyncAsync(menuState.ImageNames, new Progress<double>(x => Progress = 0.65 + (0.15 * x)), timeout.Token);
+        }
 
         // 来店の途中で起動し直したときは、注文の画面に戻す
         await ReportAsync(0.8, AppResources.StartupStepVisit);
@@ -214,11 +271,22 @@ public sealed partial class StartupViewModel : AppViewModelBase
         }
         else
         {
+            // 来店がなければ店舗の初めの言語から始める (来店の途中で起動し直したときは、選んでいた言語のまま)
             visitState.Close();
+            languageState.Reset();
         }
 
         await ReportAsync(1.0, AppResources.StartupStepReady);
         await Navigator.ForwardAsync(visitState.IsOpen ? ViewId.Menu : ViewId.Standby);
+    }
+
+    // 起動に失敗した画面はお客様の前に出るので、端末の設定には PIN を確かめて入る
+    private async Task OpenSetupAsync()
+    {
+        if (await popupNavigator.VerifyStaffAsync(staffLock))
+        {
+            await Navigator.ForwardAsync(ViewId.Setup);
+        }
     }
 
     private Task ReportAsync(double progress, string text)

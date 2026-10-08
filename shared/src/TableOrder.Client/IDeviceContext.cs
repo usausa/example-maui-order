@@ -1,6 +1,6 @@
 namespace TableOrder.Client;
 
-// API の実装 (REST / モック) が読む端末の側の値。端末のアプリが設定に持ち、登録と接続先の変更で替わる
+// API の実装が読む端末の側の値。端末のアプリが設定に持ち、登録と接続先の変更で替わる
 public interface IDeviceContext
 {
     // 注文サーバの URL

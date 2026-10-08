@@ -1,0 +1,66 @@
+@page "/store-settings"
+
+<PageTitle>店舗の設定</PageTitle>
+
+<MudText Typo="Typo.h4">店舗の設定</MudText>
+<MudText Class="mt-2">機能の有無、言語、支払方法、呼び出しの用件、スタッフの PIN (保存するとテーブル端末は待受のときに読み直す)</MudText>
+
+@if (Selection.StoreId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+}
+else if (version is not null)
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">機能</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="6">
+                <MudSwitch T="bool" @bind-Value="registerCheckout" Label="お会計で「レジで払う」を出す" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudSwitch T="bool" @bind-Value="splitPayment" Label="割り勘で 1 人分ずつ払える" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField T="int" @bind-Value="lastOrderNoticeMinutes" Label="ラストオーダーの何分前から知らせるか (0 は知らせない)" Min="0" Max="180" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField T="int" @bind-Value="finishSeconds" Label="お礼の画面から待受に戻るまでの秒数" Min="5" Max="300" />
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">言語と支払方法</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">言語が 1 つなら、テーブル端末は言語のボタンを出しません。テーブルで払えない店は、レジでの会計を外せません。</MudText>
+        <div class="d-flex flex-wrap gap-4 mt-2">
+            <MudCheckBox T="bool" @bind-Value="japanese" Label="日本語" />
+            <MudCheckBox T="bool" @bind-Value="english" Label="英語" />
+        </div>
+        <div class="d-flex flex-wrap gap-4">
+            <MudCheckBox T="bool" @bind-Value="qrCode" Label="QR コード決済" />
+            <MudCheckBox T="bool" @bind-Value="creditCard" Label="クレジットカード" />
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">呼び出しの用件</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">すべて外すと、テーブル端末は店員呼出を出しません。</MudText>
+        <div class="d-flex flex-wrap gap-4 mt-2">
+            @foreach (var reason in reasons)
+            {
+                <MudCheckBox T="bool" @bind-Value="reason.IsActive" Label="@reason.Name" />
+            }
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">スタッフの PIN</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">替えるときだけ入れてください (@Length.StaffPinDigits 桁の数字)。サーバはハッシュだけを持ちます。</MudText>
+        <MudTextField T="string" @bind-Value="newPin" Label="新しい PIN" InputType="InputType.Password" MaxLength="@Length.StaffPinDigits" Class="mt-2 pin-field" />
+    </MudPaper>
+
+    <div class="d-flex gap-2 mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+        <MudButton OnClick="LoadAsync">読み直す</MudButton>
+    </div>
+}

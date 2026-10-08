@@ -9,6 +9,13 @@ public sealed class TenantEntity
 
     public string Name { get; set; } = default!;
 
+    // チェーンの設定 (名前、ロゴの画像の名前、替える色の JSON)
+    public LocalizedText BrandName { get; set; } = default!;
+
+    public string? LogoImageName { get; set; }
+
+    public string? Theme { get; set; }
+
     public TenantStatus Status { get; set; }
 
     public DateTimeOffset? SuspendedAt { get; set; }

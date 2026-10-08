@@ -2,7 +2,6 @@ namespace TableOrder.Terminal.Table.Modules;
 
 using TableOrder.Terminal.Table.Modules.Dialogs;
 using TableOrder.Terminal.Table.Modules.Menu;
-using TableOrder.Terminal.Table.Modules.Standby;
 
 // ポップアップの種類ごとにメソッドを置く (表題と桁数を画面側で持たない)。null = キャンセル
 public static class PopupNavigatorExtensions
@@ -28,21 +27,37 @@ public static class PopupNavigatorExtensions
             DialogId.InputNumber,
             new NumberInputParameter(title, string.Empty, Length.StaffPinDigits, digits: true, masked: true));
 
-    // スタッフメニューに入る前に PIN を確かめる。違うときは知らせて false
-    public static async ValueTask<bool> VerifyStaffAsync(this IPopupNavigator popupNavigator, Settings settings)
+    // スタッフメニュー (と起動に失敗したときの端末の設定) に入る前に PIN を確かめる。違うときと止めているときは知らせて false
+    // PIN を受け取る前の端末 (登録していない) は確かめずに入れる
+    public static async ValueTask<bool> VerifyStaffAsync(this IPopupNavigator popupNavigator, StaffLock staffLock)
     {
+        if (!staffLock.RequiresPin)
+        {
+            return true;
+        }
+
+        if (staffLock.IsLocked)
+        {
+            await popupNavigator.MessageAsync(AppResources.StaffTitle, AppResources.StaffPinLocked);
+            return false;
+        }
+
         if (await popupNavigator.InputPinAsync(AppResources.StaffPin) is not { } pin)
         {
             return false;
         }
 
-        if (pin == settings.StaffPin)
+        switch (await staffLock.VerifyAsync(pin))
         {
-            return true;
+            case StaffPinResult.Accepted:
+                return true;
+            case StaffPinResult.Locked:
+                await popupNavigator.MessageAsync(AppResources.StaffTitle, AppResources.StaffPinLocked);
+                return false;
+            default:
+                await popupNavigator.MessageAsync(AppResources.StaffTitle, AppResources.StaffPinWrong);
+                return false;
         }
-
-        await popupNavigator.MessageAsync(AppResources.StaffTitle, AppResources.StaffPinWrong);
-        return false;
     }
 
     public static ValueTask MessageAsync(this IPopupNavigator popupNavigator, string title, string message) =>
@@ -55,13 +70,6 @@ public static class PopupNavigatorExtensions
     // 言語を選ぶ (今の言語に印を付ける)
     public static ValueTask<Language?> LanguageAsync(this IPopupNavigator popupNavigator) =>
         popupNavigator.PopupAsync<Language?>(DialogId.Language);
-
-    //--------------------------------------------------------------------------------
-    // 来店
-    //--------------------------------------------------------------------------------
-
-    public static ValueTask<GuestCountResult?> GuestCountAsync(this IPopupNavigator popupNavigator) =>
-        popupNavigator.PopupAsync<GuestCountResult?>(DialogId.GuestCount);
 
     //--------------------------------------------------------------------------------
     // 注文

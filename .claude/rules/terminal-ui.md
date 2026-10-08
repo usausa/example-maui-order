@@ -16,7 +16,7 @@ paths:
 - 面は罫線 (`HorizontalRule` / `VerticalRule`、または区切り線の色を間隔から見せる Grid) と色の面で区切る
 - ヘッダ、タブ、下部の操作の帯は画面の端まで通し、隣の列 (注文リスト) の帯と高さを揃える
 - 絵文字を使わない。記号は Material Icons のグリフにする
-- 料理の写真がない間 (モック) は、料理の絵 (`Resources/Images/food_*.svg`、4:3) を写真の代わりに置く
+- 料理の写真は端末に保存したもの (`ImageCache.PathOf`) を出し、保存していない間は写真の場所に面の色とチェーンのロゴ (`PhotoPlaceholderImage`)、ロゴもなければ記号 (`PhotoPlaceholderLabel`) を出す (料理の絵を端末に同梱しない)
 - ヘッダとカテゴリのタブは別の帯にする (1 本にまとめない)
 - メニューのカードは 4 列 3 段を 1 画面に見せる。高さが足りないときはカードの間隔と帯を詰め、帯は押せる面の高さより低くしない
 - カードの文字は 2 行の高さで揃える。名前の 1 行目は価格の上まで使い、価格は最後の行の右に置く (名前の後ろに価格と同じ文字を面の色で続けて幅を確保し、見える価格を重ねる)
@@ -29,9 +29,13 @@ paths:
 - 色は `Resources/Styles/Colors.xaml` の役割の名前 (`PrimaryColor`、`SecondaryColor`、`SurfaceColor`、`OnSurfaceColor`、`OutlineColor`、`ErrorColor` など) だけを使い、XAML と C# に色の値を直接書かない
 - 新しい用途の色が要るときは既存の役割で足りないかを先に考え、足りなければ役割として Colors.xaml に足す (画面ごとの色の名前は作らない)
 - 面の色と文字の色は対 (`Xxx` と `OnXxx`) で使う
-- チェーンのイメージカラーは Colors.xaml の Brand の節で替える。替えたら面と文字のコントラスト比 4.5 以上を確かめる
+- チェーンの色はチェーンの設定 (`brand.theme`) で受け取り、起動の画面で `ThemeManager` が Brand・Neutral・Status の役割を替える (System の役割は替えない)
+- スタイルで Brand・Neutral・Status の役割の色を引くときは `DynamicResource` にする (色はスタイルを作ったあとに替わる)。System の役割は `StaticResource` のままでよい
+- Colors.xaml の値は既定の色にする。既定の色を替えたら面と文字のコントラスト比 4.5 以上を確かめる
+- 色の役割を足したり名前を替えたりしたら、`TableOrder.Domain.ThemeRoles` (サーバの確かめと管理画面のチェーンの設定が使う) も合わせる
+- C# で資源 (色など) を引くときは `FindResource` (`TryGetValue`) を使い、`ContainsKey` で探さない (`Source` で入れた辞書の中身は `ContainsKey` では見つからない)
 - 記号 (`FontImageSource`) は `Markup/AppIcons` にグリフと色の役割の名前で足し、色の値を持たない。XAML からは `{x:Static markup:AppIcons.Xxx}` で使う
-- チェーンの印は `AppIcons.BrandGlyph` の 1 か所に置き、ヘッダ (`AppIcons.Brand`) と待受の印はそこから引く (グリフを画面に直接書かない)
+- ヘッダと待受のチェーンの印は `ViewHelper.Brand` (`BrandMark`) から出し、ロゴ (`BrandLogoImage`) を保存していなければ名前の頭の文字 (`BrandInitialLabel`) を出す (チェーンの名前・ロゴ・グリフを画面に書かない)
 - 部品の色の既定値も色の値にせず、スタイルで役割の色を渡す (`QrCodeView.ForegroundColor` など)
 
 ## 文言
@@ -43,7 +47,8 @@ paths:
 - 言語のボタンには今の言語を出し、押したら選ぶポップアップ (`PopupNavigatorExtensions.LanguageAsync`) を開く (切り替え先を出すトグルにしない)
 - 言語の名前はその言語で書く (`ViewHelper.LanguageName`。どの言語の画面でも読めるように)
 - メニューの名前など、サーバから受ける文字は `LocalizedText.Get(language)` で選ぶ
-- チェーンの名前は resx の `BrandName` に置いて `{x:Static strings:AppResources.BrandName}` で引き、サーバの店舗の名前 (`storeName`) と混ぜない
+- チェーンの名前はチェーンの設定 (`MenuState.BrandName`) から選んだ言語で出し、サーバの店舗の名前 (`storeName`) と混ぜない
+- 選べる言語は店舗の設定の言語 (`LanguageState.Available`) にし、1 つなら言語のボタンを出さない
 
 ## 画面と遷移
 
@@ -63,10 +68,12 @@ paths:
 - タイマーで画面を動かす処理は、操作の途中 (`BusyState.IsBusy`) なら行わない
 - 読み直しの結果は、頼んだあとに操作で内容を反映していたら使わない (古い内容で上書きしない)
 - サーバの通知は `OrderEventReceiver` が受けて状態を替え、操作の途中と遷移の間を待ってから `ShellEvent` で表示中の画面に知らせる。画面の動きは各画面が `OnVisitOpenedAsync` などで決める (受け手から画面を動かさない)
-- 端末が使えなくなったとき (無効化、テナントの停止) と EMM が接続先を替えたときは、`OrderEventReceiver` が `ShellEvent.Restart` を出し、表示中の画面が起動からやり直す (基底の `OnRestartAsync`。起動と端末の設定の画面は自分で確かめるので受けない)
+- 端末が使えなくなったとき (無効化、テナントの停止)、管理画面で端末を替えたとき (`device.updated`)、EMM が接続先を替えたとき、通知を追いかけられなくなったとき (`Expired`) は、`OrderEventReceiver` が `ShellEvent.Restart` を出し、表示中の画面が起動からやり直す (基底の `OnRestartAsync`。起動と端末の設定の画面は自分で確かめるので受けない)
 - 起動の失敗 (通信できない、テーブルの割り当て待ち、テナントの停止) は、もう一度試すボタンのほかに、時間を置いて自動でもやり直す (店の端末は人が触らずに戻れるように)
 - テーブルの名前は端末の設定 (`MenuState.TableName`) から出し、端末の側にテーブルを持たない
+- テーブル端末では来店を開かない (人数の入力を置かない)。来店はスタッフが開き、待受は来店の知らせ (`OnVisitOpenedAsync`) で注文の画面に進む
 - 通知は別の画面にいる間にも届くので、画面に入ったとき (`OnNavigatedToAsync`) にも状態を確かめる (来店が閉じていたら待受に戻すなど)
+- 通知で変わる値 (人数、売り切れ) は ViewModel を作るときに読むだけにせず、知らせ (`OnVisitUpdatedAsync`、`OnStockUpdatedAsync`) で出し直す
 - 来店が閉じたときと起動からやり直すときのポップアップは、`PopupCloseMessage` を受けた `Extender/PopupClosePlugin` が閉じる (処理の途中は終わってから、そのポップアップだけ)。各ポップアップに閉じる処理を持たせない
 - ポップアップを外から閉じるときは、そのポップアップの `Popup.CloseAsync` で閉じる (`IPopupNavigator.CloseAsync` は一番上を閉じるので、先に閉じていると別のポップアップを閉じる)
 
@@ -79,11 +86,14 @@ paths:
 - ほかの要素を行の位置にそろえるラベルは `behaviors:LabelOption.FixedLineHeight` で行の高さを固定する (和文は CJK のフォントで行が広がり、英字と行の位置が変わる)
 - 添付プロパティ (`Behaviors`) は MAUI のプロパティと同じ名前にしない (ハンドラの対応付けの同じキーに混ざり、Controls が飛ばす処理で一緒に飛ばされる)
 - `GridItemsLayout` の間隔は端の項目の外側と見出し・末尾にも半分ずつ入る。外側の余白は `CollectionView` の `Margin` と見出しの高さからその分を引いて決める
-- 画面全体のタッチ (待受など) は一番下の面に付け、上に重ねるボタンを含む親に `TapGestureRecognizer` を付けない (子のボタンのタップも拾う)
+- 画面全体のタッチは一番下の面に付け、上に重ねるボタンを含む親に `TapGestureRecognizer` を付けない (子のボタンのタップも拾う)
 - 全画面と専用端末 (ロックタスク、Device Owner の制限、一時的な解除) は `Components/KioskManager` にまとめ、画面から直接 Android の API を呼ばない
 - 全画面の間は、ポップアップの窓のシステムバーも隠す (`Extender/FullscreenPopupPlugin`)。ステータスバーの色の指定は全画面と合わせない
 - CommunityToolkit の `TouchBehavior` は付けた要素の BindingContext を受け継がないので、要素に `x:Name` を付けて `BindingContext="{Binding Source={x:Reference Xxx}, Path=BindingContext, x:DataType={x:Type Border}}"` で渡す (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
 - スタッフメニューの入口は、ブランドの印の長押し (`AppGestures.StaffLongPress`) と PIN (`PopupNavigatorExtensions.VerifyStaffAsync`) にする。お客様の画面に入口のボタンを置かない
+- PIN は `StaffLock` で確かめ (店舗の設定のハッシュ、間違いが続いたら止める)、起動に失敗したときの端末の設定にも同じ確かめを使う
+- 店舗の設定で替わる動き (機能の有無 `MenuState.Features`、支払方法、呼び出しの用件、明細の上限) は設定から読み、端末に固定の値を持たない。使わない機能の操作は出さない
+- チェーンと店舗の設定の変更 (設定の版) は待受で確かめ (入ったときと `store.updated`)、起動からやり直して反映する。来店の途中の画面では替えない
 
 ## 操作
 

@@ -2,8 +2,8 @@ namespace TableOrder.Server.Core.Accessors;
 
 public sealed class SqlTenantConditionTests
 {
-    // テナントを持たない表 (Tenants) と、テナントを決めるための引き当てと、表に紐付かない処理だけは、テナントの条件がなくてよい
-    private static readonly string[] ExemptAccessors = ["GenericAccessor", "TenantAccessor", "DirectoryAccessor"];
+    // テナントを持たない表 (Tenants) と、テナントを決めるための引き当てと、表に紐付かない処理と、テナントをまたぐ裏の処理だけは、テナントの条件がなくてよい
+    private static readonly string[] ExemptAccessors = ["GenericAccessor", "TenantAccessor", "DirectoryAccessor", "BackgroundAccessor"];
 
     // すべての SQL がテナントの値を引数で受けて絞る (書き忘れると、ほかのテナントの行を読み書きする)
     [Fact]

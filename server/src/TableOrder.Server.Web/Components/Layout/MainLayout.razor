@@ -13,16 +13,20 @@
     <MudDrawer @bind-Open="drawerOpen" Elevation="2">
         <NavMenu />
     </MudDrawer>
-    <MudMainContent Class="pa-4">
-        <ErrorBoundary @ref="errorBoundary">
-            <ChildContent>
-                @Body
-            </ChildContent>
-            <ErrorContent>
-                <MudAlert Severity="Severity.Error" Class="mb-4">エラーが発生しました。</MudAlert>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Recover">再試行</MudButton>
-            </ErrorContent>
-        </ErrorBoundary>
+    @* 余白は内側に付ける (MudMainContent の上の余白は上の帯の高さで、pa-4 で上書きすると帯の下に隠れる) *@
+    <MudMainContent>
+        <div class="pa-4">
+            <StoreSelector />
+            <ErrorBoundary @ref="errorBoundary">
+                <ChildContent>
+                    @Body
+                </ChildContent>
+                <ErrorContent>
+                    <MudAlert Severity="Severity.Error" Class="mb-4">エラーが発生しました。</MudAlert>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Recover">再試行</MudButton>
+                </ErrorContent>
+            </ErrorBoundary>
+        </div>
     </MudMainContent>
 </MudLayout>
 

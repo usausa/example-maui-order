@@ -29,4 +29,7 @@ public sealed class StoreResponse
     public LocalizedText? PausedMessage { get; set; }
 
     public TaxRounding TaxRounding { get; set; }
+
+    // チェーンと店舗の設定の版 (端末の設定の版と違えば、テーブル端末は待受のときに起動からやり直す)
+    public int SettingsVersion { get; set; }
 }

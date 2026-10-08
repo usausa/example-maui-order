@@ -5,15 +5,18 @@
 PRAGMA journal_mode = WAL;
 
 CREATE TABLE IF NOT EXISTS Tenants (
-    Id           TEXT     NOT NULL,
-    Code         TEXT     NOT NULL,
-    Name         TEXT     NOT NULL,
-    Status       TEXT     NOT NULL,
-    SuspendedAt  TEXT,
-    ClosedAt     TEXT,
-    CreatedAt    TEXT     NOT NULL,
-    UpdatedAt    TEXT     NOT NULL,
-    Version      INTEGER  NOT NULL,
+    Id             TEXT     NOT NULL,
+    Code           TEXT     NOT NULL,
+    Name           TEXT     NOT NULL,
+    BrandName      TEXT     NOT NULL,
+    LogoImageName  TEXT,
+    Theme          TEXT,
+    Status         TEXT     NOT NULL,
+    SuspendedAt    TEXT,
+    ClosedAt       TEXT,
+    CreatedAt      TEXT     NOT NULL,
+    UpdatedAt      TEXT     NOT NULL,
+    Version        INTEGER  NOT NULL,
     PRIMARY KEY (Id),
     UNIQUE (Code)
 );
@@ -31,13 +34,14 @@ CREATE TABLE IF NOT EXISTS Stores (
     OrderingPaused      INTEGER  NOT NULL,
     PausedMessage       TEXT,
     TaxRounding         TEXT     NOT NULL,
-    SelfStart           INTEGER  NOT NULL,
     MaxQuantityPerLine  INTEGER  NOT NULL,
     MaxLinesPerOrder    INTEGER  NOT NULL,
     Languages           TEXT     NOT NULL,
     PaymentMethods      TEXT     NOT NULL,
     ElectronicReceipt   INTEGER  NOT NULL,
-    Theme               TEXT,
+    Features            TEXT     NOT NULL,
+    StaffPinHash        TEXT     NOT NULL,
+    SettingsVersion     INTEGER  NOT NULL,
     MenuPublicationId   TEXT,
     IsActive            INTEGER  NOT NULL,
     CreatedAt           TEXT     NOT NULL,
@@ -404,6 +408,7 @@ CREATE TABLE IF NOT EXISTS EventSequences (
     FOREIGN KEY (TenantId, StoreId) REFERENCES Stores (TenantId, Id)
 );
 
+-- 送る先は種類と、通知が持つテーブル (JSON の配列。NULL は店舗のすべて) と持ち場 (NULL はすべて) で決める
 CREATE TABLE IF NOT EXISTS Events (
     TenantId    TEXT     NOT NULL,
     StoreId     TEXT     NOT NULL,
@@ -411,6 +416,8 @@ CREATE TABLE IF NOT EXISTS Events (
     Type        TEXT     NOT NULL,
     OccurredAt  TEXT     NOT NULL,
     Data        TEXT     NOT NULL,
+    TableIds    TEXT,
+    StationId   TEXT,
     PRIMARY KEY (TenantId, StoreId, Seq),
     FOREIGN KEY (TenantId, StoreId) REFERENCES Stores (TenantId, Id)
 );

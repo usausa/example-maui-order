@@ -1,0 +1,63 @@
+@page "/brand"
+
+<PageTitle>チェーン</PageTitle>
+
+<MudText Typo="Typo.h4">チェーン</MudText>
+<MudText Class="mt-2">テーブル端末に出すチェーンの名前・ロゴ・色 (テナントのすべての店舗に効く。保存するとテーブル端末は待受のときに読み直す)</MudText>
+
+@if (Selection.TenantId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントを選んでください。</MudAlert>
+}
+else if (version is not null)
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">名前とロゴ</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">ロゴは置いてある画像から選びます (正方形で地の色を含むもの)。ないときは、印に名前の頭の文字を出します。</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="4">
+                <MudTextField T="string" @bind-Value="nameJa" Label="名前 (日本語)" MaxLength="@Length.BrandName" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudTextField T="string" @bind-Value="nameEn" Label="名前 (英語)" MaxLength="@Length.BrandName" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudSelect T="string" Value="logo" ValueChanged="SelectLogoAsync" Label="ロゴ" Clearable="true">
+                    @foreach (var image in images)
+                    {
+                        <MudSelectItem T="string" Value="@image">@image</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+        </MudGrid>
+        @if (logoPreview is not null)
+        {
+            <img src="@logoPreview" class="brand-logo mt-4" alt="" />
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">色</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">空にした役割は端末の既定の色です。色は #RRGGBB か #AARRGGBB で入れ、面と文字の組 (Xxx と OnXxx) はコントラスト比 4.5 以上にしてください。</MudText>
+        @foreach (var group in Groups)
+        {
+            <MudText Typo="Typo.subtitle1" Class="mt-4">@group.Name</MudText>
+            <MudGrid Spacing="2">
+                @foreach (var role in group.Roles)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <div class="d-flex align-center gap-2">
+                            <span class="color-swatch" style="@SwatchStyle(role)"></span>
+                            <MudTextField T="string" Value="@colors[role]" ValueChanged="value => colors[role] = value" Label="@role" Placeholder="既定" />
+                        </div>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </MudPaper>
+
+    <div class="d-flex gap-2 mt-4">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+        <MudButton OnClick="LoadAsync">読み直す</MudButton>
+    </div>
+}

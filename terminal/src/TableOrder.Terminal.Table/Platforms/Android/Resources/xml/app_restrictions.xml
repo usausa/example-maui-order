@@ -8,11 +8,6 @@
 		android:description="@string/restriction_api_end_point_description"
 		android:restrictionType="string" />
 	<restriction
-		android:key="staffPin"
-		android:title="@string/restriction_staff_pin_title"
-		android:description="@string/restriction_staff_pin_description"
-		android:restrictionType="string" />
-	<restriction
 		android:key="enrollmentToken"
 		android:title="@string/restriction_enrollment_token_title"
 		android:description="@string/restriction_enrollment_token_description"

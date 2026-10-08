@@ -29,7 +29,8 @@ public static class StoreHours
     public static TimeSpan UntilLastOrder(TimeOnly now, TimeOnly open, TimeOnly lastOrder) =>
         (lastOrder - open) - (now - open);
 
-    private static DateTime LocalDateTime(DateTimeOffset now, string timeZone)
+    // 店舗の現地の日時 (タイムゾーンが見つからないときは動いている機器の時刻)
+    public static DateTime LocalDateTime(DateTimeOffset now, string timeZone)
     {
         var local = now.ToLocalTime();
         try

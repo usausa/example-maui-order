@@ -77,8 +77,11 @@ public abstract class AppViewModelBase :
         {
             ShellEvent.Back => OnNotifyBackAsync(),
             ShellEvent.VisitOpened => OnVisitOpenedAsync(),
+            ShellEvent.VisitUpdated => OnVisitUpdatedAsync(),
             ShellEvent.VisitClosed => OnVisitClosedAsync(),
+            ShellEvent.VisitMoved => OnVisitMovedAsync(),
             ShellEvent.StoreUpdated => OnStoreUpdatedAsync(),
+            ShellEvent.StockUpdated => OnStockUpdatedAsync(),
             ShellEvent.Restart => OnRestartAsync(),
             _ => Task.CompletedTask
         };
@@ -92,9 +95,15 @@ public abstract class AppViewModelBase :
 
     protected virtual Task OnVisitOpenedAsync() => Task.CompletedTask;
 
+    protected virtual Task OnVisitUpdatedAsync() => Task.CompletedTask;
+
     protected virtual Task OnVisitClosedAsync() => Task.CompletedTask;
 
+    protected virtual Task OnVisitMovedAsync() => Task.CompletedTask;
+
     protected virtual Task OnStoreUpdatedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnStockUpdatedAsync() => Task.CompletedTask;
 
     // 起動からやり直す (起動で登録・トークン・店舗の設定を確かめ直す)。起動と端末の設定の画面は自分で確かめるので受けない
     protected virtual async Task OnRestartAsync() =>

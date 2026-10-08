@@ -1,7 +1,7 @@
 namespace TableOrder.Client;
 
 // テーブル端末が使う注文サーバの API。窓口は端末の種類 (テーブル、ホール、キッチン、受付) ごとに分ける
-// 端末の登録と設定は、すべての端末に共通の IDeviceApi に置く。実装は REST / gRPC / モックを DI で替える
+// 端末の登録と設定は、すべての端末に共通の IDeviceApi に置く。実装は通信の方式 (REST、gRPC) ごとに作る
 public interface ITableApi
 {
     //--------------------------------------------------------------------------------
@@ -27,9 +27,6 @@ public interface ITableApi
 
     // GET /devices/me/visit (来店がなければ内容が null)
     ValueTask<ApiResult<VisitResponse?>> GetCurrentVisitAsync(CancellationToken cancel = default);
-
-    // POST /visits
-    ValueTask<ApiResult<VisitResponse>> StartVisitAsync(VisitCreateRequest request, CancellationToken cancel = default);
 
     // POST /visits/{visitId}/confirmations
     ValueTask<ApiResult<VisitResponse>> ConfirmAsync(Guid visitId, VisitConfirmationRequest request, CancellationToken cancel = default);

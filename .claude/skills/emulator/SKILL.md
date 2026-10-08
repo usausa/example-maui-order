@@ -34,7 +34,7 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 - 掛けた制限は、アプリが前に出たときに入る。ホームアプリとして動かすには `emu.py reboot` で再起動する (ランチャーから起動しただけでは、落ちたときにランチャーへ戻る)
 - Device Owner のアプリは `am force-stop` と `am crash` が効かない。止めるときは `emu.py kill` (run-as で止める。Debug だけ)
 - Device Owner の間は Debug の高速配置でアプリを差し替えられない (止められないため、本体のない APK が残って起動できない)。入れるときは `emu.py install --embed`
-- スタッフメニューは、ブランドの印を長押し (`emu.py swipe x y x y 3500`) して PIN (初めは 1234) を入れる
+- スタッフメニューは、ブランドの印を長押し (`emu.py swipe x y x y 3500`) して PIN (店舗の設定。サンプルのデータはデモが 1234、検証用が 5678) を入れる
 - 外す: `emu.py owner clear` (Debug は testOnly なので外せる。Release は外せない)。画面を点けたままの設定とホームの役割も元に戻す
 
 ## 外部の EMM と管理対象の構成
@@ -42,7 +42,7 @@ description: 端末アプリ (MAUI Android、タブレット横向き) をエミ
 - 外部の EMM で配るとき (EMM が許すロックタスク、管理対象の構成) は、adb (dumpsys) から操作できる DPC を EMM の代わりにして確かめる
 - 使う DPC の APK と受け口の名前は、このフォルダの `__` で始まる控え (Git の管理の外) にある。受け口は `--dpc <パッケージ/受け口>` か環境変数 `EMU_DPC` で渡す
 - 入れる: `emu.py emm set <DPC の APK>` (DPC を Device Owner にし、アプリのロックタスクを許す)。アプリが Device Owner なら先に `emu.py owner clear` で外す
-- 構成を配る: `emu.py emm config apiEndPoint=https://... staffPin=5678` (値を並べないと消す)。アプリは知らせを受けて読み直し、スタッフメニューの「EMM の設定」に出す
+- 構成を配る: `emu.py emm config apiEndPoint=https://... enrollmentToken=...` (値を並べないと消す)。アプリは知らせを受けて読み直し、スタッフメニューの「EMM の設定」に出す
 - 状態: `emu.py emm status` (Device Owner、ロックタスクの許可と状態)。配った構成はアプリのログ (`emu.py logcat --grep "Managed configuration"`) で見る
 - 外す: `emu.py emm clear` (構成とロックタスクの許可を消し、DPC を Device Owner から外して消す)
 

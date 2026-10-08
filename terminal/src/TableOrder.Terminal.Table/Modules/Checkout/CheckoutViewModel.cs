@@ -1,5 +1,7 @@
 namespace TableOrder.Terminal.Table.Modules.Checkout;
 
+using TableOrder.Terminal.Table.Components;
+
 // お会計。左に明細と合計・割り勘の目安、右に支払方法を選んでから QR コード決済 / カード / レジの案内を出す
 // 支払の完了は読み直して待ち (サーバの通知ができたら通知で替える)、終わったらお礼と電子レシートを出して待受に戻る
 // 割り勘は人数で割った 1 人分ずつ払い、残りがなくなるまで支払方法の選び直しに戻る
@@ -7,14 +9,11 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1);
 
-    // お礼を出したまま操作がなければ待受に戻す
-    private static readonly TimeSpan FinishAfter = TimeSpan.FromSeconds(30);
-
     private readonly ILogger<CheckoutViewModel> log;
 
     private readonly IPopupNavigator popupNavigator;
 
-    private readonly Settings settings;
+    private readonly StaffLock staffLock;
 
     private readonly VisitState visitState;
 
@@ -40,13 +39,26 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     private bool finished;
 
+    // お礼を出したまま操作がなければ待受に戻す (店舗の設定)
+    private readonly TimeSpan finishAfter;
+
+    // 割り勘で 1 人分ずつ払えるか (店舗の設定)
+    private readonly bool splitPayment;
+
+    public BrandMark Brand { get; }
+
     public string TableText { get; }
 
-    public string GuestsText { get; }
+    // ホール端末で人数を直したら替える (会計中も直せる)
+    [ObservableProperty]
+    public partial string GuestsText { get; set; }
 
     public bool CanUseQrCode { get; }
 
     public bool CanUseCreditCard { get; }
+
+    // 「レジで払う」を出すか (店舗の設定)
+    public bool CanUseRegister { get; }
 
     public string RegisterMessage { get; }
 
@@ -170,7 +182,8 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     public CheckoutViewModel(
         ILogger<CheckoutViewModel> log,
         IPopupNavigator popupNavigator,
-        Settings settings,
+        ImageCache imageCache,
+        StaffLock staffLock,
         MenuState menuState,
         VisitState visitState,
         LanguageState languageState,
@@ -179,16 +192,20 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
-        this.settings = settings;
+        this.staffLock = staffLock;
         this.tableApi = tableApi;
         this.visitState = visitState;
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
+        finishAfter = TimeSpan.FromSeconds(menuState.Features.FinishSeconds);
+        splitPayment = menuState.Features.SplitPayment;
+        Brand = ViewHelper.Brand(menuState, imageCache, languageState.Current);
         TableText = ViewHelper.Table(menuState.TableName);
         GuestsText = ViewHelper.Guests(visitState.Guests);
         CanUseQrCode = menuState.Config.PaymentMethods.Contains(PaymentMethod.QrCode);
         CanUseCreditCard = menuState.Config.PaymentMethods.Contains(PaymentMethod.CreditCard);
+        CanUseRegister = menuState.Features.RegisterCheckout;
         RegisterMessage = ViewHelper.Format(AppResources.RegisterMessageFormat, TableText);
 
         SplitDecreaseCommand = MakeDelegateCommand(() => ChangeSplit(splitCount - 1), () => IsMethod && (splitCount > 1));
@@ -238,6 +255,16 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
                 await BackAsync();
             }
         }
+    }
+
+    // ほかのテーブルに移ったら (会計を始める前)、お礼を出さずに待受に戻す
+    protected override Task OnVisitMovedAsync() => FinishAsync();
+
+    // 支払の方法を選んでいる間に人数が変わったら、明細を読み直して割り勘の人数を替える
+    protected override Task OnVisitUpdatedAsync()
+    {
+        GuestsText = ViewHelper.Guests(visitState.Guests);
+        return IsMethod && (bill is not null) && (bill.Guests != visitState.Guests) ? LoadAsync() : Task.CompletedTask;
     }
 
     // レジで払い終えたなど、この画面の外で来店が閉じたらお礼を出す (この画面で払い終えたときはお礼を出している)
@@ -302,7 +329,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         CanBack = !IsCompleted && !HasPaid;
         PaidText = ViewHelper.Format(AppResources.CheckoutPaidFormat, ViewHelper.Price(content.PaidAmount));
 
-        CanSplit = (content.Guests > 1) && (content.Balance > 0);
+        CanSplit = splitPayment && (content.Guests > 1) && (content.Balance > 0);
         ChangeSplit(splitCount);
     }
 
@@ -477,7 +504,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
         try
         {
-            await Task.Delay(FinishAfter, token);
+            await Task.Delay(finishAfter, token);
         }
         catch (OperationCanceledException)
         {
@@ -603,7 +630,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     // ブランドの印の長押しで、PIN を確かめてスタッフメニューに入る
     private async Task OpenStaffAsync()
     {
-        if (await popupNavigator.VerifyStaffAsync(settings))
+        if (await popupNavigator.VerifyStaffAsync(staffLock))
         {
             await Navigator.ForwardAsync(ViewId.Staff);
         }

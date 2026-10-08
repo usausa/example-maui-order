@@ -12,7 +12,7 @@
            WidthRequest="1120"
            HeightRequest="760">
 
-    <!-- 左に大きな絵と説明、右にオプション・出す時機・数量。下の帯で閉じる / 入れる -->
+    <!-- 左に大きな写真と説明、右にオプション・出す時機・数量。下の帯で閉じる / 入れる -->
     <Grid Style="{StaticResource DialogGrid}"
           RowDefinitions="*,1,80">
         <Grid Grid.Row="0"
@@ -23,8 +23,14 @@
                         Style="{StaticResource PanelScroll}">
                 <VerticalStackLayout>
                     <Grid Style="{StaticResource DetailImageGrid}">
+                        <Label Style="{StaticResource DetailPlaceholderLabel}"
+                               IsVisible="{Binding ShowsGlyph}"
+                               Text="{x:Static fonts:MaterialIcons.Restaurant}" />
+                        <Image Style="{StaticResource DetailPlaceholderImage}"
+                               IsVisible="{Binding ShowsLogo}"
+                               Source="{Binding LogoPath}" />
                         <Image Style="{StaticResource DetailImage}"
-                               Source="{Binding ImageName}" />
+                               Source="{Binding ImagePath}" />
                         <Border Style="{StaticResource MenuBadgeBorder}"
                                 IsVisible="{Binding HasBadge}">
                             <Label Style="{StaticResource MenuBadgeLabel}"

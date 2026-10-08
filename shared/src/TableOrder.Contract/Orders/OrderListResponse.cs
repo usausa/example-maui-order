@@ -10,6 +10,8 @@ public sealed class OrderListResponseItem
 {
     public Guid Id { get; set; }
 
+    public Guid VisitId { get; set; }
+
     // 来店の中の通し番号
     public int OrderNo { get; set; }
 
@@ -46,7 +48,14 @@ public sealed class OrderListResponseLine
 
     public OrderLineStatus Status { get; set; }
 
+    // 作る持ち場 (作らない品は null)
+    public Guid? StationId { get; set; }
+
     public DateTimeOffset? ServedAt { get; set; }
+
+    public DateTimeOffset? CancelledAt { get; set; }
+
+    public string? CancelReason { get; set; }
 }
 
 public sealed class OrderListResponseOption

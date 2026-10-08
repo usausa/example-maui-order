@@ -11,7 +11,31 @@ public static class ApiRoutes
 
     public const string Store = Prefix + "/store";
 
+    public const string Tables = Prefix + "/tables";
+
     public const string Menu = Prefix + "/menu";
 
+    public const string Images = Prefix + "/images";
+
     public const string Stock = Prefix + "/stock";
+
+    public const string Visits = Prefix + "/visits";
+
+    public const string Orders = Prefix + "/orders";
+
+    public const string Kitchen = Prefix + "/kitchen";
+
+    public const string Serving = Prefix + "/serving";
+
+    public const string Calls = Prefix + "/calls";
+
+    public const string Payments = Prefix + "/payments";
+
+    public const string Events = Prefix + "/events";
+
+    // 通知のハブ (API の経路の外。WebSocket はヘッダを付けられないので、トークンをクエリでも受ける)
+    public const string StoreHub = "/hubs/store";
+
+    // 電子レシートの画面 (API の経路の外。お客様が QR から開く)
+    public const string Receipts = "/receipts";
 }

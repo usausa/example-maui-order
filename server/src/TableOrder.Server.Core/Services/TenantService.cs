@@ -7,11 +7,20 @@ public sealed class TenantService
 {
     private readonly TenantAccessor tenantAccessor;
 
-    public TenantService(TenantAccessor tenantAccessor)
+    private readonly StoreAccessor storeAccessor;
+
+    public TenantService(
+        TenantAccessor tenantAccessor,
+        StoreAccessor storeAccessor)
     {
         this.tenantAccessor = tenantAccessor;
+        this.storeAccessor = storeAccessor;
     }
 
     public ValueTask<List<TenantEntity>> GetAllAsync(CancellationToken cancellationToken) =>
         tenantAccessor.QueryAllAsync(cancellationToken);
+
+    // 運営者が選んだテナントの店舗 (管理画面で店舗を選ぶ)
+    public ValueTask<List<StoreEntity>> GetStoreAllAsync(Guid tenantId, CancellationToken cancellationToken) =>
+        storeAccessor.QueryAllAsync(tenantId, cancellationToken);
 }

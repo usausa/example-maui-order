@@ -28,14 +28,19 @@ using OpenTelemetry.Trace;
 using Serilog;
 
 using TableOrder.Server.Core.Accessors;
+using TableOrder.Server.Core.Infrastructure.Images;
 using TableOrder.Server.Core.Infrastructure.Json;
+using TableOrder.Server.Core.Infrastructure.Payments;
 using TableOrder.Server.Web.Application.Authentication;
+using TableOrder.Server.Web.Application.Cleanup;
 using TableOrder.Server.Web.Application.Context;
 using TableOrder.Server.Web.Application.ExceptionHandling;
 using TableOrder.Server.Web.Application.HealthChecks;
+using TableOrder.Server.Web.Application.Simulation;
 using TableOrder.Server.Web.Application.Telemetry;
 using TableOrder.Server.Web.Components;
 using TableOrder.Server.Web.Endpoints;
+using TableOrder.Server.Web.Hubs;
 using TableOrder.Server.Web.Infrastructure.Logging;
 using TableOrder.Server.Web.Infrastructure.Security;
 
@@ -50,6 +55,8 @@ public static class ApplicationExtensions
     private const string SchemaPath = "Assets/Data/Schema.sql";
     private const string SampleDataPath = "Assets/Data/SampleData.sql";
     private const string SampleMenuPath = "Assets/Data/Menu.json";
+
+    private const string SampleImagePath = "Assets/Images";
 
     //--------------------------------------------------------------------------------
     // Logging
@@ -182,6 +189,10 @@ public static class ApplicationExtensions
         });
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
+        // 通知のハブ。通知の中身は API の応答と同じ形にする
+        builder.Services.AddSignalR()
+            .AddJsonProtocol(static options => JsonDefaults.Apply(options.PayloadSerializerOptions));
+
         return builder;
     }
 
@@ -232,6 +243,21 @@ public static class ApplicationExtensions
                     ClockSkew = TimeSpan.FromSeconds(30),
                     NameClaimType = ClaimNames.Subject
                 };
+
+                // WebSocket はヘッダを付けられない (ブラウザのキッチン端末) ので、ハブだけクエリのトークンも受ける
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = static context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments(ApiRoutes.StoreHub, StringComparison.OrdinalIgnoreCase) &&
+                            (context.Request.Query["access_token"].ToString() is { Length: > 0 } token))
+                        {
+                            context.Token = token;
+                        }
+
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
         // 端末の種類で使える API を絞る (範囲の外は 403 DEVICE_SCOPE)
@@ -239,6 +265,13 @@ public static class ApplicationExtensions
         {
             options.AddPolicy(Policies.AnyDevice, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen, DeviceKind.Reception));
             options.AddPolicy(Policies.MenuReader, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen));
+            options.AddPolicy(Policies.StockWriter, DevicePolicy(DeviceKind.Hall, DeviceKind.Kitchen));
+            options.AddPolicy(Policies.TableReader, DevicePolicy(DeviceKind.Hall, DeviceKind.Reception));
+            options.AddPolicy(Policies.VisitOpener, DevicePolicy(DeviceKind.Hall, DeviceKind.Reception));
+            options.AddPolicy(Policies.VisitReader, DevicePolicy(DeviceKind.Table, DeviceKind.Hall));
+            options.AddPolicy(Policies.TableDevice, DevicePolicy(DeviceKind.Table));
+            options.AddPolicy(Policies.HallDevice, DevicePolicy(DeviceKind.Hall));
+            options.AddPolicy(Policies.KitchenDevice, DevicePolicy(DeviceKind.Kitchen));
         });
         builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
 
@@ -491,14 +524,35 @@ public static class ApplicationExtensions
         // Service
         builder.Services.AddSingleton<ApplicationServiceContextProvider>();
         builder.Services.AddSingleton<ServiceContextProvider>(static p => p.GetRequiredService<ApplicationServiceContextProvider>());
+        builder.Services.AddScoped<StoreSelection>();
         builder.Services.AddScoped<BlazorServiceScope>();
 
         builder.Services.AddCoreServices();
 
+        // Event (業務の処理が知らせた店舗の通知を、ハブで送る)
+        builder.Services.AddSingleton<EventSignal>();
+        builder.Services.AddSingleton<IEventPublisher>(static p => p.GetRequiredService<EventSignal>());
+        builder.Services.AddHostedService<EventDispatcher>();
+
+        // Cleanup (古いデータを一定の間隔で消す)
+        builder.Services.AddHostedService<CleanupWorker>();
+
+        // Payment (本物の決済サービスにつなぐまでは仮の決済サービス)
+        builder.Services.AddSingleton<IPaymentProvider, FakePaymentProvider>();
+
+        // Image (料理の写真とチェーンのロゴの置き場。本番の置き場を作るまではファイル)
+        builder.Services.AddSingleton<IImageStore>(static p => new FileImageStore(Path.Combine(AppContext.BaseDirectory, p.GetRequiredService<ImageSetting>().Directory)));
+
+        // Simulation (開発の環境で、スタッフと決済サービスの代わりに時間で進める。動かすかは設定で決める)
+        builder.Services.AddHostedService<SimulationWorker>();
+
         // Setting
         builder.Services.AddSetting<TokenSetting>("Token");
         builder.Services.AddSetting<DatabaseSetting>("Database");
+        builder.Services.AddSetting<ImageSetting>("Image");
         builder.Services.AddSetting<RateLimitSetting>("RateLimit");
+        builder.Services.AddSetting<EventSetting>("Event");
+        builder.Services.AddSetting<SimulationSetting>("Simulation");
         builder.Services.AddSetting<CompressionSetting>("Compression");
         builder.Services.AddSetting<CspSetting>("Csp");
         builder.Services.AddSetting<LogSetting>("Log");
@@ -584,8 +638,21 @@ public static class ApplicationExtensions
         // API
         app.MapDeviceEndpoints();
         app.MapStoreEndpoints();
+        app.MapTableEndpoints();
         app.MapMenuEndpoints();
+        app.MapImageEndpoints();
         app.MapStockEndpoints();
+        app.MapVisitEndpoints();
+        app.MapOrderEndpoints();
+        app.MapKitchenEndpoints();
+        app.MapServingEndpoints();
+        app.MapCallEndpoints();
+        app.MapBillEndpoints();
+        app.MapPaymentEndpoints();
+        app.MapEventEndpoints();
+
+        // 通知のハブ
+        app.MapHub<StoreHub>(ApiRoutes.StoreHub);
 
         // API の知らない経路は 404 の Problem Details にする
         app.MapFallback(ApiRoutes.Root + "/{**path}", static () => TypedResults.Problem(statusCode: StatusCodes.Status404NotFound));
@@ -616,11 +683,23 @@ public static class ApplicationExtensions
         var database = app.Services.GetRequiredService<DatabaseService>();
         await database.InitializeAsync(SchemaPath, CancellationToken.None);
 
-        // サンプルのデータ (開発の環境とテスト)
-        if (app.Services.GetRequiredService<DatabaseSetting>().SampleData &&
-            await database.LoadSampleDataAsync(SampleDataPath, SampleMenuPath, CancellationToken.None))
+        // サンプルのデータ (開発の環境とテスト)。料理の写真は、まだ置いていないテナントの置き場に起動のたびに写す
+        if (app.Services.GetRequiredService<DatabaseSetting>().SampleData)
         {
-            app.Logger.InfoSampleDataLoaded();
+            if (await database.LoadSampleDataAsync(SampleDataPath, SampleMenuPath, CancellationToken.None))
+            {
+                app.Logger.InfoSampleDataLoaded();
+            }
+
+            var images = app.Services.GetRequiredService<ImageService>();
+            foreach (var tenant in await app.Services.GetRequiredService<TenantService>().GetAllAsync(CancellationToken.None))
+            {
+                var copied = await images.CopySampleAsync(tenant.Id, SampleImagePath, CancellationToken.None);
+                if (copied > 0)
+                {
+                    app.Logger.InfoSampleImagesCopied(tenant.Code, copied);
+                }
+            }
         }
     }
 

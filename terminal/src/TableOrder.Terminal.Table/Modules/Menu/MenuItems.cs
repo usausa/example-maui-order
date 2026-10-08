@@ -20,34 +20,52 @@ public sealed partial class CategoryTab : ObservableObject
     }
 }
 
-// メニューのカード (料理の絵、名前、価格、印)。オプションのない商品はカードの + ですぐ入れられる
-public sealed class MenuCard
+// メニューのカード (料理の写真、名前、価格、印)。オプションのない商品はカードの + ですぐ入れられる。売り切れは通知で替える
+public sealed partial class MenuCard : ObservableObject
 {
+    private readonly bool hasOptions;
+
     public Guid Id { get; }
 
     public string Name { get; }
 
     public string PriceText { get; }
 
-    public string? ImageName { get; }
+    // 保存した写真のファイル (保存していなければ null で、代わりにチェーンのロゴか記号を出す)
+    public string? ImagePath { get; }
+
+    public string? LogoPath { get; }
+
+    public bool ShowsLogo => (ImagePath is null) && (LogoPath is not null);
+
+    public bool ShowsGlyph => (ImagePath is null) && (LogoPath is null);
 
     public string BadgeText { get; }
 
     public bool HasBadge => BadgeText.Length > 0;
 
-    public bool IsSoldOut { get; }
+    [ObservableProperty]
+    public partial bool IsSoldOut { get; set; }
 
-    public bool CanQuickAdd { get; }
+    [ObservableProperty]
+    public partial bool CanQuickAdd { get; set; }
 
-    public MenuCard(MenuProduct product, bool hasOptions)
+    public MenuCard(MenuProduct product, bool hasOptions, string? imagePath, string? logoPath)
     {
+        this.hasOptions = hasOptions;
         Id = product.Id;
         Name = product.Name;
         PriceText = ViewHelper.Price(product.Price);
-        ImageName = product.ImageName;
+        ImagePath = imagePath;
+        LogoPath = logoPath;
         BadgeText = product.Badges.Count > 0 ? ViewHelper.Name(product.Badges[0]) : string.Empty;
-        IsSoldOut = product.IsSoldOut;
-        CanQuickAdd = !hasOptions && !product.IsSoldOut;
+        UpdateSoldOut(product.IsSoldOut);
+    }
+
+    public void UpdateSoldOut(bool soldOut)
+    {
+        IsSoldOut = soldOut;
+        CanQuickAdd = !hasOptions && !soldOut;
     }
 }
 

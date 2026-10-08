@@ -5,7 +5,8 @@ public sealed class VisitState
 {
     private readonly HashSet<Guid> confirmedRuleIds = [];
 
-    private readonly List<OrderedLine> orderedLines = [];
+    // 注文ごとの、取消を除いた品 (同じ注文を受け直したら置き換え、この端末で送った注文とその通知を重ねて数えない)
+    private readonly Dictionary<Guid, List<OrderedLine>> orderedLines = [];
 
     public Guid Id { get; private set; }
 
@@ -21,7 +22,7 @@ public sealed class VisitState
 
     public int Version { get; private set; }
 
-    public IReadOnlyList<OrderedLine> OrderedLines => orderedLines;
+    public IReadOnlyList<OrderedLine> OrderedLines => orderedLines.Values.SelectMany(static x => x).ToList();
 
     public void Open(VisitResponse visit)
     {
@@ -59,16 +60,16 @@ public sealed class VisitState
     public void UpdateOrdered(IEnumerable<OrderListResponseItem> orders)
     {
         orderedLines.Clear();
-        orderedLines.AddRange(orders
-            .SelectMany(static x => x.Lines)
-            .Where(static x => x.Status != OrderLineStatus.Cancelled)
-            .Select(static x => new OrderedLine(x.ItemId, x.Options.Select(static o => o.OptionId).ToList(), x.Quantity)));
+        foreach (var order in orders)
+        {
+            SetOrdered(order);
+        }
     }
 
-    public void AddOrdered(OrderListResponseItem order)
-    {
-        orderedLines.AddRange(order.Lines
+    // 注文の取消を除いた品を入れる (送った注文、ホール端末で受けた注文、明細の状態が変わった注文。同じ注文は置き換える)
+    public void SetOrdered(OrderListResponseItem order) =>
+        orderedLines[order.Id] = order.Lines
             .Where(static x => x.Status != OrderLineStatus.Cancelled)
-            .Select(static x => new OrderedLine(x.ItemId, x.Options.Select(static o => o.OptionId).ToList(), x.Quantity)));
-    }
+            .Select(static x => new OrderedLine(x.ItemId, x.Options.Select(static o => o.OptionId).ToList(), x.Quantity))
+            .ToList();
 }

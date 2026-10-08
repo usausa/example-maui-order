@@ -25,8 +25,6 @@ public sealed class StoreEntity
 
     public TaxRounding TaxRounding { get; set; }
 
-    public bool SelfStart { get; set; }
-
     public int MaxQuantityPerLine { get; set; }
 
     public int MaxLinesPerOrder { get; set; }
@@ -39,7 +37,14 @@ public sealed class StoreEntity
 
     public bool ElectronicReceipt { get; set; }
 
-    public string? Theme { get; set; }
+    // 機能の有無 (JSON。ない項目は既定の値)
+    public string Features { get; set; } = default!;
+
+    // スタッフの PIN のハッシュ (JSON)
+    public string StaffPinHash { get; set; } = default!;
+
+    // チェーンと店舗の設定の版 (設定を替えるたびに上げる)
+    public int SettingsVersion { get; set; }
 
     public Guid? MenuPublicationId { get; set; }
 

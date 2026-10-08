@@ -1,8 +1,12 @@
 namespace TableOrder.Terminal.Table.Modules.Menu;
 
-// 商品の詳細 (大きな絵、説明、アレルギー、オプション、出す時機、数量)。選んだ内容を返し、カートに入れるのは注文の画面が行う
+using TableOrder.Terminal.Table.Components;
+
+// 商品の詳細 (大きな写真、説明、アレルギー、オプション、出す時機、数量)。選んだ内容を返し、カートに入れるのは注文の画面が行う
 public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopupInitialize<ItemDetailParameter>
 {
+    private readonly ImageCache imageCache;
+
     private readonly MenuState menuState;
 
     private readonly LanguageState languageState;
@@ -19,8 +23,19 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
     [ObservableProperty]
     public partial string PriceText { get; set; } = string.Empty;
 
+    // 保存した写真のファイル (保存していなければ null で、代わりの絵を出す)
     [ObservableProperty]
-    public partial string? ImageName { get; set; }
+    public partial string? ImagePath { get; set; }
+
+    // 写真がないときの代わり (チェーンのロゴか記号)
+    [ObservableProperty]
+    public partial string? LogoPath { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShowsLogo { get; set; }
+
+    [ObservableProperty]
+    public partial bool ShowsGlyph { get; set; }
 
     [ObservableProperty]
     public partial string BadgeText { get; set; } = string.Empty;
@@ -84,9 +99,11 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
 
     public ItemDetailViewModel(
         IPopupNavigator popupNavigator,
+        ImageCache imageCache,
         MenuState menuState,
         LanguageState languageState)
     {
+        this.imageCache = imageCache;
         this.menuState = menuState;
         this.languageState = languageState;
 
@@ -111,7 +128,10 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
 
         Name = item.Name.Get(language);
         PriceText = ViewHelper.Price(item.Price);
-        ImageName = item.ImageName;
+        ImagePath = imageCache.PathOf(item.ImageName);
+        LogoPath = imageCache.PathOf(menuState.LogoImageName);
+        ShowsLogo = (ImagePath is null) && (LogoPath is not null);
+        ShowsGlyph = (ImagePath is null) && (LogoPath is null);
         BadgeText = item.Badges.Count > 0 ? ViewHelper.Name(item.Badges[0]) : string.Empty;
         HasBadge = item.Badges.Count > 0;
         Description = item.Description.Get(language, string.Empty)!;

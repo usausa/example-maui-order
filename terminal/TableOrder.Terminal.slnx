@@ -15,6 +15,7 @@
   <Folder Name="/docs/">
     <File Path="../docs/api-design.md" />
     <File Path="../docs/architecture.md" />
+    <File Path="../docs/business.md" />
     <File Path="../docs/device-management.md" />
     <File Path="../docs/plan.md" />
   </Folder>

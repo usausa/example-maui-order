@@ -8,4 +8,22 @@ public static class Policies
 
     // メニューと品切れを読む端末 (テーブル、ホール、キッチン)
     public const string MenuReader = nameof(MenuReader);
+
+    // 品切れを変える端末 (ホール、キッチン)
+    public const string StockWriter = nameof(StockWriter);
+
+    // テーブルの一覧を読む端末 (ホール、受付)
+    public const string TableReader = nameof(TableReader);
+
+    // 来店を開く端末 (ホール、受付。テーブル端末からは開かない)
+    public const string VisitOpener = nameof(VisitOpener);
+
+    // 来店を読む端末と、注文を入れる端末 (テーブル、ホール)
+    public const string VisitReader = nameof(VisitReader);
+
+    public const string TableDevice = nameof(TableDevice);
+
+    public const string HallDevice = nameof(HallDevice);
+
+    public const string KitchenDevice = nameof(KitchenDevice);
 }

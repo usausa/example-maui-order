@@ -1,7 +1,6 @@
 namespace TableOrder.Server.Web.Endpoints;
 
 using System.Security.Cryptography;
-using System.Text.Json;
 
 using TableOrder.Client;
 using TableOrder.Contract.Devices;
@@ -48,7 +47,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
-        Assert.Equal("PAIRING_CODE_INVALID", await ReadErrorCodeAsync(response));
+        Assert.Equal("PAIRING_CODE_INVALID", await TestDevice.ReadErrorCodeAsync(response));
     }
 
     // 曲線の上の点でない公開鍵は受けない
@@ -69,7 +68,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Equal("VALIDATION_ERROR", await ReadErrorCodeAsync(response));
+        Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(response));
     }
 
     //--------------------------------------------------------------------------------
@@ -100,7 +99,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
     {
         // Arrange
         using var client = factory.CreateClient();
-        var key = new DerSignatureKey();
+        var key = new TestDeviceKey();
         var request = new DevicePairRequest
         {
             PairingCode = SampleData.DemoTableCode,
@@ -166,7 +165,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Equal("DEVICE_REVOKED", await ReadErrorCodeAsync(response));
+        Assert.Equal("DEVICE_REVOKED", await TestDevice.ReadErrorCodeAsync(response));
     }
 
     // 契約を止めたテナントの端末には、トークンを出さず、登録もさせない
@@ -186,9 +185,9 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, token.StatusCode);
-        Assert.Equal("TENANT_SUSPENDED", await ReadErrorCodeAsync(token));
+        Assert.Equal("TENANT_SUSPENDED", await TestDevice.ReadErrorCodeAsync(token));
         Assert.Equal(HttpStatusCode.Forbidden, pair.StatusCode);
-        Assert.Equal("TENANT_SUSPENDED", await ReadErrorCodeAsync(pair));
+        Assert.Equal("TENANT_SUSPENDED", await TestDevice.ReadErrorCodeAsync(pair));
     }
 
     //--------------------------------------------------------------------------------
@@ -213,6 +212,40 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(DeviceKind.Table, config.Device!.Kind);
         Assert.Equal(device.DeviceId, config.Device.Id);
         Assert.Equal("1", config.Device.TableName);
+    }
+
+    // チェーンの設定 (名前・ロゴ・色) と店舗の設定 (機能、スタッフの PIN、言語、支払方法) は、テナントと店舗ごとに返る
+    [Fact]
+    public async Task ConfigReturnsChainAndStoreSettings()
+    {
+        // Arrange
+        using var demo = new TestDevice(factory.CreateClient());
+        await demo.SignInAsync(SampleData.DemoTableCode);
+        using var test = new TestDevice(factory.CreateClient());
+        await test.SignInAsync(SampleData.TestTableCode);
+
+        // Act
+        var demoConfig = await demo.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
+        var testConfig = await test.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
+
+        // Assert
+        Assert.Equal("バニーズ", demoConfig.Brand.Name.Ja);
+        Assert.StartsWith("logo-bunnys.", demoConfig.Brand.LogoImageName, StringComparison.Ordinal);
+        Assert.Empty(demoConfig.Brand.Theme);
+        Assert.True(demoConfig.Features.RegisterCheckout);
+        Assert.True(demoConfig.Features.SplitPayment);
+        Assert.Equal((30, 30), (demoConfig.Features.LastOrderNoticeMinutes, demoConfig.Features.FinishSeconds));
+        Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
+
+        Assert.Equal("あおぞら食堂", testConfig.Brand.Name.Ja);
+        Assert.Contains(testConfig.Brand.Theme, static x => (x.Role == "PrimaryColor") && (x.Color == "#1E5FA8"));
+        Assert.All(testConfig.Brand.Theme, static x => Assert.True(ThemeRoles.IsRole(x.Role) && ThemeRoles.IsColor(x.Color)));
+        Assert.Equal(["ja"], testConfig.Languages);
+        Assert.Equal([PaymentMethod.QrCode], testConfig.PaymentMethods);
+        Assert.False(testConfig.Features.SplitPayment);
+        Assert.Equal((15, 20), (testConfig.Features.LastOrderNoticeMinutes, testConfig.Features.FinishSeconds));
+        Assert.True(StaffPins.Verify("5678", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
+        Assert.False(StaffPins.Verify("1234", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
     }
 
     // キッチン端末は、登録したときの持ち場を受け持つ
@@ -262,37 +295,5 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
-    }
-
-    private static async Task<string?> ReadErrorCodeAsync(HttpResponseMessage response)
-    {
-        using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
-        return document.RootElement.TryGetProperty("errorCode", out var value) ? value.GetString() : null;
-    }
-
-    // 端末の鍵 (Android の Keystore と同じく、公開鍵は SubjectPublicKeyInfo、署名は DER で返す)
-    private sealed class DerSignatureKey : IDeviceKey
-    {
-        private ECParameters parameters = Generate();
-
-        public byte[] GetPublicKey()
-        {
-            using var key = ECDsa.Create(parameters);
-            return key.ExportSubjectPublicKeyInfo();
-        }
-
-        public byte[] Sign(byte[] data)
-        {
-            using var key = ECDsa.Create(parameters);
-            return key.SignData(data, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence);
-        }
-
-        public void Delete() => parameters = Generate();
-
-        private static ECParameters Generate()
-        {
-            using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-            return key.ExportParameters(true);
-        }
     }
 }
