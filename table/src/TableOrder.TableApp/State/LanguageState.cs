@@ -23,6 +23,7 @@ public sealed class LanguageState
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
         AppResources.Culture = culture;
+        TerminalResources.Culture = culture;
     }
 
     // 店舗の設定の言語にする。今の言語を選べなければ初めの言語に戻す

@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:terminalStrings="clr-namespace:TableOrder.Terminal.Resources.Strings;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Setup"
              x:Class="TableOrder.TableApp.Modules.Setup.SetupView"
              x:DataType="{x:Type module:SetupViewModel}"
@@ -62,7 +63,7 @@
                 <!-- pairing code -->
                 <VerticalStackLayout Style="{StaticResource SetupFieldStack}">
                     <Label Style="{StaticResource SetupFieldLabel}"
-                           Text="{x:Static strings:AppResources.SetupPairingCode}" />
+                           Text="{x:Static terminalStrings:TerminalResources.SetupPairingCode}" />
                     <Border Style="{StaticResource SetupValueBorder}">
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0"

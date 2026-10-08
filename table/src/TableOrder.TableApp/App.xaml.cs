@@ -2,7 +2,7 @@ namespace TableOrder.TableApp;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using TableOrder.TableApp.Diagnostics;
+using TableOrder.Terminal.Diagnostics;
 
 #pragma warning disable CA1724
 public sealed partial class App

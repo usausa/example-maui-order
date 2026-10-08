@@ -110,6 +110,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\shared\src\TableOrder.Client\TableOrder.Client.csproj" />
+    <ProjectReference Include="..\..\..\terminal\src\TableOrder.Terminal\TableOrder.Terminal.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -125,17 +125,11 @@
   <data name="CommonBack" xml:space="preserve">
     <value>Back</value>
   </data>
-  <data name="CommonCancel" xml:space="preserve">
-    <value>Cancel</value>
-  </data>
   <data name="CommonClose" xml:space="preserve">
     <value>Close</value>
   </data>
   <data name="CommonNo" xml:space="preserve">
     <value>No</value>
-  </data>
-  <data name="CommonOk" xml:space="preserve">
-    <value>OK</value>
   </data>
   <data name="CommonYes" xml:space="preserve">
     <value>Yes</value>
@@ -413,9 +407,6 @@
   <data name="SetupNotRegistered" xml:space="preserve">
     <value>Not registered</value>
   </data>
-  <data name="SetupPairingCode" xml:space="preserve">
-    <value>Pairing code</value>
-  </data>
   <data name="SetupPairingCodeHint" xml:space="preserve">
     <value>The 6-digit code issued in the admin console.</value>
   </data>
@@ -505,18 +496,6 @@
   </data>
   <data name="StaffNetwork" xml:space="preserve">
     <value>Network</value>
-  </data>
-  <data name="StaffPin" xml:space="preserve">
-    <value>Staff PIN</value>
-  </data>
-  <data name="StaffPinLocked" xml:space="preserve">
-    <value>Too many wrong attempts. Please try again later.</value>
-  </data>
-  <data name="StaffPinWrong" xml:space="preserve">
-    <value>Incorrect PIN.</value>
-  </data>
-  <data name="StaffTitle" xml:space="preserve">
-    <value>Staff menu</value>
   </data>
   <data name="StandbyReception" xml:space="preserve">
     <value>Please check in at the reception kiosk at the entrance</value>

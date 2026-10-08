@@ -25,6 +25,9 @@
     <Project Path="../shared/src/TableOrder.Contract/TableOrder.Contract.csproj" />
     <Project Path="../shared/src/TableOrder.Domain/TableOrder.Domain.csproj" />
   </Folder>
+  <Folder Name="/Terminal/">
+    <Project Path="../terminal/src/TableOrder.Terminal/TableOrder.Terminal.csproj" />
+  </Folder>
   <Folder Name="/App/">
     <Project Path="src/TableOrder.TableApp/TableOrder.TableApp.csproj" DefaultStartup="true">
       <Deploy />

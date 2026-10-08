@@ -1,0 +1,240 @@
+namespace TableOrder.Terminal.Shell;
+
+using TableOrder.Terminal.Components;
+
+// 注文サーバの通知の受け口の土台。通知を受けて重複を捨て、操作の途中 (Busy) と遷移の間は待ち、終わってから届いた順に各アプリの扱い (ApplyAsync) に渡す
+// 端末が使えなくなったとき (無効化、テナントの停止)、管理画面で端末を替えたとき、EMM が接続先を替えたとき、通知を追いかけられなくなったときは、起動からやり直すように知らせる (NotifyRestartAsync)
+public abstract class OrderEventReceiverBase
+{
+    private readonly ILogger log;
+
+    private readonly IReactiveMessenger messenger;
+
+    private readonly ManagedConfiguration managedConfiguration;
+
+    private readonly IBusyState busyState;
+
+    private readonly Settings settings;
+
+    private readonly IDeviceApi deviceApi;
+
+    private readonly IOrderEvents events;
+
+    private readonly DeviceUsecase deviceUsecase;
+
+    private readonly Queue<OrderEvent> pending = new();
+
+    // seq を数えている端末 (seq は店舗の中の通し番号なので、登録し直したら数え直す)
+    private Guid? seqDeviceId;
+
+    private long lastSeq;
+
+    // 起動からやり直すように知らせる (待っている通知より先に渡す)
+    private bool restartRequested;
+
+    // EMM が配っている接続先 (替わったら起動からやり直す)
+    private string? managedEndPoint;
+
+    private bool delivering;
+
+    protected INavigator Navigator { get; }
+
+    protected OrderEventReceiverBase(
+        ILogger log,
+        INavigator navigator,
+        IReactiveMessenger messenger,
+        ManagedConfiguration managedConfiguration,
+        IBusyState busyState,
+        Settings settings,
+        IDeviceApi deviceApi,
+        IOrderEvents events,
+        DeviceUsecase deviceUsecase)
+    {
+        this.log = log;
+        Navigator = navigator;
+        this.messenger = messenger;
+        this.managedConfiguration = managedConfiguration;
+        this.busyState = busyState;
+        this.settings = settings;
+        this.deviceApi = deviceApi;
+        this.events = events;
+        this.deviceUsecase = deviceUsecase;
+    }
+
+    public void Start()
+    {
+        managedEndPoint = managedConfiguration.ApiEndPoint;
+
+        events.Received += HandleReceived;
+        events.Expired += HandleExpired;
+        deviceApi.Denied += HandleDenied;
+        managedConfiguration.Changed += HandleManagedChanged;
+        busyState.PropertyChanged += (_, _) => Deliver();
+        Navigator.ExecutingChanged += (_, _) => Deliver();
+    }
+
+    //--------------------------------------------------------------------------------
+    // Application
+    //--------------------------------------------------------------------------------
+
+    // 届いた通知を待ちに入れる前に見る (画面のスレッド)。来店が閉じたときにポップアップを先に閉じるなど
+    protected virtual void OnReceived(OrderEvent e)
+    {
+    }
+
+    // 待っていた通知を、操作の途中と遷移の間を避けて届いた順に扱う (状態を替え、表示中の画面に知らせる)
+    protected abstract Task ApplyAsync(OrderEvent e);
+
+    // 起動からやり直すように、表示中の画面に知らせる
+    protected abstract Task NotifyRestartAsync();
+
+    // 開いているポップアップを閉じる (開いている間は画面が Busy のままで、知らせを渡せない)
+    protected void ClosePopups() => messenger.Send(new PopupCloseMessage());
+
+    //--------------------------------------------------------------------------------
+    // Event
+    //--------------------------------------------------------------------------------
+
+    // 通知はどのスレッドからも届くので、画面のスレッドで受ける
+    private void HandleReceived(object? sender, OrderEventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            var e = args.Event;
+
+            // 登録し直した端末 (ほかの店舗のこともある) は、seq を数え直す
+            if (settings.DeviceId != seqDeviceId)
+            {
+                seqDeviceId = settings.DeviceId;
+                lastSeq = 0;
+            }
+
+            // 同じ通知が 2 回届くことがあるので、seq で重複を捨てる
+            if (e.Seq <= lastSeq)
+            {
+                return;
+            }
+
+            lastSeq = e.Seq;
+            log.DebugEventReceived(e.GetType().Name, e.Seq, e.OccurredAt);
+
+            // 管理画面で置き場所を替えたか無効にした端末は、起動からやり直して新しいトークンと設定を受け取る (ほかの端末の知らせは使わない)
+            if (e is DeviceUpdatedEvent updated)
+            {
+                if (updated.DeviceId == settings.DeviceId)
+                {
+                    log.InfoDeviceUpdated();
+                    RequestRestart();
+                }
+
+                return;
+            }
+
+            OnReceived(e);
+            pending.Enqueue(e);
+            Deliver();
+        });
+
+    //--------------------------------------------------------------------------------
+    // Restart
+    //--------------------------------------------------------------------------------
+
+    // 無効にされた端末は登録と鍵を消してから起動からやり直す (起動は登録に進む)
+    // テナントを止められたときは、起動で止まっていることを出して待つ
+    private void HandleDenied(object? sender, DeviceDeniedEventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            // 登録し直した後に届いた、前の端末の知らせは使わない
+            if (args.DeviceId != settings.DeviceId)
+            {
+                return;
+            }
+
+            log.WarnDeviceDenied(args.Reason);
+            if (args.Reason == DeviceDenial.Revoked)
+            {
+                deviceUsecase.Unregister();
+            }
+
+            RequestRestart();
+        });
+
+    // 抜けた通知を追いかけられなくなったら (長く切れていた)、起動からやり直して今の状態を読み直す
+    private void HandleExpired(object? sender, EventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            log.WarnEventsExpired();
+            RequestRestart();
+        });
+
+    // EMM が接続先を替えたら、起動からやり直してつなぎ直す (登録は接続先ごとなので、起動で登録し直す)
+    private void HandleManagedChanged(object? sender, EventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (managedConfiguration.ApiEndPoint == managedEndPoint)
+            {
+                return;
+            }
+
+            managedEndPoint = managedConfiguration.ApiEndPoint;
+            log.InfoEndPointChanged(settings.ApiEndPoint);
+            RequestRestart();
+        });
+
+    // 開いているポップアップを閉じてから知らせる
+    // スタッフメニューのポップアップも閉じる (端末が使えなくなったので、操作を続けさせない)
+    private void RequestRestart()
+    {
+        restartRequested = true;
+        ClosePopups();
+        Deliver();
+    }
+
+    //--------------------------------------------------------------------------------
+    // Deliver
+    //--------------------------------------------------------------------------------
+
+    private void Deliver()
+    {
+        if (delivering)
+        {
+            return;
+        }
+
+        // 待たずに進めるが、例外はログに残す
+        DeliverAsync().ContinueWith(
+            t => log.WarnEventDeliveryFailed(t.Exception!),
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted,
+            TaskScheduler.Default);
+    }
+
+    private async Task DeliverAsync()
+    {
+        delivering = true;
+        try
+        {
+            while (!busyState.IsBusy && !Navigator.Executing)
+            {
+                // 起動で読み直すので、待っている通知は捨てる
+                if (restartRequested)
+                {
+                    restartRequested = false;
+                    pending.Clear();
+                    await NotifyRestartAsync().ConfigureAwait(true);
+                    continue;
+                }
+
+                if (!pending.TryDequeue(out var e))
+                {
+                    break;
+                }
+
+                await ApplyAsync(e).ConfigureAwait(true);
+            }
+        }
+        finally
+        {
+            delivering = false;
+        }
+    }
+}

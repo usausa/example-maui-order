@@ -3,6 +3,7 @@ namespace TableOrder.TableApp.Modules.Helpers;
 using Fonts;
 
 using TableOrder.TableApp.Components;
+using TableOrder.Terminal.Components;
 
 // 表示用の書式と文言 (文言は表示する言語の AppResources から引く)
 public static class ViewHelper

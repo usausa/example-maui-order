@@ -24,6 +24,7 @@ paths:
 ## 色
 
 - 色は `Resources/Styles/Colors.xaml` の役割の名前 (`PrimaryColor`、`SecondaryColor`、`SurfaceColor`、`OnSurfaceColor`、`OutlineColor`、`ErrorColor` など) だけを使い、XAML と C# に色の値を直接書かない
+- System の役割の色は `TableOrder.Terminal` の `SystemColors`、どの端末でも同じスタイルは `TerminalStyles` に置き、アプリの `App.xaml` でアプリの色の辞書とアプリのスタイルの辞書の間に入れる (`TerminalStyles` は `SystemColors` を中に入れ、アプリが値を持つ役割の色は `DynamicResource` で引く)
 - 新しい用途の色が要るときは既存の役割で足りないかを先に考え、足りなければ役割として Colors.xaml に足す (画面ごとの色の名前は作らない)
 - 面の色と文字の色は対 (`Xxx` と `OnXxx`) で使う
 - チェーンの色はチェーンの設定 (`brand.theme`) で受け取り、起動の画面で `ThemeManager` が Brand・Neutral・Status の役割を替える (System の役割は替えない)
@@ -38,6 +39,7 @@ paths:
 ## 文言
 
 - 画面の文言は `Resources/Strings/AppResources.resx` (日本語) と `AppResources.en.resx` (英語) に置き、XAML は `{x:Static strings:AppResources.Xxx}`、C# は `AppResources.Xxx` で引く
+- 共通の部品 (`TableOrder.Terminal`) が使う文言は `TerminalResources` (アプリの XAML から引けるように public) に置いてアプリの resx に重ねて持たず、言語を切り替えるときは `TerminalResources.Culture` も替える
 - resx を変えたら `AppResources.Designer.cs` も合わせる (Visual Studio で保存すると作り直される)
 - 値を埋め込む文言は `{0}` を使う書式にし、`ViewHelper.Format` で組み立てる
 - 言語を切り替えたら表示中の画面を作り直して文言を引き直す (画面をまたぐ内容は State に置く)
@@ -51,6 +53,7 @@ paths:
 
 - MainPage には帯を置かない。タブや操作の帯は各 View に置く
 - 画面は `ViewId` に足して View に `[View(ViewId.Xxx)]` を、ポップアップは `DialogId` に足して `[Popup(DialogId.Xxx)]` を付ける
+- どの端末でも同じポップアップ (電卓、知らせ、確認) は `TableOrder.Terminal` の `TerminalDialogId` に足し、入口は `TableOrder.Terminal` の `PopupNavigatorExtensions` に置く。アプリのポップアップの登録には `TerminalModules.DialogSource` も足す
 - XAML で画面 ID を渡すときは `{markup:ViewId Xxx}` と書く (`x:Static` にしない)
 - 端末の戻るは各画面で `OnNotifyBackAsync` (抽象) を実装して決める。お客様の画面では何もしない (アプリの外へ出さない)
 - ViewModel のプロパティは `[ObservableProperty] public partial`、コマンドは `MakeAsyncCommand` / `MakeDelegateCommand` で作る

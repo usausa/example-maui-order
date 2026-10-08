@@ -1,7 +1,7 @@
 namespace TableOrder.TableApp;
 
-using TableOrder.TableApp.Components;
 using TableOrder.TableApp.Modules;
+using TableOrder.Terminal.Components;
 
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
 public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle

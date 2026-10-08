@@ -125,17 +125,11 @@
   <data name="CommonBack" xml:space="preserve">
     <value>戻る</value>
   </data>
-  <data name="CommonCancel" xml:space="preserve">
-    <value>キャンセル</value>
-  </data>
   <data name="CommonClose" xml:space="preserve">
     <value>閉じる</value>
   </data>
   <data name="CommonNo" xml:space="preserve">
     <value>いいえ</value>
-  </data>
-  <data name="CommonOk" xml:space="preserve">
-    <value>OK</value>
   </data>
   <data name="CommonYes" xml:space="preserve">
     <value>はい</value>
@@ -413,9 +407,6 @@
   <data name="SetupNotRegistered" xml:space="preserve">
     <value>未登録</value>
   </data>
-  <data name="SetupPairingCode" xml:space="preserve">
-    <value>ペアリングコード</value>
-  </data>
   <data name="SetupPairingCodeHint" xml:space="preserve">
     <value>管理画面で出した 6 桁のコードです</value>
   </data>
@@ -505,18 +496,6 @@
   </data>
   <data name="StaffNetwork" xml:space="preserve">
     <value>ネットワーク</value>
-  </data>
-  <data name="StaffPin" xml:space="preserve">
-    <value>スタッフの PIN</value>
-  </data>
-  <data name="StaffPinLocked" xml:space="preserve">
-    <value>間違いが続いたため、しばらく入れません</value>
-  </data>
-  <data name="StaffPinWrong" xml:space="preserve">
-    <value>PIN が違います</value>
-  </data>
-  <data name="StaffTitle" xml:space="preserve">
-    <value>スタッフメニュー</value>
   </data>
   <data name="StandbyReception" xml:space="preserve">
     <value>入口の受付機で受付をしてください</value>

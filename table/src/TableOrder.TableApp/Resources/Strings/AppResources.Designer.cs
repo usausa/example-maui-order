@@ -213,12 +213,6 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
-        internal static string CommonCancel {
-            get {
-                return ResourceManager.GetString("CommonCancel", resourceCulture);
-            }
-        }
-
         internal static string CommonClose {
             get {
                 return ResourceManager.GetString("CommonClose", resourceCulture);
@@ -228,12 +222,6 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string CommonNo {
             get {
                 return ResourceManager.GetString("CommonNo", resourceCulture);
-            }
-        }
-
-        internal static string CommonOk {
-            get {
-                return ResourceManager.GetString("CommonOk", resourceCulture);
             }
         }
 
@@ -789,12 +777,6 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
-        internal static string SetupPairingCode {
-            get {
-                return ResourceManager.GetString("SetupPairingCode", resourceCulture);
-            }
-        }
-
         internal static string SetupPairingCodeHint {
             get {
                 return ResourceManager.GetString("SetupPairingCodeHint", resourceCulture);
@@ -972,30 +954,6 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string StaffNetwork {
             get {
                 return ResourceManager.GetString("StaffNetwork", resourceCulture);
-            }
-        }
-
-        internal static string StaffPin {
-            get {
-                return ResourceManager.GetString("StaffPin", resourceCulture);
-            }
-        }
-
-        internal static string StaffPinLocked {
-            get {
-                return ResourceManager.GetString("StaffPinLocked", resourceCulture);
-            }
-        }
-
-        internal static string StaffPinWrong {
-            get {
-                return ResourceManager.GetString("StaffPinWrong", resourceCulture);
-            }
-        }
-
-        internal static string StaffTitle {
-            get {
-                return ResourceManager.GetString("StaffTitle", resourceCulture);
             }
         }
 

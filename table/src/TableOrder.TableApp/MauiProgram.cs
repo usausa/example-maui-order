@@ -19,14 +19,14 @@ using Smart.Mvvm.Resolver;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 using TableOrder.Client.Rest;
-using TableOrder.Client.SignalR;
-using TableOrder.TableApp.Behaviors;
 using TableOrder.TableApp.Components;
-using TableOrder.TableApp.Diagnostics;
-using TableOrder.TableApp.Extender;
 using TableOrder.TableApp.Modules;
 using TableOrder.TableApp.Shell;
-using TableOrder.TableApp.Usecase;
+using TableOrder.Terminal.Behaviors;
+using TableOrder.Terminal.Components;
+using TableOrder.Terminal.Diagnostics;
+using TableOrder.Terminal.Extender;
+using TableOrder.Terminal.Shell;
 
 public static partial class MauiProgram
 {
@@ -210,7 +210,11 @@ public static partial class MauiProgram
             c.EnablePromptEnterAction = true;
             c.EnablePromptSelectAll = true;
         });
-        services.AddComponentsPopup(static c => c.AutoRegister(DialogSource()));
+        services.AddComponentsPopup(static c =>
+        {
+            c.AutoRegister(DialogSource());
+            c.AutoRegister(TerminalModules.DialogSource());
+        });
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
         services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
         services.AddComponentsScreen();
@@ -232,14 +236,12 @@ public static partial class MauiProgram
             config.UseIdViewMapper(static m => m.AutoRegister(ViewSource()));
         });
 
+        // Terminal (端末の部品、端末の設定と状態、登録と状態の報告、注文サーバの登録と通知の窓口)
+        services.AddTerminalComponents(new KioskOptions(typeof(AdminReceiver), typeof(MainActivity)));
+
         // Components
-        services.AddSingleton<DeviceInformation>();
-        services.AddSingleton<DeviceKey>();
         services.AddSingleton<ImageCache>();
         services.AddSingleton<ThemeManager>();
-        services.AddSingleton<IStorageManager, StorageManager>();
-        services.AddSingleton<KioskManager>();
-        services.AddSingleton<ManagedConfiguration>();
 
         // Resource
         services.AddSingleton<ResourceDictionary>(static _ => Application.Current!.Resources);
@@ -247,31 +249,20 @@ public static partial class MauiProgram
         // State
         services.AddSingleton(BusyState.Default);
         services.AddSingleton<StartupState>();
-        services.AddSingleton<DeviceState>();
-        services.AddSingleton<Settings>();
-        services.AddSingleton<StaffLock>();
-        services.AddSingleton<IDeviceContext>(static p => p.GetRequiredService<Settings>());
         services.AddSingleton<LanguageState>();
         services.AddSingleton<MenuState>();
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();
         services.AddSingleton<StoreState>();
 
-        // Service (注文サーバの REST の窓口と SignalR の通知)
-        services.AddSingleton(TimeProvider.System);
-        services.AddSingleton(new OrderServerOptions());
-        services.AddSingleton<RestConnection>();
-        services.AddSingleton<IDeviceApi, RestDeviceApi>();
+        // Service (テーブル端末の REST の窓口)
         services.AddSingleton<ITableApi, RestTableApi>();
-        services.AddSingleton<IOrderEvents, SignalROrderEvents>();
 
         // Usecase
-        services.AddSingleton<DeviceUsecase>();
         services.AddSingleton<OrderUsecase>();
 
         // Shell
         services.AddSingleton<OrderEventReceiver>();
-        services.AddSingleton<StatusReporter>();
     }
 
     // ------------------------------------------------------------

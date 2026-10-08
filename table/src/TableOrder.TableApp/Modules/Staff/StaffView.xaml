@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:terminalStrings="clr-namespace:TableOrder.Terminal.Resources.Strings;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Staff"
              x:Class="TableOrder.TableApp.Modules.Staff.StaffView"
              x:DataType="{x:Type module:StaffViewModel}"
@@ -20,7 +21,7 @@
                    Source="system_logo.png" />
             <Label Grid.Column="1"
                    Style="{StaticResource SystemHeaderLabel}"
-                   Text="{x:Static strings:AppResources.StaffTitle}" />
+                   Text="{x:Static terminalStrings:TerminalResources.StaffTitle}" />
         </Grid>
         <BoxView Grid.Row="1"
                  Style="{StaticResource SystemRule}" />

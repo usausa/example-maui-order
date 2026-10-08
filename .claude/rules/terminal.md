@@ -7,6 +7,10 @@ paths:
 ---
 # 端末の部品と状態
 
+- 端末のアプリに共通の部品 (端末の部品、端末の設定と状態、スタッフの PIN、登録と状態の報告、通知の受け口の土台) は `TableOrder.Terminal` に置き、アプリには画面とそのアプリだけが使うものを置く
+- 共通の部品は `AddTerminalComponents` で登録し、生成の DI が作り方を作れるように、アプリの `GeneratedFactory` に型を足す
+- 共通の部品からアプリの型を参照しない。アプリごとに違う Android の型 (Device Owner の受け口、ホームにする画面) は、アプリが `KioskOptions` で渡す
+- 通知の受け口は `OrderEventReceiverBase` を継ぎ、通知の扱い (`ApplyAsync`) と起動からやり直す知らせ (`NotifyRestartAsync`) をアプリで決める
 - Android の API は `Components/` の部品にまとめ (共通の部分は `Xxx.cs`、Android の部分は `Xxx.android.cs`)、画面と状態から直接呼ばない
 - 管理対象の構成 (EMM が配る設定) は `Components/ManagedConfiguration` で読み、`Settings` が端末の設定より優先して返す。端末の値は書き換えない (配られなくなったら端末の値に戻る)
 - 管理対象の構成のキーを足すときは、`Platforms/Android/Resources/xml/app_restrictions.xml`、名前と説明の文言 (`values` / `values-en` の `restrictions.xml`)、`ManagedConfiguration` を揃える

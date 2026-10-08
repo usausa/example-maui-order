@@ -2,10 +2,7 @@ namespace TableOrder.TableApp.Modules;
 
 public enum DialogId
 {
-    // 共通
-    InputNumber,
-    Message,
-    Confirm,
+    // 共通 (電卓、知らせ、確認は TableOrder.Terminal の TerminalDialogId)
     Language,
 
     // 待受

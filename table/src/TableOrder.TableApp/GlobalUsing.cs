@@ -66,12 +66,19 @@ global using TableOrder.Domain;
 global using TableOrder.Domain.Enums;
 
 global using TableOrder.TableApp;
-global using TableOrder.TableApp.Messaging;
 global using TableOrder.TableApp.Models;
-global using TableOrder.TableApp.Models.Input;
 global using TableOrder.TableApp.Models.Menu;
 global using TableOrder.TableApp.Models.Order;
 global using TableOrder.TableApp.Modules.Helpers;
 global using TableOrder.TableApp.Resources.Strings;
 global using TableOrder.TableApp.State;
 global using TableOrder.TableApp.Usecase;
+
+global using TableOrder.Terminal;
+global using TableOrder.Terminal.Messaging;
+global using TableOrder.Terminal.Models;
+global using TableOrder.Terminal.Models.Input;
+global using TableOrder.Terminal.Modules;
+global using TableOrder.Terminal.Resources.Strings;
+global using TableOrder.Terminal.State;
+global using TableOrder.Terminal.Usecase;

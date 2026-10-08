@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    x:Class="TableOrder.Terminal.Resources.Styles.SystemColors">
+
+    <!-- System の役割の色。どの端末でも同じで、チェーンの色に替えない (スタイルの辞書 TerminalStyles が中に入れる) -->
+    <!-- On で始まる色は、対になる面の上に置く文字と記号の色 (面と文字のコントラスト比 4.5 以上を保つ) -->
+
+
+    <!-- ================================================================================ -->
+    <!-- System -->
+    <!-- ================================================================================ -->
+
+    <!-- 起動と端末の設定 (システムの画面)。チェーンの色に替えず、スプラッシュとアプリのアイコンの色に揃える -->
+
+    <!-- 地と面 (SystemCanvas はスプラッシュの地と同じ色) -->
+    <Color x:Key="SystemCanvasColor">#F4F5F7</Color>
+    <Color x:Key="SystemSurfaceColor">#FFFFFF</Color>
+
+    <!-- 地と面の上の文字 (本文、補足) -->
+    <Color x:Key="OnSystemCanvasColor">#1F2328</Color>
+    <Color x:Key="OnSystemCanvasVariantColor">#656D76</Color>
+
+    <!-- 罫線、進み具合の溝 -->
+    <Color x:Key="SystemOutlineColor">#D0D7DE</Color>
+
+    <!-- 主な操作と進み具合 (システムのロゴの色) -->
+    <Color x:Key="SystemAccentColor">#1F2328</Color>
+    <Color x:Key="SystemAccentPressedColor">#3A4048</Color>
+    <Color x:Key="OnSystemAccentColor">#FFFFFF</Color>
+
+</ResourceDictionary>

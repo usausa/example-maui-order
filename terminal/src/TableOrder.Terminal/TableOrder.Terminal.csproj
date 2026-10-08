@@ -1,0 +1,77 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <RootNamespace>TableOrder.Terminal</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
+    <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
+    <MauiXamlInflator>SourceGen</MauiXamlInflator>
+    <CodeAnalysisRuleSet>..\..\..\Analyzers.ruleset</CodeAnalysisRuleSet>
+
+    <!-- 文言は日本語を既定 (TerminalResources.resx) にし、英語を TerminalResources.en.resx に置く -->
+    <NeutralLanguage>ja</NeutralLanguage>
+
+    <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">30.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+
+  <!-- アプリの XAML から x:Static で引くので、文言のクラスは public にする -->
+  <ItemGroup>
+    <Compile Update="Resources\Strings\TerminalResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TerminalResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Resources\Strings\TerminalResources.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>TerminalResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').Contains('-android')) == 'true'">
+    <Compile Update="**\*.android.cs">
+      <DependentUpon>$([System.String]::Copy('%(FileName)%(Extension)').Replace('.android',''))</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').Contains('-android')) == 'false'">
+    <Compile Remove="**\*.android.cs" />
+    <None Include="**\*.android.cs">
+      <DependentUpon>$([System.String]::Copy('%(FileName)%(Extension)').Replace('.android',''))</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').Contains('-ios')) == 'true'">
+    <Compile Update="**\*.ios.cs">
+      <DependentUpon>$([System.String]::Copy('%(FileName)%(Extension)').Replace('.ios',''))</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup Condition="$([System.String]::Copy('$(TargetFramework)').Contains('-ios')) == 'false'">
+    <Compile Remove="**\*.ios.cs" />
+    <None Include="**\*.ios.cs">
+      <DependentUpon>$([System.String]::Copy('%(FileName)%(Extension)').Replace('.ios',''))</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\src\TableOrder.Client\TableOrder.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BunnyTail.DependencyInjection" Version="0.8.0" />
+    <PackageReference Include="BunnyTail.MemberAccessor" Version="1.18.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
+    <PackageReference Include="Components.Maui" Version="1.48.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.110" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.110" />
+    <PackageReference Include="System.Reactive" Version="7.0.0" />
+    <PackageReference Include="Usa.Smart.Core" Version="2.20.0" />
+    <PackageReference Include="Usa.Smart.Maui" Version="2.32.0" />
+    <PackageReference Include="Usa.Smart.Maui.Extensions" Version="2.32.0" />
+    <PackageReference Include="Usa.Smart.Mvvm" Version="2.16.0" />
+    <PackageReference Include="Usa.Smart.Navigation" Version="3.15.0" />
+  </ItemGroup>
+
+</Project>
