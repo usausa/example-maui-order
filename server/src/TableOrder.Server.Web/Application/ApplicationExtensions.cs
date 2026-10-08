@@ -49,7 +49,7 @@ public static class ApplicationExtensions
     private const string HealthEndpointPath = "/health";
     private const string AlivenessEndpointPath = "/alive";
 
-    // キッチン端末の Web アプリ (WebAssembly) を配る場所 (TableOrder.Web.Kitchen の StaticWebAssetBasePath と合わせる)
+    // キッチン端末の Web アプリ (WebAssembly) を配る場所 (TableOrder.KitchenApp の StaticWebAssetBasePath と合わせる)
     private const string KitchenPath = "/kitchen";
 
     private const string SchemaPath = "Assets/Data/Schema.sql";

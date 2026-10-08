@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # 作業の単位の検証: ビルド (警告 0)、テスト、InspectCode (指摘 0)、改行コード、文書の改行
 #
-#   python .claude/skills/verify/scripts/verify.py [terminal] [server] [files] [--no-inspect] [--fix] [--all-docs] [--out DIR]
+#   python .claude/skills/verify/scripts/verify.py [table] [hall] [reception] [server] [files] [--no-inspect] [--fix] [--all-docs] [--out DIR]
 #
-# 対象を省くと terminal、server、files のすべてを行う。1 つでも問題があれば終了コードは 1
+# 対象を省くとすべてを行う。1 つでも問題があれば終了コードは 1
 import argparse
 import json
 import re
@@ -17,17 +17,20 @@ from markdown_breaks import format_markdown
 
 ROOT = Path(__file__).resolve().parents[4]
 
-TERMINAL_SOLUTION = 'terminal/TableOrder.Terminal.slnx'
-TEST_PROJECTS = [
-    'shared/tests/TableOrder.Domain.Tests',
-    'shared/tests/TableOrder.Client.Tests',
-]
-
-SERVER_SOLUTION = 'server/TableOrder.Server.slnx'
-SERVER_TEST_PROJECTS = [
-    'server/tests/TableOrder.Server.Core.Tests',
-    'server/tests/TableOrder.Server.Web.Tests',
-]
+# 区分ごとのソリューションと、Release のビルドのあとに実行するテスト
+# 共有のプロジェクトとテストは、共有の型をいちばん使うテーブル端末のソリューションで確かめる (使わないソリューションに入れると、使われていない型を InspectCode が指摘する)
+SOLUTIONS = {
+    'table': ('table/TableOrder.TableApp.slnx', [
+        'shared/tests/TableOrder.Domain.Tests',
+        'shared/tests/TableOrder.Client.Tests',
+    ]),
+    'hall': ('hall/TableOrder.HallApp.slnx', []),
+    'reception': ('reception/TableOrder.ReceptionApp.slnx', []),
+    'server': ('server/TableOrder.Server.slnx', [
+        'server/tests/TableOrder.Server.Core.Tests',
+        'server/tests/TableOrder.Server.Web.Tests',
+    ]),
+}
 
 # 改行コードを見ない (バイナリ) ファイル
 BINARY_SUFFIXES = {'.png', '.jpg', '.jpeg', '.gif', '.ico', '.ttf', '.otf', '.woff', '.woff2', '.pfx', '.snk', '.keystore', '.jar', '.db', '.zip', '.pdf'}
@@ -222,31 +225,26 @@ def main():
     if not sys.stdout.isatty():
         sys.stdout.reconfigure(encoding='utf-8', errors='replace')
     parser = argparse.ArgumentParser(description='ビルド・テスト・InspectCode・改行コード・文書の改行を確かめる')
-    parser.add_argument('targets', nargs='*', choices=['terminal', 'server', 'files'], help='省くとすべて')
+    parser.add_argument('targets', nargs='*', choices=[*SOLUTIONS, 'files'], help='省くとすべて')
     parser.add_argument('--no-inspect', action='store_true', help='InspectCode を省く (途中の確認用。作業の単位の検証では省かない)')
     parser.add_argument('--fix', action='store_true', help='改行コードと文書の改行を直す')
     parser.add_argument('--all-docs', action='store_true', help='変更のない文書も含めて docs/*.md と README.md の改行を確かめる')
     parser.add_argument('--out', help='ログの置き場所 (既定は一時フォルダの tableorder-verify)')
     args = parser.parse_args()
-    targets = args.targets or ['terminal', 'server', 'files']
+    targets = args.targets or [*SOLUTIONS, 'files']
     out = Path(args.out) if args.out else Path(tempfile.gettempdir()) / 'tableorder-verify'
     out.mkdir(parents=True, exist_ok=True)
     print(f'ログ: {out}', flush=True)
 
-    if 'terminal' in targets:
-        if build(TERMINAL_SOLUTION, 'Release', out):
-            for project in TEST_PROJECTS:
+    for target, (solution, test_projects) in SOLUTIONS.items():
+        if target not in targets:
+            continue
+        if build(solution, 'Release', out):
+            for project in test_projects:
                 test(project, out)
-        build(TERMINAL_SOLUTION, 'Debug', out)
+        build(solution, 'Debug', out)
         if not args.no_inspect:
-            inspect(TERMINAL_SOLUTION, out)
-    if 'server' in targets:
-        if build(SERVER_SOLUTION, 'Release', out):
-            for project in SERVER_TEST_PROJECTS:
-                test(project, out)
-        build(SERVER_SOLUTION, 'Debug', out)
-        if not args.no_inspect:
-            inspect(SERVER_SOLUTION, out)
+            inspect(solution, out)
     if 'files' in targets:
         files = changed_files()
         check_line_endings(files, args.fix)

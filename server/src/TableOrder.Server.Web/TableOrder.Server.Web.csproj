@@ -32,7 +32,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TableOrder.Server.Core\TableOrder.Server.Core.csproj" />
-    <ProjectReference Include="..\TableOrder.Web.Kitchen\TableOrder.Web.Kitchen.csproj" />
+    <ProjectReference Include="..\TableOrder.KitchenApp\TableOrder.KitchenApp.csproj" />
   </ItemGroup>
 
   <ItemGroup>

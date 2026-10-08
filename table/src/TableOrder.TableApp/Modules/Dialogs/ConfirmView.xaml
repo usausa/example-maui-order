@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Dialogs"
+           x:Class="TableOrder.TableApp.Modules.Dialogs.ConfirmView"
+           x:DataType="{x:Type module:ConfirmViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:ConfirmViewModel}"
+           WidthRequest="640">
+
+    <!-- 受ける / 断るのボタンは同じ大きさにする -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{Binding Title}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <Label Style="{StaticResource DialogMessageLabel}"
+               Text="{Binding Message}" />
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CancelCommand}"
+                    Text="{Binding CancelText}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource PrimaryActionButton}"
+                    Command="{Binding OkCommand}"
+                    Text="{Binding OkText}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

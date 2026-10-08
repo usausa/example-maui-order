@@ -39,9 +39,9 @@ FRAMEWORK = 'net10.0-android'
 # 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
 # 受け口のないアプリ (枠だけのホール端末と受付機) は None にし、Device Owner の操作をしない
 APPS = {
-    'table': ('tableorder.terminal.table', 'terminal/src/TableOrder.Terminal.Table/TableOrder.Terminal.Table.csproj', '.AdminReceiver'),
-    'hall': ('tableorder.terminal.hall', 'terminal/src/TableOrder.Terminal.Hall/TableOrder.Terminal.Hall.csproj', None),
-    'reception': ('tableorder.terminal.reception', 'terminal/src/TableOrder.Terminal.Reception/TableOrder.Terminal.Reception.csproj', None),
+    'table': ('tableorder.terminal.table', 'table/src/TableOrder.TableApp/TableOrder.TableApp.csproj', '.AdminReceiver'),
+    'hall': ('tableorder.terminal.hall', 'hall/src/TableOrder.HallApp/TableOrder.HallApp.csproj', None),
+    'reception': ('tableorder.terminal.reception', 'reception/src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj', None),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
 

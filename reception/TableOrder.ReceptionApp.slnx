@@ -1,0 +1,28 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitattributes" />
+    <File Path="../.gitignore" />
+    <File Path="../AGENTS.md" />
+    <File Path="../Analyzers.ruleset" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../Directory.Build.targets" />
+    <File Path="../LICENSE" />
+    <File Path="../README.md" />
+    <File Path="../Settings.XamlStyler" />
+    <File Path="TableOrder.ReceptionApp.sln.DotSettings" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="../docs/api-design.md" />
+    <File Path="../docs/architecture.md" />
+    <File Path="../docs/business.md" />
+    <File Path="../docs/database.md" />
+    <File Path="../docs/device-management.md" />
+    <File Path="../docs/plan.md" />
+  </Folder>
+  <Folder Name="/App/">
+    <Project Path="src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj" DefaultStartup="true">
+      <Deploy />
+    </Project>
+  </Folder>
+</Solution>

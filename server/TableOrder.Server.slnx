@@ -28,7 +28,7 @@
   <Folder Name="/Server/">
     <Project Path="src/TableOrder.Server.Core/TableOrder.Server.Core.csproj" />
     <Project Path="src/TableOrder.Server.Web/TableOrder.Server.Web.csproj" />
-    <Project Path="src/TableOrder.Web.Kitchen/TableOrder.Web.Kitchen.csproj" />
+    <Project Path="src/TableOrder.KitchenApp/TableOrder.KitchenApp.csproj" />
   </Folder>
   <Folder Name="/Test/">
     <Project Path="tests/TableOrder.Server.Core.Tests/TableOrder.Server.Core.Tests.csproj" />

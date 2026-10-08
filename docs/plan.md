@@ -235,10 +235,16 @@ shared/                 共有 (サーバ・端末・Web アプリ)
   src/    TableOrder.Domain、TableOrder.Contract、TableOrder.Client
   tests/  TableOrder.Domain.Tests、TableOrder.Client.Tests
 server/                 注文サーバと、サーバが配る Web アプリ (TableOrder.Server.slnx)
-  src/    TableOrder.Server.Core、TableOrder.Server.Web、TableOrder.Server.AppHost、TableOrder.Web.Kitchen
+  src/    TableOrder.Server.Core、TableOrder.Server.Web、TableOrder.Server.AppHost、TableOrder.KitchenApp
   tests/  TableOrder.Server.Core.Tests、TableOrder.Server.Web.Tests
-terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
-  src/    TableOrder.Terminal.Shared、TableOrder.Terminal.Table、TableOrder.Terminal.Hall、TableOrder.Terminal.Reception
+terminal/               端末に共通の部品
+  src/    TableOrder.Terminal
+table/                  テーブル端末 (TableOrder.TableApp.slnx)
+  src/    TableOrder.TableApp
+hall/                   ホール端末 (TableOrder.HallApp.slnx)
+  src/    TableOrder.HallApp
+reception/              受付機 (TableOrder.ReceptionApp.slnx)
+  src/    TableOrder.ReceptionApp
 ```
 
 これから足すプロジェクト:
@@ -248,10 +254,10 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 | `TableOrder.Server.Core` | .NET | 業務の処理 (来店、注文、調理、提供、呼び出し、会計、ルールの確認) とデータの保存。入口に依存しない。骨組み (端末の登録、店舗、メニュー、品切れ) はある |
 | `TableOrder.Server.Web` | ASP.NET Core | 入口 (REST、SignalR、OTLP の受け口、外部の Webhook)、管理画面 (Blazor Server)、Web アプリの配信。受けた要求を `Server.Core` に渡すだけにする。骨組みはある |
 | `TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバ、データベース、テレメトリの受け口)。サーバを動かすだけのものはある |
-| `TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る。枠はある |
-| `TableOrder.Terminal.Shared` | .NET MAUI のライブラリ | 端末に共通の部品 (専用端末、EMM の設定、端末の情報、電卓、色とスタイルの土台)。2 つ目の端末アプリを作るときに、テーブル端末から移す |
-| `TableOrder.Terminal.Hall` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ)。枠 (起動して仮の画面を出す) はある |
-| `TableOrder.Terminal.Reception` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く)。枠はある |
+| `TableOrder.KitchenApp` | Blazor WebAssembly | キッチン端末 (KDS。チケット、作り始め、できあがり)。サーバが `/kitchen` で配る。枠はある |
+| `TableOrder.Terminal` | .NET MAUI のライブラリ | 端末に共通の部品 (専用端末、EMM の設定、端末の情報、電卓、色とスタイルの土台)。2 つ目の端末アプリを作るときに、テーブル端末から移す |
+| `TableOrder.HallApp` | .NET MAUI (Android のスマートフォン) | ホール端末 (スタッフのハンディ。来店の開始、呼び出しの対応、提供、品切れ)。枠 (起動して仮の画面を出す) はある |
+| `TableOrder.ReceptionApp` | .NET MAUI (Android のタブレット) | 受付機 (任意。お客様が人数を入れて来店を開く)。枠はある |
 | `TableOrder.Server.Core.Tests` / `TableOrder.Server.Web.Tests` | xunit | 業務の処理のテストと、API・通知のテスト |
 
 ### キッチン端末
@@ -269,7 +275,7 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 | バンプバー | USB のキーの入力として受ける (なくても触って操作できるようにする) |
 | 伝票のプリンタ | 扱わない (KDS を前提にする) |
 
-- EMM のキオスクのブラウザがない店や、自前の Device Owner の店のために、Web の画面を全画面で開くだけの端末アプリ (`TableOrder.Terminal.Kitchen`、WebView) を作る余地を残す
+- EMM のキオスクのブラウザがない店や、自前の Device Owner の店のために、Web の画面を全画面で開くだけの端末アプリ (WebView) を作る余地を残す
 - 端末の窓口 (`TableOrder.Client`) は WebAssembly でも動くので、テーブル端末と同じ窓口 (`IKitchenApi`、`IOrderEvents`) を使う
 
 ### ほかのアプリ
@@ -278,7 +284,7 @@ terminal/               店の端末のアプリ (TableOrder.Terminal.slnx)
 | --- | --- |
 | 管理画面 (店舗と端末) | 作る。端末のペアリングとテーブルの割り当て、登録トークン、店舗の設定 (注文の一時停止、ラストオーダー、色)、端末の状態。`Server.Web` の中に置く |
 | 受付機 | 任意。予約・順番待ちのシステムを使わない店のために、テーブル端末と同じ専用端末の仕組みで作る (枠は先に用意した) |
-| お客様のスマートフォンからの注文 | 作らない (API の想定の範囲の外)。作るなら `TableOrder.Web` の下に置き、読み込みの軽さを優先した作りを別に考える |
+| お客様のスマートフォンからの注文 | 作らない (API の想定の範囲の外)。作るならサーバが配る Web アプリ (`TableOrder.{用途}App`) にし、読み込みの軽さを優先した作りを別に考える |
 | 店舗のエッジ | 検討。サーバ (`Server.Core`、`Server.Web`) を店に置き、クラウドとの同期を足す形にする |
 | 本部の管理システム、POS、決済サービス、配膳ロボット | 外部のシステム。サーバの入口 (API、Webhook) でつなぎ、このリポジトリにアプリは作らない |
 
@@ -574,9 +580,9 @@ USB デバッグは EMM のポリシーで止め、自前の Device Owner では
 - [x] 端末の登録 (Keystore の鍵、ペアリングコードと EMM の登録トークン、端末の設定のテーブル、状態の報告、無効化とテナントの停止、接続先の変更。モックで動かす)
 - [x] 端末の実際の通信 (REST の窓口とトークンの取得・取り直し、通知の受け口とつなぎ直し、接続先によるモックとの切り替え)
 - [ ] 管理画面 (サインイン、テナント・店舗・テーブル・端末、出したトークンをすぐに拒む一覧)
-- [x] ホール端末と受付機の枠 (`Terminal.Hall`、`Terminal.Reception`。起動して仮の画面を出す)
-- [ ] ホール端末と受付機の画面と、端末に共通の部品 (`Terminal.Shared`)
-- [ ] キッチン端末 (`Web.Kitchen`)
+- [x] ホール端末と受付機の枠 (`HallApp`、`ReceptionApp`。起動して仮の画面を出す)
+- [ ] ホール端末と受付機の画面と、端末に共通の部品 (`TableOrder.Terminal`)
+- [ ] キッチン端末 (`KitchenApp`)
 - [ ] 店舗のエッジ (回線が切れても店内で注文を回す)
 - [ ] 外部の連携 (OAuth のクライアント、メニューの公開と写真 (端末は `menu.published` で読み直す)、POS の参照と来店の終了、Webhook)
 - [ ] 決済サービスと決済端末の接続、本物の QR コードの生成 (決済サービスの結果の通知の署名)

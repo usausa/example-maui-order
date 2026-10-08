@@ -1,6 +1,6 @@
 # 構成
 
-リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.Terminal.Table`) とサーバの作り。  
+リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`) とサーバの作り。  
 ここには作ったものだけを書き、これから作るもの (サーバの来店・注文などの業務、ホール端末とキッチン端末の画面、端末の実際の通信) は [plan.md](plan.md) に置く。  
 業務の前提と流れは [business.md](business.md)、API の想定は [api-design.md](api-design.md)、データベースは [database.md](database.md) を参照。
 
@@ -16,41 +16,45 @@
 
 ## 📦 1. プロジェクト
 
-モノレポにし、区分 (共有、サーバ、端末) ごとのフォルダの `src/` にプロジェクト、`tests/` にテストを置く。  
-ソリューションは区分ごとに分け、端末は `terminal/TableOrder.Terminal.slnx`、サーバは `server/TableOrder.Server.slnx`。
+モノレポにし、区分ごとのフォルダの `src/` にプロジェクト、`tests/` にテストを置く。  
+ソリューションは区分ごとに分け、サーバは `server/TableOrder.Server.slnx`、端末のアプリはアプリごと (`table/TableOrder.TableApp.slnx`、`hall/TableOrder.HallApp.slnx`、`reception/TableOrder.ReceptionApp.slnx`)。
 
 | 区分 | フォルダ | 内容 |
 | --- | --- | --- |
 | 共有 | `shared/` | サーバ・端末・Web アプリが共に使うもの (.NET の標準のライブラリのほかに依存しない) |
 | サーバ | `server/` | 注文サーバと、サーバが配る Web アプリ |
-| 端末 | `terminal/` | 店の端末のアプリ (.NET MAUI、Android) |
+| テーブル端末 | `table/` | お客様がテーブルで使う端末のアプリ (.NET MAUI、Android) |
+| ホール端末 | `hall/` | スタッフが使う端末のアプリ (.NET MAUI、Android) |
+| 受付機 | `reception/` | 店の入口に置く端末のアプリ (.NET MAUI、Android) |
 
 - 区分で分けるのは、ビルドに要るもの (端末は Android のワークロード) と設定が違うため。  
   サーバの区分は Android なしでビルドできる
-- ホール端末と受付機は、骨組み (画面の入れ物、遷移、処理中の覆い) だけをテーブル端末と同じ形で置いている。  
-  端末に共通の部品 (専用端末、EMM の設定、端末の情報など) は、画面を作るときに `TableOrder.Terminal.Shared` に移す
+- 端末のアプリは用途ごとに区分を分け、1 つの区分に用途の違うアプリを混ぜない。  
+  端末に共通の部品 (専用端末、EMM の設定、端末の情報など) は、ホール端末の画面を作るときに `terminal/` の `TableOrder.Terminal` (画面を持たない MAUI のライブラリ) に移す
+- ホール端末と受付機は、骨組み (画面の入れ物、遷移、処理中の覆い) だけをテーブル端末と同じ形で置いている
+- 共有のプロジェクトとテストは、テーブル端末のソリューションに入れて確かめる (共有の型をいちばん使うので、使われていない型の指摘が出ない)
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
 | `shared/src/TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
 | `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
 | `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi`、通知の `IOrderEvents`、`ApiResult`)、注文サーバの実装 (`Rest/` の要求、`SignalR/` の通知)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) |
-| `terminal/src/TableOrder.Terminal.Table` | .NET MAUI (Android) | テーブル端末のアプリ |
-| `terminal/src/TableOrder.Terminal.Hall` | .NET MAUI (Android) | ホール端末のアプリの枠 (起動して仮の画面を出すだけ) |
-| `terminal/src/TableOrder.Terminal.Reception` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
+| `table/src/TableOrder.TableApp` | .NET MAUI (Android) | テーブル端末のアプリ |
+| `hall/src/TableOrder.HallApp` | .NET MAUI (Android) | ホール端末のアプリの枠 (起動して仮の画面を出すだけ) |
+| `reception/src/TableOrder.ReceptionApp` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
 | `server/src/TableOrder.Server.Core` | .NET | 業務の処理 (端末の登録と認可、店舗、メニュー、品切れ) と DB の読み書き (Accessor と 2-way SQL) |
 | `server/src/TableOrder.Server.Web` | ASP.NET Core | 入口 (REST)、端末の認証、管理画面 (Blazor Server)、キッチン端末の配信 |
 | `server/src/TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバとテレメトリ) |
-| `server/src/TableOrder.Web.Kitchen` | Blazor WebAssembly | キッチン端末の Web アプリの枠 (仮の画面を出すだけ) |
+| `server/src/TableOrder.KitchenApp` | Blazor WebAssembly | キッチン端末の Web アプリの枠 (仮の画面を出すだけ) |
 | `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
 | `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | 端末の鍵の値の変換と、`Client` が画面・端末・サーバに依存しないことのテスト (窓口の動きはサーバのテストで本物のサーバにつないで確かめる) |
 | `server/tests/TableOrder.Server.Core.Tests` | .NET (xunit) | すべての SQL がテナントで絞っていることと、DB の型の変換のテスト |
 | `server/tests/TableOrder.Server.Web.Tests` | .NET (xunit) | API と通知のハブのテスト (端末の登録とトークン、端末のアプリと同じ形の鍵での登録、端末の種類の範囲、テナントで分けられていること、来店から会計までの API、通知の送る先と抜けた通知) と、端末のアプリの窓口 (`TableOrder.Client` の REST と SignalR) をサーバにつないだテスト |
 
 ```
-TableOrder.Terminal.Table ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
+TableOrder.TableApp ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
 TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
-          └──> TableOrder.Web.Kitchen
+          └──> TableOrder.KitchenApp
 ```
 
 ### 名前の付け方
@@ -59,19 +63,18 @@ TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
 | --- | --- |
 | 共有 | `TableOrder.{Domain\|Contract\|Client}` |
 | サーバ | `TableOrder.Server.{Core\|Web\|AppHost}` |
-| Web アプリ (ブラウザで動き、サーバが配る) | `TableOrder.Web.{Kitchen}` |
-| 端末 (.NET MAUI) | `TableOrder.Terminal.{Shared\|Table\|Hall\|Reception}` (`Shared` は端末に共通の部品) |
+| アプリ (店の端末とブラウザで動く) | `TableOrder.{Table\|Hall\|Reception\|Kitchen}App` |
+| 端末に共通の部品 (.NET MAUI のライブラリ) | `TableOrder.Terminal` |
 | テスト | 区分の `tests/` に `{プロジェクト名}.Tests` |
 
-- 名前の 2 つ目は動く場所を表す (`Server` はサーバ、`Web` はブラウザ、`Terminal` は店の端末)。  
-  フォルダの区分はビルドの単位で決めるので、サーバが配る Web アプリは `server/` に置く
-- 名前空間はアセンブリの名前にフォルダの道を続ける (`TableOrder.Terminal.Table.Modules.Menu` など)
+- 店の端末とブラウザで動くアプリは `{用途}App` にし、サーバはプロジェクトの役割 (`Core`、`Web`、`AppHost`) で名前を分ける。  
+  フォルダの区分はビルドの単位で決めるので、サーバが配る Web アプリ (`TableOrder.KitchenApp`) は `server/` に置く
+- 名前空間はアセンブリの名前にフォルダの道を続ける (`TableOrder.TableApp.Modules.Menu` など)
 - ファイルは 1 つの型を 1 つのファイルに置き、ファイル名を型の名前にする。  
   Android だけの部分は `Xxx.android.cs`、端末の画面は `Modules/{画面}/{画面}View.xaml` と `{画面}ViewModel.cs` にする
 - 端末の窓口は端末の種類ごとに `I{種類}Api` (`ITableApi`。ホール端末は `IHallApi`、キッチン端末は `IKitchenApi`、受付機は `IReceptionApi`) にし、端末の登録と設定 (`IDeviceApi`) と通知 (`IOrderEvents`) は共通にする。  
   実装は通信の方式を前に付ける (`RestDeviceApi`、`Rest{種類}Api`、`SignalROrderEvents`)
 - サーバのファイルの名前は template-maui-server に合わせる (入口は `Endpoints/{リソース}Endpoints.cs`、業務の処理は `Services/{リソース}Service.cs`、データは `Accessors/{リソース}Accessor.cs` と `Accessors/Sql/{リソース}Accessor.{メソッド}.sql`、行は `Models/Entity/{テーブル}Entity.cs`)
-- 名前空間の `TableOrder.Terminal.Table` と紛れるので、`Table` という名前の型は作らない
 - MAUI の `MenuItem` とぶつかるので、メニューの品の型は `MenuProduct` などにする
 
 ---
@@ -345,7 +348,7 @@ Device Owner のときに掛ける端末の制限:
 端末 ──REST────> Server.Web (Endpoints) ──> Server.Core (Services ──> Accessors ──> SQLite)
 端末 <──SignalR── Server.Web (StoreHub <── EventDispatcher) ──> Server.Core (EventService)
                    ├─ 管理画面 (Blazor Server) ──> Server.Core
-                   └─ キッチン端末 (Web.Kitchen、WebAssembly) を /kitchen で配る
+                   └─ キッチン端末 (KitchenApp、WebAssembly) を /kitchen で配る
 ```
 
 - 入口 (`Endpoints/`) は要求の形を確かめて Service に渡し、結果を応答にするだけにする

@@ -1,0 +1,37 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitattributes" />
+    <File Path="../.gitignore" />
+    <File Path="../AGENTS.md" />
+    <File Path="../Analyzers.ruleset" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../Directory.Build.targets" />
+    <File Path="../LICENSE" />
+    <File Path="../README.md" />
+    <File Path="../Settings.XamlStyler" />
+    <File Path="TableOrder.TableApp.sln.DotSettings" />
+  </Folder>
+  <Folder Name="/docs/">
+    <File Path="../docs/api-design.md" />
+    <File Path="../docs/architecture.md" />
+    <File Path="../docs/business.md" />
+    <File Path="../docs/database.md" />
+    <File Path="../docs/device-management.md" />
+    <File Path="../docs/plan.md" />
+  </Folder>
+  <Folder Name="/Shared/">
+    <Project Path="../shared/src/TableOrder.Client/TableOrder.Client.csproj" />
+    <Project Path="../shared/src/TableOrder.Contract/TableOrder.Contract.csproj" />
+    <Project Path="../shared/src/TableOrder.Domain/TableOrder.Domain.csproj" />
+  </Folder>
+  <Folder Name="/App/">
+    <Project Path="src/TableOrder.TableApp/TableOrder.TableApp.csproj" DefaultStartup="true">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/Test/">
+    <Project Path="../shared/tests/TableOrder.Client.Tests/TableOrder.Client.Tests.csproj" />
+    <Project Path="../shared/tests/TableOrder.Domain.Tests/TableOrder.Domain.Tests.csproj" />
+  </Folder>
+</Solution>

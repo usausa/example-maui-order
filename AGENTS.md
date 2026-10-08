@@ -14,9 +14,10 @@
 
 ## 構成
 
-- モノレポ。区分ごとのフォルダ (`shared/`、`server/`、`terminal/`) の `src/` にプロジェクト、`tests/` にテストを置き、ソリューションは区分ごとに分ける (構成は `docs/architecture.md`)
-- 名前は `TableOrder.{Domain|Contract|Client}` (共有)、`TableOrder.Server.{Core|Web|AppHost}` (サーバ)、`TableOrder.Web.{Kitchen}` (サーバが配る Web アプリ)、`TableOrder.Terminal.{Shared|Table|Hall|Reception}` (端末) にし、名前空間はアセンブリの名前にフォルダを続ける
-- 端末のソリューションは `terminal/TableOrder.Terminal.slnx`。端末アプリは Android だけを対象にする
+- モノレポ。区分ごとのフォルダ (`shared/`、`server/`、`table/`、`hall/`、`reception/`) の `src/` にプロジェクト、`tests/` にテストを置き、ソリューションは区分ごとに分ける (構成は `docs/architecture.md`)
+- 端末のアプリはアプリごとの区分 (`table/`、`hall/`、`reception/`) に置き、用途の違うアプリを 1 つの区分に混ぜない。端末に共通の部品 (画面を持たない MAUI のライブラリ) は `terminal/` に置く
+- 名前は `TableOrder.{Domain|Contract|Client}` (共有)、`TableOrder.Server.{Core|Web|AppHost}` (サーバ)、`TableOrder.{Table|Hall|Reception|Kitchen}App` (端末とブラウザで動くアプリ)、`TableOrder.Terminal` (端末に共通の部品) にし、名前空間はアセンブリの名前にフォルダを続ける
+- 端末のソリューションはアプリごと (`table/TableOrder.TableApp.slnx` など)。端末アプリは Android だけを対象にする
 - サーバとクライアントの業務の処理は通信の入り口 (Minimal API / gRPC / SignalR) に依存させない。入り口は受けた要求を業務の処理に渡すだけにする
 - 業務の特例 (ドリンクバー、お酒、キッズなど) をコードで分岐せず、メニューのタグとルールの設定で表す
 - 物理キーボードを前提にしない (キー入力の仕組みとフォーカスの移動は持たない)

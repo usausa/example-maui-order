@@ -12,8 +12,9 @@ AGENTS.md の「検証」を 1 回で確かめる。
 python .claude/skills/verify/scripts/verify.py
 ```
 
-- 対象を絞るときは `terminal` / `server` / `files` を並べる (例: `verify.py server files`)。省くとすべて
-- `terminal`: `terminal/TableOrder.Terminal.slnx` の Release と Debug のビルド (作り直し)、`shared/tests/TableOrder.Domain.Tests`・`shared/tests/TableOrder.Client.Tests` の `dotnet run --project` (Release)、InspectCode
+- 対象を絞るときは `table` / `hall` / `reception` / `server` / `files` を並べる (例: `verify.py table files`)。省くとすべて
+- `table`: `table/TableOrder.TableApp.slnx` の Release と Debug のビルド (作り直し)、`shared/tests/TableOrder.Domain.Tests`・`shared/tests/TableOrder.Client.Tests` の `dotnet run --project` (Release)、InspectCode (共有のプロジェクトとテストはこのソリューションで確かめる)
+- `hall` / `reception`: `hall/TableOrder.HallApp.slnx` / `reception/TableOrder.ReceptionApp.slnx` の Release と Debug のビルド (作り直し)、InspectCode
 - `server`: `server/TableOrder.Server.slnx` の Release と Debug のビルド (作り直し)、`server/tests/TableOrder.Server.Core.Tests`・`server/tests/TableOrder.Server.Web.Tests` の `dotnet run --project` (Release)、InspectCode
 - `files`: 変更したファイル (git の未コミット分) の改行コード (新しいファイルは CRLF、既存のファイルは元のまま) と、`docs/*.md`・README の改行 (1 行 1 文、「。」の後に 2 スペース)
 - `--fix` で改行コードと文書の改行を直す。`--all-docs` で変更のない文書も確かめる

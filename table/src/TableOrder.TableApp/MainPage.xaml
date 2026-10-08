@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:navigation="http://smart/navigation"
+             xmlns:local="clr-namespace:TableOrder.TableApp"
+             xmlns:shell="clr-namespace:TableOrder.TableApp.Shell"
+             x:Class="TableOrder.TableApp.MainPage"
+             x:DataType="{x:Type local:MainPageViewModel}"
+             s:BindingContextResolver.Type="{x:Type local:MainPageViewModel}"
+             SafeAreaEdges="Default">
+
+    <!-- 仮の全画面の間はシステムバーを出さないので、ステータスバーの色を付けない (色の帯が画面の上に残るため) -->
+    <ContentPage.Behaviors>
+        <s:AppLifecycleBehavior />
+    </ContentPage.Behaviors>
+
+    <!-- 画面の枠 (タブ、操作の帯など) は各 View が持つ。MainPage は画面を切り替える入れ物と、全体に重ねる処理中の覆いだけを持つ -->
+    <!-- 起動の進み具合は起動の画面 (Startup) が出す -->
+    <Grid Style="{StaticResource MainGrid}">
+        <!-- view container -->
+        <AbsoluteLayout Style="{StaticResource ContainerLayout}"
+                        IsClippedToBounds="True">
+            <AbsoluteLayout.Behaviors>
+                <navigation:NavigationContainerBehavior Navigator="{Binding Navigator}" />
+            </AbsoluteLayout.Behaviors>
+        </AbsoluteLayout>
+
+        <!-- overlay -->
+        <Rectangle shell:ShellProperty.BusyOverlay="True"
+                   IsVisible="{Binding BusyState.IsBusy}" />
+    </Grid>
+
+</ContentPage>
