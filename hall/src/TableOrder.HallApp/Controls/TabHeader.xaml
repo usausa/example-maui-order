@@ -8,17 +8,17 @@
              x:DataType="{x:Type modules:TabViewModelBase}">
 
     <!-- タブの画面のヘッダ (タブの名前、店舗の名前、端末の画面への入口) と、注文を一時停止している間の知らせの帯。画面の ViewModel (TabViewModelBase) にバインドする -->
-    <VerticalStackLayout Style="{StaticResource TabHeaderStack}">
-        <Grid Style="{StaticResource TabHeaderGrid}"
+    <VerticalStackLayout Style="{StaticResource HeaderStack}">
+        <Grid Style="{StaticResource HeaderGrid}"
               ColumnDefinitions="Auto,*,Auto">
             <Label Grid.Column="0"
-                   Style="{StaticResource TabTitleLabel}"
+                   Style="{StaticResource HeaderTitleLabel}"
                    Text="{Binding TitleText}" />
             <Label Grid.Column="1"
-                   Style="{StaticResource TabStoreLabel}"
+                   Style="{StaticResource HeaderCaptionLabel}"
                    Text="{Binding StoreNameText}" />
             <Button Grid.Column="2"
-                    Style="{StaticResource TabHeaderButton}"
+                    Style="{StaticResource HeaderButton}"
                     Command="{Binding DeviceCommand}"
                     Text="{x:Static fonts:MaterialIcons.Smartphone}" />
         </Grid>

@@ -8,6 +8,7 @@
 #   python emu.py install [--release] [--embed]   ビルドしてエミュレータに入れて起動する (--embed は Device Owner の間に使う)
 #   python emu.py launch | stop              アプリを起動する / 止める
 #   python emu.py kill                       アプリのプロセスを止める (Device Owner のアプリは stop が効かない。Debug だけ)
+#   python emu.py locale [<言語>]            アプリを止めて、アプリだけの言語を替える (例: ja-JP。省くと端末の言語に戻す。Android 13 以降)
 #   python emu.py owner set|clear|status     アプリを Device Owner にする / 外す / 今の状態 (専用端末、Debug だけ外せる)
 #   python emu.py emm set <apk> | config [key=value ...] | clear | status [--dpc パッケージ/受け口]
 #                                            外部の EMM の代わりにする DPC を入れる / 管理対象の構成を配る (値を省くと消す) / 外す / 今の状態
@@ -233,6 +234,16 @@ def kill():
     print(f'止めました: {pid}' if pid else '動いていません')
 
 
+def locale(tag):
+    # 端末の言語に従うアプリ (ホール端末) を、端末の言語を替えずにほかの言語で確かめる
+    # アプリは起動のときに言語を読むので、止めてから替える (起動は emu.py launch)
+    if tag and not re.fullmatch(r'[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*', tag):
+        sys.exit(f'言語の名前が正しくありません: {tag} (例: ja-JP)')
+    stop()
+    shell(f"cmd locale set-app-locales {PACKAGE} --user 0 --locales '{tag or ''}'")
+    print(shell(f'cmd locale get-app-locales {PACKAGE} --user 0').strip())
+
+
 #--------------------------------------------------------------------------------
 # Device owner
 #--------------------------------------------------------------------------------
@@ -406,6 +417,8 @@ def main():
     sub.add_parser('launch')
     sub.add_parser('stop')
     sub.add_parser('kill')
+    p = sub.add_parser('locale')
+    p.add_argument('tag', nargs='?')
     p = sub.add_parser('owner')
     p.add_argument('action', choices=['set', 'clear', 'status'])
     p = sub.add_parser('emm')
@@ -461,6 +474,8 @@ def main():
         stop()
     elif args.command == 'kill':
         kill()
+    elif args.command == 'locale':
+        locale(args.tag)
     elif args.command == 'owner':
         owner(args.action)
     elif args.command == 'emm':

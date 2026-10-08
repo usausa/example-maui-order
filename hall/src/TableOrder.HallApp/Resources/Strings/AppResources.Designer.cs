@@ -417,6 +417,276 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
+        internal static string CommonBack {
+            get {
+                return ResourceManager.GetString("CommonBack", resourceCulture);
+            }
+        }
+
+        internal static string TableFormat {
+            get {
+                return ResourceManager.GetString("TableFormat", resourceCulture);
+            }
+        }
+
+        internal static string SeatVacant {
+            get {
+                return ResourceManager.GetString("SeatVacant", resourceCulture);
+            }
+        }
+
+        internal static string SeatOpen {
+            get {
+                return ResourceManager.GetString("SeatOpen", resourceCulture);
+            }
+        }
+
+        internal static string SeatPaying {
+            get {
+                return ResourceManager.GetString("SeatPaying", resourceCulture);
+            }
+        }
+
+        internal static string CapacityFormat {
+            get {
+                return ResourceManager.GetString("CapacityFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuestsFormat {
+            get {
+                return ResourceManager.GetString("GuestsFormat", resourceCulture);
+            }
+        }
+
+        internal static string ElapsedMinutesFormat {
+            get {
+                return ResourceManager.GetString("ElapsedMinutesFormat", resourceCulture);
+            }
+        }
+
+        internal static string ElapsedHoursFormat {
+            get {
+                return ResourceManager.GetString("ElapsedHoursFormat", resourceCulture);
+            }
+        }
+
+        internal static string UnservedFormat {
+            get {
+                return ResourceManager.GetString("UnservedFormat", resourceCulture);
+            }
+        }
+
+        internal static string CallsFormat {
+            get {
+                return ResourceManager.GetString("CallsFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuideTitleFormat {
+            get {
+                return ResourceManager.GetString("GuideTitleFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuideCapacityFormat {
+            get {
+                return ResourceManager.GetString("GuideCapacityFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuideOpen {
+            get {
+                return ResourceManager.GetString("GuideOpen", resourceCulture);
+            }
+        }
+
+        internal static string GuestAdults {
+            get {
+                return ResourceManager.GetString("GuestAdults", resourceCulture);
+            }
+        }
+
+        internal static string GuestChildren {
+            get {
+                return ResourceManager.GetString("GuestChildren", resourceCulture);
+            }
+        }
+
+        internal static string GuestChildrenHint {
+            get {
+                return ResourceManager.GetString("GuestChildrenHint", resourceCulture);
+            }
+        }
+
+        internal static string GuestChangeTitle {
+            get {
+                return ResourceManager.GetString("GuestChangeTitle", resourceCulture);
+            }
+        }
+
+        internal static string GuestChange {
+            get {
+                return ResourceManager.GetString("GuestChange", resourceCulture);
+            }
+        }
+
+        internal static string VisitGuests {
+            get {
+                return ResourceManager.GetString("VisitGuests", resourceCulture);
+            }
+        }
+
+        internal static string GuestDetailFormat {
+            get {
+                return ResourceManager.GetString("GuestDetailFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuestAdultsFormat {
+            get {
+                return ResourceManager.GetString("GuestAdultsFormat", resourceCulture);
+            }
+        }
+
+        internal static string VisitOpened {
+            get {
+                return ResourceManager.GetString("VisitOpened", resourceCulture);
+            }
+        }
+
+        internal static string VisitOpenedFormat {
+            get {
+                return ResourceManager.GetString("VisitOpenedFormat", resourceCulture);
+            }
+        }
+
+        internal static string VisitTotal {
+            get {
+                return ResourceManager.GetString("VisitTotal", resourceCulture);
+            }
+        }
+
+        internal static string VisitOrders {
+            get {
+                return ResourceManager.GetString("VisitOrders", resourceCulture);
+            }
+        }
+
+        internal static string VisitNoOrders {
+            get {
+                return ResourceManager.GetString("VisitNoOrders", resourceCulture);
+            }
+        }
+
+        internal static string OrderTitleFormat {
+            get {
+                return ResourceManager.GetString("OrderTitleFormat", resourceCulture);
+            }
+        }
+
+        internal static string VisitMove {
+            get {
+                return ResourceManager.GetString("VisitMove", resourceCulture);
+            }
+        }
+
+        internal static string VisitClose {
+            get {
+                return ResourceManager.GetString("VisitClose", resourceCulture);
+            }
+        }
+
+        internal static string VisitCancel {
+            get {
+                return ResourceManager.GetString("VisitCancel", resourceCulture);
+            }
+        }
+
+        internal static string MoveTitle {
+            get {
+                return ResourceManager.GetString("MoveTitle", resourceCulture);
+            }
+        }
+
+        internal static string MoveEmpty {
+            get {
+                return ResourceManager.GetString("MoveEmpty", resourceCulture);
+            }
+        }
+
+        internal static string CloseTitle {
+            get {
+                return ResourceManager.GetString("CloseTitle", resourceCulture);
+            }
+        }
+
+        internal static string CloseMessageFormat {
+            get {
+                return ResourceManager.GetString("CloseMessageFormat", resourceCulture);
+            }
+        }
+
+        internal static string CloseOk {
+            get {
+                return ResourceManager.GetString("CloseOk", resourceCulture);
+            }
+        }
+
+        internal static string CancelTitle {
+            get {
+                return ResourceManager.GetString("CancelTitle", resourceCulture);
+            }
+        }
+
+        internal static string CancelMessageFormat {
+            get {
+                return ResourceManager.GetString("CancelMessageFormat", resourceCulture);
+            }
+        }
+
+        internal static string CancelOk {
+            get {
+                return ResourceManager.GetString("CancelOk", resourceCulture);
+            }
+        }
+
+        internal static string StatusHeld {
+            get {
+                return ResourceManager.GetString("StatusHeld", resourceCulture);
+            }
+        }
+
+        internal static string StatusOrdered {
+            get {
+                return ResourceManager.GetString("StatusOrdered", resourceCulture);
+            }
+        }
+
+        internal static string StatusCooking {
+            get {
+                return ResourceManager.GetString("StatusCooking", resourceCulture);
+            }
+        }
+
+        internal static string StatusReady {
+            get {
+                return ResourceManager.GetString("StatusReady", resourceCulture);
+            }
+        }
+
+        internal static string StatusServed {
+            get {
+                return ResourceManager.GetString("StatusServed", resourceCulture);
+            }
+        }
+
+        internal static string StatusCancelled {
+            get {
+                return ResourceManager.GetString("StatusCancelled", resourceCulture);
+            }
+        }
+
         internal static string ErrorUnavailable {
             get {
                 return ResourceManager.GetString("ErrorUnavailable", resourceCulture);
@@ -444,6 +714,42 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ErrorDeviceKind {
             get {
                 return ResourceManager.GetString("ErrorDeviceKind", resourceCulture);
+            }
+        }
+
+        internal static string ErrorTableOccupied {
+            get {
+                return ResourceManager.GetString("ErrorTableOccupied", resourceCulture);
+            }
+        }
+
+        internal static string ErrorVersionMismatch {
+            get {
+                return ResourceManager.GetString("ErrorVersionMismatch", resourceCulture);
+            }
+        }
+
+        internal static string ErrorVisitHasOrders {
+            get {
+                return ResourceManager.GetString("ErrorVisitHasOrders", resourceCulture);
+            }
+        }
+
+        internal static string ErrorCheckoutInProgress {
+            get {
+                return ResourceManager.GetString("ErrorCheckoutInProgress", resourceCulture);
+            }
+        }
+
+        internal static string ErrorVisitNotOpen {
+            get {
+                return ResourceManager.GetString("ErrorVisitNotOpen", resourceCulture);
+            }
+        }
+
+        internal static string ErrorNotFound {
+            get {
+                return ResourceManager.GetString("ErrorNotFound", resourceCulture);
             }
         }
 

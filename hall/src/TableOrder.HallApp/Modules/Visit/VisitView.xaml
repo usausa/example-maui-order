@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:fonts="clr-namespace:Fonts"
+             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Visit"
+             x:Class="TableOrder.HallApp.Modules.Visit.VisitView"
+             x:DataType="{x:Type module:VisitViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:VisitViewModel}">
+
+    <!-- 来店の詳細: 状態、人数、開いた時刻、注文の合計、注文と明細の状態。下の帯に来店の操作を置く -->
+    <Grid Style="{StaticResource ScreenGrid}"
+          RowDefinitions="Auto,*,Auto">
+        <!-- header -->
+        <VerticalStackLayout Grid.Row="0"
+                             Style="{StaticResource HeaderStack}">
+            <Grid Style="{StaticResource HeaderGrid}"
+                  ColumnDefinitions="Auto,*,Auto">
+                <Button Grid.Column="0"
+                        Style="{StaticResource HeaderButton}"
+                        Command="{Binding BackCommand}"
+                        Text="{x:Static fonts:MaterialIcons.Arrow_back}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource HeaderTitleLabel}"
+                       Text="{Binding TitleText}" />
+                <Label Grid.Column="2"
+                       Style="{StaticResource VisitStatusLabel}"
+                       Text="{Binding StatusText}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsPaying}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </Grid>
+            <BoxView Style="{StaticResource HorizontalRule}" />
+        </VerticalStackLayout>
+
+        <!-- body -->
+        <ScrollView Grid.Row="1"
+                    Style="{StaticResource PanelScroll}">
+            <VerticalStackLayout Style="{StaticResource VisitBodyStack}">
+                <!-- summary -->
+                <Grid Style="{StaticResource VisitSummaryGrid}"
+                      RowDefinitions="Auto,Auto,Auto"
+                      ColumnDefinitions="120,*">
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Style="{StaticResource VisitInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.VisitGuests}" />
+                    <Label Grid.Row="0" Grid.Column="1"
+                           Style="{StaticResource VisitInfoValueLabel}"
+                           Text="{Binding GuestText}" />
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Style="{StaticResource VisitInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.VisitOpened}" />
+                    <Label Grid.Row="1" Grid.Column="1"
+                           Style="{StaticResource VisitInfoValueLabel}"
+                           Text="{Binding OpenedText}" />
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Style="{StaticResource VisitInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.VisitTotal}" />
+                    <Label Grid.Row="2" Grid.Column="1"
+                           Style="{StaticResource VisitInfoValueLabel}"
+                           Text="{Binding TotalText}" />
+                </Grid>
+
+                <!-- orders -->
+                <Label Style="{StaticResource VisitSectionLabel}"
+                       Text="{x:Static strings:AppResources.VisitOrders}" />
+                <Label Style="{StaticResource VisitErrorLabel}"
+                       IsVisible="{Binding ErrorText, Converter={StaticResource NotEmptyConverter}}"
+                       Text="{Binding ErrorText}" />
+                <Label Style="{StaticResource VisitEmptyLabel}"
+                       IsVisible="{Binding HasNoOrders}"
+                       Text="{x:Static strings:AppResources.VisitNoOrders}" />
+                <VerticalStackLayout Style="{StaticResource VisitOrderListStack}"
+                                     BindableLayout.ItemsSource="{Binding Orders}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Type module:VisitOrder}">
+                            <VerticalStackLayout Style="{StaticResource VisitOrderStack}">
+                                <Grid Style="{StaticResource VisitOrderTitleGrid}"
+                                      ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0"
+                                           Style="{StaticResource VisitOrderTitleLabel}"
+                                           Text="{Binding Title}" />
+                                    <Label Grid.Column="1"
+                                           Style="{StaticResource VisitOrderTimeLabel}"
+                                           Text="{Binding TimeText}" />
+                                </Grid>
+                                <VerticalStackLayout BindableLayout.ItemsSource="{Binding Lines}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="{x:Type module:VisitLine}">
+                                            <Grid Style="{StaticResource VisitLineGrid}"
+                                                  ColumnDefinitions="*,Auto,Auto">
+                                                <VerticalStackLayout Grid.Column="0"
+                                                                     Style="{StaticResource VisitLineNameStack}">
+                                                    <Label Style="{StaticResource VisitLineNameLabel}"
+                                                           Text="{Binding Name}">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding IsDone}"
+                                                                         Value="True">
+                                                                <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                    <Label Style="{StaticResource VisitLineOptionLabel}"
+                                                           IsVisible="{Binding HasOptions}"
+                                                           Text="{Binding OptionText}" />
+                                                </VerticalStackLayout>
+                                                <Label Grid.Column="1"
+                                                       Style="{StaticResource VisitLineQuantityLabel}"
+                                                       Text="{Binding QuantityText}" />
+                                                <Label Grid.Column="2"
+                                                       Style="{StaticResource VisitLineStatusLabel}"
+                                                       Text="{Binding StatusText}">
+                                                    <Label.Triggers>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding IsReady}"
+                                                                     Value="True">
+                                                            <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+                                                            <Setter Property="FontAttributes" Value="Bold" />
+                                                        </DataTrigger>
+                                                        <DataTrigger TargetType="Label"
+                                                                     Binding="{Binding IsDone}"
+                                                                     Value="True">
+                                                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+                                                        </DataTrigger>
+                                                    </Label.Triggers>
+                                                </Label>
+                                            </Grid>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- action -->
+        <Grid Grid.Row="2"
+              Style="{StaticResource VisitActionGrid}"
+              RowDefinitions="1,64,1,80"
+              ColumnDefinitions="*,1,*">
+            <BoxView Grid.Row="0" Grid.ColumnSpan="3"
+                     Style="{StaticResource HorizontalRule}" />
+            <Button Grid.Row="1" Grid.Column="0"
+                    Style="{StaticResource VisitActionButton}"
+                    Command="{Binding GuestsCommand}"
+                    Text="{x:Static strings:AppResources.GuestChangeTitle}" />
+            <BoxView Grid.Row="1" Grid.Column="1"
+                     Style="{StaticResource VerticalRule}" />
+            <Button Grid.Row="1" Grid.Column="2"
+                    Style="{StaticResource VisitActionButton}"
+                    Command="{Binding MoveCommand}"
+                    Text="{x:Static strings:AppResources.VisitMove}" />
+            <BoxView Grid.Row="2" Grid.ColumnSpan="3"
+                     Style="{StaticResource HorizontalRule}" />
+            <!-- 注文のある来店と会計中はレジで払った、注文のない来店は取りやめ -->
+            <Button Grid.Row="3" Grid.ColumnSpan="3"
+                    Style="{StaticResource VisitCloseButton}"
+                    Command="{Binding CloseCommand}"
+                    IsVisible="{Binding IsCancelable, Converter={StaticResource ReverseConverter}}"
+                    Text="{x:Static strings:AppResources.VisitClose}" />
+            <Button Grid.Row="3" Grid.ColumnSpan="3"
+                    Style="{StaticResource VisitCancelButton}"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsCancelable}"
+                    Text="{x:Static strings:AppResources.VisitCancel}" />
+        </Grid>
+    </Grid>
+
+</ContentView>

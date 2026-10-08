@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+           xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
+           x:Class="TableOrder.HallApp.Modules.Dialogs.MoveTableView"
+           x:DataType="{x:Type module:MoveTableViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:MoveTableViewModel}"
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
+
+    <!-- 移る席: 空いている席を縦に並べ、押すとその席に移る -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{x:Static strings:AppResources.MoveTitle}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <Label Style="{StaticResource DialogMessageLabel}"
+               IsVisible="{Binding IsEmpty}"
+               Text="{x:Static strings:AppResources.MoveEmpty}" />
+        <ScrollView Style="{StaticResource ChoiceListScroll}"
+                    IsVisible="{Binding IsEmpty, Converter={StaticResource ReverseConverter}}">
+            <VerticalStackLayout Style="{StaticResource ChoiceListStack}"
+                                 BindableLayout.ItemsSource="{Binding Tables}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Type module:TableChoice}">
+                        <Border Style="{StaticResource ChoiceTileBorder}">
+                            <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MoveTableViewModel}}, Path=SelectCommand, x:DataType={x:Type module:MoveTableViewModel}}"
+                                                      CommandParameter="{Binding .}" />
+                            </Border.GestureRecognizers>
+                            <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0"
+                                       Style="{StaticResource ChoiceNameLabel}"
+                                       Text="{Binding Name}" />
+                                <Label Grid.Column="1"
+                                       Style="{StaticResource ChoiceCaptionLabel}"
+                                       Text="{Binding CapacityText}" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}">
+            <Button Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

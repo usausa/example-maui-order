@@ -36,6 +36,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - なぞる: `emu.py swipe <x1> <y1> <x2> <y2> [ms]` (一覧やタブのスクロール)
 - 例外の確認: `emu.py logcat --grep "Exception|FATAL"`
 - アプリの設定: `emu.py pref get <キー>` / `emu.py pref set <キー> <値>` (アプリを止めてから書き換わる)
+- アプリの言語: 端末の言語に従うアプリ (ホール端末) は、`emu.py locale ja-JP` でアプリだけの言語を替えて確かめる (アプリを止めて替えるので `emu.py launch` で起動する。`emu.py locale` で端末の言語に戻す)
 
 ## 専用端末 (Device Owner)
 
@@ -63,3 +64,4 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - Device Owner にしたら `emu.py owner clear` で外す
 - EMM の代わりの DPC を入れたら `emu.py emm clear` で外す
 - 変えた設定は控えた値に戻す
+- アプリの言語を替えたら `emu.py locale` で端末の言語に戻す

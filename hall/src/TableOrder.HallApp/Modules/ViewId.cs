@@ -11,5 +11,8 @@ public enum ViewId
     Seats,
     Calls,
     Serving,
-    Stock
+    Stock,
+
+    // 席から開く画面
+    Visit
 }

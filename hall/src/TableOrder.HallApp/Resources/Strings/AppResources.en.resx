@@ -227,6 +227,141 @@
   <data name="KioskUnlocked" xml:space="preserve">
     <value>not locked</value>
   </data>
+  <data name="CommonBack" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="TableFormat" xml:space="preserve">
+    <value>Table {0}</value>
+  </data>
+  <data name="SeatVacant" xml:space="preserve">
+    <value>Vacant</value>
+  </data>
+  <data name="SeatOpen" xml:space="preserve">
+    <value>Seated</value>
+  </data>
+  <data name="SeatPaying" xml:space="preserve">
+    <value>Paying</value>
+  </data>
+  <data name="CapacityFormat" xml:space="preserve">
+    <value>Seats {0}</value>
+  </data>
+  <data name="GuestsFormat" xml:space="preserve">
+    <value>{0} pax</value>
+  </data>
+  <data name="ElapsedMinutesFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="ElapsedHoursFormat" xml:space="preserve">
+    <value>{0} h {1} min</value>
+  </data>
+  <data name="UnservedFormat" xml:space="preserve">
+    <value>{0} to serve</value>
+  </data>
+  <data name="CallsFormat" xml:space="preserve">
+    <value>Calls {0}</value>
+  </data>
+  <data name="GuideTitleFormat" xml:space="preserve">
+    <value>Seat guests at table {0}</value>
+  </data>
+  <data name="GuideCapacityFormat" xml:space="preserve">
+    <value>This table seats {0}.</value>
+  </data>
+  <data name="GuideOpen" xml:space="preserve">
+    <value>Open visit</value>
+  </data>
+  <data name="GuestAdults" xml:space="preserve">
+    <value>Adults</value>
+  </data>
+  <data name="GuestChildren" xml:space="preserve">
+    <value>Children</value>
+  </data>
+  <data name="GuestChildrenHint" xml:space="preserve">
+    <value>Elementary school age and under</value>
+  </data>
+  <data name="GuestChangeTitle" xml:space="preserve">
+    <value>Change guests</value>
+  </data>
+  <data name="GuestChange" xml:space="preserve">
+    <value>Change</value>
+  </data>
+  <data name="VisitGuests" xml:space="preserve">
+    <value>Guests</value>
+  </data>
+  <data name="GuestDetailFormat" xml:space="preserve">
+    <value>Adults {0}, children {1}</value>
+  </data>
+  <data name="GuestAdultsFormat" xml:space="preserve">
+    <value>Adults {0}</value>
+  </data>
+  <data name="VisitOpened" xml:space="preserve">
+    <value>Opened</value>
+  </data>
+  <data name="VisitOpenedFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="VisitTotal" xml:space="preserve">
+    <value>Order total</value>
+  </data>
+  <data name="VisitOrders" xml:space="preserve">
+    <value>Orders</value>
+  </data>
+  <data name="VisitNoOrders" xml:space="preserve">
+    <value>No orders yet</value>
+  </data>
+  <data name="OrderTitleFormat" xml:space="preserve">
+    <value>Order {0}</value>
+  </data>
+  <data name="VisitMove" xml:space="preserve">
+    <value>Move table</value>
+  </data>
+  <data name="VisitClose" xml:space="preserve">
+    <value>Paid at register</value>
+  </data>
+  <data name="VisitCancel" xml:space="preserve">
+    <value>Cancel visit</value>
+  </data>
+  <data name="MoveTitle" xml:space="preserve">
+    <value>Choose a table</value>
+  </data>
+  <data name="MoveEmpty" xml:space="preserve">
+    <value>No tables are vacant.</value>
+  </data>
+  <data name="CloseTitle" xml:space="preserve">
+    <value>Close visit</value>
+  </data>
+  <data name="CloseMessageFormat" xml:space="preserve">
+    <value>Close the visit at table {0} as paid at the register.</value>
+  </data>
+  <data name="CloseOk" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="CancelTitle" xml:space="preserve">
+    <value>Cancel visit</value>
+  </data>
+  <data name="CancelMessageFormat" xml:space="preserve">
+    <value>Cancel the visit at table {0} because the guests left without ordering.</value>
+  </data>
+  <data name="CancelOk" xml:space="preserve">
+    <value>Cancel visit</value>
+  </data>
+  <data name="StatusHeld" xml:space="preserve">
+    <value>After meal</value>
+  </data>
+  <data name="StatusOrdered" xml:space="preserve">
+    <value>Ordered</value>
+  </data>
+  <data name="StatusCooking" xml:space="preserve">
+    <value>Cooking</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StatusServed" xml:space="preserve">
+    <value>Served</value>
+  </data>
+  <data name="StatusCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>
   </data>
@@ -241,6 +376,24 @@
   </data>
   <data name="ErrorDeviceKind" xml:space="preserve">
     <value>This pairing code is not for a hall terminal</value>
+  </data>
+  <data name="ErrorTableOccupied" xml:space="preserve">
+    <value>This table already has a visit.</value>
+  </data>
+  <data name="ErrorVersionMismatch" xml:space="preserve">
+    <value>It was changed on another device. The latest state has been loaded.</value>
+  </data>
+  <data name="ErrorVisitHasOrders" xml:space="preserve">
+    <value>A visit with orders cannot be canceled.</value>
+  </data>
+  <data name="ErrorCheckoutInProgress" xml:space="preserve">
+    <value>This cannot be done during checkout.</value>
+  </data>
+  <data name="ErrorVisitNotOpen" xml:space="preserve">
+    <value>The visit has ended.</value>
+  </data>
+  <data name="ErrorNotFound" xml:space="preserve">
+    <value>Not found.</value>
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Something went wrong.</value>

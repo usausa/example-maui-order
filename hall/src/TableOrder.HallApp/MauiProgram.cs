@@ -129,8 +129,12 @@ public static partial class MauiProgram
         services.AddViews();
         services.AddViewModels();
 
-        // MauiComponents (ホール端末のポップアップはまだないので、どの端末でも同じポップアップだけを入れる)
-        services.AddComponentsPopup(static c => c.AutoRegister(TerminalModules.DialogSource()));
+        // MauiComponents
+        services.AddComponentsPopup(static c =>
+        {
+            c.AutoRegister(DialogSource());
+            c.AutoRegister(TerminalModules.DialogSource());
+        });
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
         services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
         services.AddComponentsScreen();
@@ -238,4 +242,7 @@ public static partial class MauiProgram
 
     [ViewSource]
     public static partial IEnumerable<KeyValuePair<ViewId, Type>> ViewSource();
+
+    [PopupSource]
+    public static partial IEnumerable<KeyValuePair<DialogId, Type>> DialogSource();
 }

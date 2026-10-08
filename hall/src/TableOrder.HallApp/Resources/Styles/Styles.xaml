@@ -2,6 +2,7 @@
 <?xaml-comp compile="true" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
                     xmlns:fonts="clr-namespace:Fonts">
 
     <!-- ホール端末の画面のスタイル (どの端末でも同じスタイルは TableOrder.Terminal の TerminalStyles) -->
@@ -73,20 +74,20 @@
     <!-- Header -->
     <!-- ================================================================================ -->
 
-    <Style x:Key="TabHeaderStack"
+    <Style x:Key="HeaderStack"
            TargetType="VerticalStackLayout">
         <Setter Property="Spacing" Value="0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="TabHeaderGrid"
+    <Style x:Key="HeaderGrid"
            TargetType="Grid">
         <Setter Property="HeightRequest" Value="64" />
         <Setter Property="ColumnSpacing" Value="0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="TabTitleLabel"
+    <Style x:Key="HeaderTitleLabel"
            TargetType="Label">
         <Setter Property="Margin" Value="16,0,12,0" />
         <Setter Property="VerticalOptions" Value="Center" />
@@ -95,7 +96,7 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
-    <Style x:Key="TabStoreLabel"
+    <Style x:Key="HeaderCaptionLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="HorizontalTextAlignment" Value="End" />
@@ -105,7 +106,7 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
-    <Style x:Key="TabHeaderButton"
+    <Style x:Key="HeaderButton"
            TargetType="Button">
         <Setter Property="WidthRequest" Value="64" />
         <Setter Property="Padding" Value="0" />
@@ -238,6 +239,421 @@
         <Setter Property="FontSize" Value="12" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnErrorColor}" />
+    </Style>
+
+    <!-- ================================================================================ -->
+    <!-- Seat -->
+    <!-- ================================================================================ -->
+
+    <!-- 見出しと末尾にもタイルの間隔の半分ずつが入るので、高さ 0 の行を置くだけで上下の余白がタイルの間隔と揃う -->
+    <Style x:Key="SeatCollectionView"
+           TargetType="CollectionView">
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="SelectionMode" Value="None" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="SeatGapBoxView"
+           TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="0" />
+    </Style>
+
+    <Style x:Key="SeatTileBorder"
+           TargetType="Border">
+        <Setter Property="HeightRequest" Value="104" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <!-- 状態の帯 (空きは罫線の色。来店中と会計中はトリガで替える) -->
+    <Style x:Key="SeatStripBoxView"
+           TargetType="BoxView">
+        <Setter Property="Color" Value="{DynamicResource OutlineColor}" />
+    </Style>
+
+    <Style x:Key="SeatTileGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="12,8" />
+        <Setter Property="RowSpacing" Value="2" />
+    </Style>
+
+    <Style x:Key="SeatNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="SeatSizeLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="SeatStatusLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="SeatElapsedLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="SeatCountStack"
+           TargetType="HorizontalStackLayout">
+        <Setter Property="Spacing" Value="8" />
+        <Setter Property="VerticalOptions" Value="End" />
+    </Style>
+
+    <Style x:Key="SeatUnservedLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 終わっていない呼び出しは、タブの件数と同じ色の面にして目立たせる -->
+    <Style x:Key="SeatCallBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="6,1" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource ErrorColor}" />
+    </Style>
+
+    <Style x:Key="SeatCallLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnErrorColor}" />
+    </Style>
+
+    <!-- ================================================================================ -->
+    <!-- Visit -->
+    <!-- ================================================================================ -->
+
+    <Style x:Key="VisitStatusLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="8,0,16,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitBodyStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="16,16,16,24" />
+        <Setter Property="Spacing" Value="12" />
+    </Style>
+
+    <Style x:Key="VisitSummaryGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="RowSpacing" Value="12" />
+        <Setter Property="ColumnSpacing" Value="12" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitInfoNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitInfoValueLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitSectionLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,8,0,0" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitEmptyLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitErrorLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
+    </Style>
+
+    <Style x:Key="VisitOrderListStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="12" />
+    </Style>
+
+    <Style x:Key="VisitOrderStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="16,8" />
+        <Setter Property="Spacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitOrderTitleGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="0,4" />
+    </Style>
+
+    <Style x:Key="VisitOrderTitleLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitOrderTimeLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitLineGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="0,8" />
+    </Style>
+
+    <Style x:Key="VisitLineNameStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="2" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <!-- 注文の内容は省略せずに折り返して全部見せる -->
+    <Style x:Key="VisitLineNameLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitLineOptionLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="VisitLineQuantityLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitLineStatusLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="WidthRequest" Value="88" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 下の帯。押せる面は 64dp、来店を終える操作は主な操作として 80dp にする -->
+    <Style x:Key="VisitActionGrid"
+           TargetType="Grid">
+        <Setter Property="RowSpacing" Value="0" />
+        <Setter Property="ColumnSpacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="VisitActionButton"
+           TargetType="Button">
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource DisabledColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <Style x:Key="VisitCloseButton"
+           TargetType="Button"
+           BasedOn="{StaticResource PrimaryActionButton}">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+
+    <Style x:Key="VisitCancelButton"
+           TargetType="Button"
+           BasedOn="{StaticResource VisitActionButton}">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+
+    <!-- ================================================================================ -->
+    <!-- Dialog -->
+    <!-- ================================================================================ -->
+
+    <Style x:Key="DialogHintLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- Guest -->
+
+    <Style x:Key="GuestRowGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="0,8" />
+        <Setter Property="ColumnSpacing" Value="12" />
+    </Style>
+
+    <Style x:Key="GuestNameStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="GuestNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="GuestHintLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 人数の増減。- と + は沈んだ面の四角いボタンにする -->
+
+    <Style x:Key="StepperGrid"
+           TargetType="Grid">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="ColumnSpacing" Value="0" />
+    </Style>
+
+    <Style x:Key="StepperButton"
+           TargetType="Button">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource OutlineColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource DisabledColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
+    <Style x:Key="StepperValueLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- Choice -->
+
+    <!-- 選択肢が多いときは、ポップアップが画面からはみ出さないようにスクロールさせる -->
+    <Style x:Key="ChoiceListScroll"
+           TargetType="ScrollView">
+        <Setter Property="MaximumHeightRequest" Value="440" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="ChoiceListStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Spacing" Value="8" />
+    </Style>
+
+    <Style x:Key="ChoiceTileBorder"
+           TargetType="Border">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="Padding" Value="16,0" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ChoiceNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ChoiceCaptionLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
 </ResourceDictionary>

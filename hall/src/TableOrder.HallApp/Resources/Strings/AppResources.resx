@@ -227,6 +227,141 @@
   <data name="KioskUnlocked" xml:space="preserve">
     <value>ロックなし</value>
   </data>
+  <data name="CommonBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="TableFormat" xml:space="preserve">
+    <value>テーブル {0}</value>
+  </data>
+  <data name="SeatVacant" xml:space="preserve">
+    <value>空き</value>
+  </data>
+  <data name="SeatOpen" xml:space="preserve">
+    <value>来店中</value>
+  </data>
+  <data name="SeatPaying" xml:space="preserve">
+    <value>会計中</value>
+  </data>
+  <data name="CapacityFormat" xml:space="preserve">
+    <value>定員 {0}</value>
+  </data>
+  <data name="GuestsFormat" xml:space="preserve">
+    <value>{0} 名</value>
+  </data>
+  <data name="ElapsedMinutesFormat" xml:space="preserve">
+    <value>{0} 分</value>
+  </data>
+  <data name="ElapsedHoursFormat" xml:space="preserve">
+    <value>{0} 時間 {1} 分</value>
+  </data>
+  <data name="UnservedFormat" xml:space="preserve">
+    <value>未提供 {0}</value>
+  </data>
+  <data name="CallsFormat" xml:space="preserve">
+    <value>呼び出し {0}</value>
+  </data>
+  <data name="GuideTitleFormat" xml:space="preserve">
+    <value>テーブル {0} に案内</value>
+  </data>
+  <data name="GuideCapacityFormat" xml:space="preserve">
+    <value>定員は {0} 名です</value>
+  </data>
+  <data name="GuideOpen" xml:space="preserve">
+    <value>来店を開く</value>
+  </data>
+  <data name="GuestAdults" xml:space="preserve">
+    <value>大人</value>
+  </data>
+  <data name="GuestChildren" xml:space="preserve">
+    <value>子ども</value>
+  </data>
+  <data name="GuestChildrenHint" xml:space="preserve">
+    <value>小学生以下</value>
+  </data>
+  <data name="GuestChangeTitle" xml:space="preserve">
+    <value>人数を変える</value>
+  </data>
+  <data name="GuestChange" xml:space="preserve">
+    <value>変える</value>
+  </data>
+  <data name="VisitGuests" xml:space="preserve">
+    <value>人数</value>
+  </data>
+  <data name="GuestDetailFormat" xml:space="preserve">
+    <value>大人 {0}・子ども {1}</value>
+  </data>
+  <data name="GuestAdultsFormat" xml:space="preserve">
+    <value>大人 {0}</value>
+  </data>
+  <data name="VisitOpened" xml:space="preserve">
+    <value>開いた時刻</value>
+  </data>
+  <data name="VisitOpenedFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="VisitTotal" xml:space="preserve">
+    <value>注文の合計</value>
+  </data>
+  <data name="VisitOrders" xml:space="preserve">
+    <value>注文</value>
+  </data>
+  <data name="VisitNoOrders" xml:space="preserve">
+    <value>まだ注文はありません</value>
+  </data>
+  <data name="OrderTitleFormat" xml:space="preserve">
+    <value>{0} 回目</value>
+  </data>
+  <data name="VisitMove" xml:space="preserve">
+    <value>席を移る</value>
+  </data>
+  <data name="VisitClose" xml:space="preserve">
+    <value>レジで払った</value>
+  </data>
+  <data name="VisitCancel" xml:space="preserve">
+    <value>取りやめ</value>
+  </data>
+  <data name="MoveTitle" xml:space="preserve">
+    <value>移る席を選ぶ</value>
+  </data>
+  <data name="MoveEmpty" xml:space="preserve">
+    <value>空いている席がありません</value>
+  </data>
+  <data name="CloseTitle" xml:space="preserve">
+    <value>来店を閉じる</value>
+  </data>
+  <data name="CloseMessageFormat" xml:space="preserve">
+    <value>テーブル {0} の来店を、レジで払ったとして閉じます</value>
+  </data>
+  <data name="CloseOk" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="CancelTitle" xml:space="preserve">
+    <value>来店を取りやめる</value>
+  </data>
+  <data name="CancelMessageFormat" xml:space="preserve">
+    <value>テーブル {0} の来店を、注文のないまま帰ったとして取りやめます</value>
+  </data>
+  <data name="CancelOk" xml:space="preserve">
+    <value>取りやめる</value>
+  </data>
+  <data name="StatusHeld" xml:space="preserve">
+    <value>食後に</value>
+  </data>
+  <data name="StatusOrdered" xml:space="preserve">
+    <value>注文済み</value>
+  </data>
+  <data name="StatusCooking" xml:space="preserve">
+    <value>調理中</value>
+  </data>
+  <data name="StatusReady" xml:space="preserve">
+    <value>できあがり</value>
+  </data>
+  <data name="StatusServed" xml:space="preserve">
+    <value>提供済み</value>
+  </data>
+  <data name="StatusCancelled" xml:space="preserve">
+    <value>取消</value>
+  </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>通信できませんでした。しばらくしてからもう一度試してください</value>
   </data>
@@ -241,6 +376,24 @@
   </data>
   <data name="ErrorDeviceKind" xml:space="preserve">
     <value>ホール端末のペアリングコードではありません</value>
+  </data>
+  <data name="ErrorTableOccupied" xml:space="preserve">
+    <value>このテーブルには来店があります</value>
+  </data>
+  <data name="ErrorVersionMismatch" xml:space="preserve">
+    <value>ほかの端末で変えられていました。読み直しました</value>
+  </data>
+  <data name="ErrorVisitHasOrders" xml:space="preserve">
+    <value>注文のある来店は取りやめられません</value>
+  </data>
+  <data name="ErrorCheckoutInProgress" xml:space="preserve">
+    <value>会計中のため、この操作はできません</value>
+  </data>
+  <data name="ErrorVisitNotOpen" xml:space="preserve">
+    <value>来店は終わっています</value>
+  </data>
+  <data name="ErrorNotFound" xml:space="preserve">
+    <value>見つかりませんでした</value>
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした</value>

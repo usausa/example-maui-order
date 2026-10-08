@@ -3,20 +3,106 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
-             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Seats"
              x:Class="TableOrder.HallApp.Modules.Seats.SeatsView"
              x:DataType="{x:Type module:SeatsViewModel}"
              s:BindingContextResolver.Type="{x:Type module:SeatsViewModel}">
 
-    <!-- 席のタブ: 席の一覧 (空き・来店中・会計中、人数、経過時間、まだ出していない品、呼び出し)。中身はこれから作る -->
+    <!-- 席のタブ: テーブルを 2 列のタイルで並べる。状態は左の帯の色でも示す (空きは罫線の色、来店中は主色、会計中は注意の色) -->
     <Grid Style="{StaticResource ScreenGrid}"
           RowDefinitions="Auto,*,Auto">
         <controls:TabHeader Grid.Row="0" />
 
-        <Label Grid.Row="1"
-               Style="{StaticResource PendingLabel}"
-               Text="{x:Static strings:AppResources.TabPending}" />
+        <CollectionView Grid.Row="1"
+                        Style="{StaticResource SeatCollectionView}"
+                        ItemsSource="{Binding Tiles}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="2"
+                                 HorizontalItemSpacing="8"
+                                 VerticalItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <BoxView Style="{StaticResource SeatGapBoxView}" />
+            </CollectionView.Header>
+            <CollectionView.Footer>
+                <BoxView Style="{StaticResource SeatGapBoxView}" />
+            </CollectionView.Footer>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:SeatTile}">
+                    <Border Style="{StaticResource SeatTileBorder}">
+                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:SeatsViewModel}}, Path=SelectCommand, x:DataType={x:Type module:SeatsViewModel}}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                        <Grid Style="{StaticResource FillGrid}"
+                              ColumnDefinitions="6,*">
+                            <!-- status strip -->
+                            <BoxView Grid.Column="0"
+                                     Style="{StaticResource SeatStripBoxView}">
+                                <BoxView.Triggers>
+                                    <DataTrigger TargetType="BoxView"
+                                                 Binding="{Binding IsOccupied}"
+                                                 Value="True">
+                                        <Setter Property="Color" Value="{DynamicResource PrimaryColor}" />
+                                    </DataTrigger>
+                                    <DataTrigger TargetType="BoxView"
+                                                 Binding="{Binding IsPaying}"
+                                                 Value="True">
+                                        <Setter Property="Color" Value="{DynamicResource WarningColor}" />
+                                    </DataTrigger>
+                                </BoxView.Triggers>
+                            </BoxView>
+
+                            <Grid Grid.Column="1"
+                                  Style="{StaticResource SeatTileGrid}"
+                                  RowDefinitions="Auto,Auto,*"
+                                  ColumnDefinitions="*,Auto">
+                                <!-- name / size -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Style="{StaticResource SeatNameLabel}"
+                                       Text="{Binding Name}" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Style="{StaticResource SeatSizeLabel}"
+                                       Text="{Binding SizeText}" />
+
+                                <!-- status / elapsed -->
+                                <Label Grid.Row="1" Grid.Column="0"
+                                       Style="{StaticResource SeatStatusLabel}"
+                                       Text="{Binding StatusText}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsPaying}"
+                                                     Value="True">
+                                            <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+                                            <Setter Property="FontAttributes" Value="Bold" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                                <Label Grid.Row="1" Grid.Column="1"
+                                       Style="{StaticResource SeatElapsedLabel}"
+                                       Text="{Binding ElapsedText}" />
+
+                                <!-- counts -->
+                                <HorizontalStackLayout Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2"
+                                                       Style="{StaticResource SeatCountStack}">
+                                    <Label Style="{StaticResource SeatUnservedLabel}"
+                                           IsVisible="{Binding UnservedText, Converter={StaticResource NotEmptyConverter}}"
+                                           Text="{Binding UnservedText}" />
+                                    <Border Style="{StaticResource SeatCallBorder}"
+                                            IsVisible="{Binding CallText, Converter={StaticResource NotEmptyConverter}}">
+                                        <Label Style="{StaticResource SeatCallLabel}"
+                                               Text="{Binding CallText}" />
+                                    </Border>
+                                </HorizontalStackLayout>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
 
         <controls:TabFooter Grid.Row="2" />
     </Grid>

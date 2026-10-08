@@ -8,6 +8,8 @@ public static class ViewHelper
     // タブの件数のバッジに出す上限
     private const int MaxBadgeCount = 99;
 
+    private const int MinutesPerHour = 60;
+
     //--------------------------------------------------------------------------------
     // Format
     //--------------------------------------------------------------------------------
@@ -32,6 +34,35 @@ public static class ViewHelper
             _ => count.ToString(CultureInfo.InvariantCulture)
         };
 
+    // 税込の価格 (例: ¥1,299)
+    public static string Price(decimal value) =>
+        $"¥{value.ToString("#,0", CultureInfo.InvariantCulture)}";
+
+    // テーブル (例: テーブル 3)
+    public static string Table(string name) =>
+        Format(AppResources.TableFormat, name);
+
+    // 合わせた人数 (席のタイル)
+    public static string Guests(int adults, int children) =>
+        Format(AppResources.GuestsFormat, adults + children);
+
+    // 人数の内訳 (子どもがいなければ大人だけ)
+    public static string GuestDetail(int adults, int children) =>
+        children > 0 ? Format(AppResources.GuestDetailFormat, adults, children) : Format(AppResources.GuestAdultsFormat, adults);
+
+    // 経過時間 (分に切り捨てる。1 時間を超えたら時間と分)
+    public static string Elapsed(TimeSpan value)
+    {
+        var minutes = Math.Max(0, (int)value.TotalMinutes);
+        return minutes < MinutesPerHour
+            ? Format(AppResources.ElapsedMinutesFormat, minutes)
+            : Format(AppResources.ElapsedHoursFormat, minutes / MinutesPerHour, minutes % MinutesPerHour);
+    }
+
+    // 店舗の現地の時刻 (端末のタイムゾーンの設定によらない)
+    public static string Time(DateTimeOffset value, string timeZone) =>
+        StoreHours.LocalDateTime(value, timeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
+
     //--------------------------------------------------------------------------------
     // Name
     //--------------------------------------------------------------------------------
@@ -54,6 +85,27 @@ public static class ViewHelper
             _ => tab.ToString()
         };
 
+    // 席の状態 (来店がなければ空き)
+    public static string SeatStatus(VisitStatus? value) =>
+        value switch
+        {
+            null => AppResources.SeatVacant,
+            VisitStatus.Paying => AppResources.SeatPaying,
+            _ => AppResources.SeatOpen
+        };
+
+    public static string Name(OrderLineStatus value) =>
+        value switch
+        {
+            OrderLineStatus.Held => AppResources.StatusHeld,
+            OrderLineStatus.Ordered => AppResources.StatusOrdered,
+            OrderLineStatus.Cooking => AppResources.StatusCooking,
+            OrderLineStatus.Ready => AppResources.StatusReady,
+            OrderLineStatus.Served => AppResources.StatusServed,
+            OrderLineStatus.Cancelled => AppResources.StatusCancelled,
+            _ => value.ToString()
+        };
+
     //--------------------------------------------------------------------------------
     // Error
     //--------------------------------------------------------------------------------
@@ -63,12 +115,18 @@ public static class ViewHelper
         result.Status switch
         {
             ApiStatus.Unavailable => AppResources.ErrorUnavailable,
-            ApiStatus.Unauthorized => result.ErrorCode == "TENANT_SUSPENDED" ? AppResources.ErrorTenantSuspended : AppResources.ErrorUnauthorized,
+            ApiStatus.Unauthorized => result.ErrorCode == ErrorCodes.TenantSuspended ? AppResources.ErrorTenantSuspended : AppResources.ErrorUnauthorized,
             ApiStatus.Rejected => result.ErrorCode switch
             {
-                "PAIRING_CODE_INVALID" => AppResources.ErrorPairingCodeInvalid,
-                "TENANT_SUSPENDED" => AppResources.ErrorTenantSuspended,
+                ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
+                ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
                 DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
+                ErrorCodes.TableOccupied => AppResources.ErrorTableOccupied,
+                ErrorCodes.VersionMismatch => AppResources.ErrorVersionMismatch,
+                ErrorCodes.VisitHasOrders => AppResources.ErrorVisitHasOrders,
+                ErrorCodes.CheckoutInProgress => AppResources.ErrorCheckoutInProgress,
+                ErrorCodes.VisitNotOpen => AppResources.ErrorVisitNotOpen,
+                ErrorCodes.NotFound => AppResources.ErrorNotFound,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric
