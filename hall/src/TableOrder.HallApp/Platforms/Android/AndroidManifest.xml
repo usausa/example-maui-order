@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<!-- 端末の設定を別の端末に移さないため、バックアップと端末間の転送はしない (Android 12 以降の転送は dataExtractionRules で止める) -->
-	<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="TableOrder Hall"></application>
+	<!-- testOnly は csproj で Debug だけ true にする (Device Owner にしたあと adb から外せるように) -->
+	<!-- usesCleartextTraffic も Debug だけ true にする (開発のサーバに http でつなぐ) -->
+	<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="TableOrder Hall" android:testOnly="${testOnly}" android:usesCleartextTraffic="${cleartext}">
+		<!-- 管理対象の構成 (外部の EMM が配る端末の設定) の定義。EMM の管理画面はこれを読んで入力の欄を出す -->
+		<meta-data android:name="android.content.APP_RESTRICTIONS" android:resource="@xml/app_restrictions" />
+	</application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 </manifest>

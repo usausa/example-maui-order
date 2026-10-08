@@ -37,11 +37,28 @@ public abstract class AppViewModelBase :
         var task = parameter switch
         {
             ShellEvent.Back => OnNotifyBackAsync(),
+            ShellEvent.StoreChanged => OnStoreChangedAsync(),
+            ShellEvent.CallsChanged => OnCallsChangedAsync(),
+            ShellEvent.ServingChanged => OnServingChangedAsync(),
+            ShellEvent.Restart => OnRestartAsync(),
             _ => Task.CompletedTask
         };
         await task.ConfigureAwait(true);
     }
 
-    // 端末の戻る。画面ごとに扱いを決める
+    // 端末の戻る。アプリの外へ出さないように、画面ごとに扱いを決める
     protected abstract Task OnNotifyBackAsync();
+
+    // サーバの通知。扱う画面だけが替える (受け手は状態を替えてから、操作の途中と遷移の間を待って知らせる)
+    // 扱う画面のない知らせ (品切れ、席の一覧) は、その画面を作るときに入口を足す
+
+    protected virtual Task OnStoreChangedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnCallsChangedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnServingChangedAsync() => Task.CompletedTask;
+
+    // 起動からやり直す (起動で登録・トークン・店舗の設定を確かめ直す)。起動と端末の設定の画面は自分で確かめるので受けない
+    protected virtual async Task OnRestartAsync() =>
+        await Navigator.ForwardAsync(ViewId.Startup);
 }

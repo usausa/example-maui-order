@@ -2,7 +2,7 @@ namespace TableOrder.HallApp;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using TableOrder.HallApp.State;
+using TableOrder.Terminal.Diagnostics;
 
 #pragma warning disable CA1724
 public sealed partial class App
@@ -27,8 +27,12 @@ public sealed partial class App
         return new Window(serviceProvider.GetRequiredService<MainPage>());
     }
 
-    protected override void OnStart()
+    // ReSharper disable once AsyncVoidMethod
+    protected override async void OnStart()
     {
+        // Report previous exception
+        await CrashReport.ShowReport();
+
         // Completed
         serviceProvider.GetRequiredService<StartupState>().NotifyCompleted();
     }

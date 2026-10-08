@@ -12,10 +12,13 @@ public static class TerminalServiceCollectionExtensions
     // 端末の部品、端末の設定と状態、登録と状態の報告、注文サーバの登録と通知の窓口、どの端末でも同じポップアップ
     // 端末の種類ごとの窓口 (ITableApi など) と通知の扱い (OrderEventReceiverBase を継いだもの) はアプリで登録する
     // ポップアップの ID と View の組 (TerminalModules.DialogSource) は、アプリのポップアップの登録に足す
-    public static IServiceCollection AddTerminalComponents(this IServiceCollection services, KioskOptions kioskOptions)
+    public static IServiceCollection AddTerminalComponents(this IServiceCollection services, TerminalOptions options, KioskOptions kioskOptions)
     {
-        // Components
+        // Options
+        services.AddSingleton(options);
         services.AddSingleton(kioskOptions);
+
+        // Components
         services.AddSingleton<DeviceInformation>();
         services.AddSingleton<DeviceKey>();
         services.AddSingleton<IStorageManager, StorageManager>();

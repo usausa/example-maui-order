@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fonts="clr-namespace:Fonts"
+             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:modules="clr-namespace:TableOrder.HallApp.Modules"
+             x:Class="TableOrder.HallApp.Controls.TabHeader"
+             x:DataType="{x:Type modules:TabViewModelBase}">
+
+    <!-- タブの画面のヘッダ (タブの名前、店舗の名前、端末の画面への入口) と、注文を一時停止している間の知らせの帯。画面の ViewModel (TabViewModelBase) にバインドする -->
+    <VerticalStackLayout Style="{StaticResource TabHeaderStack}">
+        <Grid Style="{StaticResource TabHeaderGrid}"
+              ColumnDefinitions="Auto,*,Auto">
+            <Label Grid.Column="0"
+                   Style="{StaticResource TabTitleLabel}"
+                   Text="{Binding TitleText}" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource TabStoreLabel}"
+                   Text="{Binding StoreNameText}" />
+            <Button Grid.Column="2"
+                    Style="{StaticResource TabHeaderButton}"
+                    Command="{Binding DeviceCommand}"
+                    Text="{x:Static fonts:MaterialIcons.Smartphone}" />
+        </Grid>
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <!-- notice -->
+        <Grid Style="{StaticResource NoticeGrid}"
+              ColumnDefinitions="Auto,*"
+              IsVisible="{Binding IsOrderingPaused}">
+            <Label Grid.Column="0"
+                   Style="{StaticResource NoticeGlyphLabel}"
+                   Text="{x:Static fonts:MaterialIcons.Pause_circle_outline}" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource NoticeLabel}"
+                   Text="{x:Static strings:AppResources.NoticeOrderingPaused}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</ContentView>

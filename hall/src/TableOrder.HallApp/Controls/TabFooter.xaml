@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:fonts="clr-namespace:Fonts"
+             xmlns:markup="clr-namespace:TableOrder.HallApp.Markup"
+             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:modules="clr-namespace:TableOrder.HallApp.Modules"
+             x:Class="TableOrder.HallApp.Controls.TabFooter"
+             x:DataType="{x:Type modules:TabViewModelBase}">
+
+    <!-- 下部のタブ (席、呼び出し、提供、品切れ)。選んでいるタブは上の線と主色で示し、待っている件数を記号の右上に出す。画面の ViewModel (TabViewModelBase) にバインドする -->
+    <Grid Style="{StaticResource TabBarGrid}"
+          RowDefinitions="1,72"
+          ColumnDefinitions="*,*,*,*">
+        <BoxView Grid.Row="0" Grid.ColumnSpan="4"
+                 Style="{StaticResource HorizontalRule}" />
+
+        <!-- seats -->
+        <Grid Grid.Row="1" Grid.Column="0"
+              Style="{StaticResource TabItemGrid}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding TabCommand}"
+                                      CommandParameter="{markup:ViewId Seats}" />
+            </Grid.GestureRecognizers>
+            <BoxView Style="{StaticResource TabIndicator}"
+                     IsVisible="{Binding IsSeats}" />
+            <VerticalStackLayout Style="{StaticResource TabItemStack}">
+                <Label Style="{StaticResource TabGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Table_restaurant}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsSeats}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label Style="{StaticResource TabTextLabel}"
+                       Text="{x:Static strings:AppResources.TabSeats}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsSeats}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- calls -->
+        <Grid Grid.Row="1" Grid.Column="1"
+              Style="{StaticResource TabItemGrid}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding TabCommand}"
+                                      CommandParameter="{markup:ViewId Calls}" />
+            </Grid.GestureRecognizers>
+            <BoxView Style="{StaticResource TabIndicator}"
+                     IsVisible="{Binding IsCalls}" />
+            <VerticalStackLayout Style="{StaticResource TabItemStack}">
+                <Label Style="{StaticResource TabGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Notifications}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsCalls}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label Style="{StaticResource TabTextLabel}"
+                       Text="{x:Static strings:AppResources.TabCalls}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsCalls}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+            <Border Style="{StaticResource TabBadgeBorder}"
+                    IsVisible="{Binding CallBadgeText, Converter={StaticResource NotEmptyConverter}}">
+                <Label Style="{StaticResource TabBadgeLabel}"
+                       Text="{Binding CallBadgeText}" />
+            </Border>
+        </Grid>
+
+        <!-- serving -->
+        <Grid Grid.Row="1" Grid.Column="2"
+              Style="{StaticResource TabItemGrid}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding TabCommand}"
+                                      CommandParameter="{markup:ViewId Serving}" />
+            </Grid.GestureRecognizers>
+            <BoxView Style="{StaticResource TabIndicator}"
+                     IsVisible="{Binding IsServing}" />
+            <VerticalStackLayout Style="{StaticResource TabItemStack}">
+                <Label Style="{StaticResource TabGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Room_service}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsServing}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label Style="{StaticResource TabTextLabel}"
+                       Text="{x:Static strings:AppResources.TabServing}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsServing}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+            <Border Style="{StaticResource TabBadgeBorder}"
+                    IsVisible="{Binding ServingBadgeText, Converter={StaticResource NotEmptyConverter}}">
+                <Label Style="{StaticResource TabBadgeLabel}"
+                       Text="{Binding ServingBadgeText}" />
+            </Border>
+        </Grid>
+
+        <!-- stock -->
+        <Grid Grid.Row="1" Grid.Column="3"
+              Style="{StaticResource TabItemGrid}">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer Command="{Binding TabCommand}"
+                                      CommandParameter="{markup:ViewId Stock}" />
+            </Grid.GestureRecognizers>
+            <BoxView Style="{StaticResource TabIndicator}"
+                     IsVisible="{Binding IsStock}" />
+            <VerticalStackLayout Style="{StaticResource TabItemStack}">
+                <Label Style="{StaticResource TabGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Inventory_2}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsStock}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+                <Label Style="{StaticResource TabTextLabel}"
+                       Text="{x:Static strings:AppResources.TabStock}">
+                    <Label.Triggers>
+                        <DataTrigger TargetType="Label"
+                                     Binding="{Binding IsStock}"
+                                     Value="True">
+                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                            <Setter Property="FontAttributes" Value="Bold" />
+                        </DataTrigger>
+                    </Label.Triggers>
+                </Label>
+            </VerticalStackLayout>
+        </Grid>
+    </Grid>
+
+</ContentView>

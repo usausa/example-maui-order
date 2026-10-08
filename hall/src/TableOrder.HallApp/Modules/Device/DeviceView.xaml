@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:fonts="clr-namespace:Fonts"
+             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Device"
+             x:Class="TableOrder.HallApp.Modules.Device.DeviceView"
+             x:DataType="{x:Type module:DeviceViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:DeviceViewModel}">
+
+    <!-- 端末: 端末の情報と、端末の設定・専用端末の操作 (PIN を確かめてから行う)。システムの色にする -->
+    <Grid Style="{StaticResource SystemScreenGrid}"
+          RowDefinitions="72,1,*">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource SystemHeaderGrid}"
+              ColumnDefinitions="Auto,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SystemBackButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static fonts:MaterialIcons.Arrow_back}" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource SystemHeaderLabel}"
+                   Text="{x:Static strings:AppResources.DeviceTitle}" />
+        </Grid>
+        <BoxView Grid.Row="1"
+                 Style="{StaticResource SystemRule}" />
+
+        <!-- body -->
+        <ScrollView Grid.Row="2"
+                    Style="{StaticResource PanelScroll}">
+            <VerticalStackLayout Style="{StaticResource DevicePanelStack}">
+                <!-- information -->
+                <Label Style="{StaticResource StaffSectionLabel}"
+                       Text="{x:Static strings:AppResources.DeviceInfo}" />
+                <Grid Style="{StaticResource StaffInfoGrid}"
+                      RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+                      ColumnDefinitions="112,*">
+                    <Label Grid.Row="0" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceStore}" />
+                    <Label Grid.Row="0" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding StoreNameText}" />
+                    <Label Grid.Row="1" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceName}" />
+                    <Label Grid.Row="1" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding DeviceNameText}" />
+                    <Label Grid.Row="2" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceId}" />
+                    <Label Grid.Row="2" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding DeviceIdText}" />
+                    <Label Grid.Row="3" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceEndpoint}" />
+                    <Label Grid.Row="3" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding EndpointText}" />
+                    <Label Grid.Row="4" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceKiosk}" />
+                    <Label Grid.Row="4" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding KioskText}" />
+                    <Label Grid.Row="5" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceManaged}" />
+                    <Label Grid.Row="5" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding ManagedText}" />
+                    <Label Grid.Row="6" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceBattery}" />
+                    <Label Grid.Row="6" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding BatteryText}" />
+                    <Label Grid.Row="7" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceNetwork}" />
+                    <Label Grid.Row="7" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding NetworkText}" />
+                    <Label Grid.Row="8" Grid.Column="0"
+                           Style="{StaticResource StaffInfoNameLabel}"
+                           Text="{x:Static strings:AppResources.DeviceApp}" />
+                    <Label Grid.Row="8" Grid.Column="1"
+                           Style="{StaticResource StaffInfoValueLabel}"
+                           Text="{Binding VersionText}" />
+                </Grid>
+
+                <!-- settings -->
+                <Label Style="{StaticResource StaffSectionLabel}"
+                       Text="{x:Static strings:AppResources.DeviceSettings}" />
+                <Button Style="{StaticResource StaffButton}"
+                        Command="{Binding SetupCommand}"
+                        Text="{x:Static strings:AppResources.SetupTitle}" />
+
+                <!-- kiosk -->
+                <Label Style="{StaticResource StaffSectionLabel}"
+                       Text="{x:Static strings:AppResources.DeviceKiosk}" />
+                <Button Style="{StaticResource StaffButton}"
+                        Command="{Binding ReleaseCommand}"
+                        IsVisible="{Binding IsReleased, Converter={StaticResource ReverseConverter}}"
+                        Text="{x:Static strings:AppResources.DeviceKioskRelease}" />
+                <Button Style="{StaticResource StaffButton}"
+                        Command="{Binding RestoreCommand}"
+                        IsVisible="{Binding IsReleased}"
+                        Text="{x:Static strings:AppResources.DeviceKioskRestore}" />
+                <Button Style="{StaticResource StaffButton}"
+                        Command="{Binding SystemSettingsCommand}"
+                        IsVisible="{Binding IsReleased}"
+                        Text="{x:Static strings:AppResources.DeviceKioskSettings}" />
+                <Label Style="{StaticResource StaffHintLabel}"
+                       Text="{x:Static strings:AppResources.DeviceKioskHint}" />
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentView>

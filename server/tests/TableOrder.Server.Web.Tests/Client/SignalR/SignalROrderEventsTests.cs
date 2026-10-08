@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Web.Client.SignalR;
 
 using TableOrder.Client;
+using TableOrder.Contract.Calls;
 using TableOrder.Contract.Menu;
 using TableOrder.Contract.Orders;
 using TableOrder.Contract.Visits;
@@ -78,6 +79,29 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         var lines = Assert.IsType<OrderLinesUpdatedEvent>(await terminal.NextAsync());
         Assert.Equal(visit.Id, lines.VisitId);
         Assert.Equal(OrderLineStatus.Cancelled, Assert.Single(Assert.Single(lines.Orders).Lines).Status);
+    }
+
+    // テーブルの呼び出しと、向かった知らせが、ホールの端末に届く
+    [Fact]
+    public async Task CallEventsReachHall()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        await using var terminal = TestTerminal.Create(factory);
+        await terminal.PairAsync(store.HallCode);
+        await using var table = TestTerminal.Create(factory);
+        await table.PairAsync(store.TableCodes[0]);
+        var cancel = TestContext.Current.CancellationToken;
+        var visit = await factory.OpenVisitAsync(store, 0);
+        Assert.True((await terminal.Events.ConnectAsync(cancel)).IsSuccess);
+
+        // Act / Assert: テーブルが呼ぶ
+        var call = (await table.Table.CreateCallAsync(visit.Id, new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Water" }, cancel)).Content!;
+        Assert.IsType<CallCreatedEvent>(await terminal.NextAsync());
+
+        // Act / Assert: ホールが向かう
+        Assert.True((await terminal.Hall.AcknowledgeCallAsync(call.Id, cancel)).IsSuccess);
+        Assert.IsType<CallUpdatedEvent>(await terminal.NextAsync());
     }
 
     // つないだ時点の番号から数える (つなぐ前の通知は、このあとに読む今の状態に入っているので渡さない)

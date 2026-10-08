@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
+             xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Calls"
+             x:Class="TableOrder.HallApp.Modules.Calls.CallsView"
+             x:DataType="{x:Type module:CallsViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:CallsViewModel}">
+
+    <!-- 呼び出しのタブ: 終わっていない呼び出し (テーブル、用件、経過時間)。中身はこれから作る -->
+    <Grid Style="{StaticResource ScreenGrid}"
+          RowDefinitions="Auto,*,Auto">
+        <controls:TabHeader Grid.Row="0" />
+
+        <Label Grid.Row="1"
+               Style="{StaticResource PendingLabel}"
+               Text="{x:Static strings:AppResources.TabPending}" />
+
+        <controls:TabFooter Grid.Row="2" />
+    </Grid>
+
+</ContentView>

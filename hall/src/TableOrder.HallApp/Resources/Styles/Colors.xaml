@@ -4,21 +4,52 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
 
     <!-- テーマの色。スタイル・画面はここにある役割の名前だけを使い、色の値を直接書かない -->
-    <!-- 枠の間はシステムの画面の色だけを置く (テーブル端末の System の節と同じ色) -->
+    <!-- ホール端末はスタッフの道具なので、チェーンの色に替えず、Brand・Neutral・Status の役割に System の色に揃えた値を持つ -->
+    <!-- System の役割の色は TableOrder.Terminal の SystemColors に置く -->
+    <!-- On で始まる色は、対になる面の上に置く文字と記号の色 (面と文字のコントラスト比 4.5 以上を保つ) -->
 
     <!-- ================================================================================ -->
-    <!-- System -->
+    <!-- Brand -->
     <!-- ================================================================================ -->
 
-    <!-- 地と面 (SystemCanvas はスプラッシュの地と同じ色) -->
-    <Color x:Key="SystemCanvasColor">#F4F5F7</Color>
-    <Color x:Key="SystemSurfaceColor">#FFFFFF</Color>
+    <!-- 主色: 選んでいるタブ、確認の主な操作 (System の主な操作と同じ色) -->
+    <Color x:Key="PrimaryColor">#1F2328</Color>
+    <Color x:Key="PrimaryPressedColor">#3A4048</Color>
+    <Color x:Key="OnPrimaryColor">#FFFFFF</Color>
 
-    <!-- 地と面の上の文字 (本文、補足) -->
-    <Color x:Key="OnSystemCanvasColor">#1F2328</Color>
-    <Color x:Key="OnSystemCanvasVariantColor">#656D76</Color>
+    <!-- ================================================================================ -->
+    <!-- Neutral -->
+    <!-- ================================================================================ -->
 
-    <!-- 罫線 -->
-    <Color x:Key="SystemOutlineColor">#D0D7DE</Color>
+    <!-- 画面の地 (System の地と同じ色) -->
+    <Color x:Key="CanvasColor">#F4F5F7</Color>
+
+    <!-- 面 (ヘッダ、タブ、ポップアップ) と、沈んだ面 (押下) -->
+    <Color x:Key="SurfaceColor">#FFFFFF</Color>
+    <Color x:Key="SurfaceVariantColor">#EAEEF2</Color>
+
+    <!-- 面の上の文字と記号 (本文、補足と選んでいないタブ) -->
+    <Color x:Key="OnSurfaceColor">#1F2328</Color>
+    <Color x:Key="OnSurfaceVariantColor">#656D76</Color>
+
+    <!-- 罫線 (枠と区切り)、薄い区切り -->
+    <Color x:Key="OutlineColor">#D0D7DE</Color>
+    <Color x:Key="OutlineVariantColor">#E6EAEF</Color>
+
+    <!-- 押せない操作の面と文字 -->
+    <Color x:Key="DisabledColor">#EAEEF2</Color>
+    <Color x:Key="OnDisabledColor">#8C959F</Color>
+
+    <!-- ================================================================================ -->
+    <!-- Status -->
+    <!-- ================================================================================ -->
+
+    <!-- 失敗、待っている件数 (タブの呼び出しと提供) -->
+    <Color x:Key="ErrorColor">#CF222E</Color>
+    <Color x:Key="OnErrorColor">#FFFFFF</Color>
+
+    <!-- 注文の一時停止の知らせ -->
+    <Color x:Key="WarningColor">#9A6700</Color>
+    <Color x:Key="OnWarningColor">#FFFFFF</Color>
 
 </ResourceDictionary>

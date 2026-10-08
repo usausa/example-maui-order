@@ -20,6 +20,7 @@ paths:
 - カードの価格は名前と同じ行の高さにして 1 行の高さだけ下げ、名前の 2 行目にそろえる
 - 注文の内容 (選んだオプションなど) は省略 (…) せずに折り返して全部見せる
 - 起動・端末の設定・電卓はシステムの画面とし、チェーンの色ではなく System の役割の色とシステムのロゴで組む
+- ホール端末 (スマートフォンの縦向き) と同じ部品を使う面 (ポップアップ、起動と端末の設定の列) に幅を決めるときは、`TerminalSizes` で画面に収める (幅を決めた要素は親の幅を越えて測られ、狭い画面からはみ出す)
 
 ## 色
 
@@ -28,6 +29,7 @@ paths:
 - 新しい用途の色が要るときは既存の役割で足りないかを先に考え、足りなければ役割として Colors.xaml に足す (画面ごとの色の名前は作らない)
 - 面の色と文字の色は対 (`Xxx` と `OnXxx`) で使う
 - チェーンの色はチェーンの設定 (`brand.theme`) で受け取り、起動の画面で `ThemeManager` が Brand・Neutral・Status の役割を替える (System の役割は替えない)
+- ホール端末はチェーンの色に替えず、`Colors.xaml` の Brand・Neutral・Status の役割に System の色に揃えた値を持つ
 - スタイルで Brand・Neutral・Status の役割の色を引くときは `DynamicResource` にする (色はスタイルを作ったあとに替わる)。System の役割は `StaticResource` のままでよい
 - Colors.xaml の値は既定の色にする。既定の色を替えたら面と文字のコントラスト比 4.5 以上を確かめる
 - 色の役割を足したり名前を替えたりしたら、`TableOrder.Domain.ThemeRoles` (サーバの確かめと管理画面のチェーンの設定が使う) も合わせる
@@ -48,10 +50,12 @@ paths:
 - メニューの名前など、サーバから受ける文字は `LocalizedText.Get(language)` で選ぶ
 - チェーンの名前はチェーンの設定 (`MenuState.BrandName`) から選んだ言語で出し、サーバの店舗の名前 (`storeName`) と混ぜない
 - 選べる言語は店舗の設定の言語 (`LanguageState.Available`) にし、1 つなら言語のボタンを出さない
+- ホール端末は言語を切り替える操作を持たず、文言とサーバの文字を端末の言語で選ぶ (`ViewHelper.Text`)
 
 ## 画面と遷移
 
 - MainPage には帯を置かない。タブや操作の帯は各 View に置く
+- ホール端末の下部のタブは、タブごとに画面 (`ViewId`) を分け、ヘッダとタブの帯の部品 (`Controls/TabHeader`、`Controls/TabFooter`) を各画面に置く。部品は画面の ViewModel の基底 (`TabViewModelBase`) にバインドする
 - 画面は `ViewId` に足して View に `[View(ViewId.Xxx)]` を、ポップアップは `DialogId` に足して `[Popup(DialogId.Xxx)]` を付ける
 - どの端末でも同じポップアップ (電卓、知らせ、確認) は `TableOrder.Terminal` の `TerminalDialogId` に足し、入口は `TableOrder.Terminal` の `PopupNavigatorExtensions` に置く。アプリのポップアップの登録には `TerminalModules.DialogSource` も足す
 - XAML で画面 ID を渡すときは `{markup:ViewId Xxx}` と書く (`x:Static` にしない)

@@ -7,7 +7,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 
 操作はリポジトリのルートで `python .claude/skills/emulator/scripts/emu.py <コマンド>` を使う (Windows では `python`、他では `python3`)。
 対象の端末アプリは `--app` で選ぶ (既定は `table`。例: `emu.py --app table install`)。
-ホール端末は `hall`、受付機は `reception` (どちらも枠だけで、Device Owner の受け口はない)。
+ホール端末は `hall`、受付機は `reception` (受付機は枠だけで、Device Owner の受け口はない)。
 端末アプリを足したら、スクリプトの `APPS` にパッケージ名とプロジェクトを足す。
 テーブル端末と受付機はタブレット (1920x1200、横向き)、ホール端末はスマートフォン (1080x2400、縦向き) の AVD で確かめる。
 スクリプトはエミュレータ (`emulator-` で始まる機器) だけを選び、実機が接続されていても使わない。
@@ -44,6 +44,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - Device Owner のアプリは `am force-stop` と `am crash` が効かない。止めるときは `emu.py kill` (run-as で止める。Debug だけ)
 - Device Owner の間は Debug の高速配置でアプリを差し替えられない (止められないため、本体のない APK が残って起動できない)。入れるときは `emu.py install --embed`
 - スタッフメニューは、ブランドの印を長押し (`emu.py swipe x y x y 3500`) して PIN (店舗の設定。サンプルのデータはデモが 1234、検証用が 5678) を入れる
+- ホール端末の端末の画面は、タブの画面のヘッダの右の記号から開く (端末の設定と一時的な解除のときに PIN を入れる)
 - 外す: `emu.py owner clear` (Debug は testOnly なので外せる。Release は外せない)。画面を点けたままの設定とホームの役割も元に戻す
 
 ## 外部の EMM と管理対象の構成

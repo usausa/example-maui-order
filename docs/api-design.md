@@ -1,7 +1,7 @@
 # 注文 API 設計 (想定)
 
 注文サーバの API の想定で、テーブル端末 (このリポジトリのアプリ)、店内の注文に関わる端末 (ホール、キッチン、受付)、外部のシステムが使う。  
-作った API は [architecture.md](architecture.md#-7-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
+作った API は [architecture.md](architecture.md#-8-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
 業務の前提と流れ (端末と業務、来店、金額と税、扱わないもの) は [business.md](business.md)、データベースは [database.md](database.md)、実装の計画は [plan.md](plan.md) を参照。
 
 - [1. 共通仕様](#-1-共通仕様)

@@ -2,6 +2,14 @@ namespace TableOrder.HallApp.Modules;
 
 public enum ViewId
 {
-    // 仮の画面 (枠)
-    Home
+    // システム
+    Startup,
+    Setup,
+    Device,
+
+    // 下部のタブ
+    Seats,
+    Calls,
+    Serving,
+    Stock
 }

@@ -4,11 +4,12 @@
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
            xmlns:strings="clr-namespace:TableOrder.Terminal.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles"
            xmlns:module="clr-namespace:TableOrder.Terminal.Modules.Dialogs"
            x:Class="TableOrder.Terminal.Modules.Dialogs.InputNumberView"
            x:DataType="{x:Type module:InputNumberViewModel}"
            s:BindingContextResolver.Type="{x:Type module:InputNumberViewModel}"
-           WidthRequest="440">
+           WidthRequest="{x:Static styles:TerminalSizes.Keypad}">
 
     <!-- 電卓は罫線で区切った四角いキーにする (キーの間隔から背景の罫線の色を見せる)。スタッフと端末の設定で使うのでシステムの色にする -->
     <VerticalStackLayout Style="{StaticResource KeypadStack}">

@@ -1,11 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             x:Class="TableOrder.HallApp.App">
+             xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+             x:Class="TableOrder.HallApp.App"
+             android:Application.WindowSoftInputModeAdjust="Pan">
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
+                <!-- アプリの役割の色、どの端末でも同じスタイル (System の色を含む)、アプリのスタイルの順に入れる (後の辞書が前の辞書のキーを引く) -->
                 <ResourceDictionary Source="Resources/Styles/Colors.xaml" />
+                <terminal:TerminalStyles />
                 <ResourceDictionary Source="Resources/Styles/Styles.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

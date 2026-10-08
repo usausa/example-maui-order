@@ -32,6 +32,9 @@ public abstract class OrderEventReceiverBase
     // 起動からやり直すように知らせる (待っている通知より先に渡す)
     private bool restartRequested;
 
+    // 扱った通知のあと、待っている通知がなくなったことをまだ知らせていない
+    private bool drainPending;
+
     // EMM が配っている接続先 (替わったら起動からやり直す)
     private string? managedEndPoint;
 
@@ -77,16 +80,20 @@ public abstract class OrderEventReceiverBase
     // Application
     //--------------------------------------------------------------------------------
 
+    // アプリごとの扱いは abstract にし、使わないアプリも何もしない実装を書く (どの端末で使うかを各アプリに書いておく)
+
     // 届いた通知を待ちに入れる前に見る (画面のスレッド)。来店が閉じたときにポップアップを先に閉じるなど
-    protected virtual void OnReceived(OrderEvent e)
-    {
-    }
+    protected abstract void OnReceived(OrderEvent e);
 
     // 待っていた通知を、操作の途中と遷移の間を避けて届いた順に扱う (状態を替え、表示中の画面に知らせる)
     protected abstract Task ApplyAsync(OrderEvent e);
 
     // 起動からやり直すように、表示中の画面に知らせる
     protected abstract Task NotifyRestartAsync();
+
+    // 待っていた通知を扱い終えたとき (まとめて届いた通知のあとに、変わった一覧を 1 回だけ読み直すなど)
+    // 操作の途中と遷移の間は、終わってから呼ぶ
+    protected abstract Task OnDrainedAsync();
 
     // 開いているポップアップを閉じる (開いている間は画面が Busy のままで、知らせを渡せない)
     protected void ClosePopups() => messenger.Send(new PopupCloseMessage());
@@ -219,17 +226,27 @@ public abstract class OrderEventReceiverBase
                 if (restartRequested)
                 {
                     restartRequested = false;
+                    drainPending = false;
                     pending.Clear();
                     await NotifyRestartAsync().ConfigureAwait(true);
                     continue;
                 }
 
-                if (!pending.TryDequeue(out var e))
+                if (pending.TryDequeue(out var e))
+                {
+                    await ApplyAsync(e).ConfigureAwait(true);
+                    drainPending = true;
+                    continue;
+                }
+
+                if (!drainPending)
                 {
                     break;
                 }
 
-                await ApplyAsync(e).ConfigureAwait(true);
+                // 知らせている間に届いた通知は、続けて扱う
+                drainPending = false;
+                await OnDrainedAsync().ConfigureAwait(true);
             }
         }
         finally

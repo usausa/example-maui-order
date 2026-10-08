@@ -6,7 +6,7 @@ using TableOrder.Terminal.Components;
 // 登録した端末の id は今の接続先と組にして設定に持つ。鍵は登録し直しても使い回し、無効にされたときに作り直す
 public sealed class DeviceUsecase
 {
-    // テーブル端末でないコードで登録しようとした (この端末は登録しない。サーバに残った端末は管理画面で無効にする)
+    // アプリの端末の種類と違うコードで登録しようとした (この端末は登録しない。サーバに残った端末は管理画面で無効にする)
     public const string KindMismatch = "DEVICE_KIND_MISMATCH";
 
     // 管理画面で見分けられるように、端末の名前に付ける端末ごとの値の桁数
@@ -20,6 +20,8 @@ public sealed class DeviceUsecase
 
     private readonly DeviceInformation deviceInformation;
 
+    private readonly TerminalOptions options;
+
     private readonly Settings settings;
 
     private readonly DeviceState deviceState;
@@ -31,6 +33,7 @@ public sealed class DeviceUsecase
         IAppInfo appInfo,
         IDeviceInfo deviceInfo,
         DeviceInformation deviceInformation,
+        TerminalOptions options,
         Settings settings,
         DeviceState deviceState,
         IDeviceApi deviceApi)
@@ -39,6 +42,7 @@ public sealed class DeviceUsecase
         this.appInfo = appInfo;
         this.deviceInfo = deviceInfo;
         this.deviceInformation = deviceInformation;
+        this.options = options;
         this.settings = settings;
         this.deviceState = deviceState;
         this.deviceApi = deviceApi;
@@ -74,7 +78,7 @@ public sealed class DeviceUsecase
             return result;
         }
 
-        if (device.Kind != DeviceKind.Table)
+        if (device.Kind != options.Kind)
         {
             log.WarnDeviceRegistrationFailed(ApiStatus.Rejected, KindMismatch);
             return ApiResult.Failure<DevicePairResponse>(ApiStatus.Rejected, KindMismatch);

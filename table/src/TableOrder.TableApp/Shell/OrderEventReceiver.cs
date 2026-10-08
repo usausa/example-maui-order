@@ -65,6 +65,9 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
     protected override async Task NotifyRestartAsync() =>
         await Navigator.NotifyAsync(ShellEvent.Restart).ConfigureAwait(true);
 
+    // 状態は通知の中身で替えるので、まとめて読み直すものはない
+    protected override Task OnDrainedAsync() => Task.CompletedTask;
+
     protected override async Task ApplyAsync(OrderEvent e)
     {
         switch (e)

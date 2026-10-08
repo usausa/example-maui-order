@@ -4,11 +4,12 @@
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
            xmlns:strings="clr-namespace:TableOrder.Terminal.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles"
            xmlns:module="clr-namespace:TableOrder.Terminal.Modules.Dialogs"
            x:Class="TableOrder.Terminal.Modules.Dialogs.MessageView"
            x:DataType="{x:Type module:MessageViewModel}"
            s:BindingContextResolver.Type="{x:Type module:MessageViewModel}"
-           WidthRequest="640">
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
 
     <VerticalStackLayout Style="{StaticResource DialogStack}">
         <Label Style="{StaticResource DialogTitleLabel}"

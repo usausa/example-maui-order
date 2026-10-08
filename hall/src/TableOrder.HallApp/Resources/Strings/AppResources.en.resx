@@ -44,7 +44,205 @@
   <data name="AppTitle" xml:space="preserve">
     <value>Hall terminal</value>
   </data>
-  <data name="HomeMessage" xml:space="preserve">
-    <value>The hall terminal screens are coming soon.</value>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="TabSeats" xml:space="preserve">
+    <value>Tables</value>
+  </data>
+  <data name="TabCalls" xml:space="preserve">
+    <value>Calls</value>
+  </data>
+  <data name="TabServing" xml:space="preserve">
+    <value>Serving</value>
+  </data>
+  <data name="TabStock" xml:space="preserve">
+    <value>Sold out</value>
+  </data>
+  <data name="TabPending" xml:space="preserve">
+    <value>This screen is coming soon.</value>
+  </data>
+  <data name="NoticeOrderingPaused" xml:space="preserve">
+    <value>Ordering is paused</value>
+  </data>
+  <data name="StartupStepSettings" xml:space="preserve">
+    <value>Checking device settings</value>
+  </data>
+  <data name="StartupStepRegister" xml:space="preserve">
+    <value>Registering this device</value>
+  </data>
+  <data name="StartupStepConnect" xml:space="preserve">
+    <value>Connecting to the server</value>
+  </data>
+  <data name="StartupStepMenu" xml:space="preserve">
+    <value>Loading the menu</value>
+  </data>
+  <data name="StartupStepFloor" xml:space="preserve">
+    <value>Loading tables, calls and serving</value>
+  </data>
+  <data name="StartupStepReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StartupNotHall" xml:space="preserve">
+    <value>This device is not registered as a hall terminal. Register it again from the device settings</value>
+  </data>
+  <data name="StartupRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="StartupSetup" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>Retrying automatically every {0} seconds</value>
+  </data>
+  <data name="SetupTitle" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="SetupEndpoint" xml:space="preserve">
+    <value>Server (API)</value>
+  </data>
+  <data name="SetupEndpointHint" xml:space="preserve">
+    <value>Enter the order server URL (http or https)</value>
+  </data>
+  <data name="SetupEndpointManaged" xml:space="preserve">
+    <value>Uses the server set by EMM (cannot be changed on this device)</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>Registered ({0})</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>Not registered</value>
+  </data>
+  <data name="SetupRegistrationHint" xml:space="preserve">
+    <value>To register again, enter a pairing code</value>
+  </data>
+  <data name="SetupEnrollmentHint" xml:space="preserve">
+    <value>This device registers itself at startup with the EMM enrollment token</value>
+  </data>
+  <data name="SetupRegisterHint" xml:space="preserve">
+    <value>Enter a pairing code to register this device</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>The 6-digit code issued in the admin console.</value>
+  </data>
+  <data name="SetupEnter" xml:space="preserve">
+    <value>Enter</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>Not entered</value>
+  </data>
+  <data name="SetupSave" xml:space="preserve">
+    <value>Save and start</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>Register and start</value>
+  </data>
+  <data name="DeviceTitle" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="DeviceInfo" xml:space="preserve">
+    <value>Device information</value>
+  </data>
+  <data name="DeviceStore" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>Device name</value>
+  </data>
+  <data name="DeviceId" xml:space="preserve">
+    <value>Device ID</value>
+  </data>
+  <data name="DeviceEndpoint" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="DeviceKiosk" xml:space="preserve">
+    <value>Kiosk</value>
+  </data>
+  <data name="DeviceManaged" xml:space="preserve">
+    <value>EMM settings</value>
+  </data>
+  <data name="DeviceManagedNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DeviceEnrollmentToken" xml:space="preserve">
+    <value>Enrollment token</value>
+  </data>
+  <data name="DeviceBattery" xml:space="preserve">
+    <value>Battery</value>
+  </data>
+  <data name="DeviceBatteryFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="DeviceBatteryChargingFormat" xml:space="preserve">
+    <value>{0}% (charging)</value>
+  </data>
+  <data name="DeviceNetwork" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="DeviceConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="DeviceDisconnected" xml:space="preserve">
+    <value>Disconnected</value>
+  </data>
+  <data name="DeviceApp" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="DeviceSettings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="DeviceKioskFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+  </data>
+  <data name="DeviceKioskRelease" xml:space="preserve">
+    <value>Release</value>
+  </data>
+  <data name="DeviceKioskRestore" xml:space="preserve">
+    <value>Lock again</value>
+  </data>
+  <data name="DeviceKioskSettings" xml:space="preserve">
+    <value>Android settings</value>
+  </data>
+  <data name="DeviceKioskHint" xml:space="preserve">
+    <value>Releasing the kiosk and the device settings require the staff PIN. Restarting the app locks it again.</value>
+  </data>
+  <data name="KioskManaged" xml:space="preserve">
+    <value>Managed (EMM)</value>
+  </data>
+  <data name="KioskDeviceOwner" xml:space="preserve">
+    <value>Device owner</value>
+  </data>
+  <data name="KioskNone" xml:space="preserve">
+    <value>None (development)</value>
+  </data>
+  <data name="KioskReleased" xml:space="preserve">
+    <value>released</value>
+  </data>
+  <data name="KioskLocked" xml:space="preserve">
+    <value>locked</value>
+  </data>
+  <data name="KioskUnlocked" xml:space="preserve">
+    <value>not locked</value>
+  </data>
+  <data name="ErrorUnavailable" xml:space="preserve">
+    <value>Could not connect. Please try again in a moment.</value>
+  </data>
+  <data name="ErrorUnauthorized" xml:space="preserve">
+    <value>This device cannot be used. Check the device in the admin console.</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>The service is suspended. Please contact your administrator</value>
+  </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>The pairing code is incorrect or has expired</value>
+  </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>This pairing code is not for a hall terminal</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>Something went wrong.</value>
   </data>
 </root>

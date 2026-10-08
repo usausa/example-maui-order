@@ -237,7 +237,7 @@ public static partial class MauiProgram
         });
 
         // Terminal (端末の部品、端末の設定と状態、登録と状態の報告、注文サーバの登録と通知の窓口)
-        services.AddTerminalComponents(new KioskOptions(typeof(AdminReceiver), typeof(MainActivity)));
+        services.AddTerminalComponents(new TerminalOptions(DeviceKind.Table), new KioskOptions(typeof(AdminReceiver), typeof(MainActivity)));
 
         // Components
         services.AddSingleton<ImageCache>();

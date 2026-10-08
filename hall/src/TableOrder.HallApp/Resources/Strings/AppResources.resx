@@ -44,7 +44,205 @@
   <data name="AppTitle" xml:space="preserve">
     <value>ホール端末</value>
   </data>
-  <data name="HomeMessage" xml:space="preserve">
-    <value>ホール端末の画面はこれから作ります</value>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="TabSeats" xml:space="preserve">
+    <value>席</value>
+  </data>
+  <data name="TabCalls" xml:space="preserve">
+    <value>呼び出し</value>
+  </data>
+  <data name="TabServing" xml:space="preserve">
+    <value>提供</value>
+  </data>
+  <data name="TabStock" xml:space="preserve">
+    <value>品切れ</value>
+  </data>
+  <data name="TabPending" xml:space="preserve">
+    <value>この画面はこれから作ります</value>
+  </data>
+  <data name="NoticeOrderingPaused" xml:space="preserve">
+    <value>注文を一時停止しています</value>
+  </data>
+  <data name="StartupStepSettings" xml:space="preserve">
+    <value>端末の設定を確かめています</value>
+  </data>
+  <data name="StartupStepRegister" xml:space="preserve">
+    <value>端末を登録しています</value>
+  </data>
+  <data name="StartupStepConnect" xml:space="preserve">
+    <value>サーバに接続しています</value>
+  </data>
+  <data name="StartupStepMenu" xml:space="preserve">
+    <value>メニューを読み込んでいます</value>
+  </data>
+  <data name="StartupStepFloor" xml:space="preserve">
+    <value>席・呼び出し・提供を読み込んでいます</value>
+  </data>
+  <data name="StartupStepReady" xml:space="preserve">
+    <value>準備ができました</value>
+  </data>
+  <data name="StartupNotHall" xml:space="preserve">
+    <value>この端末はホール端末として登録されていません。端末の設定から登録し直してください</value>
+  </data>
+  <data name="StartupRetry" xml:space="preserve">
+    <value>もう一度試す</value>
+  </data>
+  <data name="StartupSetup" xml:space="preserve">
+    <value>端末の設定</value>
+  </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>{0} 秒ごとに自動でもう一度試します</value>
+  </data>
+  <data name="SetupTitle" xml:space="preserve">
+    <value>端末の設定</value>
+  </data>
+  <data name="SetupEndpoint" xml:space="preserve">
+    <value>接続先 (API)</value>
+  </data>
+  <data name="SetupEndpointHint" xml:space="preserve">
+    <value>注文サーバの URL (http か https) を入れます</value>
+  </data>
+  <data name="SetupEndpointManaged" xml:space="preserve">
+    <value>EMM で配られた接続先を使います (この端末では変えられません)</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>端末の登録</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>登録済み ({0})</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>未登録</value>
+  </data>
+  <data name="SetupRegistrationHint" xml:space="preserve">
+    <value>登録し直すときは、ペアリングコードを入れてください</value>
+  </data>
+  <data name="SetupEnrollmentHint" xml:space="preserve">
+    <value>EMM の登録トークンで、起動したときに自動で登録します</value>
+  </data>
+  <data name="SetupRegisterHint" xml:space="preserve">
+    <value>ペアリングコードを入れて、この端末を登録してください</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>管理画面で出した 6 桁のコードです</value>
+  </data>
+  <data name="SetupEnter" xml:space="preserve">
+    <value>入力</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>未入力</value>
+  </data>
+  <data name="SetupSave" xml:space="preserve">
+    <value>保存して起動する</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>登録して起動する</value>
+  </data>
+  <data name="DeviceTitle" xml:space="preserve">
+    <value>端末</value>
+  </data>
+  <data name="DeviceInfo" xml:space="preserve">
+    <value>端末の情報</value>
+  </data>
+  <data name="DeviceStore" xml:space="preserve">
+    <value>店舗</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>端末の名前</value>
+  </data>
+  <data name="DeviceId" xml:space="preserve">
+    <value>端末 ID</value>
+  </data>
+  <data name="DeviceEndpoint" xml:space="preserve">
+    <value>接続先</value>
+  </data>
+  <data name="DeviceKiosk" xml:space="preserve">
+    <value>専用端末</value>
+  </data>
+  <data name="DeviceManaged" xml:space="preserve">
+    <value>EMM の設定</value>
+  </data>
+  <data name="DeviceManagedNone" xml:space="preserve">
+    <value>なし</value>
+  </data>
+  <data name="DeviceEnrollmentToken" xml:space="preserve">
+    <value>登録トークン</value>
+  </data>
+  <data name="DeviceBattery" xml:space="preserve">
+    <value>電池</value>
+  </data>
+  <data name="DeviceBatteryFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="DeviceBatteryChargingFormat" xml:space="preserve">
+    <value>{0}% (充電中)</value>
+  </data>
+  <data name="DeviceNetwork" xml:space="preserve">
+    <value>ネットワーク</value>
+  </data>
+  <data name="DeviceConnected" xml:space="preserve">
+    <value>接続</value>
+  </data>
+  <data name="DeviceDisconnected" xml:space="preserve">
+    <value>未接続</value>
+  </data>
+  <data name="DeviceApp" xml:space="preserve">
+    <value>アプリ</value>
+  </data>
+  <data name="DeviceSettings" xml:space="preserve">
+    <value>設定</value>
+  </data>
+  <data name="DeviceKioskFormat" xml:space="preserve">
+    <value>{0}・{1}</value>
+  </data>
+  <data name="DeviceKioskRelease" xml:space="preserve">
+    <value>一時的に解除する</value>
+  </data>
+  <data name="DeviceKioskRestore" xml:space="preserve">
+    <value>専用端末に戻す</value>
+  </data>
+  <data name="DeviceKioskSettings" xml:space="preserve">
+    <value>Android の設定</value>
+  </data>
+  <data name="DeviceKioskHint" xml:space="preserve">
+    <value>解除と端末の設定は、スタッフの PIN を入れて行います。解除は、アプリを起動し直すと元に戻ります</value>
+  </data>
+  <data name="KioskManaged" xml:space="preserve">
+    <value>外部の管理 (EMM)</value>
+  </data>
+  <data name="KioskDeviceOwner" xml:space="preserve">
+    <value>Device Owner</value>
+  </data>
+  <data name="KioskNone" xml:space="preserve">
+    <value>なし (開発中の端末)</value>
+  </data>
+  <data name="KioskReleased" xml:space="preserve">
+    <value>一時的に解除中</value>
+  </data>
+  <data name="KioskLocked" xml:space="preserve">
+    <value>ロック中</value>
+  </data>
+  <data name="KioskUnlocked" xml:space="preserve">
+    <value>ロックなし</value>
+  </data>
+  <data name="ErrorUnavailable" xml:space="preserve">
+    <value>通信できませんでした。しばらくしてからもう一度試してください</value>
+  </data>
+  <data name="ErrorUnauthorized" xml:space="preserve">
+    <value>この端末は使えません。管理画面で端末を確かめてください</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>ご利用を停止しています。管理者にお問い合わせください</value>
+  </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>ペアリングコードが正しくないか、期限が切れています</value>
+  </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>ホール端末のペアリングコードではありません</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>処理できませんでした</value>
   </data>
 </root>

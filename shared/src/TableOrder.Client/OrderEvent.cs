@@ -37,5 +37,11 @@ public sealed record OrderCreatedEvent(long Seq, DateTimeOffset OccurredAt, Orde
 // 明細の状態が変わった (order.lines.updated。調理、提供、取消、食後の品のお願い)。変わった注文を、注文のすべての明細と一緒に受ける
 public sealed record OrderLinesUpdatedEvent(long Seq, DateTimeOffset OccurredAt, Guid VisitId, IReadOnlyList<OrderListResponseItem> Orders) : OrderEvent(Seq, OccurredAt);
 
+// テーブルで呼び出した (call.created)。ホール端末は呼び出しの一覧を読み直すので、呼び出しの中身は渡さない
+public sealed record CallCreatedEvent(long Seq, DateTimeOffset OccurredAt) : OrderEvent(Seq, OccurredAt);
+
+// 呼び出しが変わった (call.updated。ホール端末で向かう、対応した)。中身は渡さない
+public sealed record CallUpdatedEvent(long Seq, DateTimeOffset OccurredAt) : OrderEvent(Seq, OccurredAt);
+
 // 管理画面で端末の置き場所・名前を替えたか、無効にした (device.updated。店舗のすべての端末に届き、その端末だけが起動からやり直す)
 public sealed record DeviceUpdatedEvent(long Seq, DateTimeOffset OccurredAt, Guid DeviceId) : OrderEvent(Seq, OccurredAt);

@@ -345,7 +345,7 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
     // Map
     //--------------------------------------------------------------------------------
 
-    // テーブル端末の扱う通知の形にする (扱わない種類と、読めない中身は渡さない)
+    // 端末の扱う通知の形にする (扱わない種類と、読めない中身は渡さない)
     private static OrderEvent? Map(EventListResponseItem item)
     {
         try
@@ -360,6 +360,8 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
                 EventTypes.StockUpdated => new StockUpdatedEvent(item.Seq, item.OccurredAt, Read(item, ClientJsonContext.Default.StockUpdatedEventData).Items),
                 EventTypes.OrderCreated => new OrderCreatedEvent(item.Seq, item.OccurredAt, Read(item, ClientJsonContext.Default.OrderListResponseItem)),
                 EventTypes.OrderLinesUpdated => LinesUpdated(item, Read(item, ClientJsonContext.Default.OrderLinesUpdatedEventData)),
+                EventTypes.CallCreated => new CallCreatedEvent(item.Seq, item.OccurredAt),
+                EventTypes.CallUpdated => new CallUpdatedEvent(item.Seq, item.OccurredAt),
                 EventTypes.DeviceUpdated => new DeviceUpdatedEvent(item.Seq, item.OccurredAt, Read(item, ClientJsonContext.Default.DeviceUpdatedEventData).DeviceId),
                 _ => null
             };

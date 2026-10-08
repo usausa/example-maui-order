@@ -251,7 +251,7 @@
 
     <Style x:Key="StartupStack"
            TargetType="VerticalStackLayout">
-        <Setter Property="WidthRequest" Value="480" />
+        <Setter Property="WidthRequest" Value="{x:Static styles:TerminalSizes.Startup}" />
         <Setter Property="Spacing" Value="20" />
         <Setter Property="HorizontalOptions" Value="Center" />
     </Style>
@@ -298,7 +298,7 @@
 
     <Style x:Key="SetupFormStack"
            TargetType="VerticalStackLayout">
-        <Setter Property="WidthRequest" Value="720" />
+        <Setter Property="WidthRequest" Value="{x:Static styles:TerminalSizes.Setup}" />
         <Setter Property="Padding" Value="0,48" />
         <Setter Property="Spacing" Value="40" />
         <Setter Property="HorizontalOptions" Value="Center" />
