@@ -17,7 +17,7 @@
 ## 📦 1. プロジェクト
 
 モノレポにし、区分ごとのフォルダの `src/` にプロジェクト、`tests/` にテストを置く。  
-ソリューションは区分ごとに分け、サーバは `server/TableOrder.Server.slnx`、端末のアプリはアプリごと (`table/TableOrder.TableApp.slnx`、`hall/TableOrder.HallApp.slnx`、`reception/TableOrder.ReceptionApp.slnx`)。
+ソリューションはサーバと端末のアプリの区分ごとに分け、サーバは `server/TableOrder.Server.slnx`、端末のアプリはアプリごと (`table/TableOrder.TableApp.slnx`、`hall/TableOrder.HallApp.slnx`、`reception/TableOrder.ReceptionApp.slnx`)。
 
 | 区分 | フォルダ | 内容 |
 | --- | --- | --- |
@@ -32,7 +32,9 @@
 - 端末のアプリは用途ごとに区分を分け、1 つの区分に用途の違うアプリを混ぜない。  
   端末に共通の部品 (専用端末、EMM の設定、端末の情報など) は、ホール端末の画面を作るときに `terminal/` の `TableOrder.Terminal` (画面を持たない MAUI のライブラリ) に移す
 - ホール端末と受付機は、骨組み (画面の入れ物、遷移、処理中の覆い) だけをテーブル端末と同じ形で置いている
-- 共有のプロジェクトとテストは、テーブル端末のソリューションに入れて確かめる (共有の型をいちばん使うので、使われていない型の指摘が出ない)
+- 共有のプロジェクトと端末に共通の部品は単独のソリューションを持たず、使う区分のソリューションに入れて確かめる。  
+  単独にすると、アプリだけが使う型を InspectCode が使われていないと指摘するため。  
+  今は、共有のプロジェクトと共有のテストを、共有の型をいちばん使うテーブル端末のソリューションに入れている
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
