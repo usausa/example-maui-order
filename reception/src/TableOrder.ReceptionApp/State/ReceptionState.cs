@@ -20,11 +20,20 @@ public sealed class ReceptionState
     // 空いているテーブルの数 (ひとつもなければ待受を満席にする。人数が定員に入るかは、席を決めるときにサーバが確かめる)
     public int VacantTables { get; private set; }
 
+    // 空席を読み直せなかった (待受がしばらくごとに読み直す。次の来店の通知を待たない)
+    public bool IsVacancyStale { get; private set; }
+
     public string BrandName(Language language) => Config.Brand.Name.Get(language);
 
     public string StoreName(Language language) => Config.StoreName.Get(language);
 
     public void Update(DeviceConfigResponse config) => Config = config;
 
-    public void UpdateVacancy(TableListResponse tables) => VacantTables = tables.Items.Count;
+    public void UpdateVacancy(TableListResponse tables)
+    {
+        VacantTables = tables.Items.Count;
+        IsVacancyStale = false;
+    }
+
+    public void MarkVacancyStale() => IsVacancyStale = true;
 }

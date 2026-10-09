@@ -29,6 +29,15 @@ public sealed class KitchenUsecase
 
     private readonly IKitchenApi kitchenApi;
 
+    // チケットの読み直しは操作のあとと通知の両方から重なって走るので、頼んだ順の番号で、あとに頼んだ読み直しの応答を古い応答で上書きしない
+    private long openRequested;
+
+    private long openApplied;
+
+    private long doneRequested;
+
+    private long doneApplied;
+
     public KitchenUsecase(
         ILogger<KitchenUsecase> log,
         BrowserStorage storage,
@@ -108,9 +117,11 @@ public sealed class KitchenUsecase
     // まだ下げていないチケット (受け持つすべての持ち場) を読み直す
     public async ValueTask<ApiResult<KitchenTicketListResponse>> RefreshTicketsAsync()
     {
+        var request = ++openRequested;
         var result = await kitchenApi.GetTicketsAsync();
-        if (result.Content is { } tickets)
+        if ((result.Content is { } tickets) && (request > openApplied))
         {
+            openApplied = request;
             ticketState.UpdateOpen(tickets);
         }
 
@@ -147,9 +158,11 @@ public sealed class KitchenUsecase
     // 直近に下げたチケットを読み直す
     public async ValueTask<ApiResult<KitchenTicketListResponse>> RefreshDoneAsync()
     {
+        var request = ++doneRequested;
         var result = await kitchenApi.GetTicketsAsync(status: KitchenTicketStatus.Done);
-        if (result.Content is { } tickets)
+        if ((result.Content is { } tickets) && (request > doneApplied))
         {
+            doneApplied = request;
             ticketState.UpdateDone(tickets);
         }
 

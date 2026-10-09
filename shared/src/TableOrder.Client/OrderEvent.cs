@@ -7,9 +7,13 @@ public sealed class OrderEventArgs : EventArgs
 {
     public OrderEvent Event { get; }
 
-    public OrderEventArgs(OrderEvent e)
+    // 通知を受けた接続 (ConnectAsync でつなぎ直すたびに替わる)。seq はこの中で増え、ほかの店舗に登録し直すと小さくなる
+    public long Connection { get; }
+
+    public OrderEventArgs(OrderEvent e, long connection)
     {
         Event = e;
+        Connection = connection;
     }
 }
 

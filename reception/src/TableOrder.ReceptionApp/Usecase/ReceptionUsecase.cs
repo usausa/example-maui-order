@@ -19,13 +19,17 @@ public sealed class ReceptionUsecase
         this.receptionApi = receptionApi;
     }
 
-    // 空席を読み直す
+    // 空席を読み直す。読み直せなかったら印を残す (待受がしばらくごとに読み直す)
     public async ValueTask<ApiResult<TableListResponse>> RefreshVacancyAsync()
     {
         var result = await receptionApi.GetTablesAsync(TableStatus.Vacant);
         if (result.Content is { } tables)
         {
             receptionState.UpdateVacancy(tables);
+        }
+        else
+        {
+            receptionState.MarkVacancyStale();
         }
 
         return result;

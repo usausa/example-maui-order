@@ -4,6 +4,7 @@ namespace TableOrder.Client;
 public interface IOrderEvents
 {
     // 届いた通知。seq の重複は受ける側で捨てる (どのスレッドで出すかは実装による)
+    // seq は接続 (OrderEventArgs.Connection) の中で数える。接続が替わったら、受ける側も数え直す
     event EventHandler<OrderEventArgs>? Received;
 
     // 抜けた通知を追いかけられなくなった (端末は今の状態を読み直す)

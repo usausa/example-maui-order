@@ -4,7 +4,7 @@ using TableOrder.Terminal.Components;
 using TableOrder.Terminal.Shell;
 
 // 受付機の通知の扱い。来店の通知で空席を読み直し、店舗の通知で店舗の今の状態を替えて、表示中の画面に知らせる
-// まとめて届いた通知は扱い終えたあと (OnDrainedAsync) に空席を 1 回だけ読み直し、読み直せなかったときは次の通知のあとに読み直す
+// まとめて届いた通知は扱い終えたあと (OnDrainedAsync) に空席を 1 回だけ読み直し、読み直せなかったときは待受がしばらくごとに読み直す
 // 受け方 (重複を捨てる、操作と遷移の間を待つ、起動からやり直す知らせ) は土台 (OrderEventReceiverBase) が行う
 public sealed class OrderEventReceiver : OrderEventReceiverBase
 {
@@ -66,6 +66,8 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         }
     }
 
+    // 読み直しを待つ間に届いた通知 (OnReceived) の印を消さないように、読み直す前に印を下ろす
+    // 読み直せなかったときは、読み直せなかった印 (ReceptionState) を見て待受が読み直す
     protected override async Task OnDrainedAsync()
     {
         if (!vacancyChanged)
@@ -73,6 +75,7 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
             return;
         }
 
+        vacancyChanged = false;
         var result = await receptionUsecase.RefreshVacancyAsync().ConfigureAwait(true);
         if (!result.IsSuccess)
         {
@@ -80,7 +83,6 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
             return;
         }
 
-        vacancyChanged = false;
         await Navigator.NotifyAsync(ShellEvent.VacancyChanged).ConfigureAwait(true);
     }
 }

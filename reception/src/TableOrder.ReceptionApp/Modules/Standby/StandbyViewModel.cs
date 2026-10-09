@@ -5,9 +5,10 @@ using TableOrder.Terminal.Components;
 // 待受。お客様が受付するを押すと人数の画面に進む
 // 受け付けないとき (来店の開き方が受付機でない店、ラストオーダーの後) と、空席がひとつもないときは、その文言を出して受付するを出さない
 // 空席は来店の通知で、ラストオーダーの後かは時刻で出し直す。チェーンと店舗の設定が替わったら (設定の版)、ここで起動からやり直して反映する
+// 通知のあとに空席を読み直せなかったときは、入ったときとしばらくごとに読み直す (次の来店の通知まで満席のままにしない)
 public sealed partial class StandbyViewModel : AppViewModelBase
 {
-    // ラストオーダーの時刻を過ぎたかは時刻で変わるので、しばらくごとに見直す
+    // ラストオーダーの時刻を過ぎたかは時刻で変わるので、しばらくごとに見直す (読み直せなかった空席も読み直す)
     private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
 
     private readonly ILogger<StandbyViewModel> log;
@@ -25,6 +26,8 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     private readonly StoreState storeState;
 
     private readonly ReceptionState receptionState;
+
+    private readonly ReceptionUsecase receptionUsecase;
 
     public BrandMark Brand { get; }
 
@@ -59,7 +62,8 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         StaffLock staffLock,
         LanguageState languageState,
         StoreState storeState,
-        ReceptionState receptionState)
+        ReceptionState receptionState,
+        ReceptionUsecase receptionUsecase)
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
@@ -69,6 +73,7 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         this.languageState = languageState;
         this.storeState = storeState;
         this.receptionState = receptionState;
+        this.receptionUsecase = receptionUsecase;
 
         var language = languageState.Current;
         Brand = ViewHelper.Brand(receptionState, imageCache, language);
@@ -82,14 +87,14 @@ public sealed partial class StandbyViewModel : AppViewModelBase
 
         Update();
 
-        Disposables.Add(Observable.Interval(CheckInterval).ObserveOnCurrentContext().Subscribe(_ => Update()));
+        Disposables.Add(Observable.Interval(CheckInterval).ObserveOnCurrentContext().Subscribe(_ => Check()));
     }
 
     //--------------------------------------------------------------------------------
     // Navigation
     //--------------------------------------------------------------------------------
 
-    // 設定が替わっていたら起動からやり直す。受け取れなかったロゴがあれば、待たずに取り直す
+    // 設定が替わっていたら起動からやり直す。受け取れなかったロゴと読み直せなかった空席があれば、待たずに読み直す
     public override async Task OnNavigatedToAsync(INavigationContext context)
     {
         if (IsSettingsChanged())
@@ -99,6 +104,7 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         }
 
         imageCache.RetryInBackground(receptionState.ImageNames);
+        Check();
     }
 
     // お客様の画面なので、戻るでは何もしない
@@ -134,6 +140,28 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
     // Reception
     //--------------------------------------------------------------------------------
+
+    // 時刻で替わる受付の可否を出し直し、読み直せなかった空席があれば読み直す
+    private void Check()
+    {
+        Update();
+        if (receptionState.IsVacancyStale)
+        {
+            _ = RefreshVacancyAsync();
+        }
+    }
+
+    private async Task RefreshVacancyAsync()
+    {
+        var result = await receptionUsecase.RefreshVacancyAsync();
+        if (!result.IsSuccess)
+        {
+            log.WarnApiFailed(nameof(IReceptionApi.GetTablesAsync), result.Status, result.ErrorCode);
+            return;
+        }
+
+        Update();
+    }
 
     private void Update()
     {

@@ -5,7 +5,7 @@ using System.Text.Json;
 // 抜けた通知 (GET /events?after=)。ハブで送る通知も同じ形 (EventListResponseItem)
 public sealed class EventListResponse
 {
-    // 店舗の今の通し番号 (追いつけないときに、端末が受けた番号を合わせ直す)
+    // 店舗の今の通し番号 (端末は読んだ通知のあと、この端末に送らない通知の番号もここまで進める)
     public long LastSeq { get; set; }
 
     public IReadOnlyList<EventListResponseItem> Items { get; set; } = default!;

@@ -17,7 +17,8 @@ using TableOrder.Contract.Events;
 
 // 注文サーバの通知 (SignalR のハブ)。ハブは端末をグループに入れ終えたら ready で店舗の今の通し番号を送る
 // はじめてつないだときはその番号から数え (このあとに端末が今の状態を読む)、つなぎ直したときは抜けた通知を読んでから続ける
-// 抜けた通知を読む間に届いた通知はためておき、抜けた通知のあとに seq の順に渡す。追いかけられないときは Expired で知らせる
+// つなぎ直しの間 (切れてから抜けた通知を読み終えるまで) に届いた通知はためておき、抜けた通知と合わせて seq の順に渡す (EventSequencer)
+// 追いかけられないときは Expired で知らせる。ConnectAsync で作り直したら、前の接続の通知と読み込みは渡さない
 // 切れたら間をおいてつなぎ直し続ける (アクセストークンと抜けた通知は REST の送り方で受け取り、つなぎ直しが 401 で断られたらトークンを取り直す)
 public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
 {
@@ -38,15 +39,12 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
 
     private readonly RestConnection rest;
 
-    private readonly Lock sync = new();
-
     private readonly SemaphoreSlim connectLock = new(1, 1);
 
-    // 渡す通知 (null は追いかけられなくなった知らせ)。1 つの流れで出し、seq の順を崩さない
-    private readonly Channel<OrderEvent?> dispatching = Channel.CreateUnbounded<OrderEvent?>(new UnboundedChannelOptions { SingleReader = true });
+    // 渡す通知 (Event が null は追いかけられなくなった知らせ)。1 つの流れで出し、seq の順を崩さない
+    private readonly Channel<Dispatch> dispatching = Channel.CreateUnbounded<Dispatch>(new UnboundedChannelOptions { SingleReader = true });
 
-    // 数え始めの位置を決める前と、抜けた通知を読む間に届いた通知
-    private readonly List<EventListResponseItem> buffered = [];
+    private readonly EventSequencer sequencer;
 
     private volatile HubConnection? connection;
 
@@ -54,16 +52,6 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
     private volatile string? providedToken;
 
     private volatile string? rejectedToken;
-
-    private TaskCompletionSource<long>? ready;
-
-    // 数え始めの位置を決めた (ready を受けた)
-    private bool counting;
-
-    private bool catchingUp;
-
-    // 渡した (読み飛ばしたものも含めて見た) 最後の通し番号
-    private long lastSeq;
 
     public event EventHandler<OrderEventArgs>? Received;
 
@@ -74,6 +62,7 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
         this.context = context;
         this.options = options;
         this.rest = rest;
+        sequencer = new EventSequencer(Emit);
         _ = DispatchAsync();
     }
 
@@ -125,16 +114,7 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
             }
 
             var started = new TaskCompletionSource<long>(TaskCreationOptions.RunContinuationsAsynchronously);
-            lock (sync)
-            {
-                ready = started;
-                counting = false;
-                catchingUp = false;
-                buffered.Clear();
-                lastSeq = 0;
-            }
-
-            var hub = Build(uri);
+            var hub = Build(uri, sequencer.Begin(), started);
             connection = hub;
             await hub.StartAsync(cancel);
             await started.Task.WaitAsync(ReadyTimeout, cancel);
@@ -157,7 +137,8 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
         }
     }
 
-    private HubConnection Build(Uri uri)
+    // id は数え方の接続 (EventSequencer.Begin)。この接続の ready と通知だけを数え、作り直したあとに届いたものは使わない
+    private HubConnection Build(Uri uri, long id, TaskCompletionSource<long> started)
     {
         var hub = new HubConnectionBuilder()
             .WithUrl(uri, http =>
@@ -169,9 +150,14 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
             .WithAutomaticReconnect(new RetryPolicy(RejectIfUnauthorized))
             .AddJsonProtocol(static json => json.PayloadSerializerOptions = ClientJsonContext.Default.Options)
             .Build();
-        hub.On<EventListResponseItem>(HubMethods.Event, OnEvent);
-        hub.On<long>(HubMethods.Ready, OnReady);
-        hub.Closed += _ => RestartAsync(hub);
+        hub.On<EventListResponseItem>(HubMethods.Event, item => sequencer.Receive(id, item));
+        hub.On<long>(HubMethods.Ready, seq => OnReady(id, started, seq));
+        hub.Reconnecting += _ =>
+        {
+            sequencer.Interrupt(id);
+            return Task.CompletedTask;
+        };
+        hub.Closed += _ => RestartAsync(hub, id);
         return hub;
     }
 
@@ -183,8 +169,9 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
     }
 
     // つなぎ直しをあきらめて閉じたとき (サーバが切った) は、間をおいて始め直す (ready を受けたら抜けた通知を読む)
-    private async Task RestartAsync(HubConnection hub)
+    private async Task RestartAsync(HubConnection hub, long id)
     {
+        sequencer.Interrupt(id);
         for (var attempt = 0; connection == hub; attempt++)
         {
             await Task.Delay(RetryDelays[Math.Min(attempt, RetryDelays.Length - 1)]);
@@ -229,114 +216,63 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
     // Receive
     //--------------------------------------------------------------------------------
 
-    // はじめは数え始めの位置にし、つなぎ直したときは抜けた通知を読む
-    private void OnReady(long seq)
+    // はじめは数え始めの位置にし (つなぐのを待っている ConnectAsync に知らせる)、つなぎ直したときは抜けた通知を読む
+    private void OnReady(long id, TaskCompletionSource<long> started, long seq)
     {
-        TaskCompletionSource<long>? first = null;
-        lock (sync)
+        if (sequencer.Ready(id, seq) is { } request)
         {
-            if (!counting)
-            {
-                counting = true;
-                lastSeq = seq;
-                first = ready;
-                Flush();
-            }
-            else
-            {
-                catchingUp = true;
-            }
+            _ = CatchUpAsync(request);
         }
-
-        if (first is not null)
+        else
         {
-            first.TrySetResult(seq);
-            return;
-        }
-
-        _ = CatchUpAsync(seq);
-    }
-
-    private void OnEvent(EventListResponseItem item)
-    {
-        lock (sync)
-        {
-            if (!counting || catchingUp)
-            {
-                buffered.Add(item);
-                return;
-            }
-
-            Enqueue(item);
+            started.TrySetResult(seq);
         }
     }
 
-    // 抜けた通知を読み、ためた通知と合わせて seq の順に渡す。追いかけられなければ今の番号から数え直し、読み直すように知らせる
-    private async Task CatchUpAsync(long readySeq)
+    // 抜けた通知を読み、ためた通知と合わせて seq の順に渡す。読めなければ (例外も含む) 今の番号から数え直し、読み直すように知らせる
+    private async Task CatchUpAsync(CatchUpRequest request)
     {
-        long after;
-        lock (sync)
+        EventListResponse? content = null;
+        try
         {
-            after = lastSeq;
+            content = (await rest.GetAsync(String.Create(CultureInfo.InvariantCulture, $"events?after={request.After}"), ClientJsonContext.Default.EventListResponse, CancellationToken.None)).Content;
         }
-
-        var result = await rest.GetAsync(String.Create(CultureInfo.InvariantCulture, $"events?after={after}"), ClientJsonContext.Default.EventListResponse, CancellationToken.None);
-        lock (sync)
+        finally
         {
-            if (result.Content is { } content)
-            {
-                buffered.AddRange(content.Items);
-                Flush();
-                lastSeq = Math.Max(lastSeq, content.LastSeq);
-            }
-            else
-            {
-                buffered.Clear();
-                lastSeq = Math.Max(lastSeq, readySeq);
-                dispatching.Writer.TryWrite(null);
-            }
-
-            catchingUp = false;
+            sequencer.Complete(request, content);
         }
     }
 
-    // ためた通知を seq の順に渡す (ロックの中で呼ぶ)
-    private void Flush()
+    // 数えた通知を渡す流れに入れる。扱わない種類と読めない中身は渡さない (番号は数え方が進めている)
+    private void Emit(long id, EventListResponseItem? item)
     {
-        foreach (var item in buffered.OrderBy(static x => x.Seq))
+        if (item is null)
         {
-            Enqueue(item);
+            dispatching.Writer.TryWrite(new Dispatch(id, null));
         }
-
-        buffered.Clear();
-    }
-
-    // 見た通し番号より後の通知だけを渡す (ロックの中で呼ぶ)。扱わない種類も番号は進める
-    private void Enqueue(EventListResponseItem item)
-    {
-        if (item.Seq <= lastSeq)
+        else if (Map(item) is { } e)
         {
-            return;
-        }
-
-        lastSeq = item.Seq;
-        if (Map(item) is { } e)
-        {
-            dispatching.Writer.TryWrite(e);
+            dispatching.Writer.TryWrite(new Dispatch(id, e));
         }
     }
 
+    // 作り直す前の接続の通知と知らせは渡さない (つなぎ直しで数え直した受け手に、前の接続 (ほかの店舗のこともある) の通知を渡さない)
     private async Task DispatchAsync()
     {
-        await foreach (var e in dispatching.Reader.ReadAllAsync())
+        await foreach (var item in dispatching.Reader.ReadAllAsync())
         {
-            if (e is null)
+            if (item.Connection != sequencer.Connection)
+            {
+                continue;
+            }
+
+            if (item.Event is null)
             {
                 Expired?.Invoke(this, EventArgs.Empty);
             }
             else
             {
-                Received?.Invoke(this, new OrderEventArgs(e));
+                Received?.Invoke(this, new OrderEventArgs(item.Event, item.Connection));
             }
         }
     }
@@ -379,6 +315,9 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
 
     private static T Read<T>(EventListResponseItem item, JsonTypeInfo<T> type) =>
         item.Data.Deserialize(type) ?? throw new JsonException("The event has no data.");
+
+    // 渡す通知と、数えた接続 (Event が null は追いかけられなくなった知らせ)
+    private sealed record Dispatch(long Connection, OrderEvent? Event);
 
     // つなぐ前の問い合わせだけに時間を区切る (Long Polling の待ちは区切らない)
     private sealed class NegotiateTimeoutHandler : DelegatingHandler

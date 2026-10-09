@@ -108,21 +108,29 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         }
     }
 
+    // 読み直しを待つ間に届いた通知 (OnReceived) の印を消さないように、読み直す前に印を下ろし、読み直せなかったら戻す
+    // (戻すときは読み直しを待ってから印を読む。待つ前に読んだ値で書くと、待つ間に付いた印を消す)
     protected override async Task OnDrainedAsync()
     {
         if (tablesChanged)
         {
-            tablesChanged = !await RefreshAsync(hallUsecase.RefreshTablesAsync, nameof(IHallApi.GetTablesAsync), ShellEvent.TablesChanged).ConfigureAwait(true);
+            tablesChanged = false;
+            var refreshed = await RefreshAsync(hallUsecase.RefreshTablesAsync, nameof(IHallApi.GetTablesAsync), ShellEvent.TablesChanged).ConfigureAwait(true);
+            tablesChanged |= !refreshed;
         }
 
         if (callsChanged)
         {
-            callsChanged = !await RefreshAsync(hallUsecase.RefreshCallsAsync, nameof(IHallApi.GetCallsAsync), ShellEvent.CallsChanged).ConfigureAwait(true);
+            callsChanged = false;
+            var refreshed = await RefreshAsync(hallUsecase.RefreshCallsAsync, nameof(IHallApi.GetCallsAsync), ShellEvent.CallsChanged).ConfigureAwait(true);
+            callsChanged |= !refreshed;
         }
 
         if (servingChanged)
         {
-            servingChanged = !await RefreshAsync(hallUsecase.RefreshServingAsync, nameof(IHallApi.GetServingAsync), ShellEvent.ServingChanged).ConfigureAwait(true);
+            servingChanged = false;
+            var refreshed = await RefreshAsync(hallUsecase.RefreshServingAsync, nameof(IHallApi.GetServingAsync), ShellEvent.ServingChanged).ConfigureAwait(true);
+            servingChanged |= !refreshed;
         }
     }
 

@@ -24,8 +24,8 @@ public abstract class OrderEventReceiverBase
 
     private readonly Queue<OrderEvent> pending = new();
 
-    // seq を数えている端末 (seq は店舗の中の通し番号なので、登録し直したら数え直す)
-    private Guid? seqDeviceId;
+    // seq を数えている接続 (seq は接続の中で増える。起動でつなぎ直したら、ほかの店舗のこともあるので数え直す)
+    private long? seqConnection;
 
     private long lastSeq;
 
@@ -108,10 +108,11 @@ public abstract class OrderEventReceiverBase
         {
             var e = args.Event;
 
-            // 登録し直した端末 (ほかの店舗のこともある) は、seq を数え直す
-            if (settings.DeviceId != seqDeviceId)
+            // つなぎ直した接続 (登録し直してほかの店舗につないだこともある) の通知は、seq を数え直す
+            // (登録し直しても、つなぎ直すまでは前の接続の通知が届くので、端末の id では数え直さない)
+            if (args.Connection != seqConnection)
             {
-                seqDeviceId = settings.DeviceId;
+                seqConnection = args.Connection;
                 lastSeq = 0;
             }
 

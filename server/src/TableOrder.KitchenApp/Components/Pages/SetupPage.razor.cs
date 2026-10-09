@@ -1,6 +1,7 @@
 namespace TableOrder.KitchenApp.Components.Pages;
 
-// 端末の設定。ペアリングコードを画面のボタンで入れて登録し、起動からやり直す
+// 端末の設定。ペアリングコードを画面のボタンで入れて登録し、アプリを読み込み直して起動からやり直す
+// (動いている端末を登録し直したときに、前の店舗の通知の数え方と選んでいた持ち場を残さない)
 // 接続先はアプリを配ったサーバなので入れない。登録し直しに失敗しても、前の登録は残す
 public sealed partial class SetupPage
 {
@@ -56,7 +57,7 @@ public sealed partial class SetupPage
                 return;
             }
 
-            Navigation.NavigateTo(String.Empty, replace: true);
+            Navigation.NavigateTo(Navigation.BaseUri, forceLoad: true);
         }
         finally
         {
