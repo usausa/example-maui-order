@@ -89,6 +89,19 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 要求と応答は OAuth の決まりの形 (フォームの本文、`access_token`、`expires_in`) にする。  
 クライアントは 1 つのテナントに属し、POS のように 1 つの店舗に限ることもできる。
 
+| 項目 | 決まり |
+| --- | --- |
+| 要求 | `grant_type=client_credentials`、`client_id`、`client_secret`、任意の `scope` (空白で区切る。省けばクライアントの範囲すべて) |
+| 応答 | `{ access_token, token_type: "Bearer", expires_in, scope }` |
+| 失敗 | OAuth の形 (`{ error, error_description }`)。知らないクライアント・違う秘密・取り消したクライアントは `401` `invalid_client` (理由を見せない)、止めたテナントは `400` `unauthorized_client`、範囲の外は `400` `invalid_scope`、ほかの `grant_type` は `400` `unsupported_grant_type` |
+| 取り消し | 取り消したクライアントのトークンも、端末と同じく期限を待たずに拒む (`401`) |
+
+| 範囲 (`scope`) | 使える API |
+| --- | --- |
+| `menu.publish` | `PUT /images/{name}`、`POST /menu/publications` |
+| `visits.read` | `GET /tables`、`GET /visits/{id}`、`GET /visits/{id}/bill` |
+| `visits.close` | `POST /visits/{id}/close` |
+
 アクセストークンのクレーム:
 
 | クレーム | 端末 | 外部 | 中身 |
@@ -104,7 +117,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 - クレームの値はサーバが端末とクライアントの記録から入れ、端末が送った値は使わない
 - 署名の鍵は環境ごとに持ち、鍵を替えられるようにトークンに `kid` を付ける (テナントごとには分けない)
-- 端末の種類 (`Table` / `Hall` / `Kitchen` / `Reception`) と置き場所の範囲の外の要求は `403` (`DEVICE_SCOPE`)
+- 端末の種類 (`Table` / `Hall` / `Kitchen` / `Reception`) と置き場所の範囲の外の要求は `403` (`DEVICE_SCOPE`)、外部のクライアントの範囲 (`scope`) の外の要求は `403` (`CLIENT_SCOPE`)
 - `401` を受けた端末は、トークンを取り直して 1 回だけ送り直す。  
   トークンの要求が `DEVICE_REVOKED` で断られたときだけ初期設定に戻る (期限切れや一時的な不具合で店の端末が外れないように)
 - 置き場所 (テーブル、持ち場) は端末の記録に持ち、席替えで登録し直さない (次のトークンと `GET /devices/me/config` に出る)
@@ -263,12 +276,16 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | --- | --- | --- | --- |
 | GET | `/menu` | テーブル / ホール / キッチン | メニュー (`MenuResponse`)。`If-None-Match` に `menuVersion` を付けると、変わっていなければ `304` |
 | GET | `/images/{name}` | 全端末 | 画像 (料理の写真、チェーンのロゴ)。名前は内容が変わると変わるので、端末は保存して使い回す (`Cache-Control: private, max-age=31536000, immutable`)。ない名前は `404`、使えない文字の名前は `400` |
-| PUT | `/images/{name}` | 外部 (本部) | 画像を置く (`image/png` / `image/jpeg` / `image/webp`) → `204`。公開の前に置き、商品の `imageName` で指す |
-| POST | `/menu/publications` | 外部 (本部) | 本部で編集したメニューの公開 `MenuPublishRequest { storeCodes, menu }` (`menu` は `MenuResponse` から `menuVersion` を除いた形) → `202` `{ menuVersion }`。通知 `menu.published` |
+| PUT | `/images/{name}` | 外部 (本部) | 画像を置く (`image/png` / `image/jpeg` / `image/webp`、2 MB まで。形式は中身の先頭で確かめる) → `204`。同じ名前で中身が違えば `409` (`IMAGE_CONFLICT`)。公開の前に置き、商品の `imageName` で指す |
+| POST | `/menu/publications` | 外部 (本部) | 本部で編集したメニューの公開 `MenuPublishRequest { storeCodes, menu }` (`menu` は `MenuResponse` から `menuVersion` を除いた形) → `200` `{ menuVersion, storeCodes }`。受け取ったらすぐに今のメニューを替える。店舗に限るクライアントは自分の店舗だけに公開する。通知 `menu.published` |
 
 - 画像はテナントごとに置き、名前は英小文字・数字・`-`・`_`・`.` で、拡張子は `png` / `jpg` / `jpeg` / `webp` にする。  
   内容を替えるときは名前も替える (内容のハッシュを入れる。例: `hamburg.3f2a9c1e.png`)
 - 写真は端末の画面に合う大きさ (1280x960 ほど) にする
+- 公開の内容は、`id` の重なり、指すもの (カテゴリの商品、商品のオプションの組と持ち場、ルールの提案する商品)、価格と差額 (0 以上)、選ぶ数、写真の名前があることを確かめ、誤りは `400` (`VALIDATION_ERROR`) で項目の場所 (`menu.items[3].optionGroupIds[0]`) ごとに返す。  
+  知らない店舗コードがあれば全体を断る (複数の店舗への公開は 1 つのトランザクション)
+- 公開で消えた商品とオプションの品切れは消す (`stock.updated`)。  
+  持ち場の `id` は公開し直しても替えない
 
 `MenuResponse` の項目:
 
@@ -642,7 +659,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `ticket.created` / `ticket.updated` | その持ち場のキッチン端末 | チケット (`KitchenTicketListResponseItem`) | キッチンの表示を変える |
 | `call.created` / `call.updated` | ホール、そのテーブル端末 | 呼び出し (`CallListResponseItem`) | ホールは知らせる (音)。テーブル端末は「向かっています」 |
 | `stock.updated` | テーブル、ホール、キッチン | 変わった品 `{ items }` (売れるように戻した品は `Available`) | 売り切れの表示を変える |
-| `menu.published` | テーブル、ホール、キッチン | `menuVersion` | メニューを読み直す (カートの価格は注文のときに確かめる) |
+| `menu.published` | テーブル、ホール、キッチン | `menuVersion` | すぐにメニューと品切れを読み直す。テーブル端末 (来店中も) とホール端末は、カートの使えなくなった品 (なくなった品、価格の変わった品) を外して知らせる |
 | `store.updated` | 全端末 | 店舗 | 一時停止の表示、ラストオーダー。設定の版が替わったら、テーブル端末は待受のときに起動からやり直す |
 | `device.updated` | 全端末 | `{ deviceId }` | その端末だけが起動からやり直す (置き場所・名前の変更、無効化) |
 | `payment.updated` | そのテーブル端末、ホール | 支払 (`PaymentResponse`) | QR の支払の完了を画面に出す |
@@ -657,10 +674,16 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `visit.closed` | 来店、会計の明細、支払 (POS の売上として取り込む) |
 | `stock.updated` | 品切れ (他のチャネルの販売を止めるため) |
 
-- 送り先はテナントごとに管理画面で登録する (店舗に限ることもできる)
-- 本文は §3.1 の通知にテナントと店舗 (`tenantId`、`storeId`、`storeCode`) を足した形。  
-  `X-Signature` に送り先ごとの鍵による HMAC-SHA256 を付ける
-- `2xx` を受けるまで指数バックオフで送り直す (受け取る側は `seq` で重複を捨てる)
+- 送り先はテナントごとに管理画面で登録する (店舗に限ることもできる)。  
+  鍵はサーバが作り、登録した画面で一度だけ見せる
+- 本文は `{ id, type, occurredAt, tenantId, storeId, storeCode, seq, data }` (`id` は配信の Id、`data` は §3.2 の通知の中身)。  
+  `visit.closed` は来店に会計の明細と支払を足す
+- `X-Signature: t={送った時刻の Unix 秒},v1={HMAC-SHA256(鍵, "{t}.{本文}") の 16 進}` を付ける。  
+  受け取る側は、時刻が 5 分より古いものを捨てる
+- `2xx` を受けるまで、1 分から倍にして 1 時間までの間隔で 24 時間送り直し (1 回の時間切れは 10 秒)、過ぎたらあきらめる。  
+  あきらめた配信は管理画面で送り直せる
+- 順番は保たない (送り直しで前後する)。  
+  受け取る側は `seq` で重複を捨てる
 
 ---
 
@@ -792,11 +815,13 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 400 | `VALIDATION_ERROR` | 入力の形式・必須の項目 (詳細は `errors`) |
 | 401 | (なし) | アクセストークンがない・期限切れ・署名が合わない、無効にした端末か止めたテナントのトークン |
 | 403 | `DEVICE_SCOPE` | 端末の種類や置き場所の範囲の外 (テーブル端末から他のテーブルの来店、キッチン端末から来店の開始など) |
+| 403 | `CLIENT_SCOPE` | 外部のクライアントの範囲 (`scope`) の外 |
 | 403 | `VISIT_OPENING_DISABLED` | 来店の開き方で許していない端末 (受付機、テーブル端末) からの来店の開始 |
 | 403 | `DEVICE_REVOKED` | トークンの要求で、無効にした端末 (端末は初期設定に戻る) |
 | 403 | `TENANT_SUSPENDED` | トークンの要求で、契約を止めたテナント (端末は止まっていることを出し、間をおいて取り直す) |
 | 404 | `NOT_FOUND` | 対象がない (ほかのテナントや店舗のものも同じ) |
 | 409 | `DUPLICATE_ID_MISMATCH` | 同じ `id` で内容が違う再送 |
+| 409 | `IMAGE_CONFLICT` | 同じ名前で中身の違う画像を置く |
 | 409 | `VERSION_MISMATCH` | 来店の楽観ロックの失敗 |
 | 409 | `TABLE_OCCUPIED` | 来店のあるテーブルでの開始・移動 |
 | 409 | `NO_VACANT_TABLE` | 受付機の来店の開始で、人数の入る空席がない |

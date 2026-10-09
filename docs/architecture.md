@@ -1,7 +1,7 @@
 # 構成
 
 リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`)、ホール端末 (`TableOrder.HallApp`)、受付機 (`TableOrder.ReceptionApp`)、キッチン端末 (`TableOrder.KitchenApp`)、サーバの作り。  
-ここには作ったものだけを書き、これから作るもの (外部の連携など) は [plan.md](plan.md) に置く。  
+ここには作ったものだけを書き、これから作るもの (外部の連携など) は [plan.md](plan.md) と [backlog.md](backlog.md) に置く。  
 業務の前提と流れは [business.md](business.md)、API の想定は [api-design.md](api-design.md)、データベースは [database.md](database.md) を参照。
 
 - [1. プロジェクト](#-1-プロジェクト)
