@@ -26,6 +26,8 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - エミュレータが複数動いているときは、どのコマンドにも `--avd <AVD の名前>` を付けて選ぶ (付けないと止まる。環境変数 `EMU_AVD` でも選べる)
 - 例: `emu.py --avd <スマートフォンの AVD> --app hall install`、`emu.py --avd <タブレットの AVD> shot <一時フォルダ>/table.png`
 - スマートフォンの画面は 1080x2400 (縦向き)。座標は撮った画像の画素で読む
+- ホール端末で提供と呼び出しを操作して確かめるときは、開発のサーバの自動の進行が先に進めないように、提供と向かうまでの秒を長くして起動する (例: `--Simulation:ServedSeconds=3600 --Simulation:AcknowledgeSeconds=3600`)
+- 新しい呼び出しの音と振動はエミュレータでは聞こえないので、`adb -s <機器> shell dumpsys vibrator_manager` (振動の記録) と `dumpsys audio` (鳴らした音の区分) で確かめる
 - 並べるために起動したエミュレータは、使い終わったら `emu.py --avd <名前> poweroff` で止める
 
 ## 操作

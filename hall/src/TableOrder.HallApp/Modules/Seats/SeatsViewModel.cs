@@ -63,26 +63,11 @@ public sealed class SeatsViewModel : TabViewModelBase
     // Seat
     //--------------------------------------------------------------------------------
 
-    // 並びが同じなら中身だけを替え (スクロールの位置を保つ)、違えば作り直す
+    // 残るタイルは作り直さずに中身を替える (スクロールの位置を保つ)
     private void UpdateTiles()
     {
         var now = timeProvider.GetUtcNow();
-        var tables = tableState.Items;
-        if ((Tiles.Count == tables.Count) && Tiles.Select(static x => x.TableId).SequenceEqual(tables.Select(static x => x.Id)))
-        {
-            for (var i = 0; i < tables.Count; i++)
-            {
-                Tiles[i].Update(tables[i], now);
-            }
-
-            return;
-        }
-
-        Tiles.Clear();
-        foreach (var table in tables)
-        {
-            Tiles.Add(new SeatTile(table, now));
-        }
+        Tiles.Sync(tableState.Items, static (tile, table) => tile.TableId == table.Id, table => new SeatTile(table, now), (tile, table) => tile.Update(table, now));
     }
 
     private void Tick()

@@ -5,10 +5,13 @@ using TableOrder.Terminal.Shell;
 
 // ホール端末の通知の扱い。店舗と品切れは通知の中身で替え、席・呼び出し・提供は変わった一覧を読み直して、表示中の画面に知らせる
 // まとめて届いた通知は扱い終えたあと (OnDrainedAsync) に一覧を 1 回だけ読み直し、読み直せなかった一覧は次の通知のあとに読み直す
+// 新しい呼び出しは、届いたときに音と振動で知らせる (操作の途中とポップアップを開いている間も待たない)
 // 受け方 (重複を捨てる、操作と遷移の間を待つ、起動からやり直す知らせ) は土台 (OrderEventReceiverBase) が行う
 public sealed class OrderEventReceiver : OrderEventReceiverBase
 {
     private readonly ILogger<OrderEventReceiver> log;
+
+    private readonly CallAlert callAlert;
 
     private readonly StoreState storeState;
 
@@ -28,6 +31,7 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         INavigator navigator,
         IReactiveMessenger messenger,
         ManagedConfiguration managedConfiguration,
+        CallAlert callAlert,
         IBusyState busyState,
         Settings settings,
         StoreState storeState,
@@ -39,6 +43,7 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         : base(log, navigator, messenger, managedConfiguration, busyState, settings, deviceApi, events, deviceUsecase)
     {
         this.log = log;
+        this.callAlert = callAlert;
         this.storeState = storeState;
         this.menuState = menuState;
         this.hallUsecase = hallUsecase;
@@ -66,7 +71,12 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
                 tablesChanged = true;
                 servingChanged = true;
                 break;
-            case CallCreatedEvent or CallUpdatedEvent:
+            case CallCreatedEvent:
+                tablesChanged = true;
+                callsChanged = true;
+                callAlert.Alert();
+                break;
+            case CallUpdatedEvent:
                 tablesChanged = true;
                 callsChanged = true;
                 break;

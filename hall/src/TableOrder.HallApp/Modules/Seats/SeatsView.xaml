@@ -14,7 +14,7 @@
         <controls:TabHeader Grid.Row="0" />
 
         <CollectionView Grid.Row="1"
-                        Style="{StaticResource SeatCollectionView}"
+                        Style="{StaticResource TileCollectionView}"
                         ItemsSource="{Binding Tiles}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical"
@@ -23,10 +23,10 @@
                                  VerticalItemSpacing="8" />
             </CollectionView.ItemsLayout>
             <CollectionView.Header>
-                <BoxView Style="{StaticResource SeatGapBoxView}" />
+                <BoxView Style="{StaticResource TileGapBoxView}" />
             </CollectionView.Header>
             <CollectionView.Footer>
-                <BoxView Style="{StaticResource SeatGapBoxView}" />
+                <BoxView Style="{StaticResource TileGapBoxView}" />
             </CollectionView.Footer>
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type module:SeatTile}">

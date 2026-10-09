@@ -126,6 +126,7 @@ public static class ViewHelper
                 ErrorCodes.VisitHasOrders => AppResources.ErrorVisitHasOrders,
                 ErrorCodes.CheckoutInProgress => AppResources.ErrorCheckoutInProgress,
                 ErrorCodes.VisitNotOpen => AppResources.ErrorVisitNotOpen,
+                ErrorCodes.LineStatusInvalid => AppResources.ErrorLineStatusInvalid,
                 ErrorCodes.NotFound => AppResources.ErrorNotFound,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },

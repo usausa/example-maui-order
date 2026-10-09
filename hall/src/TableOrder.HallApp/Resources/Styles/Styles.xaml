@@ -174,6 +174,84 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
+    <!-- 一覧が空のときの知らせ -->
+    <Style x:Key="EmptyLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="24" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- タブの画面の一覧 (タイルとカード)。見出しと末尾にも項目の間隔の半分ずつが入るので、高さ 0 の行を置くだけで上下の余白が項目の間隔と揃う -->
+
+    <Style x:Key="TileCollectionView"
+           TargetType="CollectionView">
+        <Setter Property="Margin" Value="4,0" />
+        <Setter Property="SelectionMode" Value="None" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="TileGapBoxView"
+           TargetType="BoxView">
+        <Setter Property="HeightRequest" Value="0" />
+    </Style>
+
+    <Style x:Key="CardBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <!-- カードの中の操作。押せる面は 64dp にし、主な操作は主色、ほかは沈んだ面にする -->
+
+    <Style x:Key="CardPrimaryButton"
+           TargetType="Button"
+           BasedOn="{StaticResource PrimaryActionButton}">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+
+    <Style x:Key="CardButton"
+           TargetType="Button">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource OutlineColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource DisabledColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
+    </Style>
+
     <!-- 下部のタブの帯。押せる面は 72dp の高さにする -->
 
     <Style x:Key="TabBarGrid"
@@ -245,27 +323,10 @@
     <!-- Seat -->
     <!-- ================================================================================ -->
 
-    <!-- 見出しと末尾にもタイルの間隔の半分ずつが入るので、高さ 0 の行を置くだけで上下の余白がタイルの間隔と揃う -->
-    <Style x:Key="SeatCollectionView"
-           TargetType="CollectionView">
-        <Setter Property="Margin" Value="4,0" />
-        <Setter Property="SelectionMode" Value="None" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
-    </Style>
-
-    <Style x:Key="SeatGapBoxView"
-           TargetType="BoxView">
-        <Setter Property="HeightRequest" Value="0" />
-    </Style>
-
     <Style x:Key="SeatTileBorder"
-           TargetType="Border">
+           TargetType="Border"
+           BasedOn="{StaticResource CardBorder}">
         <Setter Property="HeightRequest" Value="104" />
-        <Setter Property="Padding" Value="0" />
-        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
-        <Setter Property="StrokeThickness" Value="1" />
-        <Setter Property="StrokeShape" Value="Rectangle" />
-        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
     <!-- 状態の帯 (空きは罫線の色。来店中と会計中はトリガで替える) -->
@@ -527,6 +588,155 @@
            TargetType="Button"
            BasedOn="{StaticResource VisitActionButton}">
         <Setter Property="FontSize" Value="20" />
+    </Style>
+
+    <!-- ================================================================================ -->
+    <!-- Call -->
+    <!-- ================================================================================ -->
+
+    <!-- 状態の帯 (呼ばれている間は注意の色。向かっている間はトリガで替える) -->
+    <Style x:Key="CallStripBoxView"
+           TargetType="BoxView">
+        <Setter Property="Color" Value="{DynamicResource ErrorColor}" />
+    </Style>
+
+    <!-- 操作の列は状態で中身を替えるので、列の間は ColumnSpacing ではなく要素の Margin で空ける -->
+    <Style x:Key="CallCardGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="12,10,12,12" />
+        <Setter Property="RowSpacing" Value="2" />
+        <Setter Property="ColumnSpacing" Value="0" />
+    </Style>
+
+    <Style x:Key="CallTableLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="CallElapsedLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="CallReasonLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="CallAcknowledgeButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardPrimaryButton}">
+        <Setter Property="Margin" Value="0,10,4,0" />
+    </Style>
+
+    <Style x:Key="CallAcknowledgedLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,10,4,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="CallCompleteButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardButton}">
+        <Setter Property="Margin" Value="4,10,0,0" />
+    </Style>
+
+    <!-- ================================================================================ -->
+    <!-- Serving -->
+    <!-- ================================================================================ -->
+
+    <!-- すべて提供したは明細が 2 つ以上のときだけ出すので、列の間は ColumnSpacing ではなくボタンの Margin で空ける -->
+    <Style x:Key="ServingTitleGrid"
+           TargetType="Grid">
+        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="Padding" Value="12,0,0,0" />
+        <Setter Property="ColumnSpacing" Value="0" />
+    </Style>
+
+    <Style x:Key="ServingTableLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ServingAllButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardPrimaryButton}">
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Setter Property="Padding" Value="16,0" />
+    </Style>
+
+    <Style x:Key="ServingLineListStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="12,4" />
+    </Style>
+
+    <!-- 注文の内容は省略せずに折り返して全部見せる -->
+    <Style x:Key="ServingLineGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="0,6" />
+        <Setter Property="ColumnSpacing" Value="12" />
+    </Style>
+
+    <Style x:Key="ServingLineNameStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="2" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="ServingLineNameLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ServingLineOptionLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="ServingLineCountStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="2" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="ServingLineQuantityLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ServingLineElapsedLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="ServingLineButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardButton}">
+        <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
     <!-- ================================================================================ -->

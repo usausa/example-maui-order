@@ -687,6 +687,48 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
+        internal static string CallAcknowledge {
+            get {
+                return ResourceManager.GetString("CallAcknowledge", resourceCulture);
+            }
+        }
+
+        internal static string CallAcknowledged {
+            get {
+                return ResourceManager.GetString("CallAcknowledged", resourceCulture);
+            }
+        }
+
+        internal static string CallComplete {
+            get {
+                return ResourceManager.GetString("CallComplete", resourceCulture);
+            }
+        }
+
+        internal static string CallsEmpty {
+            get {
+                return ResourceManager.GetString("CallsEmpty", resourceCulture);
+            }
+        }
+
+        internal static string ServeLine {
+            get {
+                return ResourceManager.GetString("ServeLine", resourceCulture);
+            }
+        }
+
+        internal static string ServeAll {
+            get {
+                return ResourceManager.GetString("ServeAll", resourceCulture);
+            }
+        }
+
+        internal static string ServingEmpty {
+            get {
+                return ResourceManager.GetString("ServingEmpty", resourceCulture);
+            }
+        }
+
         internal static string ErrorUnavailable {
             get {
                 return ResourceManager.GetString("ErrorUnavailable", resourceCulture);
@@ -750,6 +792,12 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ErrorNotFound {
             get {
                 return ResourceManager.GetString("ErrorNotFound", resourceCulture);
+            }
+        }
+
+        internal static string ErrorLineStatusInvalid {
+            get {
+                return ResourceManager.GetString("ErrorLineStatusInvalid", resourceCulture);
             }
         }
 

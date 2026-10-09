@@ -9,14 +9,90 @@
              x:DataType="{x:Type module:ServingViewModel}"
              s:BindingContextResolver.Type="{x:Type module:ServingViewModel}">
 
-    <!-- 提供のタブ: できあがった明細 (テーブルごと)。中身はこれから作る -->
+    <!-- 提供のタブ: できあがった明細をテーブルごとのカードに並べる (できあがりの古い順)。明細ごとに提供したを、明細が 2 つ以上のテーブルにはすべて提供したを置く -->
     <Grid Style="{StaticResource ScreenGrid}"
           RowDefinitions="Auto,*,Auto">
         <controls:TabHeader Grid.Row="0" />
 
+        <CollectionView Grid.Row="1"
+                        Style="{StaticResource TileCollectionView}"
+                        ItemsSource="{Binding Groups}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="1"
+                                 HorizontalItemSpacing="8"
+                                 VerticalItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <BoxView Style="{StaticResource TileGapBoxView}" />
+            </CollectionView.Header>
+            <CollectionView.Footer>
+                <BoxView Style="{StaticResource TileGapBoxView}" />
+            </CollectionView.Footer>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:ServingGroup}">
+                    <Border Style="{StaticResource CardBorder}">
+                        <VerticalStackLayout>
+                            <!-- table / serve all -->
+                            <Grid Style="{StaticResource ServingTitleGrid}"
+                                  ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0"
+                                       Style="{StaticResource ServingTableLabel}"
+                                       Text="{Binding TableText}" />
+                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                <Button Grid.Column="1"
+                                        Style="{StaticResource ServingAllButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type module:ServingViewModel}}, Path=ServeGroupCommand, x:DataType={x:Type module:ServingViewModel}}"
+                                        CommandParameter="{Binding .}"
+                                        IsVisible="{Binding HasMany}"
+                                        Text="{x:Static strings:AppResources.ServeAll}" />
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                            </Grid>
+                            <BoxView Style="{StaticResource HorizontalRule}" />
+
+                            <!-- lines -->
+                            <VerticalStackLayout Style="{StaticResource ServingLineListStack}"
+                                                 BindableLayout.ItemsSource="{Binding Lines}">
+                                <BindableLayout.ItemTemplate>
+                                    <DataTemplate x:DataType="{x:Type module:ServingLine}">
+                                        <Grid Style="{StaticResource ServingLineGrid}"
+                                              ColumnDefinitions="*,Auto,Auto">
+                                            <VerticalStackLayout Grid.Column="0"
+                                                                 Style="{StaticResource ServingLineNameStack}">
+                                                <Label Style="{StaticResource ServingLineNameLabel}"
+                                                       Text="{Binding Name}" />
+                                                <Label Style="{StaticResource ServingLineOptionLabel}"
+                                                       IsVisible="{Binding HasOptions}"
+                                                       Text="{Binding OptionText}" />
+                                            </VerticalStackLayout>
+                                            <VerticalStackLayout Grid.Column="1"
+                                                                 Style="{StaticResource ServingLineCountStack}">
+                                                <Label Style="{StaticResource ServingLineQuantityLabel}"
+                                                       Text="{Binding QuantityText}" />
+                                                <Label Style="{StaticResource ServingLineElapsedLabel}"
+                                                       Text="{Binding ElapsedText}" />
+                                            </VerticalStackLayout>
+                                            <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                            <Button Grid.Column="2"
+                                                    Style="{StaticResource ServingLineButton}"
+                                                    Command="{Binding Source={RelativeSource AncestorType={x:Type module:ServingViewModel}}, Path=ServeLineCommand, x:DataType={x:Type module:ServingViewModel}}"
+                                                    CommandParameter="{Binding .}"
+                                                    Text="{x:Static strings:AppResources.ServeLine}" />
+                                            <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                        </Grid>
+                                    </DataTemplate>
+                                </BindableLayout.ItemTemplate>
+                            </VerticalStackLayout>
+                        </VerticalStackLayout>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
         <Label Grid.Row="1"
-               Style="{StaticResource PendingLabel}"
-               Text="{x:Static strings:AppResources.TabPending}" />
+               Style="{StaticResource EmptyLabel}"
+               IsVisible="{Binding IsEmpty}"
+               Text="{x:Static strings:AppResources.ServingEmpty}" />
 
         <controls:TabFooter Grid.Row="2" />
     </Grid>

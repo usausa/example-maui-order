@@ -362,6 +362,27 @@
   <data name="StatusCancelled" xml:space="preserve">
     <value>取消</value>
   </data>
+  <data name="CallAcknowledge" xml:space="preserve">
+    <value>向かう</value>
+  </data>
+  <data name="CallAcknowledged" xml:space="preserve">
+    <value>向かっています</value>
+  </data>
+  <data name="CallComplete" xml:space="preserve">
+    <value>対応した</value>
+  </data>
+  <data name="CallsEmpty" xml:space="preserve">
+    <value>呼び出しはありません</value>
+  </data>
+  <data name="ServeLine" xml:space="preserve">
+    <value>提供した</value>
+  </data>
+  <data name="ServeAll" xml:space="preserve">
+    <value>すべて提供した</value>
+  </data>
+  <data name="ServingEmpty" xml:space="preserve">
+    <value>提供を待つ品はありません</value>
+  </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>通信できませんでした。しばらくしてからもう一度試してください</value>
   </data>
@@ -394,6 +415,9 @@
   </data>
   <data name="ErrorNotFound" xml:space="preserve">
     <value>見つかりませんでした</value>
+  </data>
+  <data name="ErrorLineStatusInvalid" xml:space="preserve">
+    <value>取り消された品か、食後まで止めている品です</value>
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした</value>

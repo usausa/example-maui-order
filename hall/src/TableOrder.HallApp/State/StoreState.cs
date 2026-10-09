@@ -15,6 +15,10 @@ public sealed class StoreState
 
     public bool OrderingPaused => Store.OrderingPaused;
 
+    // 呼び出しの用件の名前 (店舗の設定にない用件は null)
+    public LocalizedText? FindCallReasonName(string code) =>
+        Config.CallReasons.FirstOrDefault(x => x.Code == code)?.Name;
+
     public void Update(DeviceConfigResponse config, StoreResponse store)
     {
         Config = config;

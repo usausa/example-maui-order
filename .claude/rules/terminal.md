@@ -14,7 +14,10 @@ paths:
 - 通知の受け口は `OrderEventReceiverBase` を継ぎ、届いたときにすぐ行うこと (`OnReceived`)、通知の扱い (`ApplyAsync`)、待っていた通知を扱い終えたとき (`OnDrainedAsync`)、起動からやり直す知らせ (`NotifyRestartAsync`) をアプリで決める
 - 共通の部品の基底クラスでアプリが決める処理は abstract にし、使わないアプリは何もしない実装を理由のコメントと一緒に書く (virtual の既定にすると、使わないアプリのソリューションの InspectCode が上書きされていないと指摘する)
 - 通知を受けて一覧を読み直すときは、通知ごとに読まず、読み直す印を届いたとき (`OnReceived`) に付けて、`OnDrainedAsync` (待っていた通知を扱い終えたとき) でまとめて読む。読み直せなかった印は残す
+- 届いたらすぐ知らせること (新しい呼び出しの音と振動) は `OnReceived` で行う (`ApplyAsync` と `OnDrainedAsync` は、操作の途中とポップアップを開いている間は待たされる)
 - Android の API は `Components/` の部品にまとめ (共通の部分は `Xxx.cs`、Android の部分は `Xxx.android.cs`)、画面と状態から直接呼ばない
+- 端末で鳴らす音は端末の通知の音にし、通知の音量で鳴らす (`Ringtone` の `AudioAttributes` を通知にする。既定は着信の音量)
+- 振動は `GetSystemService(Class)` で `Vibrator` を引く (名前で引く `Context.VibratorService` は Android 12 で廃止され、警告になる)
 - 管理対象の構成 (EMM が配る設定) は `Components/ManagedConfiguration` で読み、`Settings` が端末の設定より優先して返す。端末の値は書き換えない (配られなくなったら端末の値に戻る)
 - 管理対象の構成のキーを足すときは、`Platforms/Android/Resources/xml/app_restrictions.xml`、名前と説明の文言 (`values` / `values-en` の `restrictions.xml`)、`ManagedConfiguration` を揃える
 - 配られた値のうち、空の値と正しくない値は使わずに記録し、端末の設定を使う

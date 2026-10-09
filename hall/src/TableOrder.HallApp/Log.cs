@@ -15,6 +15,11 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]
     public static partial void WarnApiFailed(this ILogger logger, string operation, ApiStatus status, string? errorCode);
 
+    // Alert
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Call alert failed.")]
+    public static partial void WarnCallAlertFailed(this ILogger logger, Exception exception);
+
     // Navigation
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Unhandled navigation error.")]

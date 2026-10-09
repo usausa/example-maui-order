@@ -362,6 +362,27 @@
   <data name="StatusCancelled" xml:space="preserve">
     <value>Cancelled</value>
   </data>
+  <data name="CallAcknowledge" xml:space="preserve">
+    <value>On my way</value>
+  </data>
+  <data name="CallAcknowledged" xml:space="preserve">
+    <value>On the way</value>
+  </data>
+  <data name="CallComplete" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="CallsEmpty" xml:space="preserve">
+    <value>No calls.</value>
+  </data>
+  <data name="ServeLine" xml:space="preserve">
+    <value>Served</value>
+  </data>
+  <data name="ServeAll" xml:space="preserve">
+    <value>All served</value>
+  </data>
+  <data name="ServingEmpty" xml:space="preserve">
+    <value>Nothing to serve.</value>
+  </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>
   </data>
@@ -394,6 +415,9 @@
   </data>
   <data name="ErrorNotFound" xml:space="preserve">
     <value>Not found.</value>
+  </data>
+  <data name="ErrorLineStatusInvalid" xml:space="preserve">
+    <value>This item was canceled or is held until after the meal.</value>
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Something went wrong.</value>

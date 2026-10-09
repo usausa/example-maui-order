@@ -43,6 +43,7 @@ global using TableOrder.Domain;
 global using TableOrder.Domain.Enums;
 
 global using TableOrder.HallApp;
+global using TableOrder.HallApp.Components;
 global using TableOrder.HallApp.Modules.Helpers;
 global using TableOrder.HallApp.Resources.Strings;
 global using TableOrder.HallApp.State;

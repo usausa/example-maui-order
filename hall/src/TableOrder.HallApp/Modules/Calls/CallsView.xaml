@@ -9,14 +9,89 @@
              x:DataType="{x:Type module:CallsViewModel}"
              s:BindingContextResolver.Type="{x:Type module:CallsViewModel}">
 
-    <!-- 呼び出しのタブ: 終わっていない呼び出し (テーブル、用件、経過時間)。中身はこれから作る -->
+    <!-- 呼び出しのタブ: 終わっていない呼び出しを古い順にカードで並べる。状態は左の帯の色でも示す (呼ばれている間は注意の色、向かっている間は主色) -->
     <Grid Style="{StaticResource ScreenGrid}"
           RowDefinitions="Auto,*,Auto">
         <controls:TabHeader Grid.Row="0" />
 
+        <CollectionView Grid.Row="1"
+                        Style="{StaticResource TileCollectionView}"
+                        ItemsSource="{Binding Items}">
+            <CollectionView.ItemsLayout>
+                <GridItemsLayout Orientation="Vertical"
+                                 Span="1"
+                                 HorizontalItemSpacing="8"
+                                 VerticalItemSpacing="8" />
+            </CollectionView.ItemsLayout>
+            <CollectionView.Header>
+                <BoxView Style="{StaticResource TileGapBoxView}" />
+            </CollectionView.Header>
+            <CollectionView.Footer>
+                <BoxView Style="{StaticResource TileGapBoxView}" />
+            </CollectionView.Footer>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:CallItem}">
+                    <Border Style="{StaticResource CardBorder}">
+                        <Grid Style="{StaticResource FillGrid}"
+                              ColumnDefinitions="6,*">
+                            <!-- status strip -->
+                            <BoxView Grid.Column="0"
+                                     Style="{StaticResource CallStripBoxView}">
+                                <BoxView.Triggers>
+                                    <DataTrigger TargetType="BoxView"
+                                                 Binding="{Binding IsAcknowledged}"
+                                                 Value="True">
+                                        <Setter Property="Color" Value="{DynamicResource PrimaryColor}" />
+                                    </DataTrigger>
+                                </BoxView.Triggers>
+                            </BoxView>
+
+                            <Grid Grid.Column="1"
+                                  Style="{StaticResource CallCardGrid}"
+                                  RowDefinitions="Auto,Auto,Auto"
+                                  ColumnDefinitions="*,*">
+                                <!-- table / elapsed -->
+                                <Label Grid.Row="0" Grid.Column="0"
+                                       Style="{StaticResource CallTableLabel}"
+                                       Text="{Binding TableText}" />
+                                <Label Grid.Row="0" Grid.Column="1"
+                                       Style="{StaticResource CallElapsedLabel}"
+                                       Text="{Binding ElapsedText}" />
+
+                                <!-- reason -->
+                                <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
+                                       Style="{StaticResource CallReasonLabel}"
+                                       Text="{Binding ReasonText}" />
+
+                                <!-- action (向かっている呼び出しは、向かうの場所に状態を出す) -->
+                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                <Button Grid.Row="2" Grid.Column="0"
+                                        Style="{StaticResource CallAcknowledgeButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type module:CallsViewModel}}, Path=AcknowledgeCommand, x:DataType={x:Type module:CallsViewModel}}"
+                                        CommandParameter="{Binding .}"
+                                        IsVisible="{Binding IsAcknowledged, Converter={StaticResource ReverseConverter}}"
+                                        Text="{x:Static strings:AppResources.CallAcknowledge}" />
+                                <Label Grid.Row="2" Grid.Column="0"
+                                       Style="{StaticResource CallAcknowledgedLabel}"
+                                       IsVisible="{Binding IsAcknowledged}"
+                                       Text="{x:Static strings:AppResources.CallAcknowledged}" />
+                                <Button Grid.Row="2" Grid.Column="1"
+                                        Style="{StaticResource CallCompleteButton}"
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type module:CallsViewModel}}, Path=CompleteCommand, x:DataType={x:Type module:CallsViewModel}}"
+                                        CommandParameter="{Binding .}"
+                                        Text="{x:Static strings:AppResources.CallComplete}" />
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                            </Grid>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
         <Label Grid.Row="1"
-               Style="{StaticResource PendingLabel}"
-               Text="{x:Static strings:AppResources.TabPending}" />
+               Style="{StaticResource EmptyLabel}"
+               IsVisible="{Binding IsEmpty}"
+               Text="{x:Static strings:AppResources.CallsEmpty}" />
 
         <controls:TabFooter Grid.Row="2" />
     </Grid>
