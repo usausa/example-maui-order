@@ -8,8 +8,6 @@ using TableOrder.Terminal.Shell;
 // 受け方 (重複を捨てる、操作と遷移の間を待つ、起動からやり直す知らせ) は土台 (OrderEventReceiverBase) が行う
 public sealed class OrderEventReceiver : OrderEventReceiverBase
 {
-    private readonly ILogger<OrderEventReceiver> log;
-
     private readonly MenuState menuState;
 
     private readonly VisitState visitState;
@@ -34,7 +32,6 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         OrderUsecase orderUsecase)
         : base(log, navigator, messenger, managedConfiguration, busyState, settings, deviceApi, events, deviceUsecase)
     {
-        this.log = log;
         this.menuState = menuState;
         this.visitState = visitState;
         this.storeState = storeState;
@@ -68,10 +65,15 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
     // 状態は通知の中身で替えるので、まとめて読み直すものはない
     protected override Task OnDrainedAsync() => Task.CompletedTask;
 
+    // 来店の通知は、このテーブルの来店 (移る前と移った先を含む) のものだけが届く
     protected override async Task ApplyAsync(OrderEvent e)
     {
         switch (e)
         {
+            case VisitOpenedEvent opened when visitState.IsOpen && (visitState.Id != opened.Visit.Id):
+                // 今の来店を終える前 (お礼の間など) に開いた次の来店は、今の来店を終えてから開く
+                visitState.SetNext(opened.Visit);
+                break;
             case VisitOpenedEvent opened:
                 // 待受で人数を入れて自分で開いた来店なら、開き直さない
                 if (!visitState.IsOpen)
@@ -88,24 +90,29 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
                     visitState.Update(updated.Visit);
                     await Navigator.NotifyAsync(ShellEvent.VisitUpdated).ConfigureAwait(true);
                 }
+                else if (visitState.Next?.Id == updated.Visit.Id)
+                {
+                    visitState.SetNext(updated.Visit);
+                }
 
                 break;
             case VisitMovedEvent moved:
-                // このテーブルから移ったら待受に戻し、このテーブルに移ってきたら注文の画面にする
-                if (visitState.IsOpen && (visitState.Id == moved.Visit.Id))
+                if (visitState.IsOpen && (visitState.Id == moved.Visit.Id) && !visitState.IsMoved)
                 {
+                    // このテーブルから移ったら待受に戻す (来店を終えるのは画面が行う。知らせを受けない画面の間も、終わったことを残す)
+                    visitState.SetMoved();
                     await Navigator.NotifyAsync(ShellEvent.VisitMoved).ConfigureAwait(true);
                 }
                 else if (!visitState.IsOpen)
                 {
-                    // 移る前の注文が読めなくても注文の画面にする (上限を超える注文はサーバが断る)
-                    var orders = await orderUsecase.OpenMovedVisitAsync(moved.Visit).ConfigureAwait(true);
-                    if (!orders.IsSuccess)
-                    {
-                        log.WarnApiFailed(nameof(ITableApi.GetOrdersAsync), orders.Status, orders.ErrorCode);
-                    }
-
+                    // このテーブルに移ってきたら注文の画面にする
+                    await orderUsecase.OpenMovedVisitAsync(moved.Visit).ConfigureAwait(true);
                     await Navigator.NotifyAsync(ShellEvent.VisitOpened).ConfigureAwait(true);
+                }
+                else
+                {
+                    // 今の来店を終える前に移ってきた来店は次の来店にし、次の来店がほかのテーブルに移ったら次の来店をなくす
+                    visitState.SetNext(visitState.Next?.Id == moved.Visit.Id ? null : moved.Visit);
                 }
 
                 break;
@@ -115,6 +122,11 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
                 {
                     visitState.Update(closed.Visit);
                     await Navigator.NotifyAsync(ShellEvent.VisitClosed).ConfigureAwait(true);
+                }
+                else if (visitState.Next?.Id == closed.Visit.Id)
+                {
+                    // 次の来店が、開く前に閉じた (取りやめなど)
+                    visitState.SetNext(null);
                 }
 
                 break;

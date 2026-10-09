@@ -50,9 +50,18 @@ public static class Extensions
     // Navigation
     //--------------------------------------------------------------------------------
 
+    // 遷移の途中 (画面の OnNavigatedToAsync など) には遷移できないので、遷移を終えてから行う
+    // 終えるまでに別の画面に移っていたら (起動からやり直すなど) 行わない (閉じた画面から遷移しない)
+
+    // 画面 (source) の処理から移る。読み込みと通知での読み直しが重なっても、移るのは表示中の画面からの 1 回だけにする
     // ReSharper disable once AsyncVoidMethod
-    public static async ValueTask PostForwardAsync(this INavigator navigator, object viewId, NavigationParameter? parameter = null)
+    public static async ValueTask PostForwardAsync(this INavigator navigator, object source, object viewId, NavigationParameter? parameter = null)
     {
+        if (!ReferenceEquals(navigator.CurrentTarget, source))
+        {
+            return;
+        }
+
         if (navigator.Executing)
         {
             // ReSharper disable once AsyncVoidEventHandlerMethod
@@ -61,7 +70,10 @@ public static class Extensions
                 if (!navigator.Executing)
                 {
                     navigator.ExecutingChanged -= ExecutingChanged;
-                    await navigator.ForwardAsync(viewId, parameter);
+                    if (ReferenceEquals(navigator.CurrentTarget, source))
+                    {
+                        await navigator.ForwardAsync(viewId, parameter);
+                    }
                 }
             }
 
@@ -78,13 +90,18 @@ public static class Extensions
     {
         if (navigator.Executing)
         {
+            var target = navigator.CurrentTarget;
+
             // ReSharper disable once AsyncVoidEventHandlerMethod
             async void ExecutingChanged(object? sender, EventArgs args)
             {
                 if (!navigator.Executing)
                 {
                     navigator.ExecutingChanged -= ExecutingChanged;
-                    await task();
+                    if (ReferenceEquals(navigator.CurrentTarget, target))
+                    {
+                        await task();
+                    }
                 }
             }
 

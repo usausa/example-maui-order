@@ -69,6 +69,7 @@ public sealed class AccountService
     //--------------------------------------------------------------------------------
 
     // 資格情報 (パスワード、印、間違えた回数、多要素) を書く。読んだときの版でなければ書かずに false を返す
+    // 止めた利用者の資格情報は書かない (止める前のサインインのまま、パスワードを替えて Cookie を出し直させない)
     public async ValueTask<bool> UpdateCredentialAsync(AdminUserEntity user, CancellationToken cancellationToken)
     {
         var now = timeProvider.GetUtcNow();

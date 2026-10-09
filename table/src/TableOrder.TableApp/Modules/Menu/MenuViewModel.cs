@@ -170,10 +170,10 @@ public sealed partial class MenuViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
-    // スタッフメニューを開いている間に来店が閉じていたら、来店を終えて待受に戻す
+    // スタッフメニューを開いている間に来店が終わっていたら (閉じた、取りやめた、ほかのテーブルに移った)、来店を終える
     public override async Task OnNavigatedToAsync(INavigationContext context)
     {
-        if (visitState.Status == VisitStatus.Closed)
+        if (visitState.IsFinished)
         {
             await Navigator.PostActionAsync(FinishVisitAsync);
         }
@@ -213,10 +213,15 @@ public sealed partial class MenuViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
+    // 来店を終えて待受に戻す。終える前に次の来店が開いていたら、次の来店の注文の画面にする
+    // 次の来店の注文を読む間も画面の操作と重ならないように、Busy にする
     private async Task FinishVisitAsync()
     {
-        orderUsecase.FinishVisit();
-        await Navigator.ForwardAsync(ViewId.Standby);
+        using (BusyState.Begin())
+        {
+            await orderUsecase.FinishVisitAsync();
+            await Navigator.ForwardAsync(visitState.IsOpen ? ViewId.Menu : ViewId.Standby);
+        }
     }
 
     //--------------------------------------------------------------------------------

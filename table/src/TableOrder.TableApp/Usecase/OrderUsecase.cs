@@ -9,7 +9,7 @@ public sealed record OrderSuggestion(
 // 来店の開始と終了、メニューのルール (確認・上限・提案) の判定、注文の送信。通信と状態の更新を組み合わせる手順をここに置く
 public sealed class OrderUsecase
 {
-    private readonly ITableApi tableApi;
+    private readonly ILogger<OrderUsecase> log;
 
     private readonly MenuState menuState;
 
@@ -19,18 +19,22 @@ public sealed class OrderUsecase
 
     private readonly LanguageState languageState;
 
+    private readonly ITableApi tableApi;
+
     public OrderUsecase(
-        ITableApi tableApi,
+        ILogger<OrderUsecase> log,
         MenuState menuState,
         VisitState visitState,
         CartState cartState,
-        LanguageState languageState)
+        LanguageState languageState,
+        ITableApi tableApi)
     {
-        this.tableApi = tableApi;
+        this.log = log;
         this.menuState = menuState;
         this.visitState = visitState;
         this.cartState = cartState;
         this.languageState = languageState;
+        this.tableApi = tableApi;
     }
 
     //--------------------------------------------------------------------------------
@@ -64,7 +68,8 @@ public sealed class OrderUsecase
     }
 
     // ほかのテーブルから移ってきた来店を開き、移る前の注文を読む (上限のルールに数える)
-    public async ValueTask<ApiResult<OrderListResponse>> OpenMovedVisitAsync(VisitResponse visit)
+    // 注文が読めなくても開く (上限を超える注文はサーバが断る)
+    public async ValueTask OpenMovedVisitAsync(VisitResponse visit)
     {
         OpenVisit(visit);
         var result = await tableApi.GetOrdersAsync(visit.Id);
@@ -72,16 +77,23 @@ public sealed class OrderUsecase
         {
             visitState.UpdateOrdered(content.Items);
         }
-
-        return result;
+        else
+        {
+            log.WarnApiFailed(nameof(ITableApi.GetOrdersAsync), result.Status, result.ErrorCode);
+        }
     }
 
-    // 会計を終えた、または来店が閉じられた
-    public void FinishVisit()
+    // 会計を終えた、または来店が終わった (閉じた、取りやめた、ほかのテーブルに移った)
+    // 終える前にこのテーブルで次の来店が開いていたら (お礼の間に次のお客様を案内したなど)、続けて開く
+    // 次の来店は移ってきたことも、開くまでに注文したこともあるので、注文を読む
+    public ValueTask FinishVisitAsync()
     {
+        var next = visitState.Next;
         visitState.Close();
         cartState.Clear();
         languageState.Reset();
+
+        return next is not null ? OpenMovedVisitAsync(next) : ValueTask.CompletedTask;
     }
 
     //--------------------------------------------------------------------------------

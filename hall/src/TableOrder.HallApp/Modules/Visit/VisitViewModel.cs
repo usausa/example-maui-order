@@ -160,8 +160,10 @@ public sealed partial class VisitViewModel : AppViewModelBase
 
     protected override Task OnTablesChangedAsync() => LoadAsync();
 
+    // 開いたときの読み込み (遷移の途中) からも戻るので、遷移を終えてから戻る
+    // 開いたときの読み込みと通知での読み直しが重なっても、戻るのは表示中のこの画面からの 1 回だけにする
     private async Task BackAsync() =>
-        await Navigator.ForwardAsync(ViewId.Seats);
+        await Navigator.PostForwardAsync(this, ViewId.Seats);
 
     //--------------------------------------------------------------------------------
     // Load

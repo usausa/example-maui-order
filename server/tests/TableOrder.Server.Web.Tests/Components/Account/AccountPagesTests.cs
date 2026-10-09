@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using TableOrder.Server.Core.Models.Entity;
 using TableOrder.Server.Core.Models.Enums;
+using TableOrder.Server.Core.Services;
 
 public sealed class AccountPagesTests : IClassFixture<ServerFactory>
 {
@@ -14,6 +15,8 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
     {
         this.factory = factory;
     }
+
+    private AccountService Account => factory.Services.GetRequiredService<AccountService>();
 
     // サインインしていなければ、管理画面はサインインの画面に移る (戻る先を付ける)
     [Fact]
@@ -186,6 +189,69 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         // Act / Assert
         await AssertSignInRefusedAsync(inactive);
         await AssertSignInRefusedAsync(suspended);
+    }
+
+    // 止めた利用者は、止める前のサインインのままではパスワードを替えられない (新しい資格の印で Cookie を出し直させない)
+    [Fact]
+    public async Task DeactivatedUserCannotChangePasswordWithEarlierSignIn()
+    {
+        // Arrange
+        using var admin = new TestAdmin(factory);
+        var email = await factory.CreateAdminUserAsync(AdminRole.TenantAdmin, SampleData.DemoTenantId);
+        using (var signIn = await admin.SignInAsync(email, ServerFactory.AdminPassword))
+        {
+            Assert.Equal("/", TestAdmin.LocationOf(signIn));
+        }
+
+        var user = (await Account.FindByEmailAsync(email.ToUpperInvariant(), TestContext.Current.CancellationToken))!;
+        using (factory.BeginTenant(SampleData.DemoTenantId))
+        {
+            Assert.Null(await factory.Services.GetRequiredService<AdminUserService>().SetActiveAsync(user.Id, false, user.Version, Guid.Empty, TestContext.Current.CancellationToken));
+        }
+
+        // Act
+        using var response = await admin.PostFormAsync("/account/password", "password", new Dictionary<string, string>
+        {
+            ["Input.CurrentPassword"] = ServerFactory.AdminPassword,
+            ["Input.NewPassword"] = "changed-password-1",
+            ["Input.ConfirmPassword"] = "changed-password-1"
+        });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.DoesNotContain("パスワードを替えました。", await TestAdmin.ReadPageAsync(response), StringComparison.Ordinal);
+        var stored = (await Account.FindByEmailAsync(email.ToUpperInvariant(), TestContext.Current.CancellationToken))!;
+        Assert.Equal(user.PasswordHash, stored.PasswordHash);
+    }
+
+    // 止めたテナントの利用者がパスワードを替えると、Cookie を出し直さずにサインアウトさせる
+    [Fact]
+    public async Task SuspendedTenantUserIsSignedOutAfterPasswordChange()
+    {
+        // Arrange
+        using var admin = new TestAdmin(factory);
+        var (tenantId, _) = await factory.CreateTenantAsync();
+        var email = await factory.CreateAdminUserAsync(AdminRole.TenantAdmin, tenantId);
+        using (var signIn = await admin.SignInAsync(email, ServerFactory.AdminPassword))
+        {
+            Assert.Equal("/", TestAdmin.LocationOf(signIn));
+        }
+
+        await factory.SuspendTenantAsync(tenantId);
+
+        // Act
+        using var response = await admin.PostFormAsync("/account/password", "password", new Dictionary<string, string>
+        {
+            ["Input.CurrentPassword"] = ServerFactory.AdminPassword,
+            ["Input.NewPassword"] = "changed-password-1",
+            ["Input.ConfirmPassword"] = "changed-password-1"
+        });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var page = await admin.GetAsync("/");
+        Assert.Equal(HttpStatusCode.Redirect, page.StatusCode);
+        Assert.StartsWith("/account/sign-in", TestAdmin.LocationOf(page), StringComparison.Ordinal);
     }
 
     // サインアウトすると、管理画面はサインインの画面に戻る

@@ -52,6 +52,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 静的な画面から移るときは `NavigationManager.NavigateTo` のあとに処理を続けない (`return` する)。戻る先は `AccountPaths.LocalReturnPath` で管理画面の中の経路に限る
 - 利用者の扱える範囲は `AdminScope` (サインインのクレームの役割、テナント、受け持つ店舗) で決め、`StoreSelection` は範囲の外を選ばない (画面で選んだ値をそのまま Service の文脈にしない)
 - 利用者の資格情報 (パスワード、役割、受け持つ店舗、多要素、止める) を替えたら `SecurityStamp` を替え、開いている管理画面をサインインからやり直させる
+- サインインできるか (止めた利用者、止めたテナント) は、サインインのほか Cookie の確かめ直し (`ValidateSecurityStampAsync`) と出し直し (`RefreshSignInAsync`) でも `AdminSignInManager` で確かめ、止めた利用者の資格情報は書かない (SQL の条件に `IsActive`。止める前の Cookie のままパスワードを替えて、新しい印の Cookie を受け取らせない)
 - 仮のパスワードは管理画面で作って (`TemporaryPassword`) ハッシュにし、Service には平文を渡さない。平文は出した画面で一度だけ見せる
 - 利用者の管理は、テナントの利用者を `AdminUserService` (選んだテナントで絞る)、運営者を `OperatorService` で行い、操作した利用者の id を渡して自分の役割の変更と自分を止めることを断る
 - サーバが配る Web アプリ (キッチン端末) の、内容で名前の替わらないファイル (`_framework` の外。index.html、JavaScript の部品、スタイル) は `Cache-Control: no-cache` で返す (ないとブラウザが推して残し、更新しても古いファイルを使う)

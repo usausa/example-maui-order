@@ -2,6 +2,7 @@ namespace TableOrder.ReceptionApp.Modules.Guests;
 
 using TableOrder.ReceptionApp.Modules.Guide;
 using TableOrder.Terminal.Components;
+using TableOrder.Terminal.Messaging;
 
 // 人数。大人と子ども (小学生以下) を増減のボタンで入れ (合わせて 1 人以上)、席を決めるで来店を開いて案内の画面に進む
 // 人数の入る空席がなければ、案内の画面に満席を出す。受付を止めていたら (来店の開き方が替わった)、知らせてから起動からやり直す
@@ -17,6 +18,8 @@ public sealed partial class GuestsViewModel : AppViewModelBase
 
     private readonly IPopupNavigator popupNavigator;
 
+    private readonly IReactiveMessenger messenger;
+
     private readonly TimeProvider timeProvider;
 
     private readonly LanguageState languageState;
@@ -28,6 +31,9 @@ public sealed partial class GuestsViewModel : AppViewModelBase
 
     // 最後に触った時刻
     private DateTimeOffset touchedAt;
+
+    // 触らなかったので、開いていた失敗の知らせを閉じた (閉じたあとに時間を数え直さない)
+    private bool closedForIdle;
 
     public BrandMark Brand { get; }
 
@@ -56,6 +62,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     public GuestsViewModel(
         ILogger<GuestsViewModel> log,
         IPopupNavigator popupNavigator,
+        IReactiveMessenger messenger,
         TimeProvider timeProvider,
         ImageCache imageCache,
         LanguageState languageState,
@@ -64,6 +71,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     {
         this.log = log;
         this.popupNavigator = popupNavigator;
+        this.messenger = messenger;
         this.timeProvider = timeProvider;
         this.languageState = languageState;
         this.receptionUsecase = receptionUsecase;
@@ -94,8 +102,10 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     // Navigation
     //--------------------------------------------------------------------------------
 
+    // 人数の画面に入るのは新しいお客様なので、前のお客様の送れたかわからなかった受付は使わない
     public override Task OnNavigatedToAsync(INavigationContext context)
     {
+        receptionUsecase.ResetPendingOpen();
         _ = WatchIdleAsync(watching.Token);
         return Task.CompletedTask;
     }
@@ -107,6 +117,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         await Navigator.ForwardAsync(ViewId.Standby);
 
     // 触らずにしばらくたったら、お客様が離れたものとして言語を戻して待受に戻す (操作の途中は戻さない)
+    // 失敗の知らせを開いたまま離れることもあるので、知らせは閉じ、席を決める操作が終わってから戻す
     private async Task WatchIdleAsync(CancellationToken token)
     {
         while (true)
@@ -120,10 +131,18 @@ public sealed partial class GuestsViewModel : AppViewModelBase
                 return;
             }
 
-            if (!BusyState.IsBusy && (timeProvider.GetUtcNow() - touchedAt >= IdleTimeout))
+            if (timeProvider.GetUtcNow() - touchedAt < IdleTimeout)
+            {
+                continue;
+            }
+
+            if (!BusyState.IsBusy)
             {
                 break;
             }
+
+            closedForIdle = true;
+            messenger.Send(new PopupCloseMessage());
         }
 
         languageState.Reset();
@@ -169,6 +188,9 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         }
 
         await popupNavigator.MessageAsync(AppResources.ErrorTitle, ViewHelper.ErrorMessage(result));
-        touchedAt = timeProvider.GetUtcNow();
+        if (!closedForIdle)
+        {
+            touchedAt = timeProvider.GetUtcNow();
+        }
     }
 }

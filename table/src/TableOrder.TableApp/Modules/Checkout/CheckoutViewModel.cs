@@ -569,6 +569,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     // 待受に戻すのは、お礼のタイマーと操作 (閉じる、端末の戻る) の両方から来るので、先の 1 回だけ行う
     // (タイマーの待ちが終わった直後の操作では、待ちを止めても続きが動く)
+    // 終える前に次の来店が開いていたら (お礼の間に次のお客様を案内したなど)、次の来店の注文の画面にする。次の来店の注文を読む間も Busy にする
     private async Task FinishAsync()
     {
         if (finished)
@@ -578,8 +579,11 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
         finished = true;
         StopWaiting();
-        orderUsecase.FinishVisit();
-        await Navigator.ForwardAsync(ViewId.Standby);
+        using (BusyState.Begin())
+        {
+            await orderUsecase.FinishVisitAsync();
+            await Navigator.ForwardAsync(visitState.IsOpen ? ViewId.Menu : ViewId.Standby);
+        }
     }
 
     private void StopWaiting()

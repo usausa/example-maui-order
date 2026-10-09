@@ -13,4 +13,5 @@ SET
     Version = Version + 1
 WHERE
     Id = /*@ id */''
+    AND IsActive = 1
     AND Version = /*@ version */0

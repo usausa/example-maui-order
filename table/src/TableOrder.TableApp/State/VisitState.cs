@@ -1,6 +1,7 @@
 namespace TableOrder.TableApp.State;
 
 // 今の来店 (人数、答えた確認、注文した品)。会計を終えたら閉じる
+// 来店が終わってから (閉じた、取りやめた、ほかのテーブルに移った) 画面が終えるまでは開いたままにする (お会計はお礼を出してから終える)
 public sealed class VisitState
 {
     private readonly HashSet<Guid> confirmedRuleIds = [];
@@ -24,10 +25,21 @@ public sealed class VisitState
 
     public IReadOnlyList<OrderedLine> OrderedLines => orderedLines.Values.SelectMany(static x => x).ToList();
 
+    // ほかのテーブルに移った (状態は Open のまま届く)
+    public bool IsMoved { get; private set; }
+
+    // 来店が終わった (閉じた、取りやめた、ほかのテーブルに移った)。画面が終えるのを待っている
+    public bool IsFinished => IsOpen && (IsMoved || (Status is VisitStatus.Closed or VisitStatus.Cancelled));
+
+    // 今の来店を終える前に、このテーブルで開いた次の来店 (お礼の間に次のお客様を案内した、移ってきた)。今の来店を終えたら開く
+    public VisitResponse? Next { get; private set; }
+
     public void Open(VisitResponse visit)
     {
         orderedLines.Clear();
         IsOpen = true;
+        IsMoved = false;
+        Next = null;
         Update(visit);
     }
 
@@ -50,9 +62,16 @@ public sealed class VisitState
         Adults = 0;
         Children = 0;
         Status = VisitStatus.Closed;
+        IsMoved = false;
+        Next = null;
         confirmedRuleIds.Clear();
         orderedLines.Clear();
     }
+
+    public void SetMoved() => IsMoved = true;
+
+    // null は次の来店がなくなった (開く前に閉じた、ほかのテーブルに移った)
+    public void SetNext(VisitResponse? visit) => Next = visit;
 
     public bool IsConfirmed(Guid ruleId) => confirmedRuleIds.Contains(ruleId);
 
