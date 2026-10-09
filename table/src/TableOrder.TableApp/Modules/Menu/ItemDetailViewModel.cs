@@ -1,6 +1,6 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-using TableOrder.TableApp.Components;
+using TableOrder.Terminal.Components;
 
 // 商品の詳細 (大きな写真、説明、アレルギー、オプション、出す時機、数量)。選んだ内容を返し、カートに入れるのは注文の画面が行う
 public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopupInitialize<ItemDetailParameter>

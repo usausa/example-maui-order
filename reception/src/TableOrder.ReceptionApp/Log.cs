@@ -7,6 +7,19 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Application start. version=[{version}], runtime=[{runtime}]")]
     public static partial void InfoApplicationStart(this ILogger logger, Version? version, Version runtime);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Startup failed. status=[{status}], errorCode=[{errorCode}]")]
+    public static partial void WarnStartupFailed(this ILogger logger, ApiStatus status, string? errorCode);
+
+    // Settings
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Settings changed. Restart to apply the chain and store settings. version=[{version}]")]
+    public static partial void InfoSettingsChanged(this ILogger logger, int version);
+
+    // Event
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]
+    public static partial void WarnApiFailed(this ILogger logger, string operation, ApiStatus status, string? errorCode);
+
     // Navigation
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Unhandled navigation error.")]

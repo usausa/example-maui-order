@@ -1,6 +1,6 @@
 namespace TableOrder.TableApp.Modules.Startup;
 
-using TableOrder.TableApp.Components;
+using TableOrder.Terminal.Components;
 
 // 起動の準備 (端末の登録、トークン、端末の設定、通知の接続、店舗の設定・メニュー・品切れ・料理の写真・今の来店の読み込み) を進み具合を出しながら行う
 // 通知は今の状態を読む前に受け始め、読んでいる間の変化を取りこぼさない

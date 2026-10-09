@@ -66,7 +66,6 @@ global using TableOrder.Domain;
 global using TableOrder.Domain.Enums;
 
 global using TableOrder.TableApp;
-global using TableOrder.TableApp.Models;
 global using TableOrder.TableApp.Models.Menu;
 global using TableOrder.TableApp.Models.Order;
 global using TableOrder.TableApp.Modules.Helpers;

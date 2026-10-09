@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 管理対象の構成 (xml/app_restrictions.xml) の名前と説明。EMM の管理画面に出る -->
+<resources>
+	<string name="restriction_api_end_point_title">接続先 (API)</string>
+	<string name="restriction_api_end_point_description">注文サーバの URL (http / https)。設定すると端末の設定より優先し、端末では変えられなくなります。空のときは端末の設定を使います</string>
+	<string name="restriction_enrollment_token_title">登録トークン</string>
+	<string name="restriction_enrollment_token_description">端末の登録に使う値 (管理画面で店舗と受付機を決めて出す)。登録していない端末は、起動したときにこの値で自分で登録します</string>
+</resources>

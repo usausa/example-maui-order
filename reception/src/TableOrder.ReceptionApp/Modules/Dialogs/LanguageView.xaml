@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
+           xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Dialogs"
+           x:Class="TableOrder.ReceptionApp.Modules.Dialogs.LanguageView"
+           x:DataType="{x:Type module:LanguageViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:LanguageViewModel}"
+           WidthRequest="640">
+
+    <!-- 言語はその言語の名前で縦に並べ、今の言語に印を付ける。押すとその言語にする -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{x:Static strings:AppResources.LanguageTitle}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <VerticalStackLayout Style="{StaticResource LanguageListStack}"
+                             BindableLayout.ItemsSource="{Binding Languages}">
+            <BindableLayout.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:LanguageChoice}">
+                    <Border Style="{StaticResource LanguageTileBorder}">
+                        <Border.Triggers>
+                            <DataTrigger TargetType="Border"
+                                         Binding="{Binding IsSelected}"
+                                         Value="True">
+                                <Setter Property="Stroke" Value="{StaticResource PrimaryColor}" />
+                                <Setter Property="StrokeThickness" Value="2" />
+                                <Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerColor}" />
+                            </DataTrigger>
+                        </Border.Triggers>
+                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:LanguageViewModel}}, Path=SelectCommand, x:DataType={x:Type module:LanguageViewModel}}"
+                                                  CommandParameter="{Binding .}" />
+                        </Border.GestureRecognizers>
+                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Style="{StaticResource LanguageNameLabel}"
+                                   Text="{Binding Name}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource OptionCheckLabel}"
+                                   IsVisible="{Binding IsSelected}"
+                                   Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </BindableLayout.ItemTemplate>
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}">
+            <Button Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonClose}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

@@ -4,10 +4,18 @@ using BunnyTail.DependencyInjection;
 
 using CommunityToolkit.Maui;
 
+using Fonts;
+
 using Smart.Mvvm.Resolver;
 
+using TableOrder.Client.Rest;
 using TableOrder.ReceptionApp.Modules;
-using TableOrder.ReceptionApp.State;
+using TableOrder.ReceptionApp.Shell;
+using TableOrder.Terminal.Behaviors;
+using TableOrder.Terminal.Components;
+using TableOrder.Terminal.Diagnostics;
+using TableOrder.Terminal.Extender;
+using TableOrder.Terminal.Shell;
 
 public static partial class MauiProgram
 {
@@ -17,9 +25,14 @@ public static partial class MauiProgram
         MauiApp.CreateBuilder()
             .UseMauiApp<App>()
             .UseGeneratedServiceProvider()
+            .ConfigureFonts(ConfigureFonts)
             .ConfigureLogging()
-            .UseMauiCommunityToolkit()
+            .ConfigureGlobalSettings()
+            .UseMauiCommunityToolkit(ConfigureMauiCommunityToolkit)
             .UseMauiServices()
+            .UseMauiComponents()
+            .UseCommunityToolkitServices()
+            .UseCustomView()
             .BuildApplication();
 
     // ------------------------------------------------------------
@@ -37,10 +50,63 @@ public static partial class MauiProgram
 #if ANDROID
         builder.Logging.AddAndroidLogger(static options => options.ShortCategory = true);
 #endif
-
-        builder.Logging.AddFilter(typeof(MauiProgram).Namespace, LogLevel.Debug);
+        // File
+        builder.Logging.AddFileLogger(static options =>
+            {
+#if ANDROID
+                options.Directory = Path.Combine(AndroidHelper.GetExternalFilesDir(), "log");
+#endif
+                options.RetainDays = 7;
+            })
+            .AddFilter(typeof(MauiProgram).Namespace, LogLevel.Debug);
 
         return builder;
+    }
+
+    // ------------------------------------------------------------
+    // Application
+    // ------------------------------------------------------------
+
+    private static void ConfigureMauiCommunityToolkit(Options options)
+    {
+        // ポップアップは画面の中央に出す四角い面 (角丸と影を付けない)
+        options.SetPopupDefaults(new DefaultPopupSettings
+        {
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
+            Margin = 0
+        });
+        options.SetPopupOptionsDefaults(new DefaultPopupOptionsSettings
+        {
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Shadow = null,
+            Shape = null
+        });
+    }
+
+    private static MauiAppBuilder ConfigureGlobalSettings(this MauiAppBuilder builder)
+    {
+        // Crash dump
+        CrashReport.Start();
+
+        return builder;
+    }
+
+    private static MauiAppBuilder UseCustomView(this MauiAppBuilder builder)
+    {
+        // Behaviors
+        builder.ConfigureCustomBehaviors();
+
+        return builder;
+    }
+
+    // ------------------------------------------------------------
+    // Design
+    // ------------------------------------------------------------
+
+    private static void ConfigureFonts(IFontCollection fonts)
+    {
+        fonts.AddFont("MaterialIcons-Regular.ttf", MaterialIcons.FontFamily);
     }
 
     // ------------------------------------------------------------
@@ -63,16 +129,50 @@ public static partial class MauiProgram
         services.AddViews();
         services.AddViewModels();
 
+        // MauiComponents
+        services.AddComponentsPopup(static c =>
+        {
+            c.AutoRegister(DialogSource());
+            c.AutoRegister(TerminalModules.DialogSource());
+        });
+        services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
+        services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
+        services.AddComponentsScreen();
+
+        // Messenger
+        services.AddSingleton<IReactiveMessenger>(ReactiveMessenger.Default);
+
         // Navigator
         services.AddNavigator(static (_, config) =>
         {
             config.UseMauiNavigationProvider();
+            config.AddPlugin<NavigationFeedbackPlugin>();
+#if DEBUG
+            config.AddPlugin<LeakDetectionPlugin>();
+#endif
             config.UseIdViewMapper(static m => m.AutoRegister(ViewSource()));
         });
+
+        // Terminal (端末の部品、端末の設定と状態、登録と状態の報告、注文サーバの登録と通知の窓口)
+        services.AddTerminalComponents(new TerminalOptions(DeviceKind.Reception), new KioskOptions(typeof(AdminReceiver), typeof(MainActivity)));
+
+        // Customer (チェーンの色、画像の保存、言語)
+        services.AddCustomerComponents(new LanguageOptions(static x => AppResources.Culture = x));
 
         // State
         services.AddSingleton(BusyState.Default);
         services.AddSingleton<StartupState>();
+        services.AddSingleton<StoreState>();
+        services.AddSingleton<ReceptionState>();
+
+        // Service (受付機の REST の窓口)
+        services.AddSingleton<IReceptionApi, RestReceptionApi>();
+
+        // Usecase
+        services.AddSingleton<ReceptionUsecase>();
+
+        // Shell
+        services.AddSingleton<OrderEventReceiver>();
     }
 
     // ------------------------------------------------------------
@@ -87,6 +187,32 @@ public static partial class MauiProgram
 
         // Setup provider
         ResolveProvider.Default.Provider = services;
+
+        // Start device information
+        services.GetRequiredService<DeviceInformation>().Start();
+
+        // EMM が配る設定を読み、替わったときの知らせを受け始める (設定を読む画面より先に)
+        services.GetRequiredService<ManagedConfiguration>().Start();
+
+        // 画面の言語は端末の言語の設定によらず日本語から始める (起動で店舗の初めの言語にする)
+        services.GetRequiredService<LanguageState>().Reset();
+
+        // サーバの通知を受け始める
+        services.GetRequiredService<OrderEventReceiver>().Start();
+
+        // 端末の状態の報告を始める (登録していない間は送らない)
+        services.GetRequiredService<StatusReporter>().Start();
+
+#if DEBUG
+        // Diagnostics for GeneratedServiceProvider
+        if (services is GeneratedServiceProvider generatedProvider)
+        {
+            foreach (var line in BunnyTail.DependencyInjection.Diagnostics.ServiceFactoryReportExtensions.DescribeRuntimeFallbacks(generatedProvider).Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries))
+            {
+                System.Diagnostics.Debug.WriteLine(line);
+            }
+        }
+#endif
 
 #if DEBUG
         // Setup navigator
@@ -119,4 +245,7 @@ public static partial class MauiProgram
 
     [ViewSource]
     public static partial IEnumerable<KeyValuePair<ViewId, Type>> ViewSource();
+
+    [PopupSource]
+    public static partial IEnumerable<KeyValuePair<DialogId, Type>> DialogSource();
 }

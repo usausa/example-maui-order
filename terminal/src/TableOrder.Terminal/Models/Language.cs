@@ -1,6 +1,6 @@
-namespace TableOrder.TableApp.Models;
+namespace TableOrder.Terminal.Models;
 
-// 画面の言語 (お客様が切り替え、来店が終わると日本語に戻す)
+// お客様の画面の言語 (お客様が切り替え、来店や受付が終わると店舗の初めの言語に戻す)
 public enum Language
 {
     Japanese,
@@ -17,6 +17,10 @@ public static class LanguageExtensions
             "en" => Language.English,
             _ => null
         };
+
+    // 言語の名前。どの言語の画面でも読めるように、その言語で書く
+    public static string NativeName(this Language language) =>
+        language == Language.English ? "English" : "日本語";
 
     // 英語がなければ日本語を出す
     public static string Get(this LocalizedText text, Language language) =>

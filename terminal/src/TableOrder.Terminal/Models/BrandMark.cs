@@ -1,6 +1,4 @@
-namespace TableOrder.TableApp.Modules;
-
-using System.Globalization;
+namespace TableOrder.Terminal.Models;
 
 // ヘッダと待受のチェーンの名前と印。ロゴを保存していなければ、印に名前の頭の文字を出す
 public sealed class BrandMark

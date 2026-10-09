@@ -1,6 +1,6 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-using TableOrder.TableApp.Components;
+using TableOrder.Terminal.Components;
 
 // 注文の画面。上にカテゴリのタブ、左にメニューのカード、右に注文リスト、下に履歴・呼出・会計を置く
 public sealed partial class MenuViewModel : AppViewModelBase
@@ -127,7 +127,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         Brand = ViewHelper.Brand(menuState, imageCache, language);
         TableText = ViewHelper.Table(menuState.TableName);
         GuestsText = ViewHelper.Guests(visitState.Guests);
-        LanguageText = ViewHelper.LanguageName(language);
+        LanguageText = language.NativeName();
         HasLanguages = languageState.HasChoice;
         CanCall = menuState.Config.CallReasons.Count > 0;
         Categories = menuState.GetCategories(language)

@@ -42,16 +42,17 @@ paths:
 ## 文言
 
 - 画面の文言は `Resources/Strings/AppResources.resx` (日本語) と `AppResources.en.resx` (英語) に置き、XAML は `{x:Static strings:AppResources.Xxx}`、C# は `AppResources.Xxx` で引く
-- 共通の部品 (`TableOrder.Terminal`) が使う文言は `TerminalResources` (アプリの XAML から引けるように public) に置いてアプリの resx に重ねて持たず、言語を切り替えるときは `TerminalResources.Culture` も替える
+- 共通の部品 (`TableOrder.Terminal`) が使う文言は `TerminalResources` (アプリの XAML から引けるように public) に置いてアプリの resx に重ねて持たない。言語は `LanguageState` で替え (`TerminalResources` のカルチャも替わる)、アプリの文言のカルチャを替える処理は `LanguageOptions` で渡す
 - resx を変えたら `AppResources.Designer.cs` も合わせる (Visual Studio で保存すると作り直される)
 - 値を埋め込む文言は `{0}` を使う書式にし、`ViewHelper.Format` で組み立てる
 - 言語を切り替えたら表示中の画面を作り直して文言を引き直す (画面をまたぐ内容は State に置く)
 - 言語のボタンには今の言語を出し、押したら選ぶポップアップ (`PopupNavigatorExtensions.LanguageAsync`) を開く (切り替え先を出すトグルにしない)
-- 言語の名前はその言語で書く (`ViewHelper.LanguageName`。どの言語の画面でも読めるように)
+- 言語の名前はその言語で書く (`Language.NativeName`。どの言語の画面でも読めるように)
 - メニューの名前など、サーバから受ける文字は `LocalizedText.Get(language)` で選ぶ
 - State と Usecase は画面の書式 (`ViewHelper`) を使わず、サーバの文字は `LocalizedText` のまま返す (言語で選ぶのと文言の組み立ては ViewModel で行う)
 - チェーンの名前はチェーンの設定 (`MenuState.BrandName`) から選んだ言語で出し、サーバの店舗の名前 (`storeName`) と混ぜない
 - 選べる言語は店舗の設定の言語 (`LanguageState.Available`) にし、1 つなら言語のボタンを出さない
+- お客様が替わるとき (テーブル端末は来店の終わり、受付機は案内を閉じたときと入れかけて離れたとき) は、言語を店舗の初めの言語に戻す (`LanguageState.Reset`)。同じお客様が続ける操作 (人数の画面の戻る) では戻さない
 - ホール端末は言語を切り替える操作を持たず、文言とサーバの文字を端末の言語で選ぶ (`ViewHelper.Text`)
 - 数を埋め込む英語の文言は、1 でも 2 以上でも読める形にする (`Seats {0}`、`{0} pax`。数で文言を切り替えない)
 - 時刻は店舗のタイムゾーン (`StoreHours.LocalDateTime`) で出し、端末のタイムゾーンの設定によらない
@@ -74,6 +75,7 @@ paths:
 - コマンドの外で待つ処理 (端末の戻るで API を呼ぶなど) は `using (BusyState.Begin())` で囲み、画面のボタンと重ならないようにする
 - タイマーや裏のタスクと操作の両方から起きる処理 (支払の完了、待受に戻すなど) は、処理済みの印 (画面の状態、フラグ) を見て 2 回目を行わない。処理済みにするときは、API を待つ前に画面の状態を変える
 - タイマーで画面を動かす処理は、操作の途中 (`BusyState.IsBusy`) なら行わない
+- お客様が入れかけて離れることのある画面 (受付機の人数) は、しばらく触らなければ待受に戻し、触るたびに時間を数え直す。結果を出す画面 (受付機の案内) も、しばらくたったら待受に戻す
 - 読み直しの結果は、頼んだあとに操作で内容を反映していたら使わない (古い内容で上書きしない)
 - ホール端末の一覧 (席、呼び出し、提供、品切れ) は、`ItemsHelper.Sync` で読み直した並びに合わせ、残る項目を作り直さない (スクロールの位置を保つ)
 - 一覧を作り直すとき (カテゴリを替えたときなど) は、`ObservableCollection` を差し替えずに `Clear` してから入れ直す (コレクションのプロパティは読み取り専用にする。CA2227)

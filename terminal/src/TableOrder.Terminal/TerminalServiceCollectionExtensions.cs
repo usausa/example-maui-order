@@ -50,4 +50,23 @@ public static class TerminalServiceCollectionExtensions
 
         return services;
     }
+
+    // お客様の画面の端末 (テーブル端末、受付機) に共通の部品 (チェーンの色、画像の保存、言語)。AddTerminalComponents に続けて呼ぶ
+    public static IServiceCollection AddCustomerComponents(this IServiceCollection services, LanguageOptions languageOptions)
+    {
+        // Options
+        services.AddSingleton(languageOptions);
+
+        // Components
+        services.AddSingleton<ImageCache>();
+        services.AddSingleton<ThemeManager>();
+
+        // Resource (チェーンの色を入れるアプリの資源)
+        services.AddSingleton<ResourceDictionary>(static _ => Application.Current!.Resources);
+
+        // State
+        services.AddSingleton<LanguageState>();
+
+        return services;
+    }
 }

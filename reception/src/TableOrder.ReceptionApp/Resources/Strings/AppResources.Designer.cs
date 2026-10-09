@@ -51,9 +51,495 @@ namespace TableOrder.ReceptionApp.Resources.Strings {
             }
         }
 
-        internal static string HomeMessage {
+        internal static string ListSeparator {
             get {
-                return ResourceManager.GetString("HomeMessage", resourceCulture);
+                return ResourceManager.GetString("ListSeparator", resourceCulture);
+            }
+        }
+
+        internal static string CommonBack {
+            get {
+                return ResourceManager.GetString("CommonBack", resourceCulture);
+            }
+        }
+
+        internal static string CommonClose {
+            get {
+                return ResourceManager.GetString("CommonClose", resourceCulture);
+            }
+        }
+
+        internal static string LanguageTitle {
+            get {
+                return ResourceManager.GetString("LanguageTitle", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepSettings {
+            get {
+                return ResourceManager.GetString("StartupStepSettings", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepRegister {
+            get {
+                return ResourceManager.GetString("StartupStepRegister", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepConnect {
+            get {
+                return ResourceManager.GetString("StartupStepConnect", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepStore {
+            get {
+                return ResourceManager.GetString("StartupStepStore", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepImages {
+            get {
+                return ResourceManager.GetString("StartupStepImages", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepTables {
+            get {
+                return ResourceManager.GetString("StartupStepTables", resourceCulture);
+            }
+        }
+
+        internal static string StartupStepReady {
+            get {
+                return ResourceManager.GetString("StartupStepReady", resourceCulture);
+            }
+        }
+
+        internal static string StartupNotReception {
+            get {
+                return ResourceManager.GetString("StartupNotReception", resourceCulture);
+            }
+        }
+
+        internal static string StartupRetry {
+            get {
+                return ResourceManager.GetString("StartupRetry", resourceCulture);
+            }
+        }
+
+        internal static string StartupSetup {
+            get {
+                return ResourceManager.GetString("StartupSetup", resourceCulture);
+            }
+        }
+
+        internal static string StartupAutoRetryFormat {
+            get {
+                return ResourceManager.GetString("StartupAutoRetryFormat", resourceCulture);
+            }
+        }
+
+        internal static string SetupTitle {
+            get {
+                return ResourceManager.GetString("SetupTitle", resourceCulture);
+            }
+        }
+
+        internal static string SetupEndpoint {
+            get {
+                return ResourceManager.GetString("SetupEndpoint", resourceCulture);
+            }
+        }
+
+        internal static string SetupEndpointHint {
+            get {
+                return ResourceManager.GetString("SetupEndpointHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupEndpointManaged {
+            get {
+                return ResourceManager.GetString("SetupEndpointManaged", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegistration {
+            get {
+                return ResourceManager.GetString("SetupRegistration", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegisteredFormat {
+            get {
+                return ResourceManager.GetString("SetupRegisteredFormat", resourceCulture);
+            }
+        }
+
+        internal static string SetupNotRegistered {
+            get {
+                return ResourceManager.GetString("SetupNotRegistered", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegistrationHint {
+            get {
+                return ResourceManager.GetString("SetupRegistrationHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupEnrollmentHint {
+            get {
+                return ResourceManager.GetString("SetupEnrollmentHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegisterHint {
+            get {
+                return ResourceManager.GetString("SetupRegisterHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupPairingCodeHint {
+            get {
+                return ResourceManager.GetString("SetupPairingCodeHint", resourceCulture);
+            }
+        }
+
+        internal static string SetupEnter {
+            get {
+                return ResourceManager.GetString("SetupEnter", resourceCulture);
+            }
+        }
+
+        internal static string SetupNotEntered {
+            get {
+                return ResourceManager.GetString("SetupNotEntered", resourceCulture);
+            }
+        }
+
+        internal static string SetupSave {
+            get {
+                return ResourceManager.GetString("SetupSave", resourceCulture);
+            }
+        }
+
+        internal static string SetupRegister {
+            get {
+                return ResourceManager.GetString("SetupRegister", resourceCulture);
+            }
+        }
+
+        internal static string StaffInfo {
+            get {
+                return ResourceManager.GetString("StaffInfo", resourceCulture);
+            }
+        }
+
+        internal static string StaffStore {
+            get {
+                return ResourceManager.GetString("StaffStore", resourceCulture);
+            }
+        }
+
+        internal static string StaffDeviceName {
+            get {
+                return ResourceManager.GetString("StaffDeviceName", resourceCulture);
+            }
+        }
+
+        internal static string StaffDeviceId {
+            get {
+                return ResourceManager.GetString("StaffDeviceId", resourceCulture);
+            }
+        }
+
+        internal static string StaffEndpoint {
+            get {
+                return ResourceManager.GetString("StaffEndpoint", resourceCulture);
+            }
+        }
+
+        internal static string StaffKiosk {
+            get {
+                return ResourceManager.GetString("StaffKiosk", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskFormat {
+            get {
+                return ResourceManager.GetString("StaffKioskFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffManaged {
+            get {
+                return ResourceManager.GetString("StaffManaged", resourceCulture);
+            }
+        }
+
+        internal static string StaffManagedNone {
+            get {
+                return ResourceManager.GetString("StaffManagedNone", resourceCulture);
+            }
+        }
+
+        internal static string StaffEnrollmentToken {
+            get {
+                return ResourceManager.GetString("StaffEnrollmentToken", resourceCulture);
+            }
+        }
+
+        internal static string StaffBattery {
+            get {
+                return ResourceManager.GetString("StaffBattery", resourceCulture);
+            }
+        }
+
+        internal static string StaffBatteryFormat {
+            get {
+                return ResourceManager.GetString("StaffBatteryFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffBatteryChargingFormat {
+            get {
+                return ResourceManager.GetString("StaffBatteryChargingFormat", resourceCulture);
+            }
+        }
+
+        internal static string StaffNetwork {
+            get {
+                return ResourceManager.GetString("StaffNetwork", resourceCulture);
+            }
+        }
+
+        internal static string StaffConnected {
+            get {
+                return ResourceManager.GetString("StaffConnected", resourceCulture);
+            }
+        }
+
+        internal static string StaffDisconnected {
+            get {
+                return ResourceManager.GetString("StaffDisconnected", resourceCulture);
+            }
+        }
+
+        internal static string StaffApp {
+            get {
+                return ResourceManager.GetString("StaffApp", resourceCulture);
+            }
+        }
+
+        internal static string StaffDevice {
+            get {
+                return ResourceManager.GetString("StaffDevice", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskRelease {
+            get {
+                return ResourceManager.GetString("StaffKioskRelease", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskRestore {
+            get {
+                return ResourceManager.GetString("StaffKioskRestore", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskSettings {
+            get {
+                return ResourceManager.GetString("StaffKioskSettings", resourceCulture);
+            }
+        }
+
+        internal static string StaffKioskHint {
+            get {
+                return ResourceManager.GetString("StaffKioskHint", resourceCulture);
+            }
+        }
+
+        internal static string KioskNone {
+            get {
+                return ResourceManager.GetString("KioskNone", resourceCulture);
+            }
+        }
+
+        internal static string KioskManaged {
+            get {
+                return ResourceManager.GetString("KioskManaged", resourceCulture);
+            }
+        }
+
+        internal static string KioskDeviceOwner {
+            get {
+                return ResourceManager.GetString("KioskDeviceOwner", resourceCulture);
+            }
+        }
+
+        internal static string KioskLocked {
+            get {
+                return ResourceManager.GetString("KioskLocked", resourceCulture);
+            }
+        }
+
+        internal static string KioskUnlocked {
+            get {
+                return ResourceManager.GetString("KioskUnlocked", resourceCulture);
+            }
+        }
+
+        internal static string KioskReleased {
+            get {
+                return ResourceManager.GetString("KioskReleased", resourceCulture);
+            }
+        }
+
+        internal static string StandbyWelcome {
+            get {
+                return ResourceManager.GetString("StandbyWelcome", resourceCulture);
+            }
+        }
+
+        internal static string StandbyMessage {
+            get {
+                return ResourceManager.GetString("StandbyMessage", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStart {
+            get {
+                return ResourceManager.GetString("StandbyStart", resourceCulture);
+            }
+        }
+
+        internal static string StandbyFull {
+            get {
+                return ResourceManager.GetString("StandbyFull", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStopped {
+            get {
+                return ResourceManager.GetString("StandbyStopped", resourceCulture);
+            }
+        }
+
+        internal static string StandbyClosed {
+            get {
+                return ResourceManager.GetString("StandbyClosed", resourceCulture);
+            }
+        }
+
+        internal static string GuestsTitle {
+            get {
+                return ResourceManager.GetString("GuestsTitle", resourceCulture);
+            }
+        }
+
+        internal static string GuestsAdults {
+            get {
+                return ResourceManager.GetString("GuestsAdults", resourceCulture);
+            }
+        }
+
+        internal static string GuestsChildren {
+            get {
+                return ResourceManager.GetString("GuestsChildren", resourceCulture);
+            }
+        }
+
+        internal static string GuestsChildrenNote {
+            get {
+                return ResourceManager.GetString("GuestsChildrenNote", resourceCulture);
+            }
+        }
+
+        internal static string GuestsDecide {
+            get {
+                return ResourceManager.GetString("GuestsDecide", resourceCulture);
+            }
+        }
+
+        internal static string GuideTitle {
+            get {
+                return ResourceManager.GetString("GuideTitle", resourceCulture);
+            }
+        }
+
+        internal static string GuideFullTitle {
+            get {
+                return ResourceManager.GetString("GuideFullTitle", resourceCulture);
+            }
+        }
+
+        internal static string GuideFullMessage {
+            get {
+                return ResourceManager.GetString("GuideFullMessage", resourceCulture);
+            }
+        }
+
+        internal static string TableFormat {
+            get {
+                return ResourceManager.GetString("TableFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuestsAdultsFormat {
+            get {
+                return ResourceManager.GetString("GuestsAdultsFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuestsAdultsChildrenFormat {
+            get {
+                return ResourceManager.GetString("GuestsAdultsChildrenFormat", resourceCulture);
+            }
+        }
+
+        internal static string ErrorTitle {
+            get {
+                return ResourceManager.GetString("ErrorTitle", resourceCulture);
+            }
+        }
+
+        internal static string ErrorUnavailable {
+            get {
+                return ResourceManager.GetString("ErrorUnavailable", resourceCulture);
+            }
+        }
+
+        internal static string ErrorUnauthorized {
+            get {
+                return ResourceManager.GetString("ErrorUnauthorized", resourceCulture);
+            }
+        }
+
+        internal static string ErrorTenantSuspended {
+            get {
+                return ResourceManager.GetString("ErrorTenantSuspended", resourceCulture);
+            }
+        }
+
+        internal static string ErrorPairingCodeInvalid {
+            get {
+                return ResourceManager.GetString("ErrorPairingCodeInvalid", resourceCulture);
+            }
+        }
+
+        internal static string ErrorDeviceKind {
+            get {
+                return ResourceManager.GetString("ErrorDeviceKind", resourceCulture);
+            }
+        }
+
+        internal static string ErrorGeneric {
+            get {
+                return ResourceManager.GetString("ErrorGeneric", resourceCulture);
             }
         }
     }

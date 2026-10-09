@@ -1,11 +1,14 @@
-namespace TableOrder.TableApp.State;
+namespace TableOrder.Terminal.State;
 
-// 画面の言語。画面の文言 (AppResources) は言語のカルチャで引き、金額と時刻の書式は変えない
+// お客様の画面の言語。画面の文言 (アプリの文言と TerminalResources) は言語のカルチャで引き、金額と時刻の書式は変えない
+// アプリの文言 (AppResources) のカルチャは、アプリが LanguageOptions で渡す処理で替える
 public sealed class LanguageState
 {
     private static readonly CultureInfo JapaneseCulture = new("ja-JP");
 
     private static readonly CultureInfo EnglishCulture = new("en-US");
+
+    private readonly LanguageOptions options;
 
     public Language Current { get; private set; } = Language.Japanese;
 
@@ -15,6 +18,11 @@ public sealed class LanguageState
     // 選べる言語が 2 つ以上 (1 つなら言語のボタンを出さない)
     public bool HasChoice => Available.Count > 1;
 
+    public LanguageState(LanguageOptions options)
+    {
+        this.options = options;
+    }
+
     public void Change(Language language)
     {
         Current = language;
@@ -22,8 +30,8 @@ public sealed class LanguageState
         var culture = language == Language.English ? EnglishCulture : JapaneseCulture;
         CultureInfo.CurrentUICulture = culture;
         CultureInfo.DefaultThreadCurrentUICulture = culture;
-        AppResources.Culture = culture;
         TerminalResources.Culture = culture;
+        options.ApplyCulture(culture);
     }
 
     // 店舗の設定の言語にする。今の言語を選べなければ初めの言語に戻す

@@ -1,6 +1,6 @@
-namespace TableOrder.TableApp.Components;
+namespace TableOrder.Terminal.Components;
 
-// 料理の写真を端末に保存して使い回す。名前は内容が変わると変わるので、保存した画像は取り直さない
+// 料理の写真とチェーンのロゴを端末に保存して使い回す (お客様の画面の端末で使う)。名前は内容が変わると変わるので、保存した画像は取り直さない
 // 保存は登録ごとのフォルダに分け、登録し直したら前のフォルダを消す (ほかのチェーンの画像を残さない)
 public sealed class ImageCache : IDisposable
 {

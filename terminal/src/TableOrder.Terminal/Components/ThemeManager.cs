@@ -1,6 +1,6 @@
-namespace TableOrder.TableApp.Components;
+namespace TableOrder.Terminal.Components;
 
-// チェーンの色をテーマに入れる。替えるのは Brand・Neutral・Status の役割 (ThemeRoles) だけで、System の役割 (起動・端末の設定・電卓) は替えない
+// チェーンの色をテーマに入れる (お客様の画面の端末で使う)。替えるのは Brand・Neutral・Status の役割 (ThemeRoles) だけで、System の役割 (起動・端末の設定・電卓) は替えない
 // 色はアプリの資源の一番上に置き、Colors.xaml の値 (既定) より先に引かせる。スタイルはこれらの色を DynamicResource で引くので、作ってある画面にも効く
 // 前のチェーンの色を残さないように、設定にない役割は既定の色に戻す
 public sealed class ThemeManager

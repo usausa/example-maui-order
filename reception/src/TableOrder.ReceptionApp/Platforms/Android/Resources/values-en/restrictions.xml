@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 管理対象の構成 (xml/app_restrictions.xml) の名前と説明 (英語) -->
+<resources>
+	<string name="restriction_api_end_point_title">Server (API)</string>
+	<string name="restriction_api_end_point_description">URL of the order server (http or https). When set, it overrides the device setting and cannot be changed on the device. When empty, the device setting is used.</string>
+	<string name="restriction_enrollment_token_title">Enrollment token</string>
+	<string name="restriction_enrollment_token_description">Value used to register the device (issued in the admin console for a store and the reception kiosk). An unregistered device registers itself with this value at startup.</string>
+</resources>

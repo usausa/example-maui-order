@@ -1,7 +1,7 @@
 # 構成
 
-リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`)、ホール端末 (`TableOrder.HallApp`)、サーバの作り。  
-ここには作ったものだけを書き、これから作るもの (ホール端末のタブの中身、受付機とキッチン端末の画面など) は [plan.md](plan.md) に置く。  
+リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`)、ホール端末 (`TableOrder.HallApp`)、受付機 (`TableOrder.ReceptionApp`)、サーバの作り。  
+ここには作ったものだけを書き、これから作るもの (キッチン端末の画面など) は [plan.md](plan.md) に置く。  
 業務の前提と流れは [business.md](business.md)、API の想定は [api-design.md](api-design.md)、データベースは [database.md](database.md) を参照。
 
 - [1. プロジェクト](#-1-プロジェクト)
@@ -11,7 +11,8 @@
 - [5. 多言語と色](#-5-多言語と色)
 - [6. 専用端末](#-6-専用端末)
 - [7. ホール端末の作り](#-7-ホール端末の作り)
-- [8. サーバの作り](#-8-サーバの作り)
+- [8. 受付機の作り](#-8-受付機の作り)
+- [9. サーバの作り](#-9-サーバの作り)
 
 ---
 
@@ -33,21 +34,20 @@
   サーバの区分は Android なしでビルドできる
 - 端末のアプリは用途ごとに区分を分け、1 つの区分に用途の違うアプリを混ぜない。  
   端末に共通の部品 (端末の情報、鍵、専用端末、EMM の設定、異常終了の記録、端末の設定と状態、スタッフの PIN、登録と状態の報告、通知の受け口の土台、どの端末でも同じポップアップ、画面の土台、System の色と共通のスタイル、その文言) は `terminal/` の `TableOrder.Terminal` (画面 (`ViewId`) を持たないライブラリ) に置く
-- 受付機は、骨組み (画面の入れ物、遷移、処理中の覆い) だけをテーブル端末と同じ形で置いている
 - 共有のプロジェクトと端末に共通の部品は単独のソリューションを持たず、使う区分のソリューションに入れて確かめる。  
   単独にすると、アプリだけが使う型を InspectCode が使われていないと指摘するため。  
   今は、共有のプロジェクトと共有のテストを、共有の型をいちばん使うテーブル端末のソリューションに入れている。  
-  端末に共通の部品は、使っているテーブル端末とホール端末のソリューションに入れている
+  端末に共通の部品は、使っているテーブル端末、ホール端末、受付機のソリューションに入れている
 
 | プロジェクト | 種類 | 内容 |
 | --- | --- | --- |
 | `shared/src/TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
 | `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
-| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi` と `IHallApi`、通知の `IOrderEvents`、`ApiResult`)、注文サーバの実装 (`Rest/` の要求、`SignalR/` の通知)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) |
-| `terminal/src/TableOrder.Terminal` | .NET MAUI (Android のライブラリ) | 端末に共通の部品。端末の情報、鍵、専用端末、EMM の設定、異常終了の記録 (`Components/`、`Diagnostics/`)、端末の設定と状態、スタッフの PIN (`State/`)、登録と状態の報告 (`Usecase/`、`Shell/`)、通知の受け口の土台 (`OrderEventReceiverBase`)、どの端末でも同じポップアップ (電卓、知らせ、確認) と入口 (`Modules/`。PIN の確かめを含む)、ポップアップと遷移のプラグイン (`Extender/`)、添付プロパティ (`Behaviors/`)、System の色と共通のスタイル (`Resources/Styles/` の `SystemColors`、`TerminalStyles`)、文言 (`TerminalResources`)、画面に収める幅 (`TerminalSizes`)、登録 (`AddTerminalComponents`。端末の種類の `TerminalOptions` と、専用端末の型の `KioskOptions` を受ける) |
+| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi`・`IHallApi`・`IReceptionApi`、通知の `IOrderEvents`、`ApiResult`)、注文サーバの実装 (`Rest/` の要求、`SignalR/` の通知)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) |
+| `terminal/src/TableOrder.Terminal` | .NET MAUI (Android のライブラリ) | 端末に共通の部品。端末の情報、鍵、専用端末、EMM の設定、異常終了の記録 (`Components/`、`Diagnostics/`)、端末の設定と状態、スタッフの PIN (`State/`)、登録と状態の報告 (`Usecase/`、`Shell/`)、通知の受け口の土台 (`OrderEventReceiverBase`)、どの端末でも同じポップアップ (電卓、知らせ、確認) と入口 (`Modules/`。PIN の確かめを含む)、ポップアップと遷移のプラグイン (`Extender/`)、添付プロパティ (`Behaviors/`)、System の色と共通のスタイル (`Resources/Styles/` の `SystemColors`、`TerminalStyles`)、文言 (`TerminalResources`)、画面に収める幅 (`TerminalSizes`)、お客様の画面の端末 (テーブル端末、受付機) に共通の部品 (チェーンの色 `ThemeManager`、画像の保存 `ImageCache`、チェーンの印 `BrandMark`、言語 `LanguageState`)、登録 (`AddTerminalComponents`。端末の種類の `TerminalOptions` と、専用端末の型の `KioskOptions` を受ける。お客様の画面の部品は `AddCustomerComponents` で、アプリの文言のカルチャを替える `LanguageOptions` を受ける) |
 | `table/src/TableOrder.TableApp` | .NET MAUI (Android) | テーブル端末のアプリ |
-| `hall/src/TableOrder.HallApp` | .NET MAUI (Android) | ホール端末のアプリ (起動、端末の設定と登録、端末の画面、下部のタブの枠、状態と通知の受け口。タブの中身はこれから) |
-| `reception/src/TableOrder.ReceptionApp` | .NET MAUI (Android) | 受付機のアプリの枠 (起動して仮の画面を出すだけ) |
+| `hall/src/TableOrder.HallApp` | .NET MAUI (Android) | ホール端末のアプリ |
+| `reception/src/TableOrder.ReceptionApp` | .NET MAUI (Android) | 受付機のアプリ |
 | `server/src/TableOrder.Server.Core` | .NET | 業務の処理 (端末の登録と認可、店舗、メニュー、品切れ) と DB の読み書き (Accessor と 2-way SQL) |
 | `server/src/TableOrder.Server.Web` | ASP.NET Core | 入口 (REST)、端末の認証、管理画面 (Blazor Server)、キッチン端末の配信 |
 | `server/src/TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバとテレメトリ) |
@@ -58,8 +58,7 @@
 | `server/tests/TableOrder.Server.Web.Tests` | .NET (xunit) | API と通知のハブのテスト (端末の登録とトークン、端末のアプリと同じ形の鍵での登録、端末の種類の範囲、テナントで分けられていること、来店から会計までの API、通知の送る先と抜けた通知) と、端末のアプリの窓口 (`TableOrder.Client` の REST と SignalR) をサーバにつないだテスト |
 
 ```
-TableOrder.{Table|Hall}App ──> TableOrder.Terminal ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
-TableOrder.ReceptionApp ──> TableOrder.Client
+TableOrder.{Table|Hall|Reception}App ──> TableOrder.Terminal ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
 TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
           └──> TableOrder.KitchenApp
 ```
@@ -92,18 +91,18 @@ TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
 
 | フォルダ | 内容 |
 | --- | --- |
-| `Modules/` | 画面とポップアップの View と ViewModel (`Startup`、`Setup`、`Staff`、`Standby`、`Menu`、`Checkout`、`Dialogs`)、ヘッダと待受のチェーンの印 (`BrandMark`) |
-| `State/` | 画面をまたぐ状態 (`MenuState`、`VisitState`、`CartState`、`LanguageState`、`StoreState`) |
+| `Modules/` | 画面とポップアップの View と ViewModel (`Startup`、`Setup`、`Staff`、`Standby`、`Menu`、`Checkout`、`Dialogs`) |
+| `State/` | 画面をまたぐ状態 (`MenuState`、`VisitState`、`CartState`、`StoreState`) |
 | `Usecase/` | 通信と状態の更新を組み合わせる手順 (`OrderUsecase`。来店の開始と終了、メニューのルールの判定、注文の送信) |
 | `Models/` | 画面で使う形 (`MenuCategory`、`MenuProduct`、`CartLine`、`ItemSelection`、`Language`) |
 | `Controls/` | 見た目の部品 (`QrCodeView`。QR コードの代わりの模様) |
 | `Markup/` | 記号 (`AppIcons`)、画面 ID の拡張 |
 | `Resources/` | 色 (`Colors.xaml`。Brand・Neutral・Status の役割)、テーブル端末の画面のスタイル (`Styles.xaml`)、画面の文言 (`Strings/AppResources.resx`、`.en.resx`)、記号のフォントとグリフの表、アイコン、スプラッシュ |
 | `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更、起動からやり直す) と処理中の覆い |
-| `Components/`、`Platforms/` | 保存した画像 (`ImageCache`)、チェーンの色 (`ThemeManager`)、Activity と Device Owner の受け口とマニフェスト |
+| `Platforms/` | Activity と Device Owner の受け口とマニフェスト |
 
-- 端末に共通の部品 (端末の情報、鍵、専用端末、EMM の設定、異常終了の記録、端末の設定 `Settings`、端末の状態、スタッフの PIN `StaffLock`、登録と状態の報告 `DeviceUsecase` / `StatusReporter`、電卓・知らせ・確認のポップアップ、プラグイン、添付プロパティ) は `TableOrder.Terminal` のものを使う。  
-  `MauiProgram` で `AddTerminalComponents` を呼んで登録し、登録で確かめる端末の種類は `TerminalOptions`、専用端末の制限に使う Device Owner の受け口とホームの画面は `KioskOptions` で渡す。  
+- 端末に共通の部品 (端末の情報、鍵、専用端末、EMM の設定、異常終了の記録、端末の設定 `Settings`、端末の状態、スタッフの PIN `StaffLock`、登録と状態の報告 `DeviceUsecase` / `StatusReporter`、電卓・知らせ・確認のポップアップ、プラグイン、添付プロパティ) と、お客様の画面の部品 (チェーンの色 `ThemeManager`、画像の保存 `ImageCache`、チェーンの印 `BrandMark`、言語 `LanguageState`) は `TableOrder.Terminal` のものを使う。  
+  `MauiProgram` で `AddTerminalComponents` と `AddCustomerComponents` を呼んで登録し、登録で確かめる端末の種類は `TerminalOptions`、専用端末の制限に使う Device Owner の受け口とホームの画面は `KioskOptions`、言語を替えるときにテーブル端末の文言のカルチャを替える処理は `LanguageOptions` で渡す。  
   共通のポップアップの ID (`TerminalDialogId`) と View の組は、ポップアップの登録に `TerminalModules.DialogSource` を足して入れる
 - 色とスタイルは、`App.xaml` でテーブル端末の色 (`Colors.xaml`)、`TableOrder.Terminal` の共通のスタイル (`TerminalStyles`。System の色 `SystemColors` を中に入れる)、テーブル端末のスタイル (`Styles.xaml`) の順に入れる。  
   共通のスタイルは、チェーンで替わる役割の色をテーブル端末の色から `DynamicResource` で引く
@@ -123,7 +122,7 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
 - 通信の結果は `ApiResult<T>` で受け、例外にしない。  
   失敗は `ViewHelper.ErrorMessage` でお客様向けの文言にし、`Log.WarnApiFailed` で記録する
 - ポップアップとの受け渡しは引数と戻り値で行い、ポップアップは閉じると ViewModel ごと破棄する
-- 料理の写真とチェーンのロゴは `Components/ImageCache` が端末に保存し、画面は保存したファイルを出す (写真を保存していない間は、面の色の上にチェーンのロゴか記号を出す)。  
+- 料理の写真とチェーンのロゴは `ImageCache` (`TableOrder.Terminal`) が端末に保存し、画面は保存したファイルを出す (写真を保存していない間は、面の色の上にチェーンのロゴか記号を出す)。  
   起動のときに足りない画像をまとめて受け取り (同時に 4 つまで)、今のメニューで使わなくなった画像は消す。  
   受け取れなかった画像は待受に戻ったときに取り直し、保存は登録ごとのフォルダに分けて、登録し直したら前のフォルダを消す
 - サーバの通知は `OrderEventReceiver` が受けて状態を替え、操作の途中 (Busy) と遷移の間を待ってから、表示中の画面に `ShellEvent` で知らせる。  
@@ -227,6 +226,7 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
 - `ITableApi` はテーブル端末が使う要求 ([api-design.md](api-design.md)) を 1 つずつメソッドにしたもの。  
   REST と gRPC のどちらで実装しても、端末は `ITableApi` だけを見る
 - `IHallApi` はホール端末が使う要求 (席、来店の操作、代わりの注文、提供、呼び出し、品切れと注文の一時停止、会計の手伝い) を 1 つずつメソッドにしたもの
+- `IReceptionApi` は受付機が使う要求 (店舗、空席、来店の開始) を 1 つずつメソッドにしたもの
 - `IDeviceApi` は全端末に共通の要求 (登録、トークン、状態の報告、端末の設定) の窓口。  
   アクセストークンは窓口の中で持って画面に渡さず、トークンの要求が断られたとき (無効化、テナントの停止) は `Denied` で端末の id と理由を知らせる
 - API の実装が読む端末の側の値 (接続先、登録した端末の id、端末の鍵) は `IDeviceContext` で受ける (テーブル端末は `Settings` が持つ)
@@ -243,7 +243,7 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
 | 実装 | 中身 |
 | --- | --- |
 | `RestConnection` | 要求の送り方。接続先の下の `api/v1/` に送り、アクセストークンを期限の 2 分前と `401` を受けたときに取り直す (送り直しは 1 回だけ)。結果は `4xx` を `Rejected` (`errorCode` と文言)、`401` を `Unauthorized`、`5xx`・時間切れ (15 秒)・通信できないを `Unavailable` にする |
-| `RestDeviceApi` / `RestTableApi` / `RestHallApi` | 端末の種類ごとの窓口。要求の形を決めて `RestConnection` で送る。メニューは版が同じなら `304` を受けて前に読んだものを使う (`RestMenuCache`。窓口ごとに持つ) |
+| `RestDeviceApi` / `RestTableApi` / `RestHallApi` / `RestReceptionApi` | 端末の種類ごとの窓口。要求の形を決めて `RestConnection` で送る。メニューは版が同じなら `304` を受けて前に読んだものを使う (`RestMenuCache`。窓口ごとに持つ) |
 | `SignalROrderEvents` | 通知 (`/hubs/store`)。`ready` で受けた番号から数え、切れたら間をおいてつなぎ直して、抜けた通知を `GET /events` で読んでから続ける。つなぐ前の問い合わせは 15 秒で打ち切り、`401` で断られたらトークンを取り直す。抜けた通知を読めないとき (追いかけられない `410` など) は `Expired` で知らせ、端末は起動からやり直す |
 
 - JSON はソース生成 (`ClientJsonContext`) で読み書きし、リフレクションに頼らない (端末のトリミングで型の情報が消えないように)
@@ -441,7 +441,92 @@ Device Owner のときに掛ける端末の制限:
 
 ---
 
-## 🏭 8. サーバの作り
+## 🙋 8. 受付機の作り
+
+来店の開き方を受付機にした店の入口に置く、タブレット (横向き) のアプリ。  
+お客様が人数を入れると、サーバが人数の入る空席を決めて来店を開き、受付機が席を案内する ([business.md](business.md#31-来店と人数))。  
+起動、端末の設定と登録、スタッフメニュー、待受、人数、案内と、状態と通知の受け口を作った。  
+端末に共通の部品とお客様の画面の部品 (`TableOrder.Terminal`) はテーブル端末と同じものを使い、登録で確かめる端末の種類を `Reception` にする。
+
+### フォルダ
+
+| フォルダ | 内容 |
+| --- | --- |
+| `Modules/` | 画面とポップアップの View と ViewModel (`Startup`、`Setup`、`Staff`、`Standby`、`Guests`、`Guide`、`Dialogs`) |
+| `State/` | 端末の設定と空席 (`ReceptionState`)、店舗の今の状態 (`StoreState`。ラストオーダーの時刻と設定の版) |
+| `Usecase/` | 空席の読み直しと、人数を送って来店を開く手順 (`ReceptionUsecase`) |
+| `Shell/` | 通知の受け手 (`OrderEventReceiver`) と画面への知らせ (`ShellEvent`)、処理中の覆い |
+| `Markup/` | 記号 (`AppIcons`)、スタッフメニューの入口の長押しの時間 (`AppGestures`)、画面 ID の拡張 |
+| `Resources/` | 色 (`Colors.xaml`。Brand・Neutral・Status の役割)、受付機の画面のスタイル (`Styles.xaml`)、画面の文言、記号のフォントとグリフの表、アイコン、スプラッシュ |
+| `Platforms/` | Activity と Device Owner の受け口、マニフェスト、管理対象の構成の定義 |
+
+### 画面
+
+| 画面 | ViewId | 内容 |
+| --- | --- | --- |
+| 起動 | `Startup` | テーブル端末と同じ流れ (接続先、登録、トークン、端末の設定 (チェーンの色、スタッフの PIN、言語)、通知の接続) のあと、店舗、チェーンのロゴ、空席を読む。受付機として登録されていなければ進まない。失敗したら 30 秒ごとにやり直す |
+| 端末の設定 | `Setup` | 接続先、今の接続先での登録、ペアリングコード (テーブル端末と同じ) |
+| スタッフメニュー | `Staff` | 端末の情報 (店舗、端末の名前、端末の id、接続先、専用端末、EMM の設定、電池、ネットワーク、アプリの版)、端末の設定、専用端末の一時的な解除 |
+| 待受 | `Standby` | チェーンの名前とロゴ、言語 (今の言語を出し、押すと選ぶ。店舗の言語が 1 つなら出さない)、いらっしゃいませ、受付の文言、受付する、店舗の名前。受け付けないとき (来店の開き方が受付機でない店、ラストオーダーの後) と、空いているテーブルがひとつもないときは、その文言を出して受付するを出さない |
+| 人数 | `Guests` | 大人と子ども (小学生以下) を増減のボタンで入れ (はじめは大人 2 人。合わせて 1 人以上)、席を決めるで来店を開いて案内に進む。戻るか、60 秒触らなければ待受に戻る |
+| 案内 | `Guide` | 決まったテーブルの名前を大きく出し、お席へお進みくださいと人数を添える。人数の入る空席がなかったときは、満席とスタッフが案内することを出す。閉じるか、15 秒たつと待受に戻る |
+
+| ポップアップ | DialogId | 内容 |
+| --- | --- | --- |
+| 電卓 / 知らせ | `InputNumber` / `Message` (`TerminalDialogId`) | ペアリングコード、スタッフの PIN、失敗の知らせ、受付を止めた知らせ |
+| 言語 | `Language` | 言語をその言語の名前で並べ、今の言語に印を付ける (待受の言語のボタンから開く) |
+
+### 遷移
+
+```
+起動 ──(登録なし、登録トークンなし)──> 端末の設定 ──登録 / 保存──> 起動
+起動 ──(用意ができた)──> 待受
+待受 ──受付する──> 人数 ──席を決める──> 案内 (テーブル / 満席) ──閉じる / 15 秒──> 待受
+人数 ──戻る / 60 秒触らない──> 待受
+人数 ──(受付を止めていた)──> [知らせ] ──> 起動
+待受 ──ブランドの印の長押し──> [PIN] ──> スタッフメニュー ──閉じる──> 待受
+待受 ──(チェーンと店舗の設定の変更)──> 起動
+どの画面 ──(端末の無効化、テナントの停止、接続先の変更の知らせ)──> 起動
+```
+
+- 端末の戻るは、待受では何もせず、人数・案内・スタッフメニューでは待受に戻る (アプリの外へ出さない)
+- 案内を閉じたときと、人数の画面で触らずに待受に戻ったときは、言語を店舗の初めの言語に戻す (次のお客様が初めの言語から始められるように)。  
+  人数の画面の戻るでは、選んだ言語のままにする (同じお客様が人数を入れ直すため)
+- 待受に戻す時間は、操作の途中 (`BusyState`) なら次の機会に延ばす。  
+  人数の画面は、人数を替えるたびに触らなかった時間を数え直す
+- スタッフメニューは、テーブル端末と同じく、ブランドの印を 3 秒押して PIN (店舗の設定) を入れると開く
+
+### 状態と通知
+
+- 起動で端末の設定 (チェーンと店舗の設定)、店舗の今の状態、空いているテーブルを読み、`OrderEventReceiver` が通知で替える
+- 空いているテーブルは、来店の通知 (`visit.opened`、`visit.moved`、`visit.closed`) を受けたら読み直す (`GET /tables?status=Vacant`)。  
+  読み直す印は届いたとき (`OnReceived`) に付け、まとめて届いた通知を扱い終えたあと (`OnDrainedAsync`) に 1 回だけ読み直して、表示中の画面に `ShellEvent.VacancyChanged` で知らせる
+- 空いているテーブルがひとつもなければ、待受を満席にする。  
+  人数が定員に入るかは、席を決めるときにサーバが確かめる (入る空席がなければ `NO_VACANT_TABLE` を返し、案内の画面に満席を出す)
+- 店舗は通知 (`store.updated`) の中身で替え、表示中の画面に `ShellEvent.StoreUpdated` で知らせる。  
+  待受は、設定の版が起動のときに読んだ端末の設定と違えば起動からやり直し (来店の開き方の変更もこれで反映する)、ほかの変化 (ラストオーダーの時刻) は文言を出し直す
+- ラストオーダーの時刻を過ぎたかは、待受が 30 秒ごとに店舗のタイムゾーンの時刻で見直す (来店を開いても注文できないので受け付けない。受付機だけで止め、サーバは止めない)
+- 来店を開く要求が送れたかわからない (通信できない) ときは、同じ人数の次の送信で同じ来店の id を送り直す (人数が替われば、別のお客様として新しく開く)
+- 来店の開き方が替わっていた (`VISIT_OPENING_DISABLED`) ときは、知らせてから起動からやり直す
+- 起動からやり直す知らせ (`Restart`) はテーブル端末と同じ
+
+### 色と言語
+
+- チェーンの色は、テーブル端末と同じく起動のときに `ThemeManager` が Brand・Neutral・Status の役割を替える。  
+  起動・端末の設定・スタッフメニューは System の役割の色で組む
+- 文言とサーバの文字 (チェーンの名前、店舗の名前) は、待受で選んだ言語で出す (選べる言語は店舗の設定の言語)。  
+  起動のときは、端末の言語の設定によらず店舗の初めの言語から始める
+- 言語を替えたら、待受を作り直して文言を引き直す
+
+### 専用端末
+
+テーブル端末と同じ仕組みを使う ([6. 専用端末](#-6-専用端末))。  
+アプリの画面 (`MainActivity`) をロックタスクとホームの候補にし、Device Owner の受け口 (`tableorder.terminal.reception/.AdminReceiver`) と管理対象の構成の定義を置く。  
+専用端末の一時的な解除は、スタッフメニューで行う。
+
+---
+
+## 🏭 9. サーバの作り
 
 サーバは、端末が使う API (端末の登録とトークン、店舗・メニュー・品切れ・端末の設定、来店・テーブル・注文・キッチン・提供・呼び出し・会計・支払) と、通知 (SignalR) を作った。  
 外部の連携 (OAuth のクライアント、メニューの公開、Webhook) と本物の決済サービスは、これから作る ([plan.md](plan.md))。
@@ -589,6 +674,7 @@ Device Owner のときに掛ける端末の制限:
 - スキーマは `CREATE TABLE IF NOT EXISTS` で作るので、表に列を足したときは開発の DB (実行のフォルダの `data.db`) を消して作り直す
 - 開発の環境ではサーバが調理・提供・呼び出し・支払を時間で進めるので、テーブル端末だけで注文から会計までを確かめられる
 - テーブル端末をつなぐときは、端末の設定で接続先を開発のサーバ (エミュレータからは `http://10.0.2.2:8080`) にし、ペアリングコード (`100001`) で登録する
+- 受付機で受け付けるときは、管理画面の店舗の設定で来店の開き方を受付機にする (サンプルのデモの店舗はスタッフなので、そのままでは受付機の待受に受付を止めている文言が出る)
 - 管理画面 (`/`) は、サインインを作るまで開発の環境だけで開く。  
   端末の画面 (`/devices`) でペアリングコードを出せば、サンプルの決まったコードのほかにも端末を登録できる
 - キッチン端末 (`/kitchen`) は枠だけで、仮の画面を出す

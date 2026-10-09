@@ -20,6 +20,9 @@
     <File Path="../docs/device-management.md" />
     <File Path="../docs/plan.md" />
   </Folder>
+  <Folder Name="/Terminal/">
+    <Project Path="../terminal/src/TableOrder.Terminal/TableOrder.Terminal.csproj" />
+  </Folder>
   <Folder Name="/App/">
     <Project Path="src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj" DefaultStartup="true">
       <Deploy />

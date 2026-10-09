@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:s="http://smart/maui"
+             xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
+             xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Guide"
+             x:Class="TableOrder.ReceptionApp.Modules.Guide.GuideView"
+             x:DataType="{x:Type module:GuideViewModel}"
+             s:BindingContextResolver.Type="{x:Type module:GuideViewModel}">
+
+    <!-- 案内: 決まったテーブルを離れても読める大きさで出す。満席のときはスタッフが案内することを出す -->
+    <Grid Style="{StaticResource ReceptionGrid}"
+          RowDefinitions="Auto,*,Auto">
+        <!-- brand -->
+        <HorizontalStackLayout Grid.Row="0"
+                               Style="{StaticResource ReceptionBrandStack}">
+            <Border Style="{StaticResource ReceptionMarkBorder}">
+                <Grid>
+                    <Label Style="{StaticResource ReceptionInitialLabel}"
+                           IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
+                           Text="{Binding Brand.Initial}" />
+                    <Image Style="{StaticResource BrandLogoImage}"
+                           IsVisible="{Binding Brand.HasLogo}"
+                           Source="{Binding Brand.LogoPath}" />
+                </Grid>
+            </Border>
+            <Label Style="{StaticResource ReceptionBrandLabel}"
+                   Text="{Binding Brand.Name}" />
+        </HorizontalStackLayout>
+
+        <!-- table -->
+        <VerticalStackLayout Grid.Row="1"
+                             Style="{StaticResource GuideStack}"
+                             IsVisible="{Binding IsFull, Converter={StaticResource ReverseConverter}}">
+            <Label Style="{StaticResource ReceptionTitleLabel}"
+                   Text="{x:Static strings:AppResources.GuideTitle}" />
+            <Label Style="{StaticResource GuideTableLabel}"
+                   Text="{Binding TableText}" />
+            <Label Style="{StaticResource GuideGuestsLabel}"
+                   Text="{Binding GuestsText}" />
+        </VerticalStackLayout>
+
+        <!-- full -->
+        <VerticalStackLayout Grid.Row="1"
+                             Style="{StaticResource GuideStack}"
+                             IsVisible="{Binding IsFull}">
+            <Label Style="{StaticResource ReceptionTitleLabel}"
+                   Text="{x:Static strings:AppResources.GuideFullTitle}" />
+            <Label Style="{StaticResource GuideFullMessageLabel}"
+                   Text="{x:Static strings:AppResources.GuideFullMessage}" />
+            <Label Style="{StaticResource GuideGuestsLabel}"
+                   Text="{Binding GuestsText}" />
+        </VerticalStackLayout>
+
+        <!-- action -->
+        <Grid Grid.Row="2"
+              Style="{StaticResource ReceptionActionGrid}"
+              ColumnDefinitions="*,2*">
+            <Button Grid.Column="1"
+                    Style="{StaticResource ReceptionPrimaryButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonClose}" />
+        </Grid>
+    </Grid>
+
+</ContentView>

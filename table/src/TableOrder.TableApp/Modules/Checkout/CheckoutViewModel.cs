@@ -1,6 +1,6 @@
 namespace TableOrder.TableApp.Modules.Checkout;
 
-using TableOrder.TableApp.Components;
+using TableOrder.Terminal.Components;
 
 // お会計。左に明細と合計・割り勘の目安、右に支払方法を選んでから QR コード決済 / カード / レジの案内を出す
 // 支払の完了は読み直して待ち (サーバの通知ができたら通知で替える)、終わったらお礼と電子レシートを出して待受に戻る

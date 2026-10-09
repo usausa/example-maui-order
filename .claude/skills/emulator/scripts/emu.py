@@ -40,11 +40,11 @@ ROOT = Path(__file__).resolve().parents[4]
 FRAMEWORK = 'net10.0-android'
 
 # 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
-# 受け口のないアプリ (枠だけの受付機) は None にし、Device Owner の操作をしない
+# 受け口のないアプリは None にし、Device Owner の操作をしない
 APPS = {
     'table': ('tableorder.terminal.table', 'table/src/TableOrder.TableApp/TableOrder.TableApp.csproj', '.AdminReceiver'),
     'hall': ('tableorder.terminal.hall', 'hall/src/TableOrder.HallApp/TableOrder.HallApp.csproj', '.AdminReceiver'),
-    'reception': ('tableorder.terminal.reception', 'reception/src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj', None),
+    'reception': ('tableorder.terminal.reception', 'reception/src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj', '.AdminReceiver'),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
 

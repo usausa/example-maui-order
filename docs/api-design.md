@@ -1,7 +1,7 @@
 # 注文 API 設計 (想定)
 
 注文サーバの API の想定で、テーブル端末 (このリポジトリのアプリ)、店内の注文に関わる端末 (ホール、キッチン、受付)、外部のシステムが使う。  
-作った API は [architecture.md](architecture.md#-8-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
+作った API は [architecture.md](architecture.md#-9-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
 業務の前提と流れ (端末と業務、来店、金額と税、扱わないもの) は [business.md](business.md)、データベースは [database.md](database.md)、実装の計画は [plan.md](plan.md) を参照。
 
 - [1. 共通仕様](#-1-共通仕様)
@@ -763,8 +763,10 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | --- | --- | --- |
 | 登録 (一度だけ) | `POST /devices/pair` | |
 | 起動 | `POST /devices/token`、`GET /devices/me/config`、`GET /store`、`GET /tables?status=Vacant`、`/hubs/store` | |
-| 受付 | `GET /tables?status=Vacant` (空席の有無を出す)、`POST /visits` (テーブルを送らず、サーバが空席を決める。満席は `409` `NO_VACANT_TABLE`) | `visit.opened` / `visit.moved` / `visit.closed` (空席を替える)、`store.updated` (来店の開き方が受付機でなくなったら受け付けを止める) |
+| 受付 | `GET /tables?status=Vacant` (空席の有無を出す)、`POST /visits` (テーブルを送らず、サーバが空席を決める。満席は `409` `NO_VACANT_TABLE`) | `visit.opened` / `visit.moved` / `visit.closed` (空席を替える)、`store.updated` (来店の開き方が受付機でなくなったら受け付けを止め、ラストオーダーの時刻を替える) |
 | 定期とつなぎ直し | `POST /devices/me/heartbeat`、`POST /devices/token`、`GET /events?after=` | |
+
+- 受付機は、ラストオーダーの時刻 (`GET /store`) を過ぎたら受け付けない (サーバは来店の開始を止めない)
 
 ### 4.6 外部
 

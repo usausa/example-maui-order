@@ -12,7 +12,7 @@ public sealed class LanguageChoice
     public LanguageChoice(Language language, bool isSelected)
     {
         Language = language;
-        Name = ViewHelper.LanguageName(language);
+        Name = language.NativeName();
         IsSelected = isSelected;
     }
 }

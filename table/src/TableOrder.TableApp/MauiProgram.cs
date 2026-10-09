@@ -19,7 +19,6 @@ using Smart.Mvvm.Resolver;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 using TableOrder.Client.Rest;
-using TableOrder.TableApp.Components;
 using TableOrder.TableApp.Modules;
 using TableOrder.TableApp.Shell;
 using TableOrder.Terminal.Behaviors;
@@ -239,17 +238,12 @@ public static partial class MauiProgram
         // Terminal (端末の部品、端末の設定と状態、登録と状態の報告、注文サーバの登録と通知の窓口)
         services.AddTerminalComponents(new TerminalOptions(DeviceKind.Table), new KioskOptions(typeof(AdminReceiver), typeof(MainActivity)));
 
-        // Components
-        services.AddSingleton<ImageCache>();
-        services.AddSingleton<ThemeManager>();
-
-        // Resource
-        services.AddSingleton<ResourceDictionary>(static _ => Application.Current!.Resources);
+        // Customer (チェーンの色、画像の保存、言語)
+        services.AddCustomerComponents(new LanguageOptions(static x => AppResources.Culture = x));
 
         // State
         services.AddSingleton(BusyState.Default);
         services.AddSingleton<StartupState>();
-        services.AddSingleton<LanguageState>();
         services.AddSingleton<MenuState>();
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();

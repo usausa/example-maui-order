@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device Owner の受け口 (AdminReceiver) の設定。Device Owner の操作は宣言が要らないので、ポリシーは並べない -->
+<device-admin>
+	<uses-policies />
+</device-admin>
