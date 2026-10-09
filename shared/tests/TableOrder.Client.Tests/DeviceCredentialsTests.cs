@@ -14,13 +14,13 @@ public sealed class DeviceCredentialsTests
 
     // 公開鍵 (SubjectPublicKeyInfo) から JWK の x と y (32 バイトずつ) を取り出す
     [Fact]
-    public void CreatePublicKeyFromSubjectPublicKeyInfo()
+    public async Task CreatePublicKeyFromSubjectPublicKeyInfo()
     {
         // Arrange
         var key = new TestDeviceKey();
 
         // Act
-        var jwk = DeviceCredentials.CreatePublicKey(key.GetPublicKey());
+        var jwk = DeviceCredentials.CreatePublicKey(await key.GetPublicKeyAsync());
 
         // Assert
         Assert.Equal("EC", jwk.Kty);
@@ -47,7 +47,7 @@ public sealed class DeviceCredentialsTests
 
     // トークンの要求は ES256 の JWT (iss と sub は端末の id、aud はサーバの名前、期限は 2 分、使い捨ての jti) で、端末の鍵で確かめられる
     [Fact]
-    public void CreateAssertionSignedByDeviceKey()
+    public async Task CreateAssertionSignedByDeviceKey()
     {
         // Arrange
         var key = new TestDeviceKey();
@@ -55,8 +55,8 @@ public sealed class DeviceCredentialsTests
         var now = new DateTimeOffset(2026, 3, 1, 12, 0, 0, TimeSpan.Zero);
 
         // Act
-        var assertion = DeviceCredentials.CreateAssertion(key, deviceId, now);
-        var next = DeviceCredentials.CreateAssertion(key, deviceId, now);
+        var assertion = await DeviceCredentials.CreateAssertionAsync(key, deviceId, now);
+        var next = await DeviceCredentials.CreateAssertionAsync(key, deviceId, now);
 
         // Assert
         var parts = assertion.Split('.');
@@ -77,7 +77,7 @@ public sealed class DeviceCredentialsTests
 
     // DER の署名の r と s を 32 バイトずつに揃える (符号のための先頭の 0 を除き、短い値は前を 0 で埋める)
     [Fact]
-    public void CreateAssertionAlignsSignatureValues()
+    public async Task CreateAssertionAlignsSignatureValues()
     {
         // Arrange
         var r = Enumerable.Range(0, 32).Select(static x => (byte)(0x80 + x)).ToArray();
@@ -85,13 +85,60 @@ public sealed class DeviceCredentialsTests
         var key = new FixedSignatureKey(r, s);
 
         // Act
-        var assertion = DeviceCredentials.CreateAssertion(key, Guid.CreateVersion7(), DateTimeOffset.UtcNow);
+        var assertion = await DeviceCredentials.CreateAssertionAsync(key, Guid.CreateVersion7(), DateTimeOffset.UtcNow);
 
         // Assert
         var signature = Base64Url.DecodeFromChars(assertion.Split('.')[2]);
         Assert.Equal(64, signature.Length);
         Assert.Equal(r, signature[..32]);
         Assert.Equal(new byte[30].Concat(s), signature[32..]);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Signature
+    //--------------------------------------------------------------------------------
+
+    // JWS の形の署名 (ブラウザの WebCrypto が返す形) を DER にしたものは、DER の署名として確かめられる
+    [Fact]
+    public void ToDerSignatureVerifiesAsDer()
+    {
+        // Arrange
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var data = "header.payload"u8.ToArray();
+        var signature = key.SignData(data, HashAlgorithmName.SHA256, DSASignatureFormat.IeeeP1363FixedFieldConcatenation);
+
+        // Act
+        var der = DeviceCredentials.ToDerSignature(signature);
+
+        // Assert
+        Assert.True(key.VerifyData(data, der, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence));
+    }
+
+    // r と s は先頭の 0 を除き、先頭のビットが立つ値は符号のための 0 を足して INTEGER にする
+    [Fact]
+    public void ToDerSignatureEncodesMinimalIntegers()
+    {
+        // Arrange
+        var r = new byte[32];
+        r[31] = 0x05;
+        var s = Enumerable.Range(0, 32).Select(static x => (byte)(0x80 + x)).ToArray();
+
+        // Act
+        var der = DeviceCredentials.ToDerSignature(r.Concat(s).ToArray());
+
+        // Assert
+        var reader = new AsnReader(der, AsnEncodingRules.DER);
+        var sequence = reader.ReadSequence();
+        Assert.Equal(new byte[] { 0x05 }, sequence.ReadIntegerBytes().ToArray());
+        Assert.Equal(new byte[] { 0x00 }.Concat(s), sequence.ReadIntegerBytes().ToArray());
+    }
+
+    // r と s が 32 バイトずつでない署名は受けない
+    [Fact]
+    public void ToDerSignatureRejectsInvalidLength()
+    {
+        // Act / Assert
+        Assert.Throws<CryptographicException>(static () => DeviceCredentials.ToDerSignature(new byte[63]));
     }
 
     //--------------------------------------------------------------------------------
@@ -114,9 +161,9 @@ public sealed class DeviceCredentialsTests
             this.s = s;
         }
 
-        public byte[] GetPublicKey() => throw new NotSupportedException();
+        public ValueTask<byte[]> GetPublicKeyAsync() => throw new NotSupportedException();
 
-        public byte[] Sign(byte[] data)
+        public ValueTask<byte[]> SignAsync(byte[] data)
         {
             var writer = new AsnWriter(AsnEncodingRules.DER);
             using (writer.PushSequence())
@@ -125,7 +172,7 @@ public sealed class DeviceCredentialsTests
                 writer.WriteIntegerUnsigned(s);
             }
 
-            return writer.Encode();
+            return ValueTask.FromResult(writer.Encode());
         }
 
         public void Delete()

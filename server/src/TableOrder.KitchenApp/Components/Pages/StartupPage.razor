@@ -1,0 +1,18 @@
+@page "/"
+
+<PageTitle>@AppResources.AppTitle</PageTitle>
+
+<div class="startup">
+    <div class="startup-title">@AppResources.AppTitle</div>
+    <div class="startup-progress"><span style="width: @ProgressWidth"></span></div>
+    <div class="startup-step @(isFailed ? "startup-failed" : null)">@stepText</div>
+    @if (isFailed)
+    {
+        <div class="startup-actions">
+            <button class="button button-primary" disabled="@isRunning" @onclick="InitializeAsync">@AppResources.StartupRetry</button>
+            <button class="button" disabled="@isRunning" @onclick="OpenSetup">@AppResources.StartupSetup</button>
+        </div>
+        <div class="startup-hint">@RetryHintText</div>
+    }
+    <div class="startup-version">@AppInfo.Version</div>
+</div>

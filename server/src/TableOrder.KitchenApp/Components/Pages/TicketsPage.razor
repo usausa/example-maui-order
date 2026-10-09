@@ -1,0 +1,59 @@
+@page "/tickets"
+
+<PageTitle>@AppResources.AppTitle</PageTitle>
+
+<div class="screen">
+    @if (HasTabs)
+    {
+        <div class="tabs">
+            <button class="tab @(TicketState.SelectedStationId is null ? "tab-selected" : null)" @onclick="() => Select(null)">
+                <span>@AppResources.StationAll</span>
+                <span class="badge">@Badge(null)</span>
+            </button>
+            @foreach (var station in StoreState.Stations)
+            {
+                <button class="tab @(TicketState.SelectedStationId == station.Id ? "tab-selected" : null)" @onclick="() => Select(station.Id)">
+                    <span>@station.Name</span>
+                    <span class="badge">@Badge(station.Id)</span>
+                </button>
+            }
+        </div>
+    }
+    @if (!Kiosk.IsSoundReady)
+    {
+        <div class="notice"><span class="icon">@Icons.TouchApp</span>@AppResources.TicketsSoundHint</div>
+    }
+    <div class="tickets">
+        @if (!Tickets.Any())
+        {
+            <div class="placeholder">
+                <span class="icon">@Icons.Restaurant</span>
+                <div class="placeholder-title">@AppResources.TicketsEmpty</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var ticket in Tickets)
+            {
+                <TicketCard @key="ticket.Id"
+                            Ticket="ticket"
+                            Now="now"
+                            AlertTime="StoreState.AlertTime"
+                            StationName="@StationName(ticket)"
+                            IsBusy="isBusy"
+                            OnLine="line => AdvanceAsync(ticket, line)"
+                            OnAction="() => BumpAsync(ticket)" />
+            }
+        }
+    </div>
+    <div class="screen-footer">
+        <button class="button footer-button" @onclick="OpenDone"><span class="icon">@Icons.History</span>@AppResources.FooterDone</button>
+        <button class="button footer-button" @onclick="OpenStock"><span class="icon">@Icons.NoFood</span>@AppResources.FooterStock</button>
+        <button class="button footer-button" @onclick="OpenDevice"><span class="icon">@Icons.Tablet</span>@AppResources.FooterDevice</button>
+    </div>
+</div>
+
+@if (message is not null)
+{
+    <MessageDialog Title="@AppResources.ErrorTitle" Message="@message" OnClose="CloseMessage" />
+}

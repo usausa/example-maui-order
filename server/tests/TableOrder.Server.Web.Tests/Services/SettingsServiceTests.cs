@@ -90,7 +90,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
             error = await Settings.UpdateStoreSettingsAsync(
                 settings with
                 {
-                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception },
+                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception, KitchenAlertMinutes = 0 },
                     Languages = ["ja", "en"],
                     PaymentMethods = [PaymentMethod.QrCode],
                     CallReasons = settings.CallReasons.Select(static x => x with { IsActive = x.Code == "Water" }).ToList()
@@ -105,13 +105,14 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         var config = (await terminal.Device.GetConfigAsync(cancel)).Content!;
         Assert.Equal((false, false, 0, 10), (config.Features.RegisterCheckout, config.Features.SplitPayment, config.Features.LastOrderNoticeMinutes, config.Features.FinishSeconds));
         Assert.Equal(VisitOpening.Reception, config.Features.VisitOpening);
+        Assert.Equal(0, config.Features.KitchenAlertMinutes);
         Assert.Equal(["ja", "en"], config.Languages);
         Assert.Equal([PaymentMethod.QrCode], config.PaymentMethods);
         Assert.Equal("Water", Assert.Single(config.CallReasons).Code);
         Assert.True(StaffPins.Verify("9876", config.StaffPin.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
     }
 
-    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、古い版は受けない
+    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、範囲の外のキッチンの遅れの時間、古い版は受けない
     [Fact]
     public async Task StoreSettingsKeepPinAndRejectInvalidSettings()
     {
@@ -129,6 +130,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         var badPin = await Settings.UpdateStoreSettingsAsync(settings with { Version = settings.Version + 1 }, "12a4", cancel);
         var noLanguage = await Settings.UpdateStoreSettingsAsync(settings with { Languages = [], Version = settings.Version + 1 }, null, cancel);
         var badOpening = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { VisitOpening = (VisitOpening)99 }, Version = settings.Version + 1 }, null, cancel);
+        var badAlert = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { KitchenAlertMinutes = 121 }, Version = settings.Version + 1 }, null, cancel);
         var stale = await Settings.UpdateStoreSettingsAsync(settings, null, cancel);
 
         // Assert
@@ -139,6 +141,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.ValidationError, badPin!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, noLanguage!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, badOpening!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, badAlert!.ErrorCode);
         Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
     }
 }

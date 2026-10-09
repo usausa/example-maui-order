@@ -1,7 +1,7 @@
 # 注文 API 設計 (想定)
 
-注文サーバの API の想定で、テーブル端末 (このリポジトリのアプリ)、店内の注文に関わる端末 (ホール、キッチン、受付)、外部のシステムが使う。  
-作った API は [architecture.md](architecture.md#-9-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
+注文サーバの API の想定で、店内の注文に関わる端末 (テーブル、ホール、キッチン、受付。どれもこのリポジトリのアプリ) と外部のシステムが使う。  
+作った API は [architecture.md](architecture.md#-10-サーバの作り) に挙げ、まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。  
 業務の前提と流れ (端末と業務、来店、金額と税、扱わないもの) は [business.md](business.md)、データベースは [database.md](database.md)、実装の計画は [plan.md](plan.md) を参照。
 
 - [1. 共通仕様](#-1-共通仕様)
@@ -201,7 +201,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§2.1)。置き場所はここで受け取る |
 | `brand` | object | チェーンの設定 `{ name (LocalizedText), logoImageName (string?), theme }`。ロゴは正方形の画像 (地の色を含む。[§2.3](#-23-メニュー-menu) の画像) で、なければ端末は印に名前の頭の文字を出す |
 | `brand.theme` | object[] | 替える色 `[{ role, color }]` (例: `{ "role": "PrimaryColor", "color": "#1E5FA8" }`)。役割は Brand・Neutral・Status の色 (`ThemeRoles`) で、色は `#RRGGBB` か `#AARRGGBB`。ない役割は端末の既定のまま |
-| `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening }` (下の表)。ない項目は既定の値 |
+| `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening, kitchenAlertMinutes }` (下の表)。ない項目は既定の値 |
 | `staffPin` | object | スタッフの PIN のハッシュ `{ iterations, salt, hash }` (PBKDF2-HMAC-SHA256。`salt` と `hash` は Base64)。端末は入れた PIN を同じ計算で確かめ、平文を持たない |
 | `settingsVersion` | int | チェーンと店舗の設定の版 (`store.updated` の店舗の `settingsVersion` と比べる) |
 
@@ -214,6 +214,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `lastOrderNoticeMinutes` | int | `30` | ラストオーダーの何分前から知らせるか (`0` は知らせない) |
 | `finishSeconds` | int | `30` | お礼の画面から待受に戻るまでの秒数 |
 | `visitOpening` | enum | `Hall` | 来店の開き方。`Hall` (スタッフがホール端末で開く) / `Reception` (受付機でお客様が人数を入れ、サーバが席を決める) / `Table` (お客様がテーブル端末で始める)。ホール端末はどの形でも開ける |
+| `kitchenAlertMinutes` | int | `15` | キッチン端末で、チケットができてから何分で注意の色にするか (`0` は色を替えない) |
 
 お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§2.3](#-23-メニュー-menu)) で決める。
 

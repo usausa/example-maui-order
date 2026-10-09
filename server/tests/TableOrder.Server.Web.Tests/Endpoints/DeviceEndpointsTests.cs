@@ -103,14 +103,14 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         var request = new DevicePairRequest
         {
             PairingCode = SampleData.DemoTableCode,
-            PublicKey = DeviceCredentials.CreatePublicKey(key.GetPublicKey()),
+            PublicKey = DeviceCredentials.CreatePublicKey(await key.GetPublicKeyAsync()),
             DeviceName = "test"
         };
         using var pair = await client.PostAsJsonAsync("/api/v1/devices/pair", request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
         var device = await pair.Content.ReadFromJsonAsync<DevicePairResponse>(TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Act
-        var assertion = DeviceCredentials.CreateAssertion(key, device!.DeviceId, DateTimeOffset.UtcNow);
+        var assertion = await DeviceCredentials.CreateAssertionAsync(key, device!.DeviceId, DateTimeOffset.UtcNow);
         using var response = await client.PostAsJsonAsync("/api/v1/devices/token", new DeviceTokenRequest { Assertion = assertion }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
@@ -236,6 +236,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.True(demoConfig.Features.SplitPayment);
         Assert.Equal((30, 30), (demoConfig.Features.LastOrderNoticeMinutes, demoConfig.Features.FinishSeconds));
         Assert.Equal(VisitOpening.Hall, demoConfig.Features.VisitOpening);
+        Assert.Equal(15, demoConfig.Features.KitchenAlertMinutes);
         Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
 
         Assert.Equal("あおぞら食堂", testConfig.Brand.Name.Ja);

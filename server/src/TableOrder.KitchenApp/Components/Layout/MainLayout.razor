@@ -1,8 +1,7 @@
 @inherits LayoutComponentBase
 
-<div class="layout">
-    <header class="layout-header">キッチン</header>
-    <main class="layout-body">
-        @Body
-    </main>
-</div>
+@* 画面を切り替える入れ物だけを持つ (上下の帯は各画面に置く) *@
+@if (canShow)
+{
+    @Body
+}

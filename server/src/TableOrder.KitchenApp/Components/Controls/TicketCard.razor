@@ -1,0 +1,30 @@
+<div class="ticket @(IsAlert ? "ticket-alert" : null)">
+    <div class="ticket-header">
+        <span class="ticket-table">@ViewHelper.Format(AppResources.TicketTableFormat, Ticket.TableName)</span>
+        <span class="ticket-order">@ViewHelper.Format(AppResources.TicketOrderFormat, Ticket.OrderNo)</span>
+        <span class="ticket-elapsed"><span class="icon">@Icons.Timer</span>@ViewHelper.Format(AppResources.TicketElapsedFormat, ElapsedMinutes)</span>
+    </div>
+    @if (StationName is not null)
+    {
+        <div class="ticket-station">@StationName</div>
+    }
+    <div class="ticket-lines">
+        @foreach (var line in Ticket.Lines)
+        {
+            <button class="line @LineClass(line.Status)" disabled="@(!CanAdvance(line))" @onclick="() => OnLine.InvokeAsync(line)">
+                <span class="line-quantity">@line.Quantity</span>
+                <span class="line-body">
+                    <span class="line-name">@line.Name</span>
+                    @if (line.Options.Count > 0)
+                    {
+                        <span class="line-options">@String.Join(AppResources.ListSeparator, line.Options)</span>
+                    }
+                </span>
+                <span class="line-status">@LineStatusText(line.Status)</span>
+            </button>
+        }
+    </div>
+    <button class="button button-primary ticket-action" disabled="@IsBusy" @onclick="OnAction">
+        <span class="icon">@ActionIcon</span>@ActionText
+    </button>
+</div>

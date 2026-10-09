@@ -596,10 +596,26 @@ public static class ApplicationExtensions
     {
         // キッチン端末の Web アプリ (WebAssembly) の _framework を、圧縮したファイルと形式を合わせて返す
         app.UseBlazorFrameworkFiles(KitchenPath);
-        app.UseStaticFiles();
+        app.UseStaticFiles(KitchenFileOptions());
 
         return app;
     }
+
+    // キッチン端末の Web アプリの名前の替わらないファイル (index.html、JavaScript の部品、スタイル) は、ブラウザに毎回確かめさせる
+    // (Cache-Control がないとブラウザが推して残し、更新したあとも古い JavaScript の部品を使う。_framework は内容で名前が替わる)
+    private static StaticFileOptions KitchenFileOptions() =>
+        new()
+        {
+            OnPrepareResponse = static context =>
+            {
+                var path = context.Context.Request.Path;
+                if (path.StartsWithSegments(KitchenPath, StringComparison.OrdinalIgnoreCase) &&
+                    !path.StartsWithSegments(KitchenPath + "/_framework", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Context.Response.Headers.CacheControl = "no-cache";
+                }
+            }
+        };
 
     //--------------------------------------------------------------------------------
     // End point
@@ -633,7 +649,7 @@ public static class ApplicationExtensions
         }
 
         // キッチン端末 (WebAssembly)。画面の経路は index.html に戻す
-        app.MapFallbackToFile(KitchenPath + "/{*path:nonfile}", "kitchen/index.html");
+        app.MapFallbackToFile(KitchenPath + "/{*path:nonfile}", "kitchen/index.html", KitchenFileOptions());
 
         // API
         app.MapDeviceEndpoints();

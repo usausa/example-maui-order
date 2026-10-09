@@ -8,21 +8,24 @@ public sealed partial class DeviceKey : IDeviceKey
 
     private readonly Lock sync = new();
 
-    public byte[] GetPublicKey()
-    {
-        lock (sync)
+    // 鍵の操作 (Keystore) は時間がかかることがあるので、画面のスレッドの外で行う
+    public ValueTask<byte[]> GetPublicKeyAsync() =>
+        new(Task.Run(() =>
         {
-            return ReadPublicKey();
-        }
-    }
+            lock (sync)
+            {
+                return ReadPublicKey();
+            }
+        }));
 
-    public byte[] Sign(byte[] data)
-    {
-        lock (sync)
+    public ValueTask<byte[]> SignAsync(byte[] data) =>
+        new(Task.Run(() =>
         {
-            return SignData(data);
-        }
-    }
+            lock (sync)
+            {
+                return SignData(data);
+            }
+        }));
 
     public void Delete()
     {

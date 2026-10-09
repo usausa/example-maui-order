@@ -113,12 +113,7 @@ public sealed class RestConnection : IDisposable
         string assertion;
         try
         {
-            // 鍵の操作は時間がかかることがあるので、画面のスレッドの外で行う
-            assertion = await Task.Run(() => DeviceCredentials.CreateAssertion(context.Key, deviceId, now), cancel);
-        }
-        catch (OperationCanceledException ex)
-        {
-            return ApiResult.Failure<string>(ApiStatus.Canceled, exception: ex);
+            assertion = await DeviceCredentials.CreateAssertionAsync(context.Key, deviceId, now);
         }
         catch (CryptographicException ex)
         {

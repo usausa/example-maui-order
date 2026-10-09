@@ -73,6 +73,9 @@ public sealed class DeviceConfigResponseFeatures
 
     // 来店の開き方 (テーブル端末は待受の文言と、人数を入れて始めるかを替える)
     public VisitOpening VisitOpening { get; set; } = VisitOpening.Hall;
+
+    // キッチン端末で、チケットができてから何分で注意の色にするか (0 は色を替えない)
+    public int KitchenAlertMinutes { get; set; } = 15;
 }
 
 // PBKDF2-HMAC-SHA256 の回数と、Base64 の塩とハッシュ (店舗の設定に持つ JSON の形も兼ねる)

@@ -1,7 +1,7 @@
 # 構成
 
-リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`)、ホール端末 (`TableOrder.HallApp`)、受付機 (`TableOrder.ReceptionApp`)、サーバの作り。  
-ここには作ったものだけを書き、これから作るもの (キッチン端末の画面など) は [plan.md](plan.md) に置く。  
+リポジトリのプロジェクトの構成と、テーブル端末 (`TableOrder.TableApp`)、ホール端末 (`TableOrder.HallApp`)、受付機 (`TableOrder.ReceptionApp`)、キッチン端末 (`TableOrder.KitchenApp`)、サーバの作り。  
+ここには作ったものだけを書き、これから作るもの (外部の連携など) は [plan.md](plan.md) に置く。  
 業務の前提と流れは [business.md](business.md)、API の想定は [api-design.md](api-design.md)、データベースは [database.md](database.md) を参照。
 
 - [1. プロジェクト](#-1-プロジェクト)
@@ -12,7 +12,8 @@
 - [6. 専用端末](#-6-専用端末)
 - [7. ホール端末の作り](#-7-ホール端末の作り)
 - [8. 受付機の作り](#-8-受付機の作り)
-- [9. サーバの作り](#-9-サーバの作り)
+- [9. キッチン端末の作り](#-9-キッチン端末の作り)
+- [10. サーバの作り](#-10-サーバの作り)
 
 ---
 
@@ -43,7 +44,7 @@
 | --- | --- | --- |
 | `shared/src/TableOrder.Domain` | .NET | 業務の値 (列挙型) と計算 (金額と内税、割り勘の目安、タグのルールの数え方、ラストオーダーの判定)。サーバと端末で同じ計算を使う |
 | `shared/src/TableOrder.Contract` | .NET | 通信データ (`XxxRequest` / `XxxResponse`、`LocalizedText`) |
-| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi`・`IHallApi`・`IReceptionApi`、通知の `IOrderEvents`、`ApiResult`)、注文サーバの実装 (`Rest/` の要求、`SignalR/` の通知)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) |
+| `shared/src/TableOrder.Client` | .NET | 端末と Web アプリが使う API の窓口 (全端末に共通の `IDeviceApi`、端末の種類ごとの `ITableApi`・`IHallApi`・`IReceptionApi`・`IKitchenApi`、通知の `IOrderEvents`、`ApiResult`)、注文サーバの実装 (`Rest/` の要求、`SignalR/` の通知)、端末の鍵の値を API の形にする変換 (`DeviceCredentials`) |
 | `terminal/src/TableOrder.Terminal` | .NET MAUI (Android のライブラリ) | 端末に共通の部品。端末の情報、鍵、専用端末、EMM の設定、異常終了の記録 (`Components/`、`Diagnostics/`)、端末の設定と状態、スタッフの PIN (`State/`)、登録と状態の報告 (`Usecase/`、`Shell/`)、通知の受け口の土台 (`OrderEventReceiverBase`)、どの端末でも同じポップアップ (電卓、知らせ、確認) と入口 (`Modules/`。PIN の確かめを含む)、ポップアップと遷移のプラグイン (`Extender/`)、添付プロパティ (`Behaviors/`)、System の色と共通のスタイル (`Resources/Styles/` の `SystemColors`、`TerminalStyles`)、文言 (`TerminalResources`)、画面に収める幅 (`TerminalSizes`)、お客様の画面の端末 (テーブル端末、受付機) に共通の部品 (チェーンの色 `ThemeManager`、画像の保存 `ImageCache`、チェーンの印 `BrandMark`、言語 `LanguageState`)、登録 (`AddTerminalComponents`。端末の種類の `TerminalOptions` と、専用端末の型の `KioskOptions` を受ける。お客様の画面の部品は `AddCustomerComponents` で、アプリの文言のカルチャを替える `LanguageOptions` を受ける) |
 | `table/src/TableOrder.TableApp` | .NET MAUI (Android) | テーブル端末のアプリ |
 | `hall/src/TableOrder.HallApp` | .NET MAUI (Android) | ホール端末のアプリ |
@@ -51,7 +52,7 @@
 | `server/src/TableOrder.Server.Core` | .NET | 業務の処理 (端末の登録と認可、店舗、メニュー、品切れ) と DB の読み書き (Accessor と 2-way SQL) |
 | `server/src/TableOrder.Server.Web` | ASP.NET Core | 入口 (REST)、端末の認証、管理画面 (Blazor Server)、キッチン端末の配信 |
 | `server/src/TableOrder.Server.AppHost` | Aspire | 開発で動かす構成 (サーバとテレメトリ) |
-| `server/src/TableOrder.KitchenApp` | Blazor WebAssembly | キッチン端末の Web アプリの枠 (仮の画面を出すだけ) |
+| `server/src/TableOrder.KitchenApp` | Blazor WebAssembly | キッチン端末の Web アプリ |
 | `shared/tests/TableOrder.Domain.Tests` | .NET (xunit) | `Domain` の計算のテストと、`Domain` が他の層に依存しないことの確認 |
 | `shared/tests/TableOrder.Client.Tests` | .NET (xunit) | 端末の鍵の値の変換と、`Client` が画面・端末・サーバに依存しないことのテスト (窓口の動きはサーバのテストで本物のサーバにつないで確かめる) |
 | `server/tests/TableOrder.Server.Core.Tests` | .NET (xunit) | すべての SQL がテナントで絞っていることと、DB の型の変換のテスト |
@@ -59,6 +60,7 @@
 
 ```
 TableOrder.{Table|Hall|Reception}App ──> TableOrder.Terminal ──> TableOrder.Client ──> TableOrder.Contract ──> TableOrder.Domain
+TableOrder.KitchenApp ──> TableOrder.Client
 TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
           └──> TableOrder.KitchenApp
 ```
@@ -227,6 +229,7 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
   REST と gRPC のどちらで実装しても、端末は `ITableApi` だけを見る
 - `IHallApi` はホール端末が使う要求 (席、来店の操作、代わりの注文、提供、呼び出し、品切れと注文の一時停止、会計の手伝い) を 1 つずつメソッドにしたもの
 - `IReceptionApi` は受付機が使う要求 (店舗、空席、来店の開始) を 1 つずつメソッドにしたもの
+- `IKitchenApi` はキッチン端末が使う要求 (店舗、メニュー、品切れ、チケットの一覧と作り始め・できあがり・下げる・戻す) を 1 つずつメソッドにしたもの
 - `IDeviceApi` は全端末に共通の要求 (登録、トークン、状態の報告、端末の設定) の窓口。  
   アクセストークンは窓口の中で持って画面に渡さず、トークンの要求が断られたとき (無効化、テナントの停止) は `Denied` で端末の id と理由を知らせる
 - API の実装が読む端末の側の値 (接続先、登録した端末の id、端末の鍵) は `IDeviceContext` で受ける (テーブル端末は `Settings` が持つ)
@@ -243,18 +246,19 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
 | 実装 | 中身 |
 | --- | --- |
 | `RestConnection` | 要求の送り方。接続先の下の `api/v1/` に送り、アクセストークンを期限の 2 分前と `401` を受けたときに取り直す (送り直しは 1 回だけ)。結果は `4xx` を `Rejected` (`errorCode` と文言)、`401` を `Unauthorized`、`5xx`・時間切れ (15 秒)・通信できないを `Unavailable` にする |
-| `RestDeviceApi` / `RestTableApi` / `RestHallApi` / `RestReceptionApi` | 端末の種類ごとの窓口。要求の形を決めて `RestConnection` で送る。メニューは版が同じなら `304` を受けて前に読んだものを使う (`RestMenuCache`。窓口ごとに持つ) |
+| `RestDeviceApi` / `RestTableApi` / `RestHallApi` / `RestReceptionApi` / `RestKitchenApi` | 端末の種類ごとの窓口。要求の形を決めて `RestConnection` で送る。メニューは版が同じなら `304` を受けて前に読んだものを使う (`RestMenuCache`。窓口ごとに持つ) |
 | `SignalROrderEvents` | 通知 (`/hubs/store`)。`ready` で受けた番号から数え、切れたら間をおいてつなぎ直して、抜けた通知を `GET /events` で読んでから続ける。つなぐ前の問い合わせは 15 秒で打ち切り、`401` で断られたらトークンを取り直す。抜けた通知を読めないとき (追いかけられない `410` など) は `Expired` で知らせ、端末は起動からやり直す |
 
 - JSON はソース生成 (`ClientJsonContext`) で読み書きし、リフレクションに頼らない (端末のトリミングで型の情報が消えないように)
-- 端末が受ける通知は、来店 (`visit.opened` / `updated` / `moved` / `closed`)、店舗 (`store.updated`)、品切れ (`stock.updated`)、注文 (`order.created`、`order.lines.updated`。上限のルールの数え方)、呼び出し (`call.created` / `call.updated`。ホール端末の呼び出しの一覧) にする。  
+- 端末が受ける通知は、来店 (`visit.opened` / `updated` / `moved` / `closed`)、店舗 (`store.updated`)、品切れ (`stock.updated`)、注文 (`order.created`、`order.lines.updated`。上限のルールの数え方)、呼び出し (`call.created` / `call.updated`。ホール端末の呼び出しの一覧)、チケット (`ticket.created` / `ticket.updated`。キッチン端末は一覧を読み直すので中身を渡さない) にする。  
   テーブル端末は、注文履歴・呼び出し・支払の状態を開いている間に読み直して出す
 - Android の端末は Debug だけ平文の HTTP につなげる (開発のサーバ。Release は HTTPS だけ)
 
 ### 端末の登録
 
 端末は自分の鍵 (`Components/DeviceKey`。Android の Keystore の P-256 で、秘密鍵は取り出せない) で登録し、サーバの端末の設定でテーブルを受け取る。  
-鍵は Keystore の形 (公開鍵は SubjectPublicKeyInfo、署名は DER) で返し、API の形 (JWK、ES256 の JWT) には `DeviceCredentials` で直す。
+鍵は Keystore の形 (公開鍵は SubjectPublicKeyInfo、署名は DER) で返し、API の形 (JWK、ES256 の JWT) には `DeviceCredentials` で直す。  
+鍵の窓口 (`IDeviceKey`) の公開鍵と署名は非同期にし (ブラウザの鍵は非同期でしか使えない)、Android の鍵は Keystore の操作を画面のスレッドの外で行う。
 
 | 場面 | 端末の動き |
 | --- | --- |
@@ -526,7 +530,88 @@ Device Owner のときに掛ける端末の制限:
 
 ---
 
-## 🏭 9. サーバの作り
+## 🍳 9. キッチン端末の作り
+
+厨房・デザート・ドリンクの持ち場に置くタブレット (横向き) のブラウザで開く、Web アプリ (Blazor WebAssembly)。  
+サーバが `/kitchen` で配り、接続先はアプリを配ったサーバにする。  
+内容で名前の替わらないファイル (index.html、JavaScript の部品、スタイル) は、更新がすぐ届くようにブラウザに毎回確かめさせる (`Cache-Control: no-cache`)。  
+起動、端末の設定と登録、端末の画面、チケット (持ち場のタブ、明細の作り始めとできあがり、下げる、下げたチケットと戻す、遅れの色)、品切れと、通知の受け口、新しいチケットの音を作った。  
+窓口 (`TableOrder.Client`) は端末のアプリと同じもの (`IDeviceApi`、`IKitchenApi`、`IOrderEvents`) を使う。
+
+### フォルダ
+
+| フォルダ | 内容 |
+| --- | --- |
+| `Components/Pages/` | 画面 (`StartupPage`、`SetupPage`、`DevicePage`、`TicketsPage`、`DonePage`、`StockPage`) |
+| `Components/Controls/` | 部品 (チケットのカード `TicketCard`、数を入れる `NumberPad`、品の状態を選ぶ `StockEditDialog`、知らせ `MessageDialog`) |
+| `Components/Helpers/` | 画面に出す文字の組み立て (`ViewHelper`) |
+| `Browser/` | ブラウザの機能を使う部品 (端末の鍵 `BrowserDeviceKey`、`localStorage` の `BrowserStorage`、画面を消さないことと音の `KioskScreen`)。JavaScript の部品は `wwwroot/js/` に置く |
+| `State/` | 端末の設定 (`Settings`。`IDeviceContext`)、店舗とメニュー (`StoreState`)、チケット (`TicketState`)、品切れ (`StockState`) |
+| `Usecase/` | 登録、チケットの読み直しと操作、品切れの設定 (`KitchenUsecase`) |
+| `Shell/` | 通知の受け手 (`KitchenEventReceiver`) と状態の報告 (`StatusReporter`) |
+| `Resources/` | 画面の文言 (`Strings/AppResources.resx`、`.en.resx`) |
+| `wwwroot/` | 色の役割とスタイル (`css/app.css`)、記号のフォント、JavaScript の部品 |
+
+### 画面
+
+| 画面 | 経路 | 内容 |
+| --- | --- | --- |
+| 起動 | `/` | 鍵を作れるブラウザか (HTTPS か localhost) を確かめ、トークン、端末の設定、通知の接続のあと、店舗、メニュー (持ち場と品)、品切れ、チケットを読む。キッチン端末として登録されていなければ進まない。失敗したら 30 秒ごとにやり直す |
+| 端末の設定 | `/setup` | 接続先 (アプリを配ったサーバ)、今の登録、ペアリングコード (画面の数のボタンで入れる) |
+| チケット | `/tickets` | 持ち場のタブ (受け持つ持ち場が 2 つ以上のとき。「すべて」と持ち場ごとに、まだ作り始めていない明細のあるチケットの数を添える) と、チケットを古い順に左から並べる (入らなければ横にスクロールする)。チケットはテーブル、何回目の注文、経過時間、持ち場 (「すべて」のとき)、明細 (数量、名前、オプション、状態)、下げる。下の帯から下げたチケット、品切れ、端末を開く |
+| 下げたチケット | `/done` | 直近に下げたチケットを新しい順に並べ、戻す (押し間違い) を置く |
+| 品切れ | `/stock` | カテゴリの帯 (品切れ・残り、メニューのカテゴリ、オプション) と品の一覧 (名前、品切れと残りの数)。品を押すと状態を選ぶポップアップ (売れる、残りの数を決める、品切れ) を開き、残りの数は数のボタンで入れる |
+| 端末 | `/device` | 端末の情報 (店舗、端末の名前、受け持つ持ち場、端末の id、接続先、音の知らせ、アプリの版) と、端末の設定への入口 |
+
+- 明細を押すと作り始め、もう一度押すとできあがりにする (できあがり・提供済み・取消の明細は押せない)。  
+  下げると残りの明細もできあがりになる
+- 経過時間は 15 秒ごとに出し直し、店舗の設定の遅れの時間 (`kitchenAlertMinutes`) を過ぎたチケットは見出しを注意の色にする
+- 操作を送っている間はボタンを押せなくする。  
+  ほかの端末で先に進めていた (`LINE_STATUS_INVALID`、`NOT_FOUND`) ときは、読み直した一覧を出すだけにする
+- 選んだ持ち場のタブは、ほかの画面から戻っても保つ (`TicketState`)
+- 起動を終える前に途中の画面の URL を開いたとき (読み込み直したときなど) は、その画面を作らずに起動からやり直す (`MainLayout`。画面は起動で読んだメニューなどを使う)
+- 物理キーボードを前提にしない (バンプバーは扱わない)。  
+  数は画面の数のボタンで入れる
+
+### 状態と通知
+
+- 起動で端末の設定、店舗、メニュー、品切れ、まだ下げていないチケットを読み、`KitchenEventReceiver` が通知で替える (起動で読み終えるまでに届いた通知は、読んだ状態に含まれるので扱わない)
+- チケットの通知 (`ticket.created` / `ticket.updated`) は中身を持たず、届いたら受け持つすべての持ち場のチケットを読み直す (読み直している間に届いた通知は、読み終えたあとに 1 回だけ読み直す)
+- 新しいチケット (`ticket.created`) は音で知らせる (続けて届いたときは 3 秒の間を空けて 1 回にまとめる)
+- 品切れ (`stock.updated`) は通知の中身で替える
+- 設定の版が替わった (`store.updated`)、この端末を替えた (`device.updated`)、通知を追いかけられない (`Expired`)、トークンを断られた (無効化、テナントの停止) ときは、アプリを読み込み直して起動からやり直す
+- 操作が通ったら、替わった一覧を読み直す (通知でも読み直すが、操作した画面がすぐ替わるように)
+- 状態の報告は 1 分ごとに送る (ブラウザは電池を読めないので、アプリの版だけ)
+
+### 端末の鍵と設定
+
+- 端末の鍵は、WebCrypto で取り出せない P-256 の鍵を作り、鍵の組のまま IndexedDB に持つ (`wwwroot/js/device-key.js`)。  
+  WebCrypto は安全な接続 (HTTPS か localhost) でしか使えないので、起動で確かめ、使えなければ知らせて止まる
+- WebCrypto の署名は r と s を並べた形なので、`DeviceCredentials.ToDerSignature` で窓口の約束の DER にして返す
+- 鍵を消すときは IndexedDB の操作を順に並べ、消したあとの操作が消す前の鍵を読まないようにする
+- 登録した端末の id は、登録した接続先と組で `localStorage` に持ち、今の接続先と違えば登録していないものとする。  
+  端末の名前には、管理画面で見分けられるようにブラウザごとの値を付ける (`Browser XXXX`)
+
+### 色と言語
+
+- スタッフ向けなので、ホール端末と同じく System の色にそろえ、チェーンの色に替えない。  
+  色の値は `wwwroot/css/app.css` の `:root` に役割の名前の CSS の変数で持ち、ほかの場所は役割の名前で使う
+- 文言はブラウザの言語で選ぶ (英語のブラウザは英語、ほかは日本語)。  
+  料理の名前と持ち場の名前は、サーバが返す日本語のまま出す
+- 状態の色はホール端末と同じ使い分けにする (品切れは失敗の色、残りの数と遅れたチケットは注意の色)
+- 角丸・影・グラデーションを使わず、記号は Material Icons のグリフにする (端末のアプリと同じ)
+
+### 専用端末
+
+- EMM のキオスクのブラウザで `/kitchen` を開く想定にする (全画面と URL の固定はブラウザに任せる)
+- キオスクのブラウザでない (URL の帯が出る) ときは、画面に触れたときに全画面にする (戻るや通知で外れたら、次に触れたときに戻す)
+- 画面の Wake Lock を、画面が前に出るたびに取り直して、画面を消さない
+- 新しいチケットの音は、ブラウザが許すまで (画面に触れるまで) 出せないので、チケットの画面に知らせの帯を出し、触れたら消す (自動再生を許したブラウザでは出ない)
+- 全画面と音は、画面に触れて指を離したとき (`pointerup`) に求める (ブラウザは、タッチの触れ始めを人の操作と認めない)
+
+---
+
+## 🏭 10. サーバの作り
 
 サーバは、端末が使う API (端末の登録とトークン、店舗・メニュー・品切れ・端末の設定、来店・テーブル・注文・キッチン・提供・呼び出し・会計・支払) と、通知 (SignalR) を作った。  
 外部の連携 (OAuth のクライアント、メニューの公開、Webhook) と本物の決済サービスは、これから作る ([plan.md](plan.md))。
@@ -590,7 +675,7 @@ Device Owner のときに掛ける端末の制限:
 | Dashboard (`/`) | 契約しているテナントの一覧 |
 | 端末 (`/devices`) | 店舗の端末の一覧 (種類、置き場所、最後の通信、電池、アプリの版、有効か)、ペアリングコードの発行 (種類と置き場所を決める。10 分、1 台)、置き場所と名前の変更、無効化 |
 | チェーン (`/brand`) | チェーンの名前 (日本語、英語)、ロゴ (置いた画像から選ぶ)、色 (役割ごと。空なら端末の既定の色) |
-| 店舗の設定 (`/store-settings`) | 来店の開き方 (スタッフ、受付機、席)、機能の有無 (レジで払う、割り勘、ラストオーダーの知らせ、お礼の時間)、言語、支払方法、呼び出しの用件 (使うものを選ぶ)、スタッフの PIN (入れたときだけ替える) |
+| 店舗の設定 (`/store-settings`) | 来店の開き方 (スタッフ、受付機、席)、機能の有無 (レジで払う、割り勘、ラストオーダーの知らせ、お礼の時間、キッチンの遅れの時間)、言語、支払方法、呼び出しの用件 (使うものを選ぶ)、スタッフの PIN (入れたときだけ替える) |
 | 案内 (`/visits`) | テーブルの一覧 (空き・来店中・会計中、人数、開いた時刻、まだ出していない品、呼び出し)、来店を開く (人数)、閉じる (レジで払った)、取りやめ (注文のないまま帰った) |
 
 - 案内はホール端末ができるまでの仮の画面で、ホール端末の API と同じ `VisitService` を呼ぶ (テーブル端末には同じ通知が届く)
@@ -677,4 +762,4 @@ Device Owner のときに掛ける端末の制限:
 - 受付機で受け付けるときは、管理画面の店舗の設定で来店の開き方を受付機にする (サンプルのデモの店舗はスタッフなので、そのままでは受付機の待受に受付を止めている文言が出る)
 - 管理画面 (`/`) は、サインインを作るまで開発の環境だけで開く。  
   端末の画面 (`/devices`) でペアリングコードを出せば、サンプルの決まったコードのほかにも端末を登録できる
-- キッチン端末 (`/kitchen`) は枠だけで、仮の画面を出す
+- キッチン端末は `/kitchen` を開き、ペアリングコード (`100201`) で登録する (端末の鍵に WebCrypto を使うので、HTTPS か localhost で開く)

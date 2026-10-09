@@ -1,0 +1,41 @@
+@page "/setup"
+
+<PageTitle>@AppResources.SetupTitle</PageTitle>
+
+<div class="screen">
+    <div class="screen-header">
+        <span class="screen-title">@AppResources.SetupTitle</span>
+        <span class="screen-note">@AppInfo.Version</span>
+    </div>
+    <div class="screen-body">
+        <div class="form">
+            <div class="form-column">
+                <div class="form-row">
+                    <span class="form-label">@AppResources.SetupEndpoint</span>
+                    <span class="form-value">@Settings.ApiEndPoint</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.SetupRegistration</span>
+                    <span class="form-value">@RegistrationText</span>
+                </div>
+                <div class="form-section">@AppResources.SetupPairingCode</div>
+                <div class="code @(pairingCode.Length == 0 ? "code-empty" : null)">@(pairingCode.Length == 0 ? AppResources.SetupNotEntered : pairingCode)</div>
+                <div class="form-hint">@AppResources.SetupPairingCodeHint</div>
+                @if (error is not null)
+                {
+                    <div class="form-error">@error</div>
+                }
+            </div>
+            <div class="form-column">
+                <NumberPad Value="@pairingCode" MaxLength="@CodeLength" ValueChanged="ChangeCode" />
+            </div>
+        </div>
+    </div>
+    <div class="screen-footer">
+        @if (Settings.IsRegistered)
+        {
+            <button class="button footer-button" disabled="@isRunning" @onclick="Back">@AppResources.CommonBack</button>
+        }
+        <button class="button button-primary footer-button" disabled="@((pairingCode.Length != CodeLength) || isRunning)" @onclick="RegisterAsync">@AppResources.SetupRegister</button>
+    </div>
+</div>

@@ -65,9 +65,7 @@ public sealed class DeviceUsecase
 
     private async ValueTask<ApiResult<DevicePairResponse>> PairAsync(DevicePairRequest request)
     {
-        // 鍵を作るのは時間がかかることがあるので、画面のスレッドの外で行う
-        var publicKey = await Task.Run(settings.Key.GetPublicKey);
-        request.PublicKey = DeviceCredentials.CreatePublicKey(publicKey);
+        request.PublicKey = DeviceCredentials.CreatePublicKey(await settings.Key.GetPublicKeyAsync());
         request.DeviceName = DeviceName();
         request.AppVersion = AppVersion();
 

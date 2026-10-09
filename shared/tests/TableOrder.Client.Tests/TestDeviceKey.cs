@@ -10,16 +10,16 @@ public sealed class TestDeviceKey : IDeviceKey
     // 公開鍵の点 (JWK の x と y と比べる)
     public ECPoint PublicPoint => parameters.Q;
 
-    public byte[] GetPublicKey()
+    public ValueTask<byte[]> GetPublicKeyAsync()
     {
         using var key = ECDsa.Create(parameters);
-        return key.ExportSubjectPublicKeyInfo();
+        return ValueTask.FromResult(key.ExportSubjectPublicKeyInfo());
     }
 
-    public byte[] Sign(byte[] data)
+    public ValueTask<byte[]> SignAsync(byte[] data)
     {
         using var key = ECDsa.Create(parameters);
-        return key.SignData(data, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence);
+        return ValueTask.FromResult(key.SignData(data, HashAlgorithmName.SHA256, DSASignatureFormat.Rfc3279DerSequence));
     }
 
     public void Delete() => parameters = Generate();

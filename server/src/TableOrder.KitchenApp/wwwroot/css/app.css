@@ -1,11 +1,67 @@
+/*-------------------------------------------------
+ Color roles (ホール端末と同じ System の色にそろえる。色の値はここだけに書き、画面は役割の名前で使う)
+-------------------------------------------------*/
+
+:root {
+    --primary-color: #1F2328;
+    --primary-pressed-color: #3A4048;
+    --on-primary-color: #FFFFFF;
+    --canvas-color: #F4F5F7;
+    --surface-color: #FFFFFF;
+    --surface-variant-color: #EAEEF2;
+    --on-surface-color: #1F2328;
+    --on-surface-variant-color: #656D76;
+    --outline-color: #D0D7DE;
+    --outline-variant-color: #E6EAEF;
+    --disabled-color: #EAEEF2;
+    --on-disabled-color: #8C959F;
+    --error-color: #CF222E;
+    --on-error-color: #FFFFFF;
+    --warning-color: #9A6700;
+    --on-warning-color: #FFFFFF;
+    --scrim-color: rgba(31, 35, 40, 0.4);
+}
+
+/*-------------------------------------------------
+ Base
+-------------------------------------------------*/
+
+@font-face {
+    font-family: 'Material Icons';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/MaterialIcons-Regular.ttf') format('truetype');
+}
+
 html, body {
     height: 100%;
     margin: 0;
-    font-family: 'Segoe UI', 'Meiryo UI', Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    background-color: var(--canvas-color);
+    color: var(--on-surface-color);
+    font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic UI', 'Meiryo UI', sans-serif;
+    font-size: 16px;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 #app {
     height: 100%;
+}
+
+button {
+    font-family: inherit;
+    color: inherit;
+}
+
+.icon {
+    font-family: 'Material Icons';
+    font-weight: normal;
+    font-style: normal;
+    font-size: 28px;
+    line-height: 1;
+    display: inline-block;
 }
 
 /*-------------------------------------------------
@@ -25,14 +81,12 @@ html, body {
     font-size: 24px;
     font-weight: 600;
     letter-spacing: 4px;
-    color: #333333;
 }
 
 .boot-bar {
     width: 200px;
     height: 4px;
-    background-color: #e0e0e0;
-    border-radius: 2px;
+    background-color: var(--outline-variant-color);
     overflow: hidden;
 }
 
@@ -40,8 +94,7 @@ html, body {
     display: block;
     width: 40%;
     height: 100%;
-    background-color: #0f6cbd;
-    border-radius: 2px;
+    background-color: var(--primary-color);
     animation: boot-slide 1.2s ease-in-out infinite;
 }
 
@@ -52,31 +105,334 @@ html, body {
 
 .boot-note {
     font-size: 12px;
-    color: #666666;
+    color: var(--on-surface-variant-color);
 }
 
 /*-------------------------------------------------
- Layout
+ Screen (上の帯、中身、下の帯)
 -------------------------------------------------*/
 
-.layout {
+.screen {
     display: flex;
     flex-direction: column;
     height: 100%;
 }
 
-.layout-header {
-    padding: 12px 16px;
-    background-color: #333333;
-    color: #ffffff;
-    font-size: 20px;
-    font-weight: 600;
+.screen-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 72px;
+    padding: 0 24px;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--outline-color);
 }
 
-.layout-body {
+.screen-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.screen-note {
+    margin-left: auto;
+    font-size: 16px;
+    color: var(--on-surface-variant-color);
+}
+
+.screen-body {
     flex: 1;
+    min-height: 0;
     overflow: auto;
 }
+
+.screen-footer {
+    display: flex;
+    min-height: 80px;
+    background-color: var(--surface-color);
+    border-top: 1px solid var(--outline-color);
+}
+
+/*-------------------------------------------------
+ Button
+-------------------------------------------------*/
+
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-height: 64px;
+    padding: 0 24px;
+    border: 1px solid var(--outline-color);
+    background-color: var(--surface-color);
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.button:active {
+    background-color: var(--surface-variant-color);
+}
+
+.button:disabled {
+    background-color: var(--disabled-color);
+    color: var(--on-disabled-color);
+    cursor: default;
+}
+
+.button-primary {
+    border-color: var(--primary-color);
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+}
+
+.button-primary:active {
+    background-color: var(--primary-pressed-color);
+}
+
+.button-primary:disabled {
+    border-color: var(--disabled-color);
+}
+
+.footer-button {
+    flex: 1;
+    min-height: 80px;
+    border: none;
+    border-left: 1px solid var(--outline-color);
+}
+
+.footer-button:first-child {
+    border-left: none;
+}
+
+/*-------------------------------------------------
+ Startup
+-------------------------------------------------*/
+
+.startup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 24px;
+    padding: 0 24px;
+    box-sizing: border-box;
+}
+
+.startup-title {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: 6px;
+}
+
+.startup-progress {
+    width: 480px;
+    max-width: 100%;
+    height: 6px;
+    background-color: var(--outline-variant-color);
+}
+
+.startup-progress span {
+    display: block;
+    height: 100%;
+    background-color: var(--primary-color);
+    transition: width 0.2s;
+}
+
+.startup-step {
+    font-size: 20px;
+    text-align: center;
+}
+
+.startup-failed {
+    color: var(--error-color);
+}
+
+.startup-actions {
+    display: flex;
+    gap: 16px;
+}
+
+.startup-hint {
+    font-size: 14px;
+    color: var(--on-surface-variant-color);
+}
+
+.startup-version {
+    position: absolute;
+    bottom: 16px;
+    font-size: 12px;
+    color: var(--on-surface-variant-color);
+}
+
+/*-------------------------------------------------
+ Form (端末の設定、端末)
+-------------------------------------------------*/
+
+.form {
+    display: flex;
+    gap: 32px;
+    padding: 24px;
+}
+
+.form-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+.form-section {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.form-row {
+    display: flex;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--outline-variant-color);
+}
+
+.form-label {
+    width: 160px;
+    flex-shrink: 0;
+    color: var(--on-surface-variant-color);
+}
+
+.form-value {
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.form-hint {
+    font-size: 14px;
+    color: var(--on-surface-variant-color);
+}
+
+.form-error {
+    color: var(--error-color);
+}
+
+/*-------------------------------------------------
+ Number pad (ペアリングコード)
+-------------------------------------------------*/
+
+.code {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 72px;
+    background-color: var(--surface-color);
+    border: 1px solid var(--outline-color);
+    font-size: 36px;
+    font-weight: 700;
+    letter-spacing: 8px;
+}
+
+.code-empty {
+    font-size: 18px;
+    font-weight: 400;
+    letter-spacing: 0;
+    color: var(--on-surface-variant-color);
+}
+
+.numpad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    background-color: var(--outline-color);
+    gap: 1px;
+    border: 1px solid var(--outline-color);
+}
+
+.numpad-key {
+    min-height: 72px;
+    border: none;
+    background-color: var(--surface-color);
+    font-size: 28px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.numpad-key:active {
+    background-color: var(--surface-variant-color);
+}
+
+.numpad-sub {
+    font-size: 20px;
+    color: var(--on-surface-variant-color);
+}
+
+/*-------------------------------------------------
+ Dialog
+-------------------------------------------------*/
+
+.dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--scrim-color);
+    z-index: 10;
+}
+
+.dialog {
+    display: flex;
+    flex-direction: column;
+    width: 560px;
+    max-width: calc(100% - 32px);
+    background-color: var(--surface-color);
+}
+
+.dialog-title {
+    padding: 20px 24px;
+    font-size: 20px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--outline-color);
+}
+
+.dialog-message {
+    padding: 24px;
+    font-size: 18px;
+    line-height: 1.6;
+}
+
+.dialog-actions {
+    display: flex;
+    border-top: 1px solid var(--outline-color);
+}
+
+.dialog-actions .button {
+    flex: 1;
+    border: none;
+    min-height: 72px;
+}
+
+/*-------------------------------------------------
+ Notice band (知らせの帯)
+-------------------------------------------------*/
+
+.notice {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 24px;
+    background-color: var(--surface-variant-color);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.notice-warning {
+    background-color: var(--warning-color);
+    color: var(--on-warning-color);
+}
+
+/*-------------------------------------------------
+ Placeholder
+-------------------------------------------------*/
 
 .placeholder {
     display: flex;
@@ -85,37 +441,356 @@ html, body {
     justify-content: center;
     height: 100%;
     gap: 12px;
+    color: var(--on-surface-variant-color);
+}
+
+.placeholder .icon {
+    font-size: 64px;
 }
 
 .placeholder-title {
-    font-size: 28px;
-    font-weight: 600;
-}
-
-.placeholder-note {
-    color: #666666;
+    font-size: 22px;
+    font-weight: 700;
 }
 
 /*-------------------------------------------------
- Blazor error UI
+ Blazor error
 -------------------------------------------------*/
 
 #blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    box-sizing: border-box;
     display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
     position: fixed;
+    bottom: 0;
+    left: 0;
     width: 100%;
-    z-index: 1000;
+    padding: 12px 24px;
+    background-color: var(--error-color);
+    color: var(--on-error-color);
+    box-sizing: border-box;
+    z-index: 100;
+}
+
+#blazor-error-ui .reload {
+    color: var(--on-error-color);
+    margin-left: 16px;
 }
 
 #blazor-error-ui .dismiss {
     cursor: pointer;
-    position: absolute;
-    right: 0.75rem;
-    top: 0.5rem;
+    float: right;
+}
+
+/*-------------------------------------------------
+ Tabs (持ち場、品切れのカテゴリ)
+-------------------------------------------------*/
+
+/* 入りきらないタブは指でなぞって送る (スクロールバーは選んだタブの下線に重なるので出さない) */
+.tabs {
+    display: flex;
+    min-height: 64px;
+    background-color: var(--surface-color);
+    border-bottom: 1px solid var(--outline-color);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.tab {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 160px;
+    white-space: nowrap;
+    padding: 0 24px;
+    border: none;
+    border-right: 1px solid var(--outline-variant-color);
+    border-bottom: 4px solid transparent;
+    background-color: var(--surface-color);
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.tab-selected {
+    border-bottom-color: var(--primary-color);
+}
+
+.badge {
+    min-width: 28px;
+    padding: 2px 8px;
+    box-sizing: border-box;
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+    font-size: 16px;
+    text-align: center;
+}
+
+.badge:empty {
+    display: none;
+}
+
+/*-------------------------------------------------
+ Tickets (古い順に左から並べ、入らなければ横にスクロールする)
+-------------------------------------------------*/
+
+.tickets {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.tickets .placeholder {
+    flex: 1;
+}
+
+.ticket {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 320px;
+    background-color: var(--surface-color);
+    border: 1px solid var(--outline-color);
+}
+
+.ticket-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: var(--primary-color);
+    color: var(--on-primary-color);
+}
+
+.ticket-alert .ticket-header {
+    background-color: var(--warning-color);
+    color: var(--on-warning-color);
+}
+
+.ticket-table {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.ticket-order {
+    font-size: 16px;
+}
+
+.ticket-elapsed {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.ticket-elapsed .icon {
+    font-size: 20px;
+}
+
+.ticket-station {
+    padding: 8px 16px;
+    background-color: var(--surface-variant-color);
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.ticket-lines {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.line {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    min-height: 72px;
+    padding: 12px 16px;
+    box-sizing: border-box;
+    border: none;
+    border-bottom: 1px solid var(--outline-variant-color);
+    border-left: 8px solid transparent;
+    background-color: var(--surface-color);
+    text-align: left;
+    cursor: pointer;
+}
+
+.line:disabled {
+    cursor: default;
+}
+
+.line-quantity {
+    min-width: 32px;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.line-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.line-name {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.line-options {
+    font-size: 16px;
+    color: var(--on-surface-variant-color);
+}
+
+.line-status {
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.line-cooking {
+    border-left-color: var(--warning-color);
+    background-color: var(--surface-variant-color);
+}
+
+.line-cooking .line-status {
+    color: var(--warning-color);
+}
+
+.line-ready {
+    border-left-color: var(--primary-color);
+    color: var(--on-disabled-color);
+}
+
+.line-ready .line-options {
+    color: var(--on-disabled-color);
+}
+
+.line-cancelled {
+    color: var(--on-disabled-color);
+}
+
+.line-cancelled .line-name,
+.line-cancelled .line-quantity {
+    text-decoration: line-through;
+}
+
+.line-cancelled .line-status {
+    color: var(--error-color);
+}
+
+.ticket-action {
+    min-height: 72px;
+    border: none;
+}
+
+/*-------------------------------------------------
+ Rows (品切れの品)
+-------------------------------------------------*/
+
+.rows {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    margin: 16px;
+    border-top: 1px solid var(--outline-variant-color);
+    border-left: 1px solid var(--outline-variant-color);
+}
+
+.row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    min-height: 72px;
+    padding: 12px 20px;
+    border: none;
+    border-right: 1px solid var(--outline-variant-color);
+    border-bottom: 1px solid var(--outline-variant-color);
+    background-color: var(--surface-color);
+    text-align: left;
+    cursor: pointer;
+}
+
+.row:active {
+    background-color: var(--surface-variant-color);
+}
+
+.row-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.row-name {
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.row-caption {
+    font-size: 14px;
+    color: var(--on-surface-variant-color);
+}
+
+.row-status {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--error-color);
+    white-space: nowrap;
+}
+
+.row-status-limited {
+    color: var(--warning-color);
+}
+
+/*-------------------------------------------------
+ Choices (品の状態)
+-------------------------------------------------*/
+
+.dialog-caption {
+    margin-left: 12px;
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--on-surface-variant-color);
+}
+
+.dialog-body {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 24px 24px;
+}
+
+.choices {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 0 24px 24px;
+    background-color: var(--outline-color);
+    border: 1px solid var(--outline-color);
+}
+
+.choice {
+    min-height: 72px;
+    padding: 0 24px;
+    border: none;
+    border-left: 8px solid transparent;
+    background-color: var(--surface-color);
+    font-size: 20px;
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+}
+
+.choice:active {
+    background-color: var(--surface-variant-color);
+}
+
+.choice-selected {
+    border-left-color: var(--primary-color);
 }

@@ -39,7 +39,7 @@ public sealed class DeviceServiceTests : IClassFixture<ServerFactory>
         await terminal.PairAsync(issued.Code);
         var config = await terminal.Device.GetConfigAsync(cancel);
         await using var other = TestTerminal.Create(factory);
-        var again = await other.Device.PairAsync(new DevicePairRequest { PairingCode = issued.Code, PublicKey = DeviceCredentials.CreatePublicKey(other.Context.Key.GetPublicKey()), DeviceName = "test" }, cancel);
+        var again = await other.Device.PairAsync(new DevicePairRequest { PairingCode = issued.Code, PublicKey = DeviceCredentials.CreatePublicKey(await other.Context.Key.GetPublicKeyAsync()), DeviceName = "test" }, cancel);
 
         // Assert
         Assert.Equal(store.TableIds[1], config.Content!.Device!.TableId);
@@ -173,7 +173,7 @@ public sealed class DeviceServiceTests : IClassFixture<ServerFactory>
         // Act
         var deleted = await Enrollments.DeleteExpiredAsync(issued.ExpiresAt.AddMinutes(1), cancel);
         await using var terminal = TestTerminal.Create(factory);
-        var paired = await terminal.Device.PairAsync(new DevicePairRequest { PairingCode = issued.Code, PublicKey = DeviceCredentials.CreatePublicKey(terminal.Context.Key.GetPublicKey()), DeviceName = "test" }, cancel);
+        var paired = await terminal.Device.PairAsync(new DevicePairRequest { PairingCode = issued.Code, PublicKey = DeviceCredentials.CreatePublicKey(await terminal.Context.Key.GetPublicKeyAsync()), DeviceName = "test" }, cancel);
 
         // Assert
         Assert.True(deleted >= 1);

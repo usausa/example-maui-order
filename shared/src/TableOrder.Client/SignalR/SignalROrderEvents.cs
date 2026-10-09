@@ -362,6 +362,8 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
                 EventTypes.OrderLinesUpdated => LinesUpdated(item, Read(item, ClientJsonContext.Default.OrderLinesUpdatedEventData)),
                 EventTypes.CallCreated => new CallCreatedEvent(item.Seq, item.OccurredAt),
                 EventTypes.CallUpdated => new CallUpdatedEvent(item.Seq, item.OccurredAt),
+                EventTypes.TicketCreated => new TicketCreatedEvent(item.Seq, item.OccurredAt),
+                EventTypes.TicketUpdated => new TicketUpdatedEvent(item.Seq, item.OccurredAt),
                 EventTypes.DeviceUpdated => new DeviceUpdatedEvent(item.Seq, item.OccurredAt, Read(item, ClientJsonContext.Default.DeviceUpdatedEventData).DeviceId),
                 _ => null
             };

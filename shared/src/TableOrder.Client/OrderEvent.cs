@@ -43,5 +43,11 @@ public sealed record CallCreatedEvent(long Seq, DateTimeOffset OccurredAt) : Ord
 // 呼び出しが変わった (call.updated。ホール端末で向かう、対応した)。中身は渡さない
 public sealed record CallUpdatedEvent(long Seq, DateTimeOffset OccurredAt) : OrderEvent(Seq, OccurredAt);
 
+// 受け持つ持ち場にチケットができた (ticket.created。注文と、食後の品のお願い)。キッチン端末はチケットの一覧を読み直すので、チケットの中身は渡さない
+public sealed record TicketCreatedEvent(long Seq, DateTimeOffset OccurredAt) : OrderEvent(Seq, OccurredAt);
+
+// チケットが変わった (ticket.updated。明細の状態、取消、下げた、戻した)。中身は渡さない
+public sealed record TicketUpdatedEvent(long Seq, DateTimeOffset OccurredAt) : OrderEvent(Seq, OccurredAt);
+
 // 管理画面で端末の置き場所・名前を替えたか、無効にした (device.updated。店舗のすべての端末に届き、その端末だけが起動からやり直す)
 public sealed record DeviceUpdatedEvent(long Seq, DateTimeOffset OccurredAt, Guid DeviceId) : OrderEvent(Seq, OccurredAt);

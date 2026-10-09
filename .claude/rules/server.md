@@ -44,6 +44,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - ログは `Application/Log.cs` の `[LoggerMessage]` に集約する (Info~ / Warn~ / Error~ の命名、`key=[{value}]` の書式)
 - 全行のログに付ける値 (接続元、テナント、店舗、主体) は `CallbackEnricher` で付け、専用のミドルウェアを置かない
 - 管理画面は、サインインを作るまで開発の環境だけで開く
+- サーバが配る Web アプリ (キッチン端末) の、内容で名前の替わらないファイル (`_framework` の外。index.html、JavaScript の部品、スタイル) は `Cache-Control: no-cache` で返す (ないとブラウザが推して残し、更新しても古いファイルを使う)
 - 管理画面のページは `AppPageBase` を継ぎ、選んだテナントと店舗 (`StoreSelection`) の文脈で Service を呼ぶ。ほかの部品の知らせ (店舗の選び直し) で読み直すときは `BeginServiceScope` で文脈を始める
 - 管理画面で端末を替えたとき (置き場所、名前、無効化) は `device.updated` を送り、端末に起動からやり直させる (トークンの置き場所と無効化をすぐに反映する)
 - チェーンと店舗の設定を替えたときは、設定の版 (`Stores.SettingsVersion`) を上げて `store.updated` を送る (チェーンの設定はテナントのすべての店舗)。版は一時停止などで上がる `Version` と分ける

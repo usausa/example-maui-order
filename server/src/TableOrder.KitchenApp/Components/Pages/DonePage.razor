@@ -1,0 +1,40 @@
+@page "/done"
+
+<PageTitle>@AppResources.DoneTitle</PageTitle>
+
+<div class="screen">
+    <div class="screen-header">
+        <span class="screen-title">@AppResources.DoneTitle</span>
+        <span class="screen-note">@AppResources.DoneHint</span>
+    </div>
+    <div class="tickets">
+        @if (TicketState.Done.Count == 0)
+        {
+            <div class="placeholder">
+                <span class="icon">@Icons.History</span>
+                <div class="placeholder-title">@AppResources.DoneEmpty</div>
+            </div>
+        }
+        else
+        {
+            @foreach (var ticket in TicketState.Done)
+            {
+                <TicketCard @key="ticket.Id"
+                            Ticket="ticket"
+                            Now="now"
+                            StationName="@StationName(ticket)"
+                            IsDone="true"
+                            IsBusy="isBusy"
+                            OnAction="() => RecallAsync(ticket)" />
+            }
+        }
+    </div>
+    <div class="screen-footer">
+        <button class="button button-primary footer-button" @onclick="Close">@AppResources.CommonClose</button>
+    </div>
+</div>
+
+@if (message is not null)
+{
+    <MessageDialog Title="@AppResources.ErrorTitle" Message="@message" OnClose="CloseMessage" />
+}

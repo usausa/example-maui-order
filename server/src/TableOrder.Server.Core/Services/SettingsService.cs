@@ -209,6 +209,11 @@ public sealed class SettingsService
             return ServiceError.Validation("visitOpening", "来店の開き方を選び直してください");
         }
 
+        if (features.KitchenAlertMinutes is < 0 or > 120)
+        {
+            return ServiceError.Validation("kitchenAlertMinutes", "キッチンの遅れの時間は 0 から 120 分で入れてください");
+        }
+
         if ((newStaffPin is not null) && !StaffPins.IsValid(newStaffPin))
         {
             return ServiceError.Validation("staffPin", $"PIN は {Length.StaffPinDigits} 桁の数字で入れてください");

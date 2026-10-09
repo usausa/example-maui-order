@@ -38,6 +38,8 @@ using TableOrder.Contract.Events;
 [JsonSerializable(typeof(CallCreateRequest))]
 [JsonSerializable(typeof(CallListResponseItem))]
 [JsonSerializable(typeof(CallListResponse))]
+[JsonSerializable(typeof(KitchenTicketListResponse))]
+[JsonSerializable(typeof(KitchenTicketListResponseItem))]
 [JsonSerializable(typeof(BillResponse))]
 [JsonSerializable(typeof(CheckoutRequest))]
 [JsonSerializable(typeof(PaymentCreateRequest))]

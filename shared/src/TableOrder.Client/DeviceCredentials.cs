@@ -69,7 +69,7 @@ public static class DeviceCredentials
     //--------------------------------------------------------------------------------
 
     // 鍵で署名したトークンの要求 (iss と sub は端末の id、aud はサーバの名前、使い捨ての jti)
-    public static string CreateAssertion(IDeviceKey key, Guid deviceId, DateTimeOffset now)
+    public static async ValueTask<string> CreateAssertionAsync(IDeviceKey key, Guid deviceId, DateTimeOffset now)
     {
         var id = deviceId.ToString("D");
         var header = Encode(static writer =>
@@ -88,7 +88,7 @@ public static class DeviceCredentials
         });
 
         var input = $"{header}.{payload}";
-        var signature = ToIeeeP1363(key.Sign(Encoding.ASCII.GetBytes(input)));
+        var signature = ToIeeeP1363(await key.SignAsync(Encoding.ASCII.GetBytes(input)));
         return $"{input}.{Base64Url.EncodeToString(signature)}";
     }
 
@@ -103,6 +103,35 @@ public static class DeviceCredentials
         }
 
         return Base64Url.EncodeToString(buffer.WrittenSpan);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Signature
+    //--------------------------------------------------------------------------------
+
+    // JWS の形の署名 (r と s を 32 バイトずつ並べたもの。ブラウザの WebCrypto が返す形) を、鍵の実装が返す DER にする
+    public static byte[] ToDerSignature(ReadOnlySpan<byte> ieeeP1363)
+    {
+        if (ieeeP1363.Length != FieldSize * 2)
+        {
+            throw new CryptographicException("The signature length is invalid.");
+        }
+
+        var writer = new AsnWriter(AsnEncodingRules.DER);
+        using (writer.PushSequence())
+        {
+            writer.WriteIntegerUnsigned(TrimInteger(ieeeP1363[..FieldSize]));
+            writer.WriteIntegerUnsigned(TrimInteger(ieeeP1363[FieldSize..]));
+        }
+
+        return writer.Encode();
+    }
+
+    // DER の INTEGER は先頭に余分な 0 を置けないので除く (0 だけの値は 1 バイト残す)
+    private static ReadOnlySpan<byte> TrimInteger(ReadOnlySpan<byte> value)
+    {
+        var trimmed = value.TrimStart((byte)0);
+        return trimmed.IsEmpty ? value[^1..] : trimmed;
     }
 
     // DER の署名 (r と s の INTEGER の並び) を JWS の形 (r と s を 32 バイトずつ並べたもの) にする

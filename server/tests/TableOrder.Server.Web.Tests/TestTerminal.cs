@@ -30,6 +30,8 @@ public sealed class TestTerminal : IAsyncDisposable
 
     public RestReceptionApi Reception { get; }
 
+    public RestKitchenApi Kitchen { get; }
+
     public SignalROrderEvents Events { get; }
 
     private TestTerminal(ServerFactory factory)
@@ -45,6 +47,7 @@ public sealed class TestTerminal : IAsyncDisposable
         Table = new RestTableApi(Context, connection);
         Hall = new RestHallApi(Context, connection);
         Reception = new RestReceptionApi(connection);
+        Kitchen = new RestKitchenApi(Context, connection);
         Events = new SignalROrderEvents(Context, options, connection);
         Device.Denied += (_, e) => denied.Writer.TryWrite(e);
         Events.Received += (_, e) => received.Writer.TryWrite(e.Event);
@@ -61,11 +64,12 @@ public sealed class TestTerminal : IAsyncDisposable
     // 端末のアプリと同じく、鍵の公開鍵とペアリングコードで登録して、端末の id を設定に入れる
     public async Task<DevicePairResponse> PairAsync(string code)
     {
+        var publicKey = await Context.Key.GetPublicKeyAsync();
         var result = await Device.PairAsync(
             new DevicePairRequest
             {
                 PairingCode = code,
-                PublicKey = DeviceCredentials.CreatePublicKey(Context.Key.GetPublicKey()),
+                PublicKey = DeviceCredentials.CreatePublicKey(publicKey),
                 DeviceName = "test"
             },
             TestContext.Current.CancellationToken);

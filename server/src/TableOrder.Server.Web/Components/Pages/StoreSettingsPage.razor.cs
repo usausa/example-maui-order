@@ -24,6 +24,8 @@ public sealed partial class StoreSettingsPage : IDisposable
 
     private int finishSeconds;
 
+    private int kitchenAlertMinutes;
+
     private bool japanese;
 
     private bool english;
@@ -85,6 +87,7 @@ public sealed partial class StoreSettingsPage : IDisposable
         splitPayment = settings.Features.SplitPayment;
         lastOrderNoticeMinutes = settings.Features.LastOrderNoticeMinutes;
         finishSeconds = settings.Features.FinishSeconds;
+        kitchenAlertMinutes = settings.Features.KitchenAlertMinutes;
         japanese = settings.Languages.Contains("ja");
         english = settings.Languages.Contains("en");
         qrCode = settings.PaymentMethods.Contains(PaymentMethod.QrCode);
@@ -111,7 +114,8 @@ public sealed partial class StoreSettingsPage : IDisposable
                 SplitPayment = splitPayment,
                 LastOrderNoticeMinutes = lastOrderNoticeMinutes,
                 FinishSeconds = finishSeconds,
-                VisitOpening = visitOpening
+                VisitOpening = visitOpening,
+                KitchenAlertMinutes = kitchenAlertMinutes
             },
             Choose(("ja", japanese), ("en", english)),
             Choose((PaymentMethod.QrCode, qrCode), (PaymentMethod.CreditCard, creditCard)),

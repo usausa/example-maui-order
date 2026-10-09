@@ -1,0 +1,47 @@
+@page "/device"
+
+<PageTitle>@AppResources.DeviceTitle</PageTitle>
+
+<div class="screen">
+    <div class="screen-header">
+        <span class="screen-title">@AppResources.DeviceTitle</span>
+    </div>
+    <div class="screen-body">
+        <div class="form">
+            <div class="form-column">
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceStore</span>
+                    <span class="form-value">@StoreText</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceName</span>
+                    <span class="form-value">@(StoreState.Config.Device?.Name)</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceStations</span>
+                    <span class="form-value">@StationsText</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceId</span>
+                    <span class="form-value">@(Settings.DeviceId?.ToString("D"))</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceEndpoint</span>
+                    <span class="form-value">@Settings.ApiEndPoint</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceSound</span>
+                    <span class="form-value">@(Kiosk.IsSoundReady ? AppResources.DeviceSoundReady : AppResources.DeviceSoundWaiting)</span>
+                </div>
+                <div class="form-row">
+                    <span class="form-label">@AppResources.DeviceVersion</span>
+                    <span class="form-value">@AppInfo.Version</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="screen-footer">
+        <button class="button footer-button" @onclick="OpenSetup">@AppResources.DeviceSetup</button>
+        <button class="button button-primary footer-button" @onclick="Close">@AppResources.CommonClose</button>
+    </div>
+</div>

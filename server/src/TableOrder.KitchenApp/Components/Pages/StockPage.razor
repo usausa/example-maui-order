@@ -1,0 +1,56 @@
+@page "/stock"
+
+<PageTitle>@AppResources.StockTitle</PageTitle>
+
+<div class="screen">
+    <div class="tabs">
+        @foreach (var category in categories)
+        {
+            <button class="tab @(category == selected ? "tab-selected" : null)" @onclick="() => Select(category)">@category.Name</button>
+        }
+    </div>
+    <div class="screen-body">
+        @if (Rows.Count == 0)
+        {
+            <div class="placeholder">
+                <span class="icon">@Icons.NoFood</span>
+                <div class="placeholder-title">@EmptyText</div>
+            </div>
+        }
+        else
+        {
+            <div class="rows">
+                @foreach (var row in Rows)
+                {
+                    <button class="row" disabled="@isBusy" @onclick="() => Edit(row)">
+                        <span class="row-body">
+                            <span class="row-name">@row.Name</span>
+                            @if (row.Caption.Length > 0)
+                            {
+                                <span class="row-caption">@row.Caption</span>
+                            }
+                        </span>
+                        <span class="row-status @StatusClass(row)">@StatusText(row)</span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+    <div class="screen-footer">
+        <button class="button button-primary footer-button" @onclick="Close">@AppResources.CommonClose</button>
+    </div>
+</div>
+
+@if (editing is not null)
+{
+    <StockEditDialog Name="@editing.Name"
+                     Caption="@editing.Caption"
+                     Stock="@StockState.Find(editing.Id)"
+                     OnDecide="DecideAsync"
+                     OnCancel="CancelEdit" />
+}
+
+@if (message is not null)
+{
+    <MessageDialog Title="@AppResources.ErrorTitle" Message="@message" OnClose="CloseMessage" />
+}

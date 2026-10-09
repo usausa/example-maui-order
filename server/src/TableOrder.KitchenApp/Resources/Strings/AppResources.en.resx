@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Kitchen</value>
+  </data>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+  <data name="CommonBack" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>Page not found</value>
+  </data>
+  <data name="NotFoundBack" xml:space="preserve">
+    <value>Back to start</value>
+  </data>
+  <data name="NumpadClear" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="StartupStepSettings" xml:space="preserve">
+    <value>Checking device settings</value>
+  </data>
+  <data name="StartupStepConnect" xml:space="preserve">
+    <value>Connecting to the server</value>
+  </data>
+  <data name="StartupStepStore" xml:space="preserve">
+    <value>Loading the store settings</value>
+  </data>
+  <data name="StartupStepTickets" xml:space="preserve">
+    <value>Loading tickets</value>
+  </data>
+  <data name="StartupStepReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="StartupNotKitchen" xml:space="preserve">
+    <value>This device is not registered as a kitchen display. Register it again from the device settings</value>
+  </data>
+  <data name="StartupRetry" xml:space="preserve">
+    <value>Retry</value>
+  </data>
+  <data name="StartupSetup" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>Retrying automatically every {0} seconds</value>
+  </data>
+  <data name="SetupTitle" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="SetupEndpoint" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>Registration</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>Registered ({0})</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>Not registered</value>
+  </data>
+  <data name="SetupPairingCode" xml:space="preserve">
+    <value>Pairing code</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>The 6-digit code issued in the admin console</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>Not entered</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>Register and start</value>
+  </data>
+  <data name="DeviceTitle" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="DeviceStore" xml:space="preserve">
+    <value>Store</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>Device name</value>
+  </data>
+  <data name="DeviceStations" xml:space="preserve">
+    <value>Stations</value>
+  </data>
+  <data name="DeviceId" xml:space="preserve">
+    <value>Device ID</value>
+  </data>
+  <data name="DeviceEndpoint" xml:space="preserve">
+    <value>Server</value>
+  </data>
+  <data name="DeviceSound" xml:space="preserve">
+    <value>Sound</value>
+  </data>
+  <data name="DeviceSoundReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="DeviceSoundWaiting" xml:space="preserve">
+    <value>Touch the screen to enable</value>
+  </data>
+  <data name="DeviceVersion" xml:space="preserve">
+    <value>App</value>
+  </data>
+  <data name="DeviceSetup" xml:space="preserve">
+    <value>Device settings</value>
+  </data>
+  <data name="StationAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+  <data name="TicketsSoundHint" xml:space="preserve">
+    <value>Touch the screen to hear a chime for new tickets</value>
+  </data>
+  <data name="TicketsEmpty" xml:space="preserve">
+    <value>No open tickets</value>
+  </data>
+  <data name="TicketTableFormat" xml:space="preserve">
+    <value>Table {0}</value>
+  </data>
+  <data name="TicketOrderFormat" xml:space="preserve">
+    <value>Order {0}</value>
+  </data>
+  <data name="TicketElapsedFormat" xml:space="preserve">
+    <value>{0} min</value>
+  </data>
+  <data name="TicketBump" xml:space="preserve">
+    <value>Bump</value>
+  </data>
+  <data name="TicketRecall" xml:space="preserve">
+    <value>Recall</value>
+  </data>
+  <data name="LineCooking" xml:space="preserve">
+    <value>Cooking</value>
+  </data>
+  <data name="LineReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="LineServed" xml:space="preserve">
+    <value>Served</value>
+  </data>
+  <data name="LineCancelled" xml:space="preserve">
+    <value>Cancelled</value>
+  </data>
+  <data name="FooterDone" xml:space="preserve">
+    <value>Bumped tickets</value>
+  </data>
+  <data name="FooterStock" xml:space="preserve">
+    <value>Stock</value>
+  </data>
+  <data name="FooterDevice" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="DoneTitle" xml:space="preserve">
+    <value>Bumped tickets</value>
+  </data>
+  <data name="DoneHint" xml:space="preserve">
+    <value>Recall a ticket bumped by mistake to put it back</value>
+  </data>
+  <data name="DoneEmpty" xml:space="preserve">
+    <value>No bumped tickets</value>
+  </data>
+  <data name="StockTitle" xml:space="preserve">
+    <value>Stock</value>
+  </data>
+  <data name="StockTabLimited" xml:space="preserve">
+    <value>Out &amp; low</value>
+  </data>
+  <data name="StockTabOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="StockAvailable" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="StockSetRemaining" xml:space="preserve">
+    <value>Set quantity left</value>
+  </data>
+  <data name="StockSoldOut" xml:space="preserve">
+    <value>Sold out</value>
+  </data>
+  <data name="StockRemainingFormat" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="StockCurrentFormat" xml:space="preserve">
+    <value>Now: {0}</value>
+  </data>
+  <data name="StockRemainingTitle" xml:space="preserve">
+    <value>Quantity left (0 is sold out)</value>
+  </data>
+  <data name="StockDecide" xml:space="preserve">
+    <value>Set</value>
+  </data>
+  <data name="StockEmptyLimited" xml:space="preserve">
+    <value>Nothing is sold out or limited</value>
+  </data>
+  <data name="StockEmpty" xml:space="preserve">
+    <value>No items</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>Notice</value>
+  </data>
+  <data name="CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="ErrorUnavailable" xml:space="preserve">
+    <value>Could not connect. Please try again in a moment</value>
+  </data>
+  <data name="ErrorUnauthorized" xml:space="preserve">
+    <value>This device is not available. Check it in the admin console</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>The service is suspended. Please contact your administrator</value>
+  </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>The pairing code is incorrect or has expired</value>
+  </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>This pairing code is not for a kitchen display</value>
+  </data>
+  <data name="ErrorDeviceKey" xml:space="preserve">
+    <value>This browser cannot create the device key. Open this page over HTTPS</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>The request failed</value>
+  </data>
+</root>

@@ -22,6 +22,10 @@
 #   python emu.py logcat [--lines N] [--grep 正規表現]
 #   python emu.py pref get <key>             アプリの設定 (shared_prefs) の値を出す
 #   python emu.py pref set <key> <value>     アプリの設定の文字列を書き換える (アプリを止めてから)
+#   python emu.py browse <url>               既定のブラウザで Web アプリ (キッチン端末) を開く (localhost はこの PC の同じポートにつなぐ。同じタブを使い回す)
+#   python emu.py browse --reload            ブラウザで開いている画面を読み込み直す (全画面の間も使える)
+#   python emu.py browse --locale <言語>     ブラウザを止めて、ブラウザだけの言語を替える (例: ja-JP。default で端末の言語に戻す)
+#   python emu.py browse --close             ブラウザを止めて、ポートのつなぎを外す
 #
 # 対象の端末アプリは --app で選ぶ (既定は table。例: python emu.py --app table install)
 # 使う機器は --avd で選んだ AVD のエミュレータ、ANDROID_SERIAL (emulator- で始まるものだけ)、ただ 1 台動いているエミュレータの順に決める
@@ -34,6 +38,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.parse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
@@ -47,6 +52,9 @@ APPS = {
     'reception': ('tableorder.terminal.reception', 'reception/src/TableOrder.ReceptionApp/TableOrder.ReceptionApp.csproj', '.AdminReceiver'),
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
+
+# Web アプリ (キッチン端末) を開いたタブを使い回すための、呼び出し元の名前
+BROWSER_TAB = 'tableorder.emu'
 
 # --avd で選んだ AVD の名前と、決めたエミュレータ (1 回の実行の中で使い回す)
 AVD = None
@@ -362,6 +370,52 @@ def logcat(lines, pattern):
 
 
 #--------------------------------------------------------------------------------
+# Browser
+#--------------------------------------------------------------------------------
+
+def browser_package():
+    # http の URL を開く既定のブラウザ (パッケージの名前は書かずに、エミュレータに聞く)
+    output = shell('cmd package resolve-activity --brief -a android.intent.action.VIEW -c android.intent.category.BROWSABLE -d http://localhost/')
+    lines = [line.strip() for line in output.splitlines() if line.strip()]
+    component = lines[-1] if lines else ''
+    # 既定が決まっていないときは、選ぶ画面 (android の受け口) が返る
+    package = component.split('/')[0] if '/' in component else ''
+    if package in ('', 'android'):
+        sys.exit('既定のブラウザが決まっていません (エミュレータの設定で既定のブラウザを選ぶ)')
+    return package
+
+
+def browse(url, reload, tag, close):
+    browser = browser_package()
+    if tag:
+        # ブラウザは起動のときに言語を読むので、止めてから替える (Web アプリはブラウザの言語で文言を選ぶ)
+        if not re.fullmatch(r'default|[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*', tag):
+            sys.exit(f'言語の名前が正しくありません: {tag} (例: ja-JP。端末の言語に戻すときは default)')
+        shell(f'am force-stop {browser}')
+        shell(f"cmd locale set-app-locales {browser} --user 0 --locales '{'' if tag == 'default' else tag}'")
+        print(shell(f'cmd locale get-app-locales {browser} --user 0').strip())
+    if url:
+        parsed = urllib.parse.urlsplit(url)
+        if parsed.scheme not in ('http', 'https'):
+            sys.exit(f'http か https の URL を渡してください: {url}')
+        # WebCrypto は安全な接続元 (HTTPS か localhost) でしか使えないので、10.0.2.2 ではなく localhost で開き、
+        # エミュレータの localhost のポートをこの PC の同じポートにつなぐ
+        if (parsed.hostname in ('localhost', '127.0.0.1')) and parsed.port:
+            adb('reverse', f'tcp:{parsed.port}', f'tcp:{parsed.port}', capture=True)
+        # 開くたびにタブが増えると、どのタブも Web アプリを動かして重くなるので、呼び出し元の名前を付けて同じタブで開く
+        shell(f'am start -a android.intent.action.VIEW -d {shlex.quote(url)} --es com.android.browser.application_id {BROWSER_TAB} {browser}')
+        print(f'開きました: {url}')
+    if reload:
+        # 全画面では URL の帯 (読み込み直すボタン) が出ないので、Ctrl+R (CTRL_LEFT と R) を送る
+        shell('input keycombination 113 46', capture=False)
+        pause()
+    if close:
+        shell(f'am force-stop {browser}')
+        adb('reverse', '--remove-all', capture=True)
+        print('ブラウザを止めて、ポートのつなぎを外しました')
+
+
+#--------------------------------------------------------------------------------
 # Preferences
 #--------------------------------------------------------------------------------
 
@@ -448,6 +502,11 @@ def main():
     p.add_argument('action', choices=['get', 'set'])
     p.add_argument('key')
     p.add_argument('value', nargs='?')
+    p = sub.add_parser('browse')
+    p.add_argument('url', nargs='?')
+    p.add_argument('--reload', action='store_true')
+    p.add_argument('--locale', dest='tag')
+    p.add_argument('--close', action='store_true')
     args = parser.parse_args()
 
     global PACKAGE, PROJECT, ADMIN, AVD
@@ -507,6 +566,10 @@ def main():
             if args.value is None:
                 sys.exit('pref set には値が要る')
             pref_set(args.key, args.value)
+    elif args.command == 'browse':
+        if not (args.url or args.reload or args.tag or args.close):
+            sys.exit('browse には URL か --reload / --locale / --close が要る')
+        browse(args.url, args.reload, args.tag, args.close)
     return 0
 
 

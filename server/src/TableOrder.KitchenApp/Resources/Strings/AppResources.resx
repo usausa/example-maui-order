@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>キッチン</value>
+  </data>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>、</value>
+  </data>
+  <data name="CommonBack" xml:space="preserve">
+    <value>戻る</value>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="NotFoundTitle" xml:space="preserve">
+    <value>ページが見つかりません</value>
+  </data>
+  <data name="NotFoundBack" xml:space="preserve">
+    <value>はじめに戻る</value>
+  </data>
+  <data name="NumpadClear" xml:space="preserve">
+    <value>クリア</value>
+  </data>
+  <data name="StartupStepSettings" xml:space="preserve">
+    <value>端末の設定を確かめています</value>
+  </data>
+  <data name="StartupStepConnect" xml:space="preserve">
+    <value>サーバに接続しています</value>
+  </data>
+  <data name="StartupStepStore" xml:space="preserve">
+    <value>店舗の設定を読み込んでいます</value>
+  </data>
+  <data name="StartupStepTickets" xml:space="preserve">
+    <value>チケットを読み込んでいます</value>
+  </data>
+  <data name="StartupStepReady" xml:space="preserve">
+    <value>準備ができました</value>
+  </data>
+  <data name="StartupNotKitchen" xml:space="preserve">
+    <value>この端末はキッチン端末として登録されていません。端末の設定から登録し直してください</value>
+  </data>
+  <data name="StartupRetry" xml:space="preserve">
+    <value>もう一度試す</value>
+  </data>
+  <data name="StartupSetup" xml:space="preserve">
+    <value>端末の設定</value>
+  </data>
+  <data name="StartupAutoRetryFormat" xml:space="preserve">
+    <value>{0} 秒ごとに自動でもう一度試します</value>
+  </data>
+  <data name="SetupTitle" xml:space="preserve">
+    <value>端末の設定</value>
+  </data>
+  <data name="SetupEndpoint" xml:space="preserve">
+    <value>接続先</value>
+  </data>
+  <data name="SetupRegistration" xml:space="preserve">
+    <value>端末の登録</value>
+  </data>
+  <data name="SetupRegisteredFormat" xml:space="preserve">
+    <value>登録済み ({0})</value>
+  </data>
+  <data name="SetupNotRegistered" xml:space="preserve">
+    <value>未登録</value>
+  </data>
+  <data name="SetupPairingCode" xml:space="preserve">
+    <value>ペアリングコード</value>
+  </data>
+  <data name="SetupPairingCodeHint" xml:space="preserve">
+    <value>管理画面で出した 6 桁のコードです</value>
+  </data>
+  <data name="SetupNotEntered" xml:space="preserve">
+    <value>未入力</value>
+  </data>
+  <data name="SetupRegister" xml:space="preserve">
+    <value>登録して起動する</value>
+  </data>
+  <data name="DeviceTitle" xml:space="preserve">
+    <value>端末</value>
+  </data>
+  <data name="DeviceStore" xml:space="preserve">
+    <value>店舗</value>
+  </data>
+  <data name="DeviceName" xml:space="preserve">
+    <value>端末の名前</value>
+  </data>
+  <data name="DeviceStations" xml:space="preserve">
+    <value>持ち場</value>
+  </data>
+  <data name="DeviceId" xml:space="preserve">
+    <value>端末 ID</value>
+  </data>
+  <data name="DeviceEndpoint" xml:space="preserve">
+    <value>接続先</value>
+  </data>
+  <data name="DeviceSound" xml:space="preserve">
+    <value>音の知らせ</value>
+  </data>
+  <data name="DeviceSoundReady" xml:space="preserve">
+    <value>鳴らせます</value>
+  </data>
+  <data name="DeviceSoundWaiting" xml:space="preserve">
+    <value>画面に触れると鳴らせます</value>
+  </data>
+  <data name="DeviceVersion" xml:space="preserve">
+    <value>アプリ</value>
+  </data>
+  <data name="DeviceSetup" xml:space="preserve">
+    <value>端末の設定</value>
+  </data>
+  <data name="StationAll" xml:space="preserve">
+    <value>すべて</value>
+  </data>
+  <data name="TicketsSoundHint" xml:space="preserve">
+    <value>画面に触れると、新しいチケットを音で知らせます</value>
+  </data>
+  <data name="TicketsEmpty" xml:space="preserve">
+    <value>まだ下げていないチケットはありません</value>
+  </data>
+  <data name="TicketTableFormat" xml:space="preserve">
+    <value>テーブル {0}</value>
+  </data>
+  <data name="TicketOrderFormat" xml:space="preserve">
+    <value>{0} 回目</value>
+  </data>
+  <data name="TicketElapsedFormat" xml:space="preserve">
+    <value>{0} 分</value>
+  </data>
+  <data name="TicketBump" xml:space="preserve">
+    <value>下げる</value>
+  </data>
+  <data name="TicketRecall" xml:space="preserve">
+    <value>戻す</value>
+  </data>
+  <data name="LineCooking" xml:space="preserve">
+    <value>作っている</value>
+  </data>
+  <data name="LineReady" xml:space="preserve">
+    <value>できあがり</value>
+  </data>
+  <data name="LineServed" xml:space="preserve">
+    <value>提供済み</value>
+  </data>
+  <data name="LineCancelled" xml:space="preserve">
+    <value>取消</value>
+  </data>
+  <data name="FooterDone" xml:space="preserve">
+    <value>下げたチケット</value>
+  </data>
+  <data name="FooterStock" xml:space="preserve">
+    <value>品切れ</value>
+  </data>
+  <data name="FooterDevice" xml:space="preserve">
+    <value>端末</value>
+  </data>
+  <data name="DoneTitle" xml:space="preserve">
+    <value>下げたチケット</value>
+  </data>
+  <data name="DoneHint" xml:space="preserve">
+    <value>押し間違えたチケットは、戻すとチケットの画面に戻ります</value>
+  </data>
+  <data name="DoneEmpty" xml:space="preserve">
+    <value>下げたチケットはありません</value>
+  </data>
+  <data name="StockTitle" xml:space="preserve">
+    <value>品切れ</value>
+  </data>
+  <data name="StockTabLimited" xml:space="preserve">
+    <value>品切れ・残り</value>
+  </data>
+  <data name="StockTabOptions" xml:space="preserve">
+    <value>オプション</value>
+  </data>
+  <data name="StockAvailable" xml:space="preserve">
+    <value>売れる</value>
+  </data>
+  <data name="StockSetRemaining" xml:space="preserve">
+    <value>残りの数を決める</value>
+  </data>
+  <data name="StockSoldOut" xml:space="preserve">
+    <value>品切れ</value>
+  </data>
+  <data name="StockRemainingFormat" xml:space="preserve">
+    <value>残り {0}</value>
+  </data>
+  <data name="StockCurrentFormat" xml:space="preserve">
+    <value>いまの状態: {0}</value>
+  </data>
+  <data name="StockRemainingTitle" xml:space="preserve">
+    <value>残りの数 (0 は品切れ)</value>
+  </data>
+  <data name="StockDecide" xml:space="preserve">
+    <value>決める</value>
+  </data>
+  <data name="StockEmptyLimited" xml:space="preserve">
+    <value>品切れと残りの数のある品はありません</value>
+  </data>
+  <data name="StockEmpty" xml:space="preserve">
+    <value>品がありません</value>
+  </data>
+  <data name="ErrorTitle" xml:space="preserve">
+    <value>お知らせ</value>
+  </data>
+  <data name="CommonOk" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="ErrorUnavailable" xml:space="preserve">
+    <value>通信できませんでした。しばらくしてからもう一度お試しください</value>
+  </data>
+  <data name="ErrorUnauthorized" xml:space="preserve">
+    <value>この端末は使えません。管理画面で端末を確かめてください</value>
+  </data>
+  <data name="ErrorTenantSuspended" xml:space="preserve">
+    <value>ご利用を停止しています。管理者にお問い合わせください</value>
+  </data>
+  <data name="ErrorPairingCodeInvalid" xml:space="preserve">
+    <value>ペアリングコードが正しくないか、期限が切れています</value>
+  </data>
+  <data name="ErrorDeviceKind" xml:space="preserve">
+    <value>キッチン端末のペアリングコードではありません</value>
+  </data>
+  <data name="ErrorDeviceKey" xml:space="preserve">
+    <value>このブラウザでは端末の鍵を作れません。HTTPS で開いてください</value>
+  </data>
+  <data name="ErrorGeneric" xml:space="preserve">
+    <value>処理できませんでした</value>
+  </data>
+</root>

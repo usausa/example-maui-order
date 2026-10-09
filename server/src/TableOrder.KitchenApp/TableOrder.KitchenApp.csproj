@@ -7,6 +7,8 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <!-- サーバは /kitchen の下で配る (wwwroot/index.html の base と合わせる) -->
     <StaticWebAssetBasePath>kitchen</StaticWebAssetBasePath>
+    <!-- 画面の文言は日本語を既定 (AppResources.resx) にし、英語を AppResources.en.resx に置く (ブラウザの言語で選ぶ) -->
+    <NeutralLanguage>ja</NeutralLanguage>
   </PropertyGroup>
 
   <!-- 日本語の照合と店舗のタイムゾーンを使うので、地域の情報を省かない -->
@@ -17,6 +19,22 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\shared\src\TableOrder.Client\TableOrder.Client.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Resources\Strings\AppResources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AppResources.resx</DependentUpon>
+    </Compile>
+    <EmbeddedResource Update="Resources\Strings\AppResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AppResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

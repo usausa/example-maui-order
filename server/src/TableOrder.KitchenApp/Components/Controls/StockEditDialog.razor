@@ -1,0 +1,35 @@
+<div class="dialog-backdrop">
+    <div class="dialog">
+        <div class="dialog-title">
+            @Name
+            @if (Caption.Length > 0)
+            {
+                <span class="dialog-caption">@Caption</span>
+            }
+        </div>
+        @if (!isEnteringRemaining)
+        {
+            <div class="dialog-message">@ViewHelper.Format(AppResources.StockCurrentFormat, CurrentText)</div>
+            <div class="choices">
+                <button class="choice @(CurrentStatus == StockStatus.Available ? "choice-selected" : null)" @onclick="() => DecideAsync(StockStatus.Available)">@AppResources.StockAvailable</button>
+                <button class="choice @(CurrentStatus == StockStatus.Limited ? "choice-selected" : null)" @onclick="StartRemaining">@AppResources.StockSetRemaining</button>
+                <button class="choice @(CurrentStatus == StockStatus.SoldOut ? "choice-selected" : null)" @onclick="() => DecideAsync(StockStatus.SoldOut)">@AppResources.StockSoldOut</button>
+            </div>
+            <div class="dialog-actions">
+                <button class="button" @onclick="OnCancel">@AppResources.CommonBack</button>
+            </div>
+        }
+        else
+        {
+            <div class="dialog-message">@AppResources.StockRemainingTitle</div>
+            <div class="dialog-body">
+                <div class="code @(remaining.Length == 0 ? "code-empty" : null)">@(remaining.Length == 0 ? AppResources.SetupNotEntered : remaining)</div>
+                <NumberPad Value="@remaining" MaxLength="@RemainingDigits" ValueChanged="ChangeRemaining" />
+            </div>
+            <div class="dialog-actions">
+                <button class="button" @onclick="OnCancel">@AppResources.CommonBack</button>
+                <button class="button button-primary" disabled="@(remaining.Length == 0)" @onclick="DecideRemainingAsync">@AppResources.StockDecide</button>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,9 @@
+<div class="numpad">
+    @foreach (var digit in Digits)
+    {
+        <button class="numpad-key" @onclick="() => AppendAsync(digit)">@digit</button>
+    }
+    <button class="numpad-key numpad-sub" @onclick="ClearAsync">@AppResources.NumpadClear</button>
+    <button class="numpad-key" @onclick="() => AppendAsync('0')">0</button>
+    <button class="numpad-key numpad-sub" @onclick="DeleteAsync"><span class="icon">@Icons.Backspace</span></button>
+</div>
