@@ -102,6 +102,22 @@ public sealed class HallUsecase
     public async ValueTask<ApiResult<VisitResponse>> CancelVisitAsync(VisitResponse visit) =>
         await AfterChangeAsync(await hallApi.CancelVisitAsync(visit.Id, new VisitCancelRequest { Version = visit.Version }), RefreshTablesAsync);
 
+    // 食後の品 (止めている明細) をすべてお願いする
+    public async ValueTask<ApiResult<OrderListResponse>> ReleaseAsync(VisitResponse visit) =>
+        await AfterChangeAsync(await hallApi.ReleaseAsync(visit.Id, new OrderReleaseRequest { LineIds = [] }), RefreshTablesAsync);
+
+    // 明細を取り消す (数量の一部の取消は、サーバが明細を分けて取り消す)
+    public async ValueTask<ApiResult<OrderListResponseItem>> CancelLineAsync(Guid orderId, Guid lineId, int quantity) =>
+        await AfterChangeAsync(await hallApi.CancelLineAsync(orderId, lineId, new OrderLineCancelRequest { Quantity = quantity }), RefreshTablesAsync);
+
+    // 会計を始める (表示していた明細の版を送り、明細が変わっていれば断られる)
+    public async ValueTask<ApiResult<VisitResponse>> StartCheckoutAsync(VisitResponse visit, string billVersion) =>
+        await AfterChangeAsync(await hallApi.StartCheckoutAsync(visit.Id, new CheckoutRequest { BillVersion = billVersion, Version = visit.Version }), RefreshTablesAsync);
+
+    // 会計を取りやめる (払い終えた支払があれば、サーバは会計中のまま返す)
+    public async ValueTask<ApiResult<VisitResponse>> CancelCheckoutAsync(VisitResponse visit) =>
+        await AfterChangeAsync(await hallApi.CancelCheckoutAsync(visit.Id), RefreshTablesAsync);
+
     //--------------------------------------------------------------------------------
     // Call
     //--------------------------------------------------------------------------------

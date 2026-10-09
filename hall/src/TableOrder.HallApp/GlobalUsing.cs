@@ -32,6 +32,7 @@ global using Smart.Reactive;
 
 global using TableOrder.Client;
 global using TableOrder.Contract;
+global using TableOrder.Contract.Bills;
 global using TableOrder.Contract.Calls;
 global using TableOrder.Contract.Devices;
 global using TableOrder.Contract.Menu;
@@ -44,6 +45,7 @@ global using TableOrder.Domain.Enums;
 
 global using TableOrder.HallApp;
 global using TableOrder.HallApp.Components;
+global using TableOrder.HallApp.Models;
 global using TableOrder.HallApp.Modules.Helpers;
 global using TableOrder.HallApp.Resources.Strings;
 global using TableOrder.HallApp.State;

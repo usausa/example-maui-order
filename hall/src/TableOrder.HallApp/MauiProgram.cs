@@ -173,6 +173,7 @@ public static partial class MauiProgram
 
         // Usecase
         services.AddSingleton<HallUsecase>();
+        services.AddSingleton<ProxyOrderUsecase>();
 
         // Shell
         services.AddSingleton<OrderEventReceiver>();

@@ -87,11 +87,14 @@ public static class ViewHelper
     // Glyph
     //--------------------------------------------------------------------------------
 
-    // 呼び出しの用件の記号 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの記号にする)
-    // 店舗の知らせ (注文の一時停止 / ラストオーダー)
-    public static string StoreNoticeGlyph(bool paused) =>
+    // 注文の知らせ (注文の一時停止 / ラストオーダー)
+    public static string OrderNoticeGlyph(bool paused) =>
         paused ? MaterialIcons.Pause_circle_outline : MaterialIcons.Schedule;
 
+    // 会計中の知らせ (お会計のボタンと同じ記号)
+    public static string CheckoutNoticeGlyph => MaterialIcons.Payments;
+
+    // 呼び出しの用件の記号 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの記号にする)
     public static string CallGlyph(string code) =>
         code switch
         {

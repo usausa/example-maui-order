@@ -13,6 +13,18 @@ public static class PopupNavigatorExtensions
     public static ValueTask<Guid?> SelectTableAsync(this IPopupNavigator popupNavigator, MoveTableParameter parameter) =>
         popupNavigator.PopupAsync<MoveTableParameter, Guid?>(DialogId.MoveTable, parameter);
 
+    // 明細の取消 (取り消す数)
+    public static ValueTask<int?> LineCancelAsync(this IPopupNavigator popupNavigator, LineCancelParameter parameter) =>
+        popupNavigator.PopupAsync<LineCancelParameter, int?>(DialogId.LineCancel, parameter);
+
+    // 会計の明細 (会計を始めるか取りやめるか)
+    public static ValueTask<BillAction?> BillAsync(this IPopupNavigator popupNavigator, BillParameter parameter) =>
+        popupNavigator.PopupAsync<BillParameter, BillAction?>(DialogId.Bill, parameter);
+
+    // 代わりの注文の品の詳細 (選んだ内容)
+    public static ValueTask<ItemSelection?> OrderItemAsync(this IPopupNavigator popupNavigator, OrderItemParameter parameter) =>
+        popupNavigator.PopupAsync<OrderItemParameter, ItemSelection?>(DialogId.OrderItem, parameter);
+
     // 品の状態 (売れる、残りの数を決める、品切れ) を選ぶ
     public static ValueTask<StockStatus?> StockEditAsync(this IPopupNavigator popupNavigator, StockEditParameter parameter) =>
         popupNavigator.PopupAsync<StockEditParameter, StockStatus?>(DialogId.StockEdit, parameter);

@@ -239,36 +239,48 @@ public sealed class VisitService
 
     // 確認のルール (お酒の年齢など) にお客様が答えた記録。来店で 1 回だけ持つ (答え直しても増やさない)
     // ホール端末は、代わりの注文でスタッフがお客様に確かめたときに記録する
-    public async ValueTask<ServiceResult<VisitResponse>> ConfirmAsync(Guid id, VisitConfirmationRequest request, CancellationToken cancellationToken)
+    // 新しく記録したら来店の変更を知らせる (ほかの端末が同じ来店で聞き直さないように)
+    public ValueTask<ServiceResult<VisitResponse>> ConfirmAsync(Guid id, VisitConfirmationRequest request, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
-        var visit = await visitAccessor.QueryAsync(tenantId, storeId, id, cancellationToken);
-        if (visit is null)
+        return eventService.WriteAsync<ServiceResult<VisitResponse>>(tenantId, storeId, async transaction =>
         {
-            return new(ServiceError.NotFound);
-        }
+            var visit = await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, id, cancellationToken);
+            if (visit is null)
+            {
+                return new(ServiceError.NotFound);
+            }
 
-        if (!InScope(context, visit))
-        {
-            return new(ServiceError.DeviceScope);
-        }
+            if (!InScope(context, visit))
+            {
+                return new(ServiceError.DeviceScope);
+            }
 
-        if (visit.Status is not (VisitStatus.Open or VisitStatus.Paying))
-        {
-            return new(new ServiceError(ErrorCodes.VisitNotOpen));
-        }
+            if (visit.Status is not (VisitStatus.Open or VisitStatus.Paying))
+            {
+                return new(new ServiceError(ErrorCodes.VisitNotOpen));
+            }
 
-        var store = await storeAccessor.QueryAsync(tenantId, storeId, cancellationToken);
-        var catalog = store is null ? null : await menuService.GetCatalogAsync(store, cancellationToken);
-        if ((catalog is null) || !catalog.Rules.TryGetValue(request.RuleId, out var rule) || (rule.Kind != MenuRuleKind.Confirmation))
-        {
-            return new(ServiceError.Validation("ruleId", "メニューの確認のルールを送ってください"));
-        }
+            var store = await storeAccessor.QueryAsync(tenantId, storeId, cancellationToken);
+            var catalog = store is null ? null : await menuService.GetCatalogAsync(store, cancellationToken);
+            if ((catalog is null) || !catalog.Rules.TryGetValue(request.RuleId, out var rule) || (rule.Kind != MenuRuleKind.Confirmation))
+            {
+                return new(ServiceError.Validation("ruleId", "メニューの確認のルールを送ってください"));
+            }
 
-        await visitAccessor.InsertConfirmationAsync(tenantId, id, request.RuleId, context.DeviceId, context.Now, cancellationToken);
-        return new(await ToResponseAsync(visit, cancellationToken));
+            var inserted = await visitAccessor.InsertConfirmationAsync(transaction.Tx, tenantId, id, request.RuleId, context.DeviceId, context.Now, cancellationToken);
+            var confirmations = await visitAccessor.QueryConfirmationListAsync(transaction.Tx, tenantId, id, cancellationToken);
+            var response = ToResponse(visit, confirmations.Select(static x => x.RuleId).ToList());
+            if (inserted > 0)
+            {
+                await transaction.AppendEventAsync(EventTypes.VisitUpdated, response, [response.TableId], null, context.Now, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+            return new(response);
+        }, cancellationToken);
     }
 
     //--------------------------------------------------------------------------------

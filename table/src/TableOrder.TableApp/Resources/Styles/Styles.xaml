@@ -600,15 +600,15 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
-    <!-- 店舗の知らせ (ラストオーダーの前は注意の色。注文の一時停止とラストオーダーの後は画面で失敗の色に替える) -->
-    <Style x:Key="StoreNoticeGrid"
+    <!-- 注文の知らせ (ラストオーダーの前は注意の色。会計中・注文の一時停止・ラストオーダーの後は画面で失敗の色に替える) -->
+    <Style x:Key="OrderNoticeGrid"
            TargetType="Grid">
         <Setter Property="Padding" Value="20,12" />
         <Setter Property="ColumnSpacing" Value="12" />
         <Setter Property="BackgroundColor" Value="{DynamicResource WarningColor}" />
     </Style>
 
-    <Style x:Key="StoreNoticeGlyphLabel"
+    <Style x:Key="OrderNoticeGlyphLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
@@ -616,7 +616,7 @@
         <Setter Property="TextColor" Value="{DynamicResource OnWarningColor}" />
     </Style>
 
-    <Style x:Key="StoreNoticeLabel"
+    <Style x:Key="OrderNoticeLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontSize" Value="18" />

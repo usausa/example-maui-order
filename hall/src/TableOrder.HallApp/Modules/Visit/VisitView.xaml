@@ -67,9 +67,17 @@
                            Text="{Binding TotalText}" />
                 </Grid>
 
-                <!-- orders -->
-                <Label Style="{StaticResource VisitSectionLabel}"
-                       Text="{x:Static strings:AppResources.VisitOrders}" />
+                <!-- orders (見出しの右に代わりの注文の入口を置く) -->
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource VisitSectionLabel}"
+                           VerticalOptions="Center"
+                           Text="{x:Static strings:AppResources.VisitOrders}" />
+                    <Button Grid.Column="1"
+                            Style="{StaticResource VisitAddOrderButton}"
+                            Command="{Binding AddOrderCommand}"
+                            Text="{x:Static strings:AppResources.VisitAddOrder}" />
+                </Grid>
                 <Label Style="{StaticResource VisitErrorLabel}"
                        IsVisible="{Binding ErrorText, Converter={StaticResource NotEmptyConverter}}"
                        Text="{Binding ErrorText}" />
@@ -95,6 +103,13 @@
                                         <DataTemplate x:DataType="{x:Type module:VisitLine}">
                                             <Grid Style="{StaticResource VisitLineGrid}"
                                                   ColumnDefinitions="*,Auto,Auto">
+                                                <!-- 押すと取り消す (提供と取消を除く) -->
+                                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                                <Grid.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:VisitViewModel}}, Path=CancelLineCommand, x:DataType={x:Type module:VisitViewModel}}"
+                                                                          CommandParameter="{Binding .}" />
+                                                </Grid.GestureRecognizers>
+                                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                                 <VerticalStackLayout Grid.Column="0"
                                                                      Style="{StaticResource VisitLineNameStack}">
                                                     <Label Style="{StaticResource VisitLineNameLabel}"
@@ -139,6 +154,12 @@
                         </DataTemplate>
                     </BindableLayout.ItemTemplate>
                 </VerticalStackLayout>
+
+                <!-- release (食後に出す品があるときだけ) -->
+                <Button Style="{StaticResource VisitReleaseButton}"
+                        Command="{Binding ReleaseCommand}"
+                        IsVisible="{Binding HasHeld}"
+                        Text="{Binding ReleaseText}" />
             </VerticalStackLayout>
         </ScrollView>
 
@@ -146,8 +167,8 @@
         <Grid Grid.Row="2"
               Style="{StaticResource ActionBarGrid}"
               RowDefinitions="1,64,1,80"
-              ColumnDefinitions="*,1,*">
-            <BoxView Grid.Row="0" Grid.ColumnSpan="3"
+              ColumnDefinitions="*,1,*,1,*">
+            <BoxView Grid.Row="0" Grid.ColumnSpan="5"
                      Style="{StaticResource HorizontalRule}" />
             <Button Grid.Row="1" Grid.Column="0"
                     Style="{StaticResource ActionBarButton}"
@@ -159,15 +180,21 @@
                     Style="{StaticResource ActionBarButton}"
                     Command="{Binding MoveCommand}"
                     Text="{x:Static strings:AppResources.VisitMove}" />
-            <BoxView Grid.Row="2" Grid.ColumnSpan="3"
+            <BoxView Grid.Row="1" Grid.Column="3"
+                     Style="{StaticResource VerticalRule}" />
+            <Button Grid.Row="1" Grid.Column="4"
+                    Style="{StaticResource ActionBarButton}"
+                    Command="{Binding BillCommand}"
+                    Text="{x:Static strings:AppResources.VisitBill}" />
+            <BoxView Grid.Row="2" Grid.ColumnSpan="5"
                      Style="{StaticResource HorizontalRule}" />
             <!-- 注文のある来店と会計中はレジで払った、注文のない来店は取りやめ -->
-            <Button Grid.Row="3" Grid.ColumnSpan="3"
+            <Button Grid.Row="3" Grid.ColumnSpan="5"
                     Style="{StaticResource VisitCloseButton}"
                     Command="{Binding CloseCommand}"
                     IsVisible="{Binding IsCancelable, Converter={StaticResource ReverseConverter}}"
                     Text="{x:Static strings:AppResources.VisitClose}" />
-            <Button Grid.Row="3" Grid.ColumnSpan="3"
+            <Button Grid.Row="3" Grid.ColumnSpan="5"
                     Style="{StaticResource VisitCancelButton}"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding IsCancelable}"

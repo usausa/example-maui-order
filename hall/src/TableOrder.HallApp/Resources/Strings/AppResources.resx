@@ -341,6 +341,138 @@
   <data name="CancelOk" xml:space="preserve">
     <value>取りやめる</value>
   </data>
+  <data name="VisitAddOrder" xml:space="preserve">
+    <value>注文を入れる</value>
+  </data>
+  <data name="VisitReleaseFormat" xml:space="preserve">
+    <value>食後の品をお願いする ({0} 点)</value>
+  </data>
+  <data name="ReleaseTitle" xml:space="preserve">
+    <value>食後の品をお願いする</value>
+  </data>
+  <data name="ReleaseMessageFormat" xml:space="preserve">
+    <value>テーブル {0} の食後の品を、作り始めるようにお願いします</value>
+  </data>
+  <data name="ReleaseOk" xml:space="preserve">
+    <value>お願いする</value>
+  </data>
+  <data name="VisitBill" xml:space="preserve">
+    <value>会計</value>
+  </data>
+  <data name="LineCancelTitle" xml:space="preserve">
+    <value>明細の取消</value>
+  </data>
+  <data name="LineCancelQuantity" xml:space="preserve">
+    <value>取り消す数</value>
+  </data>
+  <data name="LineCancelOk" xml:space="preserve">
+    <value>取り消す</value>
+  </data>
+  <data name="BillTitleFormat" xml:space="preserve">
+    <value>テーブル {0} の会計</value>
+  </data>
+  <data name="BillEmpty" xml:space="preserve">
+    <value>明細はありません</value>
+  </data>
+  <data name="BillTotal" xml:space="preserve">
+    <value>合計</value>
+  </data>
+  <data name="BillTaxFormat" xml:space="preserve">
+    <value>内税 {0}%</value>
+  </data>
+  <data name="BillPaid" xml:space="preserve">
+    <value>支払済み</value>
+  </data>
+  <data name="BillBalance" xml:space="preserve">
+    <value>残り</value>
+  </data>
+  <data name="BillUnserved" xml:space="preserve">
+    <value>まだ出していない品があります</value>
+  </data>
+  <data name="BillStart" xml:space="preserve">
+    <value>会計を始める</value>
+  </data>
+  <data name="BillCancel" xml:space="preserve">
+    <value>会計を取りやめる</value>
+  </data>
+  <data name="ProxyOrderTitleFormat" xml:space="preserve">
+    <value>テーブル {0} の注文</value>
+  </data>
+  <data name="OrderCartFormat" xml:space="preserve">
+    <value>カート {0}</value>
+  </data>
+  <data name="OrderCartEmpty" xml:space="preserve">
+    <value>カートに品はありません</value>
+  </data>
+  <data name="OrderSubmit" xml:space="preserve">
+    <value>注文する</value>
+  </data>
+  <data name="OrderSubmitFormat" xml:space="preserve">
+    <value>注文する  {0} 点  {1}</value>
+  </data>
+  <data name="OrderSubmitMessageFormat" xml:space="preserve">
+    <value>テーブル {0} に {1} 点 ({2}) を注文します</value>
+  </data>
+  <data name="OrderDiscardTitle" xml:space="preserve">
+    <value>カートを捨てる</value>
+  </data>
+  <data name="OrderDiscardMessage" xml:space="preserve">
+    <value>カートの品を捨てて、来店の詳細に戻ります</value>
+  </data>
+  <data name="OrderDiscardOk" xml:space="preserve">
+    <value>捨てる</value>
+  </data>
+  <data name="OrderRemoveTitle" xml:space="preserve">
+    <value>カートから外す</value>
+  </data>
+  <data name="OrderRemoveMessageFormat" xml:space="preserve">
+    <value>{0} をカートから外します</value>
+  </data>
+  <data name="OrderRemoveOk" xml:space="preserve">
+    <value>外す</value>
+  </data>
+  <data name="OrderLimitTitle" xml:space="preserve">
+    <value>数の上限</value>
+  </data>
+  <data name="OrderLimitMessage" xml:space="preserve">
+    <value>数の上限を超えるため、この品は入れられません</value>
+  </data>
+  <data name="OrderLinesLimitFormat" xml:space="preserve">
+    <value>1 回の注文は {0} 明細までです</value>
+  </data>
+  <data name="OrderConfirmRuleTitle" xml:space="preserve">
+    <value>お客様に確認</value>
+  </data>
+  <data name="OrderConfirmRuleOk" xml:space="preserve">
+    <value>確かめた</value>
+  </data>
+  <data name="OrderConfirmRuleFallback" xml:space="preserve">
+    <value>この品はお客様への確認が必要です</value>
+  </data>
+  <data name="ItemAdd" xml:space="preserve">
+    <value>カートに入れる</value>
+  </data>
+  <data name="ItemChooseOne" xml:space="preserve">
+    <value>1 つ選ぶ</value>
+  </data>
+  <data name="ItemOptional" xml:space="preserve">
+    <value>お好みで</value>
+  </data>
+  <data name="ItemChooseUpToFormat" xml:space="preserve">
+    <value>{0} つまで</value>
+  </data>
+  <data name="ItemTiming" xml:space="preserve">
+    <value>出す時機</value>
+  </data>
+  <data name="ItemTimingNow" xml:space="preserve">
+    <value>すぐに</value>
+  </data>
+  <data name="ItemTimingAfterMeal" xml:space="preserve">
+    <value>食後に</value>
+  </data>
+  <data name="ItemQuantity" xml:space="preserve">
+    <value>数量</value>
+  </data>
   <data name="StatusHeld" xml:space="preserve">
     <value>食後に</value>
   </data>
@@ -466,6 +598,39 @@
   </data>
   <data name="ErrorLineStatusInvalid" xml:space="preserve">
     <value>取り消された品か、食後まで止めている品です</value>
+  </data>
+  <data name="ErrorOrderingPaused" xml:space="preserve">
+    <value>注文を一時停止しています</value>
+  </data>
+  <data name="ErrorLastOrderPassed" xml:space="preserve">
+    <value>ラストオーダーを過ぎています</value>
+  </data>
+  <data name="ErrorMenuChanged" xml:space="preserve">
+    <value>メニューが変わりました。起動からやり直してください</value>
+  </data>
+  <data name="ErrorItemSoldOut" xml:space="preserve">
+    <value>品切れの品があります</value>
+  </data>
+  <data name="ErrorStockInsufficient" xml:space="preserve">
+    <value>残りの数が足りない品があります</value>
+  </data>
+  <data name="ErrorLimitExceeded" xml:space="preserve">
+    <value>数の上限を超える品があります</value>
+  </data>
+  <data name="ErrorConfirmationRequired" xml:space="preserve">
+    <value>お客様への確認が必要な品があります</value>
+  </data>
+  <data name="ErrorQuantityExceeded" xml:space="preserve">
+    <value>数量か明細の数が上限を超えています</value>
+  </data>
+  <data name="ErrorOptionInvalid" xml:space="preserve">
+    <value>オプションの選び方が正しくありません</value>
+  </data>
+  <data name="ErrorDuplicateIdMismatch" xml:space="preserve">
+    <value>前に送った注文と内容が違います。注文を確かめてから送り直してください</value>
+  </data>
+  <data name="ErrorBillChanged" xml:space="preserve">
+    <value>明細が変わりました。もう一度開いてください</value>
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした</value>

@@ -6,7 +6,7 @@ using TableOrder.TableApp.Components;
 public sealed partial class MenuViewModel : AppViewModelBase
 {
     // ラストオーダーの知らせは時刻で変わるので、しばらくごとに見直す
-    private static readonly TimeSpan StoreNoticeInterval = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan OrderNoticeInterval = TimeSpan.FromSeconds(30);
 
     private readonly ILogger<MenuViewModel> log;
 
@@ -59,19 +59,19 @@ public sealed partial class MenuViewModel : AppViewModelBase
     [ObservableProperty]
     public partial bool HasCart { get; set; }
 
-    // 店舗の知らせ (注文の一時停止、ラストオーダー)。一時停止とラストオーダーの後は注文を確定できない
+    // 注文の知らせ (会計中、注文の一時停止、ラストオーダー)。会計中・一時停止・ラストオーダーの後は注文を確定できない
 
     [ObservableProperty]
-    public partial bool HasStoreNotice { get; set; }
+    public partial bool HasOrderNotice { get; set; }
 
     [ObservableProperty]
     public partial bool IsOrderingStopped { get; set; }
 
     [ObservableProperty]
-    public partial string StoreNoticeGlyph { get; set; } = string.Empty;
+    public partial string OrderNoticeGlyph { get; set; } = string.Empty;
 
     [ObservableProperty]
-    public partial string StoreNoticeText { get; set; } = string.Empty;
+    public partial string OrderNoticeText { get; set; } = string.Empty;
 
     public IObserveCommand SelectCategoryCommand { get; }
 
@@ -148,9 +148,9 @@ public sealed partial class MenuViewModel : AppViewModelBase
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
         SyncCart();
-        UpdateStoreNotice();
+        UpdateOrderNotice();
 
-        Disposables.Add(Observable.Interval(StoreNoticeInterval).ObserveOnCurrentContext().Subscribe(_ => UpdateStoreNotice()));
+        Disposables.Add(Observable.Interval(OrderNoticeInterval).ObserveOnCurrentContext().Subscribe(_ => UpdateOrderNotice()));
     }
 
     //--------------------------------------------------------------------------------
@@ -188,15 +188,17 @@ public sealed partial class MenuViewModel : AppViewModelBase
     // ほかのテーブルに移ったら、このテーブルは待受に戻す
     protected override Task OnVisitMovedAsync() => FinishVisitAsync();
 
+    // ホール端末で人数を直したときと、会計を始めた・やめたときに出し直す
     protected override Task OnVisitUpdatedAsync()
     {
         GuestsText = ViewHelper.Guests(visitState.Guests);
+        UpdateOrderNotice();
         return Task.CompletedTask;
     }
 
     protected override Task OnStoreUpdatedAsync()
     {
-        UpdateStoreNotice();
+        UpdateOrderNotice();
         return Task.CompletedTask;
     }
 
@@ -218,36 +220,41 @@ public sealed partial class MenuViewModel : AppViewModelBase
     }
 
     //--------------------------------------------------------------------------------
-    // Store
+    // Notice
     //--------------------------------------------------------------------------------
 
-    private void UpdateStoreNotice()
+    // ほかの端末 (ホール端末) で会計を始めたら、会計の明細が変わらないように確定を止める (お会計の画面には進める)
+    private void UpdateOrderNotice()
     {
         var until = storeState.UntilLastOrder(DateTimeOffset.UtcNow);
-        if (storeState.OrderingPaused)
+        if (visitState.Status == VisitStatus.Paying)
         {
-            SetStoreNotice(true, ViewHelper.StoreNoticeGlyph(true), storeState.PausedMessage.Get(languageState.Current, AppResources.MenuOrderingPaused)!);
+            SetOrderNotice(true, ViewHelper.CheckoutNoticeGlyph, AppResources.MenuCheckoutInProgress);
+        }
+        else if (storeState.OrderingPaused)
+        {
+            SetOrderNotice(true, ViewHelper.OrderNoticeGlyph(true), storeState.PausedMessage.Get(languageState.Current, AppResources.MenuOrderingPaused)!);
         }
         else if (until < TimeSpan.Zero)
         {
-            SetStoreNotice(true, ViewHelper.StoreNoticeGlyph(false), AppResources.MenuLastOrderPassed);
+            SetOrderNotice(true, ViewHelper.OrderNoticeGlyph(false), AppResources.MenuLastOrderPassed);
         }
         else if ((menuState.Features.LastOrderNoticeMinutes > 0) && (until <= TimeSpan.FromMinutes(menuState.Features.LastOrderNoticeMinutes)) && (storeState.LastOrderTime is { } last))
         {
-            SetStoreNotice(false, ViewHelper.StoreNoticeGlyph(false), ViewHelper.Format(AppResources.MenuLastOrderSoonFormat, StoreHours.Format(last)));
+            SetOrderNotice(false, ViewHelper.OrderNoticeGlyph(false), ViewHelper.Format(AppResources.MenuLastOrderSoonFormat, StoreHours.Format(last)));
         }
         else
         {
-            SetStoreNotice(false, string.Empty, string.Empty);
+            SetOrderNotice(false, string.Empty, string.Empty);
         }
     }
 
-    private void SetStoreNotice(bool stopped, string glyph, string text)
+    private void SetOrderNotice(bool stopped, string glyph, string text)
     {
         IsOrderingStopped = stopped;
-        StoreNoticeGlyph = glyph;
-        StoreNoticeText = text;
-        HasStoreNotice = text.Length > 0;
+        OrderNoticeGlyph = glyph;
+        OrderNoticeText = text;
+        HasOrderNotice = text.Length > 0;
     }
 
     //--------------------------------------------------------------------------------

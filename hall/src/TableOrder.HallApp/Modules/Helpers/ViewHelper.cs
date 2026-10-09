@@ -38,6 +38,19 @@ public static class ViewHelper
     public static string Price(decimal value) =>
         $"¥{value.ToString("#,0", CultureInfo.InvariantCulture)}";
 
+    // オプションの価格の差 (例: +¥100。差のないオプションは空)
+    public static string PriceDelta(decimal value) =>
+        value switch
+        {
+            > 0 => $"+{Price(value)}",
+            < 0 => $"-{Price(-value)}",
+            _ => string.Empty
+        };
+
+    // 税率 (例: 0.1 → 10)
+    public static string Percent(decimal rate) =>
+        (rate * 100).ToString("0.#", CultureInfo.InvariantCulture);
+
     // テーブル (例: テーブル 3)
     public static string Table(string name) =>
         Format(AppResources.TableFormat, name);
@@ -136,6 +149,17 @@ public static class ViewHelper
                 ErrorCodes.CheckoutInProgress => AppResources.ErrorCheckoutInProgress,
                 ErrorCodes.VisitNotOpen => AppResources.ErrorVisitNotOpen,
                 ErrorCodes.LineStatusInvalid => AppResources.ErrorLineStatusInvalid,
+                ErrorCodes.OrderingPaused => AppResources.ErrorOrderingPaused,
+                ErrorCodes.LastOrderPassed => AppResources.ErrorLastOrderPassed,
+                ErrorCodes.MenuChanged => AppResources.ErrorMenuChanged,
+                ErrorCodes.ItemSoldOut => AppResources.ErrorItemSoldOut,
+                ErrorCodes.StockInsufficient => AppResources.ErrorStockInsufficient,
+                ErrorCodes.LimitExceeded => AppResources.ErrorLimitExceeded,
+                ErrorCodes.ConfirmationRequired => AppResources.ErrorConfirmationRequired,
+                ErrorCodes.QuantityExceeded => AppResources.ErrorQuantityExceeded,
+                ErrorCodes.OptionInvalid => AppResources.ErrorOptionInvalid,
+                ErrorCodes.DuplicateIdMismatch => AppResources.ErrorDuplicateIdMismatch,
+                ErrorCodes.BillChanged => AppResources.ErrorBillChanged,
                 ErrorCodes.NotFound => AppResources.ErrorNotFound,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },

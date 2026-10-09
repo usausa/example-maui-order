@@ -378,11 +378,11 @@
                 <BoxView Grid.Row="3"
                          Style="{StaticResource HorizontalRule}" />
 
-                <!-- store notice (注文の一時停止、ラストオーダー。注文できない間は失敗の色にする) -->
+                <!-- order notice (会計中、注文の一時停止、ラストオーダー。注文できない間は失敗の色にする) -->
                 <Grid Grid.Row="4"
-                      Style="{StaticResource StoreNoticeGrid}"
+                      Style="{StaticResource OrderNoticeGrid}"
                       ColumnDefinitions="Auto,*"
-                      IsVisible="{Binding HasStoreNotice}">
+                      IsVisible="{Binding HasOrderNotice}">
                     <Grid.Triggers>
                         <DataTrigger TargetType="Grid"
                                      Binding="{Binding IsOrderingStopped}"
@@ -391,8 +391,8 @@
                         </DataTrigger>
                     </Grid.Triggers>
                     <Label Grid.Column="0"
-                           Style="{StaticResource StoreNoticeGlyphLabel}"
-                           Text="{Binding StoreNoticeGlyph}">
+                           Style="{StaticResource OrderNoticeGlyphLabel}"
+                           Text="{Binding OrderNoticeGlyph}">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label"
                                          Binding="{Binding IsOrderingStopped}"
@@ -402,8 +402,8 @@
                         </Label.Triggers>
                     </Label>
                     <Label Grid.Column="1"
-                           Style="{StaticResource StoreNoticeLabel}"
-                           Text="{Binding StoreNoticeText}">
+                           Style="{StaticResource OrderNoticeLabel}"
+                           Text="{Binding OrderNoticeText}">
                         <Label.Triggers>
                             <DataTrigger TargetType="Label"
                                          Binding="{Binding IsOrderingStopped}"

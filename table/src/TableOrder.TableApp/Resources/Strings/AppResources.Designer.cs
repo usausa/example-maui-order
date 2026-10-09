@@ -603,6 +603,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string MenuCheckoutInProgress {
+            get {
+                return ResourceManager.GetString("MenuCheckoutInProgress", resourceCulture);
+            }
+        }
+
         internal static string MenuHistory {
             get {
                 return ResourceManager.GetString("MenuHistory", resourceCulture);

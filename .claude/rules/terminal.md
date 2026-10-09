@@ -14,6 +14,7 @@ paths:
 - 通知の受け口は `OrderEventReceiverBase` を継ぎ、届いたときにすぐ行うこと (`OnReceived`)、通知の扱い (`ApplyAsync`)、待っていた通知を扱い終えたとき (`OnDrainedAsync`)、起動からやり直す知らせ (`NotifyRestartAsync`) をアプリで決める
 - 共通の部品の基底クラスでアプリが決める処理は abstract にし、使わないアプリは何もしない実装を理由のコメントと一緒に書く (virtual の既定にすると、使わないアプリのソリューションの InspectCode が上書きされていないと指摘する)
 - 通知を受けて一覧を読み直すときは、通知ごとに読まず、読み直す印を届いたとき (`OnReceived`) に付けて、`OnDrainedAsync` (待っていた通知を扱い終えたとき) でまとめて読む。読み直せなかった印は残す
+- 新しく作る要求 (案内、注文) は、送れたかわからない (`Unavailable`) ときに id を残し、送り直すときは同じ id を使う。送れたときと断られたときは残さない (サーバは同じ id の送り直しに受けたものを返し、内容が違えば `DUPLICATE_ID_MISMATCH` で断る)
 - 届いたらすぐ知らせること (新しい呼び出しの音と振動) は `OnReceived` で行う (`ApplyAsync` と `OnDrainedAsync` は、操作の途中とポップアップを開いている間は待たされる)
 - Android の API は `Components/` の部品にまとめ (共通の部分は `Xxx.cs`、Android の部分は `Xxx.android.cs`)、画面と状態から直接呼ばない
 - 端末で鳴らす音は端末の通知の音にし、通知の音量で鳴らす (`Ringtone` の `AudioAttributes` を通知にする。既定は着信の音量)

@@ -1,5 +1,6 @@
 namespace TableOrder.Server.Web.Endpoints;
 
+using TableOrder.Contract.Events;
 using TableOrder.Contract.Visits;
 
 public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
@@ -341,6 +342,29 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(byHall)).ConfirmedRuleIds);
         Assert.Equal(HttpStatusCode.Forbidden, byKitchen.StatusCode);
         Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(byKitchen));
+    }
+
+    // ホール端末で新しく記録した確認は、来店の変更としてテーブル端末に知らせる (同じ来店で聞き直さないように)。答え直しは知らせない
+    [Fact]
+    public async Task ConfirmNotifiesTable()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        using var table = await SignInAsync(store.TableCodes[0]);
+        var visit = await factory.OpenVisitAsync(store, 0);
+        var before = await table.GetAsync<EventListResponse>("/api/v1/events?after=0");
+
+        // Act
+        using var first = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+        using var second = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+        var events = await table.GetAsync<EventListResponse>($"/api/v1/events?after={before.LastSeq}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, second.StatusCode);
+        Assert.Equal([EventTypes.VisitUpdated], events.Items.Select(static x => x.Type));
+        Assert.Equal([ConfirmationRuleId], TestHubConnection.Read<VisitResponse>(events.Items[0]).ConfirmedRuleIds);
     }
 
     //--------------------------------------------------------------------------------

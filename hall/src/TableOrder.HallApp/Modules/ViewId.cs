@@ -14,5 +14,6 @@ public enum ViewId
     Stock,
 
     // 席から開く画面
-    Visit
+    Visit,
+    Order
 }

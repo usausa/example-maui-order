@@ -2,9 +2,10 @@ namespace TableOrder.HallApp.Modules.Visit;
 
 using TableOrder.HallApp.Modules.Dialogs;
 
-// 来店の詳細。状態、人数、開いた時刻と経過時間、注文の合計、注文と明細の状態を出し、人数の変更・席の移動・来店を終える操作を行う
+// 来店の詳細。状態、人数、開いた時刻と経過時間、注文の合計、注文と明細の状態を出し、人数の変更・席の移動・代わりの注文・食後の品のお願い・明細の取消・会計の手伝い・来店を終える操作を行う
 // 来店と注文は開いたときと、席の一覧を読み直した知らせ (TablesChanged) で読み直し、来店が終わっていたら席のタブに戻る
 // 来店を終える操作は、注文のある来店と会計中はレジで払った、注文のない来店は取りやめにする (サーバはどちらかしか通さない)
+// 会計中は、注文を入れる・食後の品のお願い・取消を押せない (サーバが断る)
 public sealed partial class VisitViewModel : AppViewModelBase
 {
     // 経過時間を出し直す間隔
@@ -69,11 +70,26 @@ public sealed partial class VisitViewModel : AppViewModelBase
     [ObservableProperty]
     public partial IReadOnlyList<VisitOrder> Orders { get; set; } = [];
 
+    // 食後に出す品 (止めている明細) がある
+    [ObservableProperty]
+    public partial bool HasHeld { get; set; }
+
+    [ObservableProperty]
+    public partial string ReleaseText { get; set; } = string.Empty;
+
     public IObserveCommand BackCommand { get; }
 
     public IObserveCommand GuestsCommand { get; }
 
     public IObserveCommand MoveCommand { get; }
+
+    public IObserveCommand BillCommand { get; }
+
+    public IObserveCommand AddOrderCommand { get; }
+
+    public IObserveCommand ReleaseCommand { get; }
+
+    public IObserveCommand CancelLineCommand { get; }
 
     public IObserveCommand CloseCommand { get; }
 
@@ -103,6 +119,10 @@ public sealed partial class VisitViewModel : AppViewModelBase
         BackCommand = MakeAsyncCommand(BackAsync);
         GuestsCommand = MakeAsyncCommand(ChangeGuestsAsync, () => IsLoaded);
         MoveCommand = MakeAsyncCommand(MoveAsync, () => IsLoaded && !IsPaying);
+        BillCommand = MakeAsyncCommand(BillAsync, () => IsLoaded);
+        AddOrderCommand = MakeAsyncCommand(() => Navigator.ForwardAsync(ViewId.Order, Parameters.MakeVisit(visitId)), () => IsLoaded && !IsPaying);
+        ReleaseCommand = MakeAsyncCommand(ReleaseAsync, () => IsLoaded && !IsPaying && HasHeld);
+        CancelLineCommand = MakeAsyncCommand<VisitLine>(CancelLineAsync);
         CloseCommand = MakeAsyncCommand(CloseAsync, () => IsLoaded);
         CancelCommand = MakeAsyncCommand(CancelAsync, () => IsLoaded);
 
@@ -204,7 +224,11 @@ public sealed partial class VisitViewModel : AppViewModelBase
     {
         Orders = orders.Items.OrderBy(static x => x.OrderNo).Select(x => new VisitOrder(x, storeState.Store.TimeZone)).ToList();
         HasNoOrders = orders.Items.Count == 0;
-        hasLines = orders.Items.SelectMany(static x => x.Lines).Any(static x => x.Status != OrderLineStatus.Cancelled);
+        var lines = orders.Items.SelectMany(static x => x.Lines).ToList();
+        hasLines = lines.Any(static x => x.Status != OrderLineStatus.Cancelled);
+        var held = lines.Where(static x => x.Status == OrderLineStatus.Held).Sum(static x => x.Quantity);
+        HasHeld = held > 0;
+        ReleaseText = ViewHelper.Format(AppResources.VisitReleaseFormat, held);
         UpdateEnd();
     }
 
@@ -269,6 +293,73 @@ public sealed partial class VisitViewModel : AppViewModelBase
 
         var result = await hallUsecase.MoveVisitAsync(visit, tableId);
         await AfterOperationAsync(AppResources.VisitMove, result);
+    }
+
+    // 会計の明細を見せ、会計を始めるか取りやめる (どちらにするかは明細のポップアップが状態で決める)
+    private async Task BillAsync()
+    {
+        if (visit is null)
+        {
+            return;
+        }
+
+        var billResult = await hallApi.GetBillAsync(visitId);
+        if (billResult.Content is not { } bill)
+        {
+            log.WarnApiFailed(nameof(IHallApi.GetBillAsync), billResult.Status, billResult.ErrorCode);
+            await popupNavigator.MessageAsync(AppResources.VisitBill, ViewHelper.ErrorMessage(billResult));
+            return;
+        }
+
+        var title = ViewHelper.Format(AppResources.BillTitleFormat, visit.TableName);
+        var action = await popupNavigator.BillAsync(new BillParameter(title, bill, IsPaying));
+        if (action == BillAction.StartCheckout)
+        {
+            await AfterOperationAsync(AppResources.BillStart, await hallUsecase.StartCheckoutAsync(visit, bill.BillVersion));
+        }
+        else if (action == BillAction.CancelCheckout)
+        {
+            await AfterOperationAsync(AppResources.BillCancel, await hallUsecase.CancelCheckoutAsync(visit));
+        }
+    }
+
+    // 食後の品をすべてお願いする
+    private async Task ReleaseAsync()
+    {
+        if ((visit is null) ||
+            !await popupNavigator.ConfirmAsync(AppResources.ReleaseTitle, ViewHelper.Format(AppResources.ReleaseMessageFormat, visit.TableName), AppResources.ReleaseOk, AppResources.CommonBack))
+        {
+            return;
+        }
+
+        await AfterOrderChangeAsync(AppResources.ReleaseTitle, await hallUsecase.ReleaseAsync(visit));
+    }
+
+    // 提供と取消を除く明細を取り消す (数量が 2 以上なら取り消す数を選ぶ)。会計中はサーバが断るので開かない
+    private async Task CancelLineAsync(VisitLine line)
+    {
+        if (!IsLoaded || IsPaying || !line.CanCancel)
+        {
+            return;
+        }
+
+        if (await popupNavigator.LineCancelAsync(new LineCancelParameter(line.Name, line.OptionText, line.Quantity)) is not { } quantity)
+        {
+            return;
+        }
+
+        await AfterOrderChangeAsync(AppResources.LineCancelTitle, await hallUsecase.CancelLineAsync(line.OrderId, line.LineId, quantity));
+    }
+
+    // 注文を替えたら来店と注文を読み直す (合計も替わる)。断られたら知らせてから読み直す
+    private async Task AfterOrderChangeAsync<T>(string title, ApiResult<T> result)
+    {
+        if (!result.IsSuccess)
+        {
+            await popupNavigator.MessageAsync(title, ViewHelper.ErrorMessage(result));
+        }
+
+        await LoadAsync();
     }
 
     private async Task CloseAsync()

@@ -25,7 +25,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 1 つの Service だけが返す結果型 (`XxxResult`) と状態 (`XxxStatus`) は、その Service のファイルの先頭で定義する
 - 業務で使う現在時刻は、要求の中は `ServiceContext.Now`、要求の外 (起動、管理画面からの発行) は `TimeProvider` から読む
 - 複数の文にまたがる書き込みは Service の中で `IDbProvider.UsingTxAsync` を使い、競合は条件付きの更新の件数 (0 件) で判定する
-- 店舗の状態を変える書き込みは `EventService.WriteAsync` の中で行い、変えた内容の通知を同じトランザクションで書く (通知の送る先は `EventRoutes` に足す)
+- 店舗の状態を変える書き込み (来店の確認の記録のような、ほかの端末が判断に使う記録も含む) は `EventService.WriteAsync` の中で行い、変えた内容の通知を同じトランザクションで書く (通知の送る先は `EventRoutes` に足す。答え直しのように変わらなかったときは書かない)
 - 入力の誤りと業務の失敗は Service が `ServiceError` で返し、値を返す処理は `ServiceResult<T>` にする (同じ Id の送り直しで既にあったものは `Created` を付けない)
 - 決済サービスは `IPaymentProvider` の実装で替え、Service から決済サービスを直接呼ばない
 - 画像の置き場は `IImageStore` の実装で替え (開発とテストはファイル、本番は Amazon S3)、テナントごとに分ける。名前は `ImageNames.IsValid` で確かめてから渡す (置き場の経路に使うため)

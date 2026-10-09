@@ -567,6 +567,19 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
+    <!-- 注文の見出しの右の代わりの注文の入口 -->
+    <Style x:Key="VisitAddOrderButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardPrimaryButton}">
+        <Setter Property="Padding" Value="20,0" />
+    </Style>
+
+    <Style x:Key="VisitReleaseButton"
+           TargetType="Button"
+           BasedOn="{StaticResource CardButton}">
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+
     <Style x:Key="VisitCloseButton"
            TargetType="Button"
            BasedOn="{StaticResource PrimaryActionButton}">
@@ -729,18 +742,20 @@
     </Style>
 
     <!-- ================================================================================ -->
-    <!-- Stock -->
+    <!-- List -->
     <!-- ================================================================================ -->
+
+    <!-- カテゴリの帯と品の一覧 (品切れのタブ、代わりの注文) -->
 
     <!-- カテゴリの帯。区切り線の色を間隔から見せ、最後のタブの右にも区切り線を出す -->
 
-    <Style x:Key="StockCategoryScroll"
+    <Style x:Key="CategoryBarScroll"
            TargetType="ScrollView">
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
         <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
-    <Style x:Key="StockCategoryStack"
+    <Style x:Key="CategoryBarStack"
            TargetType="HorizontalStackLayout">
         <Setter Property="Padding" Value="0,0,1,0" />
         <Setter Property="Spacing" Value="1" />
@@ -748,7 +763,7 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource OutlineColor}" />
     </Style>
 
-    <Style x:Key="StockCategoryBorder"
+    <Style x:Key="CategoryTabBorder"
            TargetType="Border">
         <Setter Property="MinimumWidthRequest" Value="96" />
         <Setter Property="Padding" Value="20,0" />
@@ -757,7 +772,7 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="StockCategoryLabel"
+    <Style x:Key="CategoryTabLabel"
            TargetType="Label">
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="VerticalOptions" Value="Center" />
@@ -767,14 +782,14 @@
     </Style>
 
     <!-- 帯が続いている向きの端に重ねる送りのボタン (押すとその向きへ送る)。タブとは罫線で分ける -->
-    <Style x:Key="StockPagerGrid"
+    <Style x:Key="CategoryPagerGrid"
            TargetType="Grid">
         <Setter Property="WidthRequest" Value="49" />
         <Setter Property="ColumnSpacing" Value="0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="StockPagerLabel"
+    <Style x:Key="CategoryPagerLabel"
            TargetType="Label">
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="VerticalOptions" Value="Center" />
@@ -785,46 +800,71 @@
 
     <!-- 品の一覧。押せる面は 64dp 以上にし、品の間は罫線で分ける -->
 
-    <Style x:Key="StockCollectionView"
+    <Style x:Key="ListCollectionView"
            TargetType="CollectionView">
         <Setter Property="SelectionMode" Value="None" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
         <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
-    <Style x:Key="StockRowGrid"
+    <Style x:Key="ListRowGrid"
            TargetType="Grid">
         <Setter Property="MinimumHeightRequest" Value="64" />
         <Setter Property="RowSpacing" Value="0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="StockRowContentGrid"
+    <Style x:Key="ListRowContentGrid"
            TargetType="Grid">
         <Setter Property="Padding" Value="16,10" />
         <Setter Property="ColumnSpacing" Value="12" />
     </Style>
 
-    <Style x:Key="StockRowNameStack"
+    <Style x:Key="ListRowNameStack"
            TargetType="VerticalStackLayout">
         <Setter Property="Spacing" Value="2" />
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <Style x:Key="StockRowNameLabel"
+    <Style x:Key="ListRowNameLabel"
            TargetType="Label">
         <Setter Property="FontSize" Value="17" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
-    <Style x:Key="StockRowCaptionLabel"
+    <Style x:Key="ListRowCaptionLabel"
            TargetType="Label">
         <Setter Property="FontSize" Value="13" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
+    <!-- 代わりの注文の品の価格 (カートの明細は数量と金額) と、品切れと残りの数 -->
+
+    <Style x:Key="OrderRowPriceLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="OrderRowStatusLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
+    <!-- 代わりの注文の注文する。主な操作なので主色の面にする -->
+    <Style x:Key="OrderSubmitButton"
+           TargetType="Button"
+           BasedOn="{StaticResource PrimaryActionButton}">
+        <Setter Property="FontSize" Value="20" />
+    </Style>
+
     <!-- 残りの数は注意の色、品切れはトリガで危険の色にする -->
-    <Style x:Key="StockRowStatusLabel"
+    <Style x:Key="ListRowStatusLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontSize" Value="16" />
@@ -966,6 +1006,163 @@
         <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
         <Setter Property="FontSize" Value="28" />
         <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <!-- Line cancel -->
+
+    <Style x:Key="LineCancelNameLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- Bill (明細が多いときは、ポップアップが画面からはみ出さないように明細だけをスクロールさせる) -->
+
+    <Style x:Key="BillLineScroll"
+           TargetType="ScrollView">
+        <Setter Property="MaximumHeightRequest" Value="320" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="BillLineStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="20,8" />
+    </Style>
+
+    <Style x:Key="BillLineGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="0,6" />
+    </Style>
+
+    <Style x:Key="BillAmountLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="MinimumWidthRequest" Value="72" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="End" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="BillTotalStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="20,12" />
+        <Setter Property="Spacing" Value="4" />
+    </Style>
+
+    <Style x:Key="BillTotalNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="BillTotalValueLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="BillSubLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 会計を始める・取りやめるは文言が長いので、ポップアップの半分の幅に収まる大きさにする -->
+    <Style x:Key="BillActionButton"
+           TargetType="Button"
+           BasedOn="{StaticResource PrimaryActionButton}">
+        <Setter Property="FontSize" Value="18" />
+    </Style>
+
+    <Style x:Key="BillUnservedLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,4,0,0" />
+        <Setter Property="FontSize" Value="15" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
+    <!-- Order item (オプションが多いときは、ポップアップが画面からはみ出さないように選択肢だけをスクロールさせる) -->
+
+    <Style x:Key="OrderItemPriceLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,0,24,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="OrderItemScroll"
+           TargetType="ScrollView">
+        <Setter Property="MaximumHeightRequest" Value="440" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="OrderItemBodyStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Padding" Value="16" />
+        <Setter Property="Spacing" Value="16" />
+    </Style>
+
+    <Style x:Key="OrderGroupStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="8" />
+    </Style>
+
+    <Style x:Key="OrderGroupTitleStack"
+           TargetType="HorizontalStackLayout">
+        <Setter Property="Spacing" Value="8" />
+    </Style>
+
+    <Style x:Key="OrderGroupNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="OrderGroupRuleLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="OrderOptionNameLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="18" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 選んだ選択肢の印。選んでいない間も場所を取り、面の色で隠す -->
+    <Style x:Key="OrderOptionCheckLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="TextColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="OrderQuantityGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="24,8" />
+        <Setter Property="ColumnSpacing" Value="12" />
+    </Style>
+
+    <Style x:Key="OrderItemCommitButton"
+           TargetType="Button"
+           BasedOn="{StaticResource PrimaryActionButton}">
+        <Setter Property="FontSize" Value="18" />
     </Style>
 
     <!-- Stock -->

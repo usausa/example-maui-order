@@ -320,6 +320,9 @@
   <data name="MenuCheckout" xml:space="preserve">
     <value>お会計</value>
   </data>
+  <data name="MenuCheckoutInProgress" xml:space="preserve">
+    <value>お会計中のため、ご注文はできません</value>
+  </data>
   <data name="MenuHistory" xml:space="preserve">
     <value>注文履歴</value>
   </data>

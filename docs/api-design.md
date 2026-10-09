@@ -423,7 +423,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | GET | `/devices/me/visit` | テーブル | 自分のテーブルの今の来店。なければ `204` (待受にする) |
 | PATCH | `/visits/{id}` | ホール | 人数の変更 `VisitUpdateRequest { adults, children, version }` (会計中も直せる)。通知 `visit.updated` |
 | POST | `/visits/{id}/move` | ホール | テーブルの移動 `{ toTableId, version }`。移動先に来店があれば `409` (`TABLE_OCCUPIED`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。通知 `visit.moved` (元のテーブル端末は待受に、移動先は注文の画面になる) |
-| POST | `/visits/{id}/confirmations` | テーブル / ホール | 確認のルールに答えた記録 `VisitConfirmationRequest { ruleId }` → `200` (来店)。ホール端末は、代わりの注文でスタッフがお客様に確かめたときに記録する。来店で 1 回だけ記録し、確認のルールでない `ruleId` は `400` |
+| POST | `/visits/{id}/confirmations` | テーブル / ホール | 確認のルールに答えた記録 `VisitConfirmationRequest { ruleId }` → `200` (来店)。ホール端末は、代わりの注文でスタッフがお客様に確かめたときに記録する。来店で 1 回だけ記録し、確認のルールでない `ruleId` は `400`。新しく記録したら通知 `visit.updated` (ほかの端末が同じ来店で聞き直さないように) |
 | POST | `/visits/{id}/close` | ホール / 外部 (POS) | レジで払ったなど、テーブルの外で会計した来店を終える `{ closedBy, version, staffId? }`。`closedBy` は `Register` / `Hall` (`TablePayment` はテーブルで払い終えたときにサーバが付ける)。通知 `visit.closed` |
 | POST | `/visits/{id}/cancel` | ホール | 注文のないまま帰った来店の取りやめ `{ version }`。取消を除いた明細があれば `422` (`VISIT_HAS_ORDERS`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。通知 `visit.closed` (`status` は `Cancelled`) |
 
@@ -631,7 +631,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `type` | 送る先 | `data` | 受けた端末の動き |
 | --- | --- | --- | --- |
 | `visit.opened` | そのテーブル端末、ホール、受付 | 来店 | テーブル端末は待受から注文の画面にする。受付機は空席から外す |
-| `visit.updated` | そのテーブル端末、ホール | 来店 | 人数・状態 (会計中) の表示を変える |
+| `visit.updated` | そのテーブル端末、ホール | 来店 | 人数・状態 (会計中)・答えた確認を替える (テーブル端末は会計中の間、注文の確定を止める) |
 | `visit.moved` | 元と移動先のテーブル端末、ホール、受付 | `{ visit, fromTableId, fromTableName }` | 元は待受に、移動先は注文の画面にする。受付機は空席を替える |
 | `visit.closed` | そのテーブル端末、ホール、受付 | 来店 (取りやめは `status` が `Cancelled`) | テーブル端末は待受に戻る (お会計の画面ならお礼を出してから)。受付機は空席に戻す |
 | `order.created` | ホール、そのテーブル端末 | 注文 (`OrderListResponseItem`) | 席の一覧と注文履歴に足す |

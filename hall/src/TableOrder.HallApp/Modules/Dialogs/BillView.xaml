@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+           xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
+           x:Class="TableOrder.HallApp.Modules.Dialogs.BillView"
+           x:DataType="{x:Type module:BillViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:BillViewModel}"
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
+
+    <!-- 会計の手伝い: 明細、内税、合計 (払った額と残り)、まだ出していない品の注意。会計を始めるか取りやめるかは状態に合わせてどちらかだけ出す -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{Binding Title}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <!-- lines -->
+        <Label Style="{StaticResource DialogMessageLabel}"
+               IsVisible="{Binding IsEmpty}"
+               Text="{x:Static strings:AppResources.BillEmpty}" />
+        <ScrollView Style="{StaticResource BillLineScroll}"
+                    IsVisible="{Binding IsEmpty, Converter={StaticResource ReverseConverter}}">
+            <VerticalStackLayout Style="{StaticResource BillLineStack}"
+                                 BindableLayout.ItemsSource="{Binding Lines}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Type module:BillLineItem}">
+                        <Grid Style="{StaticResource BillLineGrid}"
+                              ColumnDefinitions="*,Auto,Auto">
+                            <VerticalStackLayout Grid.Column="0"
+                                                 Style="{StaticResource VisitLineNameStack}">
+                                <Label Style="{StaticResource VisitLineNameLabel}"
+                                       Text="{Binding Name}" />
+                                <Label Style="{StaticResource VisitLineOptionLabel}"
+                                       IsVisible="{Binding HasOptions}"
+                                       Text="{Binding OptionText}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource VisitLineQuantityLabel}"
+                                   Text="{Binding QuantityText}" />
+                            <Label Grid.Column="2"
+                                   Style="{StaticResource BillAmountLabel}"
+                                   Text="{Binding AmountText}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+        </ScrollView>
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <!-- total -->
+        <VerticalStackLayout Style="{StaticResource BillTotalStack}">
+            <Grid ColumnDefinitions="*,Auto">
+                <Label Grid.Column="0"
+                       Style="{StaticResource BillTotalNameLabel}"
+                       Text="{x:Static strings:AppResources.BillTotal}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource BillTotalValueLabel}"
+                       Text="{Binding TotalText}" />
+            </Grid>
+            <VerticalStackLayout BindableLayout.ItemsSource="{Binding Taxes}">
+                <BindableLayout.ItemTemplate>
+                    <DataTemplate x:DataType="{x:Type module:BillTaxItem}">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Grid.Column="0"
+                                   Style="{StaticResource BillSubLabel}"
+                                   Text="{Binding Name}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource BillSubLabel}"
+                                   Text="{Binding AmountText}" />
+                        </Grid>
+                    </DataTemplate>
+                </BindableLayout.ItemTemplate>
+            </VerticalStackLayout>
+            <Grid ColumnDefinitions="*,Auto"
+                  IsVisible="{Binding HasPaid}">
+                <Label Grid.Column="0"
+                       Style="{StaticResource BillSubLabel}"
+                       Text="{x:Static strings:AppResources.BillPaid}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource BillSubLabel}"
+                       Text="{Binding PaidText}" />
+            </Grid>
+            <Grid ColumnDefinitions="*,Auto"
+                  IsVisible="{Binding HasPaid}">
+                <Label Grid.Column="0"
+                       Style="{StaticResource BillTotalNameLabel}"
+                       Text="{x:Static strings:AppResources.BillBalance}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource BillTotalValueLabel}"
+                       Text="{Binding BalanceText}" />
+            </Grid>
+            <Label Style="{StaticResource BillUnservedLabel}"
+                   IsVisible="{Binding HasUnserved}"
+                   Text="{x:Static strings:AppResources.BillUnserved}" />
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource BillActionButton}"
+                    Command="{Binding StartCommand}"
+                    IsVisible="{Binding IsPaying, Converter={StaticResource ReverseConverter}}"
+                    Text="{x:Static strings:AppResources.BillStart}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource BillActionButton}"
+                    Command="{Binding CancelCheckoutCommand}"
+                    IsVisible="{Binding IsPaying}"
+                    Text="{x:Static strings:AppResources.BillCancel}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

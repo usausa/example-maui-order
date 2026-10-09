@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+           xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
+           x:Class="TableOrder.HallApp.Modules.Dialogs.LineCancelView"
+           x:DataType="{x:Type module:LineCancelViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:LineCancelViewModel}"
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
+
+    <!-- 明細の取消: 取り消す明細を出し、数量が 2 以上なら取り消す数を増減のボタンで選ぶ -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{x:Static strings:AppResources.LineCancelTitle}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <VerticalStackLayout Style="{StaticResource DialogBodyStack}">
+            <Label Style="{StaticResource LineCancelNameLabel}"
+                   Text="{Binding Name}" />
+            <Label Style="{StaticResource DialogHintLabel}"
+                   IsVisible="{Binding OptionText, Converter={StaticResource NotEmptyConverter}}"
+                   Text="{Binding OptionText}" />
+
+            <!-- quantity -->
+            <Grid Style="{StaticResource GuestRowGrid}"
+                  ColumnDefinitions="*,Auto"
+                  IsVisible="{Binding CanChoose}">
+                <Label Grid.Column="0"
+                       Style="{StaticResource GuestNameLabel}"
+                       Text="{x:Static strings:AppResources.LineCancelQuantity}" />
+                <Grid Grid.Column="1"
+                      Style="{StaticResource StepperGrid}"
+                      ColumnDefinitions="64,72,64">
+                    <Button Grid.Column="0"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding DecreaseCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Remove}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource StepperValueLabel}"
+                           Text="{Binding Quantity}" />
+                    <Button Grid.Column="2"
+                            Style="{StaticResource StepperButton}"
+                            Command="{Binding IncreaseCommand}"
+                            Text="{x:Static fonts:MaterialIcons.Add}" />
+                </Grid>
+            </Grid>
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource PrimaryActionButton}"
+                    Command="{Binding CommitCommand}"
+                    Text="{x:Static strings:AppResources.LineCancelOk}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

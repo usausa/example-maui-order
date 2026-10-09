@@ -320,6 +320,9 @@
   <data name="MenuCheckout" xml:space="preserve">
     <value>Checkout</value>
   </data>
+  <data name="MenuCheckoutInProgress" xml:space="preserve">
+    <value>No more orders during checkout</value>
+  </data>
   <data name="MenuHistory" xml:space="preserve">
     <value>History</value>
   </data>

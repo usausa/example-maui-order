@@ -645,6 +645,270 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
+        internal static string VisitAddOrder {
+            get {
+                return ResourceManager.GetString("VisitAddOrder", resourceCulture);
+            }
+        }
+
+        internal static string VisitReleaseFormat {
+            get {
+                return ResourceManager.GetString("VisitReleaseFormat", resourceCulture);
+            }
+        }
+
+        internal static string ReleaseTitle {
+            get {
+                return ResourceManager.GetString("ReleaseTitle", resourceCulture);
+            }
+        }
+
+        internal static string ReleaseMessageFormat {
+            get {
+                return ResourceManager.GetString("ReleaseMessageFormat", resourceCulture);
+            }
+        }
+
+        internal static string ReleaseOk {
+            get {
+                return ResourceManager.GetString("ReleaseOk", resourceCulture);
+            }
+        }
+
+        internal static string VisitBill {
+            get {
+                return ResourceManager.GetString("VisitBill", resourceCulture);
+            }
+        }
+
+        internal static string LineCancelTitle {
+            get {
+                return ResourceManager.GetString("LineCancelTitle", resourceCulture);
+            }
+        }
+
+        internal static string LineCancelQuantity {
+            get {
+                return ResourceManager.GetString("LineCancelQuantity", resourceCulture);
+            }
+        }
+
+        internal static string LineCancelOk {
+            get {
+                return ResourceManager.GetString("LineCancelOk", resourceCulture);
+            }
+        }
+
+        internal static string BillTitleFormat {
+            get {
+                return ResourceManager.GetString("BillTitleFormat", resourceCulture);
+            }
+        }
+
+        internal static string BillEmpty {
+            get {
+                return ResourceManager.GetString("BillEmpty", resourceCulture);
+            }
+        }
+
+        internal static string BillTotal {
+            get {
+                return ResourceManager.GetString("BillTotal", resourceCulture);
+            }
+        }
+
+        internal static string BillTaxFormat {
+            get {
+                return ResourceManager.GetString("BillTaxFormat", resourceCulture);
+            }
+        }
+
+        internal static string BillPaid {
+            get {
+                return ResourceManager.GetString("BillPaid", resourceCulture);
+            }
+        }
+
+        internal static string BillBalance {
+            get {
+                return ResourceManager.GetString("BillBalance", resourceCulture);
+            }
+        }
+
+        internal static string BillUnserved {
+            get {
+                return ResourceManager.GetString("BillUnserved", resourceCulture);
+            }
+        }
+
+        internal static string BillStart {
+            get {
+                return ResourceManager.GetString("BillStart", resourceCulture);
+            }
+        }
+
+        internal static string BillCancel {
+            get {
+                return ResourceManager.GetString("BillCancel", resourceCulture);
+            }
+        }
+
+        internal static string ProxyOrderTitleFormat {
+            get {
+                return ResourceManager.GetString("ProxyOrderTitleFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderCartFormat {
+            get {
+                return ResourceManager.GetString("OrderCartFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderCartEmpty {
+            get {
+                return ResourceManager.GetString("OrderCartEmpty", resourceCulture);
+            }
+        }
+
+        internal static string OrderSubmit {
+            get {
+                return ResourceManager.GetString("OrderSubmit", resourceCulture);
+            }
+        }
+
+        internal static string OrderSubmitFormat {
+            get {
+                return ResourceManager.GetString("OrderSubmitFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderSubmitMessageFormat {
+            get {
+                return ResourceManager.GetString("OrderSubmitMessageFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderDiscardTitle {
+            get {
+                return ResourceManager.GetString("OrderDiscardTitle", resourceCulture);
+            }
+        }
+
+        internal static string OrderDiscardMessage {
+            get {
+                return ResourceManager.GetString("OrderDiscardMessage", resourceCulture);
+            }
+        }
+
+        internal static string OrderDiscardOk {
+            get {
+                return ResourceManager.GetString("OrderDiscardOk", resourceCulture);
+            }
+        }
+
+        internal static string OrderRemoveTitle {
+            get {
+                return ResourceManager.GetString("OrderRemoveTitle", resourceCulture);
+            }
+        }
+
+        internal static string OrderRemoveMessageFormat {
+            get {
+                return ResourceManager.GetString("OrderRemoveMessageFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderRemoveOk {
+            get {
+                return ResourceManager.GetString("OrderRemoveOk", resourceCulture);
+            }
+        }
+
+        internal static string OrderLimitTitle {
+            get {
+                return ResourceManager.GetString("OrderLimitTitle", resourceCulture);
+            }
+        }
+
+        internal static string OrderLimitMessage {
+            get {
+                return ResourceManager.GetString("OrderLimitMessage", resourceCulture);
+            }
+        }
+
+        internal static string OrderLinesLimitFormat {
+            get {
+                return ResourceManager.GetString("OrderLinesLimitFormat", resourceCulture);
+            }
+        }
+
+        internal static string OrderConfirmRuleTitle {
+            get {
+                return ResourceManager.GetString("OrderConfirmRuleTitle", resourceCulture);
+            }
+        }
+
+        internal static string OrderConfirmRuleOk {
+            get {
+                return ResourceManager.GetString("OrderConfirmRuleOk", resourceCulture);
+            }
+        }
+
+        internal static string OrderConfirmRuleFallback {
+            get {
+                return ResourceManager.GetString("OrderConfirmRuleFallback", resourceCulture);
+            }
+        }
+
+        internal static string ItemAdd {
+            get {
+                return ResourceManager.GetString("ItemAdd", resourceCulture);
+            }
+        }
+
+        internal static string ItemChooseOne {
+            get {
+                return ResourceManager.GetString("ItemChooseOne", resourceCulture);
+            }
+        }
+
+        internal static string ItemOptional {
+            get {
+                return ResourceManager.GetString("ItemOptional", resourceCulture);
+            }
+        }
+
+        internal static string ItemChooseUpToFormat {
+            get {
+                return ResourceManager.GetString("ItemChooseUpToFormat", resourceCulture);
+            }
+        }
+
+        internal static string ItemTiming {
+            get {
+                return ResourceManager.GetString("ItemTiming", resourceCulture);
+            }
+        }
+
+        internal static string ItemTimingNow {
+            get {
+                return ResourceManager.GetString("ItemTimingNow", resourceCulture);
+            }
+        }
+
+        internal static string ItemTimingAfterMeal {
+            get {
+                return ResourceManager.GetString("ItemTimingAfterMeal", resourceCulture);
+            }
+        }
+
+        internal static string ItemQuantity {
+            get {
+                return ResourceManager.GetString("ItemQuantity", resourceCulture);
+            }
+        }
+
         internal static string StatusHeld {
             get {
                 return ResourceManager.GetString("StatusHeld", resourceCulture);
@@ -894,6 +1158,72 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ErrorLineStatusInvalid {
             get {
                 return ResourceManager.GetString("ErrorLineStatusInvalid", resourceCulture);
+            }
+        }
+
+        internal static string ErrorOrderingPaused {
+            get {
+                return ResourceManager.GetString("ErrorOrderingPaused", resourceCulture);
+            }
+        }
+
+        internal static string ErrorLastOrderPassed {
+            get {
+                return ResourceManager.GetString("ErrorLastOrderPassed", resourceCulture);
+            }
+        }
+
+        internal static string ErrorMenuChanged {
+            get {
+                return ResourceManager.GetString("ErrorMenuChanged", resourceCulture);
+            }
+        }
+
+        internal static string ErrorItemSoldOut {
+            get {
+                return ResourceManager.GetString("ErrorItemSoldOut", resourceCulture);
+            }
+        }
+
+        internal static string ErrorStockInsufficient {
+            get {
+                return ResourceManager.GetString("ErrorStockInsufficient", resourceCulture);
+            }
+        }
+
+        internal static string ErrorLimitExceeded {
+            get {
+                return ResourceManager.GetString("ErrorLimitExceeded", resourceCulture);
+            }
+        }
+
+        internal static string ErrorConfirmationRequired {
+            get {
+                return ResourceManager.GetString("ErrorConfirmationRequired", resourceCulture);
+            }
+        }
+
+        internal static string ErrorQuantityExceeded {
+            get {
+                return ResourceManager.GetString("ErrorQuantityExceeded", resourceCulture);
+            }
+        }
+
+        internal static string ErrorOptionInvalid {
+            get {
+                return ResourceManager.GetString("ErrorOptionInvalid", resourceCulture);
+            }
+        }
+
+        internal static string ErrorDuplicateIdMismatch {
+            get {
+                return ResourceManager.GetString("ErrorDuplicateIdMismatch", resourceCulture);
+            }
+        }
+
+        internal static string ErrorBillChanged {
+            get {
+                return ResourceManager.GetString("ErrorBillChanged", resourceCulture);
             }
         }
 

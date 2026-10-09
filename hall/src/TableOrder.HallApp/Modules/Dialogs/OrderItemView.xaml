@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+           xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
+           x:Class="TableOrder.HallApp.Modules.Dialogs.OrderItemView"
+           x:DataType="{x:Type module:OrderItemViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:OrderItemViewModel}"
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
+
+    <!-- 代わりの注文の品の詳細: オプションの組 (選んだものに印。品切れは選べない)、出す時機、数量。必須の組を選ぶまでカートに入れられない -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Grid ColumnDefinitions="*,Auto">
+            <Label Grid.Column="0"
+                   Style="{StaticResource DialogTitleLabel}"
+                   Text="{Binding Name}" />
+            <Label Grid.Column="1"
+                   Style="{StaticResource OrderItemPriceLabel}"
+                   Text="{Binding PriceText}" />
+        </Grid>
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <ScrollView Style="{StaticResource OrderItemScroll}"
+                    IsVisible="{Binding HasChoices}">
+            <VerticalStackLayout Style="{StaticResource OrderItemBodyStack}">
+                <!-- option -->
+                <VerticalStackLayout Style="{StaticResource OrderItemBodyStack}"
+                                     Padding="0"
+                                     BindableLayout.ItemsSource="{Binding Groups}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Type module:OrderOptionGroup}">
+                            <VerticalStackLayout Style="{StaticResource OrderGroupStack}">
+                                <HorizontalStackLayout Style="{StaticResource OrderGroupTitleStack}">
+                                    <Label Style="{StaticResource OrderGroupNameLabel}"
+                                           Text="{Binding Name}" />
+                                    <Label Style="{StaticResource OrderGroupRuleLabel}"
+                                           Text="{Binding RuleText}" />
+                                </HorizontalStackLayout>
+                                <VerticalStackLayout Style="{StaticResource OrderGroupStack}"
+                                                     BindableLayout.ItemsSource="{Binding Options}">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="{x:Type module:OrderOptionChoice}">
+                                            <Border Style="{StaticResource ChoiceTileBorder}">
+                                                <Border.Triggers>
+                                                    <DataTrigger TargetType="Border"
+                                                                 Binding="{Binding IsSelected}"
+                                                                 Value="True">
+                                                        <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                                        <Setter Property="StrokeThickness" Value="2" />
+                                                    </DataTrigger>
+                                                </Border.Triggers>
+                                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                                <Border.GestureRecognizers>
+                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:OrderItemViewModel}}, Path=SelectOptionCommand, x:DataType={x:Type module:OrderItemViewModel}}"
+                                                                          CommandParameter="{Binding .}" />
+                                                </Border.GestureRecognizers>
+                                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                                <Grid ColumnDefinitions="*,Auto,Auto">
+                                                    <Label Grid.Column="0"
+                                                           Style="{StaticResource OrderOptionNameLabel}"
+                                                           Text="{Binding Name}">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding IsSoldOut}"
+                                                                         Value="True">
+                                                                <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                    <Label Grid.Column="1"
+                                                           Style="{StaticResource ChoiceCaptionLabel}"
+                                                           Text="{Binding CaptionText}">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding IsSoldOut}"
+                                                                         Value="True">
+                                                                <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                    <Label Grid.Column="2"
+                                                           Style="{StaticResource OrderOptionCheckLabel}"
+                                                           Text="{x:Static fonts:MaterialIcons.Check}">
+                                                        <Label.Triggers>
+                                                            <DataTrigger TargetType="Label"
+                                                                         Binding="{Binding IsSelected}"
+                                                                         Value="True">
+                                                                <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                                                            </DataTrigger>
+                                                        </Label.Triggers>
+                                                    </Label>
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+
+                <!-- timing -->
+                <VerticalStackLayout Style="{StaticResource OrderGroupStack}"
+                                     IsVisible="{Binding HasTiming}">
+                    <Label Style="{StaticResource OrderGroupNameLabel}"
+                           Text="{x:Static strings:AppResources.ItemTiming}" />
+                    <VerticalStackLayout Style="{StaticResource OrderGroupStack}"
+                                         BindableLayout.ItemsSource="{Binding Timings}">
+                        <BindableLayout.ItemTemplate>
+                            <DataTemplate x:DataType="{x:Type module:OrderTimingChoice}">
+                                <Border Style="{StaticResource ChoiceTileBorder}">
+                                    <Border.Triggers>
+                                        <DataTrigger TargetType="Border"
+                                                     Binding="{Binding IsSelected}"
+                                                     Value="True">
+                                            <Setter Property="Stroke" Value="{DynamicResource PrimaryColor}" />
+                                            <Setter Property="StrokeThickness" Value="2" />
+                                        </DataTrigger>
+                                    </Border.Triggers>
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <Border.GestureRecognizers>
+                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:OrderItemViewModel}}, Path=SelectTimingCommand, x:DataType={x:Type module:OrderItemViewModel}}"
+                                                              CommandParameter="{Binding .}" />
+                                    </Border.GestureRecognizers>
+                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                    <Grid ColumnDefinitions="*,Auto">
+                                        <Label Grid.Column="0"
+                                               Style="{StaticResource OrderOptionNameLabel}"
+                                               Text="{Binding Name}" />
+                                        <Label Grid.Column="1"
+                                               Style="{StaticResource OrderOptionCheckLabel}"
+                                               Text="{x:Static fonts:MaterialIcons.Check}">
+                                            <Label.Triggers>
+                                                <DataTrigger TargetType="Label"
+                                                             Binding="{Binding IsSelected}"
+                                                             Value="True">
+                                                    <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+                                                </DataTrigger>
+                                            </Label.Triggers>
+                                        </Label>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </BindableLayout.ItemTemplate>
+                    </VerticalStackLayout>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+        <BoxView Style="{StaticResource HorizontalRule}"
+                 IsVisible="{Binding HasChoices}" />
+
+        <!-- quantity -->
+        <Grid Style="{StaticResource OrderQuantityGrid}"
+              ColumnDefinitions="*,Auto">
+            <Label Grid.Column="0"
+                   Style="{StaticResource GuestNameLabel}"
+                   Text="{x:Static strings:AppResources.ItemQuantity}" />
+            <Grid Grid.Column="1"
+                  Style="{StaticResource StepperGrid}"
+                  ColumnDefinitions="64,72,64">
+                <Button Grid.Column="0"
+                        Style="{StaticResource StepperButton}"
+                        Command="{Binding DecreaseCommand}"
+                        Text="{x:Static fonts:MaterialIcons.Remove}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource StepperValueLabel}"
+                       Text="{Binding Quantity}" />
+                <Button Grid.Column="2"
+                        Style="{StaticResource StepperButton}"
+                        Command="{Binding IncreaseCommand}"
+                        Text="{x:Static fonts:MaterialIcons.Add}" />
+            </Grid>
+        </Grid>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}"
+              ColumnDefinitions="*,*">
+            <Button Grid.Column="0"
+                    Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+            <Button Grid.Column="1"
+                    Style="{StaticResource OrderItemCommitButton}"
+                    Command="{Binding CommitCommand}"
+                    Text="{x:Static strings:AppResources.ItemAdd}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

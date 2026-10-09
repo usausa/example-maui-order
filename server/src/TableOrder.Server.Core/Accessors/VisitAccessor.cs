@@ -54,7 +54,11 @@ public sealed partial class VisitAccessor
     [Query]
     public partial ValueTask<List<VisitConfirmationEntity>> QueryConfirmationListAsync(Guid tenantId, Guid visitId, CancellationToken cancellationToken);
 
+    // 書き込みの中で読む (足したばかりの記録を見る)
+    [Query]
+    public partial ValueTask<List<VisitConfirmationEntity>> QueryConfirmationListAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
+
     // 答えた記録を足す (同じルールに答えていれば足さずに 0 件)
     [Execute]
-    public partial ValueTask<int> InsertConfirmationAsync(Guid tenantId, Guid visitId, Guid ruleId, Guid? deviceId, DateTimeOffset now, CancellationToken cancellationToken);
+    public partial ValueTask<int> InsertConfirmationAsync(DbTransaction tx, Guid tenantId, Guid visitId, Guid ruleId, Guid? deviceId, DateTimeOffset now, CancellationToken cancellationToken);
 }
