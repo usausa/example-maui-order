@@ -94,6 +94,15 @@ public static class ViewHelper
             _ => AppResources.SeatOpen
         };
 
+    // 品の状態 (例: 品切れ、残り 3)
+    public static string Name(StockStatus status, int? remaining) =>
+        status switch
+        {
+            StockStatus.SoldOut => AppResources.StockSoldOut,
+            StockStatus.Limited => Format(AppResources.StockRemainingFormat, remaining ?? 0),
+            _ => AppResources.StockAvailable
+        };
+
     public static string Name(OrderLineStatus value) =>
         value switch
         {

@@ -2,23 +2,160 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
+             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
+             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Stock"
              x:Class="TableOrder.HallApp.Modules.Stock.StockView"
              x:DataType="{x:Type module:StockViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StockViewModel}">
 
-    <!-- 品切れのタブ: 品ごとの売り切れと残りの数、注文の一時停止。中身はこれから作る -->
+    <!-- 品切れのタブ: カテゴリの帯で選んだ品を並べ、品を押すと状態を選ぶ。下の帯に注文の一時停止と再開 (どちらかだけ)、すべて戻すを置く -->
     <Grid Style="{StaticResource ScreenGrid}"
-          RowDefinitions="Auto,*,Auto">
+          RowDefinitions="Auto,56,1,*,Auto,Auto">
         <controls:TabHeader Grid.Row="0" />
 
-        <Label Grid.Row="1"
-               Style="{StaticResource PendingLabel}"
-               Text="{x:Static strings:AppResources.TabPending}" />
+        <!-- category (横にスクロールする。帯が続いている向きの端に送りのボタンを重ねる) -->
+        <Grid Grid.Row="1"
+              Style="{StaticResource FillGrid}">
+            <ScrollView x:Name="CategoryScroll"
+                        Style="{StaticResource StockCategoryScroll}"
+                        Orientation="Horizontal"
+                        HorizontalScrollBarVisibility="Never">
+                <HorizontalStackLayout Style="{StaticResource StockCategoryStack}"
+                                       BindableLayout.ItemsSource="{Binding Categories}">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="{x:Type module:StockCategory}">
+                            <Border Style="{StaticResource StockCategoryBorder}">
+                                <Border.Triggers>
+                                    <DataTrigger TargetType="Border"
+                                                 Binding="{Binding IsSelected}"
+                                                 Value="True">
+                                        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryColor}" />
+                                    </DataTrigger>
+                                </Border.Triggers>
+                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:StockViewModel}}"
+                                                          CommandParameter="{Binding .}" />
+                                </Border.GestureRecognizers>
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                <Label Style="{StaticResource StockCategoryLabel}"
+                                       Text="{Binding Name}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding IsSelected}"
+                                                     Value="True">
+                                            <Setter Property="TextColor" Value="{DynamicResource OnPrimaryColor}" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
+                            </Border>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </HorizontalStackLayout>
+            </ScrollView>
+            <Grid Style="{StaticResource StockPagerGrid}"
+                  ColumnDefinitions="*,1"
+                  behaviors:ScrollPager.Forward="False"
+                  behaviors:ScrollPager.Target="{x:Reference CategoryScroll}"
+                  HorizontalOptions="Start">
+                <Label Grid.Column="0"
+                       Style="{StaticResource StockPagerLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Chevron_left}" />
+                <BoxView Grid.Column="1"
+                         Style="{StaticResource VerticalRule}" />
+            </Grid>
+            <Grid Style="{StaticResource StockPagerGrid}"
+                  ColumnDefinitions="1,*"
+                  behaviors:ScrollPager.Target="{x:Reference CategoryScroll}"
+                  HorizontalOptions="End">
+                <BoxView Grid.Column="0"
+                         Style="{StaticResource VerticalRule}" />
+                <Label Grid.Column="1"
+                       Style="{StaticResource StockPagerLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Chevron_right}" />
+            </Grid>
+        </Grid>
+        <BoxView Grid.Row="2"
+                 Style="{StaticResource HorizontalRule}" />
 
-        <controls:TabFooter Grid.Row="2" />
+        <!-- item -->
+        <CollectionView Grid.Row="3"
+                        Style="{StaticResource StockCollectionView}"
+                        ItemsSource="{Binding Rows}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="{x:Type module:StockRow}">
+                    <Grid Style="{StaticResource StockRowGrid}"
+                          RowDefinitions="*,1">
+                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                        <Grid.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=EditCommand, x:DataType={x:Type module:StockViewModel}}"
+                                                  CommandParameter="{Binding .}" />
+                        </Grid.GestureRecognizers>
+                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                        <Grid Grid.Row="0"
+                              Style="{StaticResource StockRowContentGrid}"
+                              ColumnDefinitions="*,Auto">
+                            <VerticalStackLayout Grid.Column="0"
+                                                 Style="{StaticResource StockRowNameStack}">
+                                <Label Style="{StaticResource StockRowNameLabel}"
+                                       Text="{Binding Name}" />
+                                <Label Style="{StaticResource StockRowCaptionLabel}"
+                                       IsVisible="{Binding HasCaption}"
+                                       Text="{Binding Caption}" />
+                            </VerticalStackLayout>
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource StockRowStatusLabel}"
+                                   Text="{Binding StatusText}">
+                                <Label.Triggers>
+                                    <DataTrigger TargetType="Label"
+                                                 Binding="{Binding IsSoldOut}"
+                                                 Value="True">
+                                        <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
+                                    </DataTrigger>
+                                </Label.Triggers>
+                            </Label>
+                        </Grid>
+                        <BoxView Grid.Row="1"
+                                 Style="{StaticResource HorizontalVariantRule}" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Label Grid.Row="3"
+               Style="{StaticResource EmptyLabel}"
+               IsVisible="{Binding IsEmpty}"
+               Text="{Binding EmptyText}" />
+
+        <!-- action (注文の一時停止と再開は、状態に合わせてどちらかだけ出す) -->
+        <Grid Grid.Row="4"
+              Style="{StaticResource ActionBarGrid}"
+              RowDefinitions="1,64"
+              ColumnDefinitions="*,1,*">
+            <BoxView Grid.Row="0" Grid.ColumnSpan="3"
+                     Style="{StaticResource HorizontalRule}" />
+            <Button Grid.Row="1" Grid.Column="0"
+                    Style="{StaticResource ActionBarButton}"
+                    Command="{Binding PauseCommand}"
+                    IsVisible="{Binding IsOrderingPaused, Converter={StaticResource ReverseConverter}}"
+                    Text="{x:Static strings:AppResources.OrderingPause}" />
+            <Button Grid.Row="1" Grid.Column="0"
+                    Style="{StaticResource ActionBarButton}"
+                    Command="{Binding ResumeCommand}"
+                    IsVisible="{Binding IsOrderingPaused}"
+                    Text="{x:Static strings:AppResources.OrderingResume}" />
+            <BoxView Grid.Row="1" Grid.Column="1"
+                     Style="{StaticResource VerticalRule}" />
+            <Button Grid.Row="1" Grid.Column="2"
+                    Style="{StaticResource ActionBarButton}"
+                    Command="{Binding ResetCommand}"
+                    Text="{x:Static strings:AppResources.StockReset}" />
+        </Grid>
+
+        <controls:TabFooter Grid.Row="5" />
     </Grid>
 
 </ContentView>

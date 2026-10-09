@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+           xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+           xmlns:s="http://smart/maui"
+           xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+           xmlns:enums="clr-namespace:TableOrder.Domain.Enums;assembly=TableOrder.Domain"
+           xmlns:fonts="clr-namespace:Fonts"
+           xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
+           xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
+           x:Class="TableOrder.HallApp.Modules.Dialogs.StockEditView"
+           x:DataType="{x:Type module:StockEditViewModel}"
+           s:BindingContextResolver.Type="{x:Type module:StockEditViewModel}"
+           WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
+
+    <!-- 品の状態: 売れる、残りの数を決める、品切れを縦に並べ、今の状態に印を付ける。押すとその状態を返す -->
+    <VerticalStackLayout Style="{StaticResource DialogStack}">
+        <Label Style="{StaticResource DialogTitleLabel}"
+               Text="{Binding Title}" />
+        <BoxView Style="{StaticResource HorizontalRule}" />
+
+        <VerticalStackLayout Style="{StaticResource ChoiceListStack}">
+            <Label Style="{StaticResource DialogHintLabel}"
+                   IsVisible="{Binding Caption, Converter={StaticResource NotEmptyConverter}}"
+                   Text="{Binding Caption}" />
+            <Label Style="{StaticResource StockEditStatusLabel}"
+                   Text="{Binding StatusText}" />
+
+            <!-- available -->
+            <Border Style="{StaticResource ChoiceTileBorder}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectCommand}"
+                                          CommandParameter="{x:Static enums:StockStatus.Available}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource ChoiceNameLabel}"
+                           Text="{x:Static strings:AppResources.StockAvailable}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource ChoiceCheckLabel}"
+                           IsVisible="{Binding IsAvailable}"
+                           Text="{x:Static fonts:MaterialIcons.Check}" />
+                </Grid>
+            </Border>
+
+            <!-- limited -->
+            <Border Style="{StaticResource ChoiceTileBorder}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectCommand}"
+                                          CommandParameter="{x:Static enums:StockStatus.Limited}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource ChoiceNameLabel}"
+                           Text="{x:Static strings:AppResources.StockSetRemaining}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource ChoiceCheckLabel}"
+                           IsVisible="{Binding IsLimited}"
+                           Text="{x:Static fonts:MaterialIcons.Check}" />
+                </Grid>
+            </Border>
+
+            <!-- sold out -->
+            <Border Style="{StaticResource ChoiceTileBorder}">
+                <Border.GestureRecognizers>
+                    <TapGestureRecognizer Command="{Binding SelectCommand}"
+                                          CommandParameter="{x:Static enums:StockStatus.SoldOut}" />
+                </Border.GestureRecognizers>
+                <Grid ColumnDefinitions="*,Auto">
+                    <Label Grid.Column="0"
+                           Style="{StaticResource ChoiceNameLabel}"
+                           Text="{x:Static strings:AppResources.StockSoldOut}" />
+                    <Label Grid.Column="1"
+                           Style="{StaticResource ChoiceCheckLabel}"
+                           IsVisible="{Binding IsSoldOut}"
+                           Text="{x:Static fonts:MaterialIcons.Check}" />
+                </Grid>
+            </Border>
+        </VerticalStackLayout>
+
+        <BoxView Style="{StaticResource HorizontalRule}" />
+        <Grid Style="{StaticResource DialogActionGrid}">
+            <Button Style="{StaticResource SecondaryActionButton}"
+                    Command="{Binding CloseCommand}"
+                    Text="{x:Static strings:AppResources.CommonBack}" />
+        </Grid>
+    </VerticalStackLayout>
+
+</mct:Popup>

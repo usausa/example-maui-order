@@ -81,12 +81,6 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
-        internal static string TabPending {
-            get {
-                return ResourceManager.GetString("TabPending", resourceCulture);
-            }
-        }
-
         internal static string NoticeOrderingPaused {
             get {
                 return ResourceManager.GetString("NoticeOrderingPaused", resourceCulture);
@@ -726,6 +720,108 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ServingEmpty {
             get {
                 return ResourceManager.GetString("ServingEmpty", resourceCulture);
+            }
+        }
+
+        internal static string StockTabLimited {
+            get {
+                return ResourceManager.GetString("StockTabLimited", resourceCulture);
+            }
+        }
+
+        internal static string StockTabOptions {
+            get {
+                return ResourceManager.GetString("StockTabOptions", resourceCulture);
+            }
+        }
+
+        internal static string StockAvailable {
+            get {
+                return ResourceManager.GetString("StockAvailable", resourceCulture);
+            }
+        }
+
+        internal static string StockSetRemaining {
+            get {
+                return ResourceManager.GetString("StockSetRemaining", resourceCulture);
+            }
+        }
+
+        internal static string StockSoldOut {
+            get {
+                return ResourceManager.GetString("StockSoldOut", resourceCulture);
+            }
+        }
+
+        internal static string StockRemainingFormat {
+            get {
+                return ResourceManager.GetString("StockRemainingFormat", resourceCulture);
+            }
+        }
+
+        internal static string StockCurrentFormat {
+            get {
+                return ResourceManager.GetString("StockCurrentFormat", resourceCulture);
+            }
+        }
+
+        internal static string StockRemainingTitle {
+            get {
+                return ResourceManager.GetString("StockRemainingTitle", resourceCulture);
+            }
+        }
+
+        internal static string StockEmptyLimited {
+            get {
+                return ResourceManager.GetString("StockEmptyLimited", resourceCulture);
+            }
+        }
+
+        internal static string StockEmpty {
+            get {
+                return ResourceManager.GetString("StockEmpty", resourceCulture);
+            }
+        }
+
+        internal static string StockReset {
+            get {
+                return ResourceManager.GetString("StockReset", resourceCulture);
+            }
+        }
+
+        internal static string StockResetMessage {
+            get {
+                return ResourceManager.GetString("StockResetMessage", resourceCulture);
+            }
+        }
+
+        internal static string StockResetOk {
+            get {
+                return ResourceManager.GetString("StockResetOk", resourceCulture);
+            }
+        }
+
+        internal static string OrderingPause {
+            get {
+                return ResourceManager.GetString("OrderingPause", resourceCulture);
+            }
+        }
+
+        internal static string OrderingResume {
+            get {
+                return ResourceManager.GetString("OrderingResume", resourceCulture);
+            }
+        }
+
+        internal static string OrderingPauseMessage {
+            get {
+                return ResourceManager.GetString("OrderingPauseMessage", resourceCulture);
+            }
+        }
+
+        internal static string OrderingPauseOk {
+            get {
+                return ResourceManager.GetString("OrderingPauseOk", resourceCulture);
             }
         }
 

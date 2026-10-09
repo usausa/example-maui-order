@@ -38,6 +38,7 @@ public abstract class AppViewModelBase :
         {
             ShellEvent.Back => OnNotifyBackAsync(),
             ShellEvent.StoreChanged => OnStoreChangedAsync(),
+            ShellEvent.StockChanged => OnStockChangedAsync(),
             ShellEvent.TablesChanged => OnTablesChangedAsync(),
             ShellEvent.CallsChanged => OnCallsChangedAsync(),
             ShellEvent.ServingChanged => OnServingChangedAsync(),
@@ -51,9 +52,10 @@ public abstract class AppViewModelBase :
     protected abstract Task OnNotifyBackAsync();
 
     // サーバの通知。扱う画面だけが替える (受け手は状態を替えてから、操作の途中と遷移の間を待って知らせる)
-    // 扱う画面のない知らせ (品切れ) は、その画面を作るときに入口を足す
 
     protected virtual Task OnStoreChangedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnStockChangedAsync() => Task.CompletedTask;
 
     protected virtual Task OnTablesChangedAsync() => Task.CompletedTask;
 

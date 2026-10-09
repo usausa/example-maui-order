@@ -59,9 +59,6 @@
   <data name="TabStock" xml:space="preserve">
     <value>Sold out</value>
   </data>
-  <data name="TabPending" xml:space="preserve">
-    <value>This screen is coming soon.</value>
-  </data>
   <data name="NoticeOrderingPaused" xml:space="preserve">
     <value>Ordering is paused</value>
   </data>
@@ -382,6 +379,57 @@
   </data>
   <data name="ServingEmpty" xml:space="preserve">
     <value>Nothing to serve.</value>
+  </data>
+  <data name="StockTabLimited" xml:space="preserve">
+    <value>Out &amp; low</value>
+  </data>
+  <data name="StockTabOptions" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="StockAvailable" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="StockSetRemaining" xml:space="preserve">
+    <value>Set quantity left</value>
+  </data>
+  <data name="StockSoldOut" xml:space="preserve">
+    <value>Sold out</value>
+  </data>
+  <data name="StockRemainingFormat" xml:space="preserve">
+    <value>{0} left</value>
+  </data>
+  <data name="StockCurrentFormat" xml:space="preserve">
+    <value>Now: {0}</value>
+  </data>
+  <data name="StockRemainingTitle" xml:space="preserve">
+    <value>Quantity left</value>
+  </data>
+  <data name="StockEmptyLimited" xml:space="preserve">
+    <value>Nothing is sold out or limited.</value>
+  </data>
+  <data name="StockEmpty" xml:space="preserve">
+    <value>No items.</value>
+  </data>
+  <data name="StockReset" xml:space="preserve">
+    <value>Reset all</value>
+  </data>
+  <data name="StockResetMessage" xml:space="preserve">
+    <value>Clear every sold-out mark and quantity limit so all items are available.</value>
+  </data>
+  <data name="StockResetOk" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="OrderingPause" xml:space="preserve">
+    <value>Pause ordering</value>
+  </data>
+  <data name="OrderingResume" xml:space="preserve">
+    <value>Resume ordering</value>
+  </data>
+  <data name="OrderingPauseMessage" xml:space="preserve">
+    <value>Ordering from table terminals will stop. Guests cannot order until you resume.</value>
+  </data>
+  <data name="OrderingPauseOk" xml:space="preserve">
+    <value>Pause</value>
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>

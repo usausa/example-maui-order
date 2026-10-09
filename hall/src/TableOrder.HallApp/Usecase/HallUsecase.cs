@@ -1,9 +1,13 @@
 namespace TableOrder.HallApp.Usecase;
 
-// 席・呼び出し・提供の一覧の読み直し (起動と通知で使う) と、来店を開く・直す・終える操作、呼び出しと提供の操作
+// 席・呼び出し・提供の一覧の読み直し (起動と通知で使う) と、来店を開く・直す・終える操作、呼び出し・提供・品切れ・注文の一時停止の操作
 // 操作のあとは替わった一覧を読み直す (通知でも読み直すが、操作した画面がすぐ替わるように)
 public sealed class HallUsecase
 {
+    private readonly StoreState storeState;
+
+    private readonly MenuState menuState;
+
     private readonly TableState tableState;
 
     private readonly CallState callState;
@@ -16,11 +20,15 @@ public sealed class HallUsecase
     private (Guid TableId, Guid VisitId)? pendingOpen;
 
     public HallUsecase(
+        StoreState storeState,
+        MenuState menuState,
         TableState tableState,
         CallState callState,
         ServingState servingState,
         IHallApi hallApi)
     {
+        this.storeState = storeState;
+        this.menuState = menuState;
         this.tableState = tableState;
         this.callState = callState;
         this.servingState = servingState;
@@ -113,6 +121,50 @@ public sealed class HallUsecase
     // 提供した明細 (提供済みの明細は、サーバが変えずに飛ばす)
     public async ValueTask<ApiResult<NoContent>> ServeAsync(IReadOnlyList<Guid> lineIds) =>
         await AfterChangeAsync(await hallApi.ServeAsync(new ServeRequest { LineIds = lineIds }), RefreshServingAsync);
+
+    //--------------------------------------------------------------------------------
+    // Stock
+    //--------------------------------------------------------------------------------
+
+    // 売れない品と残りの数のある品
+    public async ValueTask<ApiResult<StockResponse>> RefreshStockAsync()
+    {
+        var result = await hallApi.GetStockAsync();
+        if (result.Content is { } stock)
+        {
+            menuState.UpdateStock(stock);
+        }
+
+        return result;
+    }
+
+    // 品切れと残りの数 (残りの数は Limited のときだけ。0 はサーバが品切れにする)
+    public async ValueTask<ApiResult<NoContent>> UpdateStockAsync(Guid targetId, StockTargetKind kind, StockStatus status, int? remaining) =>
+        await AfterChangeAsync(await hallApi.UpdateStockAsync(targetId, new StockUpdateRequest { TargetKind = kind, Status = status, Remaining = remaining }), RefreshStockAsync);
+
+    // すべての品を売れるように戻す
+    public async ValueTask<ApiResult<NoContent>> ResetStockAsync() =>
+        await AfterChangeAsync(await hallApi.ResetStockAsync(), RefreshStockAsync);
+
+    //--------------------------------------------------------------------------------
+    // Store
+    //--------------------------------------------------------------------------------
+
+    // 店舗の今の状態 (注文の一時停止)
+    public async ValueTask<ApiResult<StoreResponse>> RefreshStoreAsync()
+    {
+        var result = await hallApi.GetStoreAsync();
+        if (result.Content is { } store)
+        {
+            storeState.UpdateStore(store);
+        }
+
+        return result;
+    }
+
+    // 注文の一時停止と再開。テーブル端末に出す文言は送らない (テーブル端末の既定の文言を出す)
+    public async ValueTask<ApiResult<NoContent>> SetOrderingAsync(bool paused) =>
+        await AfterChangeAsync(await hallApi.SetOrderingAsync(new StoreOrderingRequest { Paused = paused }), RefreshStoreAsync);
 
     // 断られたとき (席が埋まっていた、ほかで替えられていた、来店が終わっていた) も、一覧が古いので読み直す。通信できないときは読み直さない
     private static async ValueTask<ApiResult<T>> AfterChangeAsync<T, TList>(ApiResult<T> result, Func<ValueTask<ApiResult<TList>>> refresh)

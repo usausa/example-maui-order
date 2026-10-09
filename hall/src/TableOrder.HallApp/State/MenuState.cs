@@ -13,8 +13,18 @@ public sealed class MenuState
     public void Update(MenuResponse menu, StockResponse stock)
     {
         Menu = menu;
+        UpdateStock(stock);
+    }
+
+    // 読み直した品切れ (品切れのタブで替えたあと)
+    public void UpdateStock(StockResponse stock)
+    {
         stocks = stock.Items.ToDictionary(static x => x.TargetId);
     }
+
+    // 品の品切れと残りの数 (売れる品は null)
+    public StockResponseItem? FindStock(Guid targetId) =>
+        stocks.GetValueOrDefault(targetId);
 
     // 通知で受けた変わった品だけを入れる (売れるように戻した品は除く)
     public void ApplyStock(IEnumerable<StockResponseItem> changes)

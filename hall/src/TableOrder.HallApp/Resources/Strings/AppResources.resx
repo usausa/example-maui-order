@@ -59,9 +59,6 @@
   <data name="TabStock" xml:space="preserve">
     <value>品切れ</value>
   </data>
-  <data name="TabPending" xml:space="preserve">
-    <value>この画面はこれから作ります</value>
-  </data>
   <data name="NoticeOrderingPaused" xml:space="preserve">
     <value>注文を一時停止しています</value>
   </data>
@@ -382,6 +379,57 @@
   </data>
   <data name="ServingEmpty" xml:space="preserve">
     <value>提供を待つ品はありません</value>
+  </data>
+  <data name="StockTabLimited" xml:space="preserve">
+    <value>品切れ・残り</value>
+  </data>
+  <data name="StockTabOptions" xml:space="preserve">
+    <value>オプション</value>
+  </data>
+  <data name="StockAvailable" xml:space="preserve">
+    <value>売れる</value>
+  </data>
+  <data name="StockSetRemaining" xml:space="preserve">
+    <value>残りの数を決める</value>
+  </data>
+  <data name="StockSoldOut" xml:space="preserve">
+    <value>品切れ</value>
+  </data>
+  <data name="StockRemainingFormat" xml:space="preserve">
+    <value>残り {0}</value>
+  </data>
+  <data name="StockCurrentFormat" xml:space="preserve">
+    <value>いまの状態: {0}</value>
+  </data>
+  <data name="StockRemainingTitle" xml:space="preserve">
+    <value>残りの数</value>
+  </data>
+  <data name="StockEmptyLimited" xml:space="preserve">
+    <value>品切れと残りの数のある品はありません</value>
+  </data>
+  <data name="StockEmpty" xml:space="preserve">
+    <value>品がありません</value>
+  </data>
+  <data name="StockReset" xml:space="preserve">
+    <value>すべて戻す</value>
+  </data>
+  <data name="StockResetMessage" xml:space="preserve">
+    <value>品切れと残りの数をすべて外し、すべての品を売れるようにします</value>
+  </data>
+  <data name="StockResetOk" xml:space="preserve">
+    <value>戻す</value>
+  </data>
+  <data name="OrderingPause" xml:space="preserve">
+    <value>注文を止める</value>
+  </data>
+  <data name="OrderingResume" xml:space="preserve">
+    <value>注文を再開する</value>
+  </data>
+  <data name="OrderingPauseMessage" xml:space="preserve">
+    <value>テーブル端末からの注文を止めます。再開するまで、お客様は注文できません</value>
+  </data>
+  <data name="OrderingPauseOk" xml:space="preserve">
+    <value>止める</value>
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>通信できませんでした。しばらくしてからもう一度試してください</value>

@@ -12,4 +12,8 @@ public static class PopupNavigatorExtensions
     // 移る席を空いている席から選ぶ (選んだテーブルの id)
     public static ValueTask<Guid?> SelectTableAsync(this IPopupNavigator popupNavigator, MoveTableParameter parameter) =>
         popupNavigator.PopupAsync<MoveTableParameter, Guid?>(DialogId.MoveTable, parameter);
+
+    // 品の状態 (売れる、残りの数を決める、品切れ) を選ぶ
+    public static ValueTask<StockStatus?> StockEditAsync(this IPopupNavigator popupNavigator, StockEditParameter parameter) =>
+        popupNavigator.PopupAsync<StockEditParameter, StockStatus?>(DialogId.StockEdit, parameter);
 }

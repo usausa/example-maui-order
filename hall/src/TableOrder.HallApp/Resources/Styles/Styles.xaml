@@ -163,17 +163,6 @@
     <!-- Tab -->
     <!-- ================================================================================ -->
 
-    <!-- 中身を作るまでの知らせ -->
-    <Style x:Key="PendingLabel"
-           TargetType="Label">
-        <Setter Property="Margin" Value="24" />
-        <Setter Property="HorizontalOptions" Value="Center" />
-        <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontSize" Value="18" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
-    </Style>
-
     <!-- 一覧が空のときの知らせ -->
     <Style x:Key="EmptyLabel"
            TargetType="Label">
@@ -206,6 +195,47 @@
         <Setter Property="StrokeThickness" Value="1" />
         <Setter Property="StrokeShape" Value="Rectangle" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <!-- 下の帯の操作 (来店の詳細、品切れのタブ)。押せる面は 64dp にする (来店を終える操作は主な操作として 80dp) -->
+    <Style x:Key="ActionBarGrid"
+           TargetType="Grid">
+        <Setter Property="RowSpacing" Value="0" />
+        <Setter Property="ColumnSpacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="ActionBarButton"
+           TargetType="Button">
+        <Setter Property="Padding" Value="8,0" />
+        <Setter Property="BorderWidth" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="VisualStateManager.VisualStateGroups">
+            <VisualStateGroupList>
+                <VisualStateGroup x:Name="CommonStates">
+                    <VisualState x:Name="Normal">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Pressed">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                    <VisualState x:Name="Disabled">
+                        <VisualState.Setters>
+                            <Setter Property="BackgroundColor" Value="{DynamicResource DisabledColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                        </VisualState.Setters>
+                    </VisualState>
+                </VisualStateGroup>
+            </VisualStateGroupList>
+        </Setter>
     </Style>
 
     <!-- カードの中の操作。押せる面は 64dp にし、主な操作は主色、ほかは沈んだ面にする -->
@@ -537,47 +567,6 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
-    <!-- 下の帯。押せる面は 64dp、来店を終える操作は主な操作として 80dp にする -->
-    <Style x:Key="VisitActionGrid"
-           TargetType="Grid">
-        <Setter Property="RowSpacing" Value="0" />
-        <Setter Property="ColumnSpacing" Value="0" />
-        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
-    </Style>
-
-    <Style x:Key="VisitActionButton"
-           TargetType="Button">
-        <Setter Property="Padding" Value="8,0" />
-        <Setter Property="BorderWidth" Value="0" />
-        <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="FontSize" Value="17" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="VisualStateManager.VisualStateGroups">
-            <VisualStateGroupList>
-                <VisualStateGroup x:Name="CommonStates">
-                    <VisualState x:Name="Normal">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
-                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Pressed">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
-                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
-                        </VisualState.Setters>
-                    </VisualState>
-                    <VisualState x:Name="Disabled">
-                        <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{DynamicResource DisabledColor}" />
-                            <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
-                        </VisualState.Setters>
-                    </VisualState>
-                </VisualStateGroup>
-            </VisualStateGroupList>
-        </Setter>
-    </Style>
-
     <Style x:Key="VisitCloseButton"
            TargetType="Button"
            BasedOn="{StaticResource PrimaryActionButton}">
@@ -586,7 +575,7 @@
 
     <Style x:Key="VisitCancelButton"
            TargetType="Button"
-           BasedOn="{StaticResource VisitActionButton}">
+           BasedOn="{StaticResource ActionBarButton}">
         <Setter Property="FontSize" Value="20" />
     </Style>
 
@@ -740,6 +729,110 @@
     </Style>
 
     <!-- ================================================================================ -->
+    <!-- Stock -->
+    <!-- ================================================================================ -->
+
+    <!-- カテゴリの帯。区切り線の色を間隔から見せ、最後のタブの右にも区切り線を出す -->
+
+    <Style x:Key="StockCategoryScroll"
+           TargetType="ScrollView">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="StockCategoryStack"
+           TargetType="HorizontalStackLayout">
+        <Setter Property="Padding" Value="0,0,1,0" />
+        <Setter Property="Spacing" Value="1" />
+        <Setter Property="HorizontalOptions" Value="Start" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource OutlineColor}" />
+    </Style>
+
+    <Style x:Key="StockCategoryBorder"
+           TargetType="Border">
+        <Setter Property="MinimumWidthRequest" Value="96" />
+        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StockCategoryLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 帯が続いている向きの端に重ねる送りのボタン (押すとその向きへ送る)。タブとは罫線で分ける -->
+    <Style x:Key="StockPagerGrid"
+           TargetType="Grid">
+        <Setter Property="WidthRequest" Value="49" />
+        <Setter Property="ColumnSpacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StockPagerLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 品の一覧。押せる面は 64dp 以上にし、品の間は罫線で分ける -->
+
+    <Style x:Key="StockCollectionView"
+           TargetType="CollectionView">
+        <Setter Property="SelectionMode" Value="None" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
+    </Style>
+
+    <Style x:Key="StockRowGrid"
+           TargetType="Grid">
+        <Setter Property="MinimumHeightRequest" Value="64" />
+        <Setter Property="RowSpacing" Value="0" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StockRowContentGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="16,10" />
+        <Setter Property="ColumnSpacing" Value="12" />
+    </Style>
+
+    <Style x:Key="StockRowNameStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="2" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="StockRowNameLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StockRowCaptionLabel"
+           TargetType="Label">
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 残りの数は注意の色、品切れはトリガで危険の色にする -->
+    <Style x:Key="StockRowStatusLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
+    <!-- ================================================================================ -->
     <!-- Dialog -->
     <!-- ================================================================================ -->
 
@@ -864,6 +957,25 @@
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontSize" Value="15" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 今の状態の選択肢に付ける印 -->
+    <Style x:Key="ChoiceCheckLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <!-- Stock -->
+
+    <Style x:Key="StockEditStatusLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,0,0,4" />
+        <Setter Property="FontSize" Value="17" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
 </ResourceDictionary>
