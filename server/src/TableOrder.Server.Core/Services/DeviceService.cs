@@ -27,13 +27,25 @@ public enum DeviceAuthorizeStatus
 public sealed record DeviceAuthorizeResult(DeviceAuthorizeStatus Status, DeviceIdentity? Identity = null);
 
 // 管理画面の端末の一覧の行 (端末と、キッチン端末の持ち場)
-public sealed record DeviceSummaryResult(DeviceSummaryEntity Device, IReadOnlyList<Guid> StationIds);
+public sealed record DeviceSummaryResult(DeviceSummaryEntity Device, IReadOnlyList<Guid> StationIds)
+{
+    // 置き場所の割り当てを待つ (登録トークンで登録した端末は、テーブルと持ち場を決めずに登録して、起動の画面で待つ)
+    public bool IsWaitingPlacement =>
+        Device.IsActive && Device.Kind switch
+        {
+            DeviceKind.Table => Device.TableId is null,
+            DeviceKind.Kitchen => StationIds.Count == 0,
+            _ => false
+        };
+}
 
 public sealed class DeviceService
 {
     private readonly ServiceContextProvider contextProvider;
 
     private readonly IDbProvider provider;
+
+    private readonly IRevocationList revocationList;
 
     private readonly DirectoryAccessor directoryAccessor;
 
@@ -54,6 +66,7 @@ public sealed class DeviceService
     public DeviceService(
         ServiceContextProvider contextProvider,
         IDbProvider provider,
+        IRevocationList revocationList,
         DirectoryAccessor directoryAccessor,
         TenantAccessor tenantAccessor,
         StoreAccessor storeAccessor,
@@ -65,6 +78,7 @@ public sealed class DeviceService
     {
         this.contextProvider = contextProvider;
         this.provider = provider;
+        this.revocationList = revocationList;
         this.directoryAccessor = directoryAccessor;
         this.tenantAccessor = tenantAccessor;
         this.storeAccessor = storeAccessor;
@@ -96,6 +110,12 @@ public sealed class DeviceService
         if (tenant?.Status != TenantStatus.Active)
         {
             return new DevicePairResult(DevicePairStatus.TenantSuspended);
+        }
+
+        // 使わなくした店舗には登録しない (残っていたコードやトークンでも)
+        if (await storeAccessor.QueryAsync(enrollment.TenantId, enrollment.StoreId, cancellationToken) is not { IsActive: true })
+        {
+            return new DevicePairResult(DevicePairStatus.CodeInvalid);
         }
 
         var deviceId = Guid.CreateVersion7(now);
@@ -237,7 +257,7 @@ public sealed class DeviceService
     // Management
     //--------------------------------------------------------------------------------
 
-    // 店舗の端末の一覧 (管理画面。有効な端末を先に並べる)
+    // 店舗の端末の一覧 (管理画面。置き場所の割り当てを待つ端末、有効な端末の順に並べる)
     public async ValueTask<List<DeviceSummaryResult>> GetSummaryListAsync(CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
@@ -245,7 +265,7 @@ public sealed class DeviceService
         var storeId = context.RequireStoreId();
         var devices = await deviceAccessor.QuerySummaryListAsync(tenantId, storeId, cancellationToken);
         var stations = (await deviceAccessor.QueryStationListByStoreAsync(tenantId, storeId, cancellationToken)).ToLookup(static x => x.DeviceId, static x => x.StationId);
-        return devices.Select(x => new DeviceSummaryResult(x, stations[x.Id].ToList())).ToList();
+        return devices.Select(x => new DeviceSummaryResult(x, stations[x.Id].ToList())).OrderByDescending(static x => x.IsWaitingPlacement).ToList();
     }
 
     // 今のメニューの持ち場 (キッチン端末の置き場所を選ぶ)
@@ -337,13 +357,14 @@ public sealed class DeviceService
         }, cancellationToken);
     }
 
-    // 無効にして端末に知らせる (端末は次のトークンの要求で断られて、登録からやり直す)
-    public ValueTask<ServiceError?> RevokeAsync(Guid deviceId, int version, CancellationToken cancellationToken)
+    // 無効にして端末に知らせ、すぐに拒む一覧を読み直す (端末の今のトークンを断り、通知の接続を切る)
+    // 端末は次のトークンの要求で断られて、登録からやり直す
+    public async ValueTask<ServiceError?> RevokeAsync(Guid deviceId, int version, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
-        return eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
+        var error = await eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
         {
             if (await deviceAccessor.UpdateRevokedAsync(transaction.Tx, tenantId, storeId, deviceId, version, context.Now, cancellationToken) == 0)
             {
@@ -355,5 +376,11 @@ public sealed class DeviceService
             await transaction.CommitAsync(cancellationToken);
             return null;
         }, cancellationToken);
+        if (error is null)
+        {
+            await revocationList.RefreshAsync(cancellationToken);
+        }
+
+        return error;
     }
 }

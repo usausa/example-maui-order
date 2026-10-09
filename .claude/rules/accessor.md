@@ -22,7 +22,7 @@ SQL ファイルの書き方は sql.md に置く。
 
 - SQL はすべて 2-way SQL のファイルに書き、Builder 属性 (`[SelectSingle]` / `[Insert]` / `[Delete]`) は使わない (テナントの条件をファイルで確かめるため)
 - テナントを持つ表を扱うメソッドは、最初の引数 (トランザクションがあればその次) に `Guid tenantId` を受ける
-- テナントのわからない要求で引くものは `DirectoryAccessor`、テナントの表は `TenantAccessor`、表に紐付かない処理は `GenericAccessor`、テナントをまたぐ裏の処理 (通知の送り手、古いデータの消去) は `BackgroundAccessor` に置く (この 4 つだけテナントの条件を調べるテストから外す)
+- テナントのわからない要求で引くものは `DirectoryAccessor`、テナントの表は `TenantAccessor`、管理画面のサインインと自分の資格情報は `AccountAccessor`、表に紐付かない処理は `GenericAccessor`、テナントをまたぐ裏の処理 (通知の送り手、古いデータの消去、すぐに拒む一覧) は `BackgroundAccessor` に置く (この 5 つだけテナントの条件を調べるテストから外す)
 - 書き込みの中で読むものは、同じ名前でトランザクションを最初の引数に受ける版を足す (SQL のファイルは共有する。別の接続で読むと、まだコミットしていない変更が見えない)
 - 状態を条件にした `[Execute]` の更新は戻り値 (更新した件数) を判定し、0 件なら続きの書き込みをしない
 - 型の変換は `DataProfile` に登録する (GUID は `GuidTextConverter`、日時は `DateTimeOffsetTextConverter`、列挙型は `EnumTextConverter<T>`、言語ごとの文字は `LocalizedTextConverter`)。新しい列挙型も登録する

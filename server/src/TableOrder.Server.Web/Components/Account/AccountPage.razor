@@ -1,0 +1,31 @@
+@page "/account"
+@attribute [ExcludeFromInteractiveRouting]
+@layout AccountLayout
+
+<PageTitle>アカウント</PageTitle>
+
+<MudPaper Class="account-card pa-8" Outlined="true">
+    <MudText Typo="Typo.h5" Class="mb-6">アカウント</MudText>
+    @if (user is not null)
+    {
+        <dl class="account-list">
+            <dt>名前</dt>
+            <dd>@user.Name</dd>
+            <dt>メールアドレス</dt>
+            <dd>@user.Email</dd>
+            <dt>役割</dt>
+            <dd>@AdminNames.RoleName(user.Role)</dd>
+            <dt>多要素</dt>
+            <dd>@(user.TwoFactorEnabled ? "使う" : "使わない")</dd>
+        </dl>
+    }
+    <div class="account-links">
+        <a href="@AccountPaths.Password">パスワードを替える</a>
+        <a href="@AccountPaths.TwoFactor">多要素 (認証アプリ)</a>
+        <a href="">管理画面に戻る</a>
+    </div>
+    <form action="@AccountPaths.SignOut" method="post" class="account-signout">
+        <AntiforgeryToken />
+        <button type="submit" class="account-button account-button-secondary">サインアウト</button>
+    </form>
+</MudPaper>

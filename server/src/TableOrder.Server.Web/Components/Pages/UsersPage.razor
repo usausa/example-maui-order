@@ -1,0 +1,142 @@
+@page "/users"
+@attribute [Authorize(Policy = AdminPolicies.TenantAdmin)]
+
+<PageTitle>利用者</PageTitle>
+
+<MudText Typo="Typo.h4">利用者</MudText>
+<MudText Class="mt-2">テナントの利用者 (テナントの管理者と店舗の担当) の追加、役割と受け持つ店舗の変更、仮のパスワード、多要素を外す、止める</MudText>
+
+@if (Selection.TenantId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントを選んでください。</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">利用者を足す</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">仮のパスワードを一度だけ出します。利用者は次のサインインでパスワードを替えます。</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="3">
+                <MudTextField T="string" @bind-Value="addEmail" Label="メールアドレス" InputType="InputType.Email" MaxLength="@AdminUserService.MaxEmailLength" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudTextField T="string" @bind-Value="addName" Label="名前" MaxLength="@AdminUserService.MaxNameLength" />
+            </MudItem>
+            <MudItem xs="12" sm="2">
+                <MudSelect T="AdminRole" @bind-Value="addRole" Label="役割">
+                    @foreach (var role in Roles)
+                    {
+                        <MudSelectItem T="AdminRole" Value="@role">@AdminNames.RoleName(role)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            @if (addRole == AdminRole.StoreStaff)
+            {
+                <MudItem xs="12" sm="3">
+                    <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="addStoreIds" Label="受け持つ店舗" ToStringFunc="StoreName">
+                        @foreach (var store in stores)
+                        {
+                            <MudSelectItem T="Guid" Value="@store.Id">@StoreName(store.Id)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="1" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">足す</MudButton>
+            </MudItem>
+        </MudGrid>
+        @if (issued is not null)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">
+                @issued.Email の仮のパスワード <span class="temporary-password">@issued.Password</span> (この画面を離れると出しません。利用者に伝えてください)
+            </MudAlert>
+        }
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <div class="d-flex align-center">
+            <MudText Typo="Typo.h6">テナントの利用者</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+        </div>
+        <MudTable Items="users" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
+            <HeaderContent>
+                <MudTh>名前</MudTh>
+                <MudTh>メールアドレス</MudTh>
+                <MudTh>役割</MudTh>
+                <MudTh>受け持つ店舗</MudTh>
+                <MudTh>多要素</MudTh>
+                <MudTh>最後のサインイン</MudTh>
+                <MudTh>状態</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.User.Name</MudTd>
+                <MudTd>@context.User.Email</MudTd>
+                <MudTd>@AdminNames.RoleName(context.User.Role)</MudTd>
+                <MudTd>@StoresText(context)</MudTd>
+                <MudTd>@(context.User.TwoFactorEnabled ? "使う" : "--")</MudTd>
+                <MudTd>@(context.User.LastSignInAt is { } signedIn ? FormatTime(signedIn) : "--")</MudTd>
+                <MudTd>@StatusText(context.User)</MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (context.User.Id == editing?.User.Id)
+                {
+                    <MudTr>
+                        <td colspan="8" class="pa-4">
+                            <MudText Typo="Typo.body2">役割や受け持つ店舗を替えると、その利用者の開いている管理画面は 1 分のうちにサインインからやり直します。</MudText>
+                            <MudGrid Class="mt-2" Spacing="2">
+                                <MudItem xs="12" sm="4">
+                                    <MudTextField T="string" @bind-Value="editName" Label="名前" MaxLength="@AdminUserService.MaxNameLength" />
+                                </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudSelect T="AdminRole" @bind-Value="editRole" Label="役割" Disabled="IsSelf(context)">
+                                        @foreach (var role in Roles)
+                                        {
+                                            <MudSelectItem T="AdminRole" Value="@role">@AdminNames.RoleName(role)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                @if (editRole == AdminRole.StoreStaff)
+                                {
+                                    <MudItem xs="12" sm="5">
+                                        <MudSelect T="Guid" MultiSelection="true" @bind-SelectedValues="editStoreIds" Label="受け持つ店舗" ToStringFunc="StoreName">
+                                            @foreach (var store in stores)
+                                            {
+                                                <MudSelectItem T="Guid" Value="@store.Id">@StoreName(store.Id)</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                    </MudItem>
+                                }
+                            </MudGrid>
+                            <div class="d-flex gap-2 mt-4 flex-wrap">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+                                <MudButton OnClick="CancelEdit">やめる</MudButton>
+                                <MudSpacer />
+                                <MudButton Variant="Variant.Outlined" OnClick="ResetPasswordAsync">仮のパスワードを出し直す</MudButton>
+                                @if (context.User.TwoFactorEnabled)
+                                {
+                                    <MudButton Variant="Variant.Outlined" OnClick="ResetTwoFactorAsync">多要素を外す</MudButton>
+                                }
+                                @if (context.User.IsActive)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="IsSelf(context)" OnClick="() => SetActiveAsync(false)">止める</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" OnClick="() => SetActiveAsync(true)">戻す</MudButton>
+                                }
+                            </div>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+            <NoRecordsContent>
+                <MudText>利用者はいません。</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}

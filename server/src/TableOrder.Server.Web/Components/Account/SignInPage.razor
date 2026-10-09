@@ -1,0 +1,28 @@
+@page "/account/sign-in"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout AccountLayout
+
+<PageTitle>サインイン</PageTitle>
+
+<MudPaper Class="account-card pa-8" Outlined="true">
+    <MudText Typo="Typo.h5" Class="mb-6">サインイン</MudText>
+    @if (message is not null)
+    {
+        <MudAlert Severity="Severity.Error" Class="mb-4">@message</MudAlert>
+    }
+    <EditForm Model="Input!" method="post" OnValidSubmit="SignInAsync" FormName="sign-in">
+        <DataAnnotationsValidator />
+        <div class="account-field">
+            <label for="email">メールアドレス</label>
+            <InputText id="email" type="email" class="account-input" autocomplete="username" @bind-Value="Input!.Email" />
+            <ValidationMessage For="() => Input!.Email" class="account-error" />
+        </div>
+        <div class="account-field">
+            <label for="password">パスワード</label>
+            <InputText id="password" type="password" class="account-input" autocomplete="current-password" @bind-Value="Input!.Password" />
+            <ValidationMessage For="() => Input!.Password" class="account-error" />
+        </div>
+        <button type="submit" class="account-button">サインイン</button>
+    </EditForm>
+</MudPaper>

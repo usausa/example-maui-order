@@ -42,18 +42,23 @@ public sealed class DatabaseService
         }
 
         var sql = await File.ReadAllTextAsync(sqlPath, cancellationToken);
-
-        // メニューは API の応答と同じ形の JSON にそろえてから入れる (応答は公開の内容をそのまま返す)
-        var menu = JsonSerializer.Deserialize<MenuResponse>(await File.ReadAllTextAsync(menuPath, cancellationToken), JsonDefaults.Options)!;
-        var content = JsonSerializer.Serialize(menu, JsonDefaults.Options);
+        var menu = await ReadSampleMenuAsync(menuPath, cancellationToken);
 
         var now = timeProvider.GetUtcNow();
         await provider.UsingTxAsync(async (_, tx) =>
         {
-            await genericAccessor.ExecuteScriptAsync(tx, sql, now, menu.MenuVersion, content, cancellationToken);
+            await genericAccessor.ExecuteScriptAsync(tx, sql, now, menu.MenuVersion, menu.Content, cancellationToken);
             await tx.CommitAsync(cancellationToken);
         }, cancellationToken);
 
         return true;
+    }
+
+    // サンプルのメニュー (サンプルのデータと、写す店舗のない新しい店舗に入れる)
+    // メニューは API の応答と同じ形の JSON にそろえてから入れる (応答は公開の内容をそのまま返す)
+    public static async ValueTask<MenuSeed> ReadSampleMenuAsync(string menuPath, CancellationToken cancellationToken)
+    {
+        var menu = JsonSerializer.Deserialize<MenuResponse>(await File.ReadAllTextAsync(menuPath, cancellationToken), JsonDefaults.Options)!;
+        return new MenuSeed(menu.MenuVersion, JsonSerializer.Serialize(menu, JsonDefaults.Options));
     }
 }

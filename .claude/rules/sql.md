@@ -28,7 +28,7 @@ Accessor のメソッド名 (= 2-way SQL のファイル名) は accessor.md に
 ## スキーマとサンプルのデータ
 
 - スキーマは `CREATE TABLE IF NOT EXISTS` で列名・型・NOT NULL を桁揃えし、主キー・一意・外部キーは表の末尾に制約として書く
-- `Tenants` のほかの表は `TenantId` を先頭の列に持ち、主キー・一意・索引・外部キーの先頭にも置く
+- `Tenants` と `AdminUsers` (運営者はテナントに属さない) のほかの表は `TenantId` を先頭の列に持ち、主キー・一意・索引・外部キーの先頭にも置く
 - テナントのわからない要求で引く列と、テナントをまたぐ裏の処理の索引だけは `TenantId` を付けず、使い道をコメントに書く
 - 索引は表の直後に空行なしで `CREATE INDEX IF NOT EXISTS IX_表_列` (一意は `UX_表_列`) と書く
 - 互いに指す外部キー (店舗と今のメニュー) は `DEFERRABLE INITIALLY DEFERRED` にする

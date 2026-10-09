@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Accessors;
 
-// 裏の処理 (通知の配信、古い通知の削除、開発の環境の自動の進行) がテナントをまたいで読み書きするもの
+// 裏の処理 (通知の配信、古い通知の削除、すぐに拒む一覧、開発の環境の自動の進行) がテナントをまたいで読み書きするもの
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class BackgroundAccessor
@@ -13,11 +13,23 @@ public sealed partial class BackgroundAccessor
     [Query]
     public partial ValueTask<List<StoreKeyEntity>> QuerySimulationStoreAllAsync(CancellationToken cancellationToken);
 
+    // since より後に無効にした端末 (すぐに拒む一覧)
+    [Query]
+    public partial ValueTask<List<DeviceKeyEntity>> QueryRevokedDeviceAllAsync(DateTimeOffset since, CancellationToken cancellationToken);
+
+    // 使えないテナント (止めた、解約した。すぐに拒む一覧)
+    [Query]
+    public partial ValueTask<List<TenantEntity>> QueryInactiveTenantAllAsync(CancellationToken cancellationToken);
+
     // 残す期間を過ぎた通知を消す
     [Execute]
     public partial ValueTask<int> DeleteEventAsync(DateTimeOffset before, CancellationToken cancellationToken);
 
     // 期限を過ぎたペアリングコードを消す (コードはすべてのテナントで一意なので、消して出し直せるようにする)
     [Execute]
-    public partial ValueTask<int> DeleteEnrollmentAsync(DateTimeOffset before, CancellationToken cancellationToken);
+    public partial ValueTask<int> DeletePairingCodeAsync(DateTimeOffset before, CancellationToken cancellationToken);
+
+    // 期限を過ぎるか取り消してから、before より前になった登録トークンを消す
+    [Execute]
+    public partial ValueTask<int> DeleteEnrollmentTokenAsync(DateTimeOffset before, CancellationToken cancellationToken);
 }

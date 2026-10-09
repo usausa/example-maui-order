@@ -12,6 +12,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - Service は `ServiceContextProvider.Current` の `RequireTenantId()` / `RequireStoreId()` を Accessor の引数に渡し、すべての読み書きをテナントで絞る
 - 要求の中の `id` はテナントと店舗の条件と一緒に引き、ほかのテナント・店舗のものは見つからないとして `404` (`NOT_FOUND`) にする
 - テナントのわからない要求 (端末の登録、トークンの要求、決済の通知、電子レシート) で引くのは `DirectoryAccessor` だけにし、引いた行のテナントをその後の文脈にする
+- 管理画面のサインインと、利用者が自分の資格情報を読み書きするのは `AccountAccessor` (利用者の `Id` かメールアドレスで引く) だけにし、テナントの利用者の一覧と管理はテナントで絞る
 - テナントをまたいで読むのは運営者の画面と裏の処理だけにし、そのための Accessor (運営者の画面は `TenantAccessor`、裏の処理は `BackgroundAccessor`) を分ける
 - 裏の処理が店舗のものを読み書きするときは、テナントと店舗で `ServiceContext` を始めてから Service を呼ぶ
 - アクセストークンのクレームの値は、Service が端末の記録から作った `DeviceIdentity` から入れ、端末が送った値を入れない
@@ -28,6 +29,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 店舗の状態を変える書き込み (来店の確認の記録のような、ほかの端末が判断に使う記録も含む) は `EventService.WriteAsync` の中で行い、変えた内容の通知を同じトランザクションで書く (通知の送る先は `EventRoutes` に足す。答え直しのように変わらなかったときは書かない)
 - 入力の誤りと業務の失敗は Service が `ServiceError` で返し、値を返す処理は `ServiceResult<T>` にする (同じ Id の送り直しで既にあったものは `Created` を付けない)
 - 決済サービスは `IPaymentProvider` の実装で替え、Service から決済サービスを直接呼ばない
+- Core が入口の側に持たせるもの (通知を送る先、すぐに拒む一覧) は Core にインタフェース (`IEventPublisher`、`IRevocationList`) を置いて Web で実装し、Service は替えたあとに知らせるだけにする
 - 画像の置き場は `IImageStore` の実装で替え (開発とテストはファイル、本番は Amazon S3)、テナントごとに分ける。名前は `ImageNames.IsValid` で確かめてから渡す (置き場の経路に使うため)
 - サンプルの画像は `Assets/Images` に `{名前}.{内容の SHA-256 の先頭 8 桁}.png` で置き、中身を替えたら名前も替えて `Menu.json` の `imageName` を直す (端末は名前で保存して取り直さない)
 - 開発の環境の自動の進行は `SimulationService` に置き、業務の処理と同じ条件付きの更新と通知で進める (設定 `Simulation:Enabled` で動かし、テストのサーバでは止める)
@@ -43,12 +45,25 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 部品の登録を設定の値で分けない (テストのサーバの設定は登録のあとに効く)。動かすかどうかは、動き始めてから設定で決める
 - ログは `Application/Log.cs` の `[LoggerMessage]` に集約する (Info~ / Warn~ / Error~ の命名、`key=[{value}]` の書式)
 - 全行のログに付ける値 (接続元、テナント、店舗、主体) は `CallbackEnricher` で付け、専用のミドルウェアを置かない
-- 管理画面は、サインインを作るまで開発の環境だけで開く
+- 管理画面はどの環境でも開き、ページはサインインを求める (`MapRazorComponents` に `AdminPolicies.SignedIn`)。サインインの前に開く画面 (サインイン、多要素のコード、エラー) だけ `[AllowAnonymous]` を付ける
+- 管理画面の確かめ方は Cookie に限り (ポリシーは `IdentityConstants.ApplicationScheme`)、端末の API と通知のハブはアクセストークンに限る (既定の確かめ方は経路で選ぶ)
+- 役割で絞る画面は `[Authorize(Policy = AdminPolicies.Xxx)]` を付け、メニュー (`NavMenu`) にも出さない
+- Cookie を書く画面 (サインイン、パスワード、多要素) は `[ExcludeFromInteractiveRouting]` の静的な画面にして `AccountLayout` で出し、入力は対話しない素の部品 (`InputText`) にする。フォームの値 (`[SupplyParameterFromForm]`) は初期化子を付けず `OnInitialized` で作る
+- 静的な画面から移るときは `NavigationManager.NavigateTo` のあとに処理を続けない (`return` する)。戻る先は `AccountPaths.LocalReturnPath` で管理画面の中の経路に限る
+- 利用者の扱える範囲は `AdminScope` (サインインのクレームの役割、テナント、受け持つ店舗) で決め、`StoreSelection` は範囲の外を選ばない (画面で選んだ値をそのまま Service の文脈にしない)
+- 利用者の資格情報 (パスワード、役割、受け持つ店舗、多要素、止める) を替えたら `SecurityStamp` を替え、開いている管理画面をサインインからやり直させる
+- 仮のパスワードは管理画面で作って (`TemporaryPassword`) ハッシュにし、Service には平文を渡さない。平文は出した画面で一度だけ見せる
+- 利用者の管理は、テナントの利用者を `AdminUserService` (選んだテナントで絞る)、運営者を `OperatorService` で行い、操作した利用者の id を渡して自分の役割の変更と自分を止めることを断る
 - サーバが配る Web アプリ (キッチン端末) の、内容で名前の替わらないファイル (`_framework` の外。index.html、JavaScript の部品、スタイル) は `Cache-Control: no-cache` で返す (ないとブラウザが推して残し、更新しても古いファイルを使う)
 - 管理画面のページは `AppPageBase` を継ぎ、選んだテナントと店舗 (`StoreSelection`) の文脈で Service を呼ぶ。ほかの部品の知らせ (店舗の選び直し) で読み直すときは `BeginServiceScope` で文脈を始める
 - 管理画面で端末を替えたとき (置き場所、名前、無効化) は `device.updated` を送り、端末に起動からやり直させる (トークンの置き場所と無効化をすぐに反映する)
-- チェーンと店舗の設定を替えたときは、設定の版 (`Stores.SettingsVersion`) を上げて `store.updated` を送る (チェーンの設定はテナントのすべての店舗)。版は一時停止などで上がる `Version` と分ける
-- 古いデータを消す処理は `CleanupWorker` に足し、通知の送り手 (`EventDispatcher`) には送ること以外を置かない
+- 無効にした端末と止めたテナントのアクセストークンは、JwtBearer が確かめたあとに `RevocationList` (すぐに拒む一覧) を引いて断り、要求ごとにデータベースを引かない
+- 端末を無効にする・テナントを止める・戻す Service は、替えたあとに `IRevocationList.RefreshAsync` で一覧を読み直させる (ほかのサーバの一覧は `RevocationWorker` が `Token:RevocationSweepSeconds` ごとに読み直す)
+- 登録トークンの平文は、出した画面で管理対象の構成のキー (`apiEndPoint`、`enrollmentToken`) と並べて一度だけ見せ、一覧には出さない
+- チェーンと店舗の設定・店舗の基本・テーブルを替えたときは、設定の版 (`Stores.SettingsVersion`) を上げて `store.updated` を送る (チェーンの設定はテナントのすべての店舗)。版は一時停止などで上がる `Version` と分ける
+- 店舗とテーブルを使わなくする前に、使っているもの (端末、開いている来店) がないかを確かめ、あれば入力の誤りで断る (行は消さない)
+- 古いデータを消す処理は `CleanupWorker` に足し、通知の送り手 (`EventDispatcher`) には送ること (ハブと、店舗を見ている画面への `StoreActivity`) 以外を置かない
+- 店舗の通知で読み直す管理画面は、`StoreActivity.Watch` で選んだ店舗を見て (店舗を選び直したら見直す)、送り手のスレッドから呼ばれたら少し待って 1 回だけ、画面の文脈 (`InvokeAsync` と `BeginServiceScope`) で読み直す。読み直しで選んだものと入力の途中の値を消さない
 
 ## エンドポイント
 
@@ -60,4 +75,5 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 本文を省ける API (null を許す本文の引数) は作らない。本文のない要求は本文を受ける経路に合わず、知らない経路の 404 になる
 - 通知のハブ (`Hubs/StoreHub`) は端末をグループに入れて送るだけにし、グループの名前は `StoreHubGroups` で作る (テナントと店舗を入れる)
 - ハブはグループに入れ終えたら `ready` で店舗の今の通し番号を送る (端末ははじめはその番号から数え、つなぎ直したら抜けた通知を読む)
-- 端末の認証の失敗 (署名、期限、端末がない、使い捨ての値の使い回し) はどれも `401` にし、理由を見せない
+- 端末の認証の失敗 (署名、期限、端末がない、使い捨ての値の使い回し、すぐに拒む一覧) はどれも `401` にし、理由を見せない (端末はトークンを取り直し、トークンの要求の `DEVICE_REVOKED` / `TENANT_SUSPENDED` で理由を知る)
+- ハブはつないだ端末を `StoreHubConnections` に覚えて、すぐに拒む一覧に入った接続を切り、トークンの期限が来た接続も切る (`CloseOnAuthenticationExpiration`。WebSocket はつないだときにだけトークンを確かめるため)

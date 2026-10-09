@@ -8,9 +8,11 @@ using System.Text.RegularExpressions;
 using System.Threading.RateLimiting;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.HttpLogging;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Data.Sqlite;
@@ -31,6 +33,7 @@ using TableOrder.Server.Core.Accessors;
 using TableOrder.Server.Core.Infrastructure.Images;
 using TableOrder.Server.Core.Infrastructure.Json;
 using TableOrder.Server.Core.Infrastructure.Payments;
+using TableOrder.Server.Web.Application.Account;
 using TableOrder.Server.Web.Application.Authentication;
 using TableOrder.Server.Web.Application.Cleanup;
 using TableOrder.Server.Web.Application.Context;
@@ -52,11 +55,8 @@ public static class ApplicationExtensions
     // キッチン端末の Web アプリ (WebAssembly) を配る場所 (TableOrder.KitchenApp の StaticWebAssetBasePath と合わせる)
     private const string KitchenPath = "/kitchen";
 
-    private const string SchemaPath = "Assets/Data/Schema.sql";
-    private const string SampleDataPath = "Assets/Data/SampleData.sql";
-    private const string SampleMenuPath = "Assets/Data/Menu.json";
-
-    private const string SampleImagePath = "Assets/Images";
+    // 要求の経路で確かめ方 (アクセストークンか Cookie) を選ぶ既定の方式
+    private const string SchemeSelector = "TableOrder";
 
     //--------------------------------------------------------------------------------
     // Logging
@@ -224,13 +224,24 @@ public static class ApplicationExtensions
 
     public static IHostApplicationBuilder ConfigureAuthentication(this IHostApplicationBuilder builder)
     {
+        // 確かめ方は経路で分ける (端末の API と通知のハブはアクセストークン、管理画面は Cookie。端末の API に Cookie を通さない)
         builder.Services
-            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer();
+            .AddAuthentication(static options =>
+            {
+                options.DefaultScheme = SchemeSelector;
+                options.DefaultChallengeScheme = SchemeSelector;
+            })
+            .AddPolicyScheme(SchemeSelector, null, static options =>
+            {
+                options.ForwardDefaultSelector = static context =>
+                    IsDeviceRequest(context.Request.Path) ? JwtBearerDefaults.AuthenticationScheme : IdentityConstants.ApplicationScheme;
+            })
+            .AddJwtBearer()
+            .AddIdentityCookies();
 
         // 署名の鍵は SigningKeyProvider が持つので、検証の設定は登録した部品から組み立てる
         builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
-            .Configure<TokenSetting, SigningKeyProvider>(static (options, setting, keys) =>
+            .Configure<TokenSetting, SigningKeyProvider, RevocationList>(static (options, setting, keys, revocations) =>
             {
                 // クレームの名前を変えない (tenant_id などをトークンの名前のまま読む)
                 options.MapInboundClaims = false;
@@ -256,11 +267,64 @@ public static class ApplicationExtensions
                         }
 
                         return Task.CompletedTask;
+                    },
+
+                    // 無効にした端末と止めたテナントのトークンは、期限の前でもすぐに断る (401。端末はトークンを取り直して、断られた理由を知る)
+                    OnTokenValidated = context =>
+                    {
+                        if (Guid.TryParse(context.Principal?.FindFirstValue(ClaimNames.TenantId), out var tenantId) &&
+                            Guid.TryParse(context.Principal?.FindFirstValue(ClaimNames.Subject), out var deviceId) &&
+                            revocations.IsRevoked(tenantId, deviceId))
+                        {
+                            context.Fail("The access token is revoked.");
+                        }
+
+                        return Task.CompletedTask;
                     }
                 };
             });
 
-        // 端末の種類で使える API を絞る (範囲の外は 403 DEVICE_SCOPE)
+        // 管理画面の利用者 (ASP.NET Core Identity の部品を、自前の表と Service で使う)
+        builder.Services
+            .AddIdentityCore<AdminUserEntity>(static options =>
+            {
+                // パスワードは長さで強さを決め、文字の種類は問わない
+                options.Password.RequiredLength = 12;
+                options.Password.RequiredUniqueChars = 1;
+                options.Password.RequireDigit = false;
+                options.Password.RequireLowercase = false;
+                options.Password.RequireUppercase = false;
+                options.Password.RequireNonAlphanumeric = false;
+
+                // 5 回続けて間違えたら 15 分止める
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
+                // 利用者の id は端末と同じクレームの名前にする (ログに主体として出す)
+                options.ClaimsIdentity.UserIdClaimType = ClaimNames.Subject;
+            })
+            .AddUserStore<AdminUserStore>()
+            .AddSignInManager<AdminSignInManager>()
+            .AddClaimsPrincipalFactory<AdminClaimsPrincipalFactory>()
+            .AddTokenProvider<AuthenticatorTokenProvider<AdminUserEntity>>(TokenOptions.DefaultAuthenticatorProvider);
+
+        // サインインは 8 時間保ち、使っていれば延ばす。ほかのサイトからの遷移では Cookie を送らない
+        builder.Services.ConfigureApplicationCookie(static options =>
+        {
+            options.Cookie.Name = "TableOrder.Admin";
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SameSite = SameSiteMode.Strict;
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = true;
+            options.LoginPath = AccountPaths.SignIn;
+            options.LogoutPath = AccountPaths.SignOut;
+            options.AccessDeniedPath = AccountPaths.AccessDenied;
+        });
+
+        // 資格の印を 1 分ごとに確かめる (止めた利用者や役割を替えた利用者のサインインを長く残さない)
+        builder.Services.Configure<SecurityStampValidatorOptions>(static options => options.ValidationInterval = TimeSpan.FromMinutes(1));
+
+        // 端末の種類で使える API を絞り (範囲の外は 403 DEVICE_SCOPE)、管理画面は役割で開ける画面を絞る
         builder.Services.AddAuthorization(static options =>
         {
             options.AddPolicy(Policies.AnyDevice, DevicePolicy(DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen, DeviceKind.Reception));
@@ -272,16 +336,29 @@ public static class ApplicationExtensions
             options.AddPolicy(Policies.TableDevice, DevicePolicy(DeviceKind.Table));
             options.AddPolicy(Policies.HallDevice, DevicePolicy(DeviceKind.Hall));
             options.AddPolicy(Policies.KitchenDevice, DevicePolicy(DeviceKind.Kitchen));
+            options.AddPolicy(AdminPolicies.SignedIn, AdminPolicy(AdminRole.Operator, AdminRole.TenantAdmin, AdminRole.StoreStaff));
+            options.AddPolicy(AdminPolicies.TenantAdmin, AdminPolicy(AdminRole.Operator, AdminRole.TenantAdmin));
+            options.AddPolicy(AdminPolicies.Operator, AdminPolicy(AdminRole.Operator));
         });
         builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
 
         return builder;
     }
 
+    private static bool IsDeviceRequest(PathString path) =>
+        path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase) ||
+        path.StartsWithSegments(ApiRoutes.StoreHub, StringComparison.OrdinalIgnoreCase);
+
     private static AuthorizationPolicy DevicePolicy(params DeviceKind[] kinds) =>
         new AuthorizationPolicyBuilder(JwtBearerDefaults.AuthenticationScheme)
             .RequireAuthenticatedUser()
             .RequireClaim(ClaimNames.DeviceKind, kinds.Select(static x => x.ToString()))
+            .Build();
+
+    private static AuthorizationPolicy AdminPolicy(params AdminRole[] roles) =>
+        new AuthorizationPolicyBuilder(IdentityConstants.ApplicationScheme)
+            .RequireAuthenticatedUser()
+            .RequireClaim(AdminClaimNames.Role, roles.Select(static x => x.ToString()))
             .Build();
 
     //--------------------------------------------------------------------------------
@@ -390,6 +467,10 @@ public static class ApplicationExtensions
 
         // Error boundary logging
         builder.Services.AddScoped<Microsoft.AspNetCore.Components.Web.IErrorBoundaryLogger, ErrorBoundaryLogger>();
+
+        // サインインの状態を画面に渡し、開いている回線のサインインを確かめ直す
+        builder.Services.AddCascadingAuthenticationState();
+        builder.Services.AddScoped<AuthenticationStateProvider, AdminAuthenticationStateProvider>();
 
         // MudBlazor
         builder.Services.AddMudServices(static options =>
@@ -521,17 +602,25 @@ public static class ApplicationExtensions
         builder.Services.AddSingleton<AccessTokenService>();
         builder.Services.AddSingleton<DeviceAssertionValidator>();
 
+        // Revocation (無効にした端末と止めたテナントのトークンをすぐに拒む一覧。数秒ごとに読み直し、通知の接続も切る)
+        builder.Services.AddSingleton<StoreHubConnections>();
+        builder.Services.AddSingleton<RevocationList>();
+        builder.Services.AddSingleton<IRevocationList>(static p => p.GetRequiredService<RevocationList>());
+        builder.Services.AddHostedService<RevocationWorker>();
+
         // Service
         builder.Services.AddSingleton<ApplicationServiceContextProvider>();
         builder.Services.AddSingleton<ServiceContextProvider>(static p => p.GetRequiredService<ApplicationServiceContextProvider>());
+        builder.Services.AddScoped<AdminScope>();
         builder.Services.AddScoped<StoreSelection>();
         builder.Services.AddScoped<BlazorServiceScope>();
 
         builder.Services.AddCoreServices();
 
-        // Event (業務の処理が知らせた店舗の通知を、ハブで送る)
+        // Event (業務の処理が知らせた店舗の通知を、ハブで送る。送ったことは店舗を見ている管理画面にも知らせる)
         builder.Services.AddSingleton<EventSignal>();
         builder.Services.AddSingleton<IEventPublisher>(static p => p.GetRequiredService<EventSignal>());
+        builder.Services.AddSingleton<StoreActivity>();
         builder.Services.AddHostedService<EventDispatcher>();
 
         // Cleanup (古いデータを一定の間隔で消す)
@@ -547,6 +636,7 @@ public static class ApplicationExtensions
         builder.Services.AddHostedService<SimulationWorker>();
 
         // Setting
+        builder.Services.AddSetting<AdminSetting>("Admin");
         builder.Services.AddSetting<TokenSetting>("Token");
         builder.Services.AddSetting<DatabaseSetting>("Database");
         builder.Services.AddSetting<ImageSetting>("Image");
@@ -638,15 +728,14 @@ public static class ApplicationExtensions
         // Static assets
         app.MapStaticAssets();
 
-        // 管理画面 (サインインを作るまでは開発の環境だけで開く)
-        if (app.Environment.IsDevelopment())
-        {
-            app.MapRazorComponents<App>()
-                .AddInteractiveServerRenderMode(static options =>
-                {
-                    options.ContentSecurityFrameAncestorsPolicy = "'none'";
-                });
-        }
+        // 管理画面 (サインインの画面のほかはサインインを求める。役割で絞る画面は画面に付けたポリシーで確かめる)
+        app.MapRazorComponents<App>()
+            .AddInteractiveServerRenderMode(static options =>
+            {
+                options.ContentSecurityFrameAncestorsPolicy = "'none'";
+            })
+            .RequireAuthorization(AdminPolicies.SignedIn);
+        app.MapAccountEndpoints();
 
         // キッチン端末 (WebAssembly)。画面の経路は index.html に戻す
         app.MapFallbackToFile(KitchenPath + "/{*path:nonfile}", "kitchen/index.html", KitchenFileOptions());
@@ -667,8 +756,8 @@ public static class ApplicationExtensions
         app.MapPaymentEndpoints();
         app.MapEventEndpoints();
 
-        // 通知のハブ
-        app.MapHub<StoreHub>(ApiRoutes.StoreHub);
+        // 通知のハブ (アクセストークンの期限が来た接続は切る。端末は新しいトークンでつなぎ直す)
+        app.MapHub<StoreHub>(ApiRoutes.StoreHub, static options => options.CloseOnAuthenticationExpiration = true);
 
         // API の知らない経路は 404 の Problem Details にする
         app.MapFallback(ApiRoutes.Root + "/{**path}", static () => TypedResults.Problem(statusCode: StatusCodes.Status404NotFound));
@@ -697,12 +786,12 @@ public static class ApplicationExtensions
 
         // Prepare database (schema from the SQL file)
         var database = app.Services.GetRequiredService<DatabaseService>();
-        await database.InitializeAsync(SchemaPath, CancellationToken.None);
+        await database.InitializeAsync(AssetPaths.Schema, CancellationToken.None);
 
         // サンプルのデータ (開発の環境とテスト)。料理の写真は、まだ置いていないテナントの置き場に起動のたびに写す
         if (app.Services.GetRequiredService<DatabaseSetting>().SampleData)
         {
-            if (await database.LoadSampleDataAsync(SampleDataPath, SampleMenuPath, CancellationToken.None))
+            if (await database.LoadSampleDataAsync(AssetPaths.SampleData, AssetPaths.SampleMenu, CancellationToken.None))
             {
                 app.Logger.InfoSampleDataLoaded();
             }
@@ -710,12 +799,49 @@ public static class ApplicationExtensions
             var images = app.Services.GetRequiredService<ImageService>();
             foreach (var tenant in await app.Services.GetRequiredService<TenantService>().GetAllAsync(CancellationToken.None))
             {
-                var copied = await images.CopySampleAsync(tenant.Id, SampleImagePath, CancellationToken.None);
+                var copied = await images.CopySampleAsync(tenant.Id, AssetPaths.SampleImages, CancellationToken.None);
                 if (copied > 0)
                 {
                     app.Logger.InfoSampleImagesCopied(tenant.Code, copied);
                 }
             }
+        }
+
+        // 運営者がひとりもいなければ、設定のメールアドレスと仮のパスワードで初めの運営者を作る
+        await app.CreateInitialOperatorAsync();
+    }
+
+    private static async ValueTask CreateInitialOperatorAsync(this WebApplication app)
+    {
+        var account = app.Services.GetRequiredService<AccountService>();
+        if (await account.HasOperatorAsync(CancellationToken.None))
+        {
+            return;
+        }
+
+        var setting = app.Services.GetRequiredService<AdminSetting>();
+        if (String.IsNullOrEmpty(setting.InitialOperatorEmail) || String.IsNullOrEmpty(setting.InitialOperatorPassword))
+        {
+            app.Logger.WarnNoOperator();
+            return;
+        }
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<AdminUserEntity>>();
+        var operatorUser = new AdminUserEntity { Email = setting.InitialOperatorEmail };
+        foreach (var validator in userManager.PasswordValidators)
+        {
+            if (!(await validator.ValidateAsync(userManager, operatorUser, setting.InitialOperatorPassword)).Succeeded)
+            {
+                app.Logger.WarnInitialOperatorPasswordInvalid();
+                return;
+            }
+        }
+
+        var hash = userManager.PasswordHasher.HashPassword(operatorUser, setting.InitialOperatorPassword);
+        if (await account.CreateInitialOperatorAsync(setting.InitialOperatorEmail, userManager.NormalizeName(setting.InitialOperatorEmail), "運営者", hash, CancellationToken.None))
+        {
+            app.Logger.InfoInitialOperatorCreated(setting.InitialOperatorEmail);
         }
     }
 

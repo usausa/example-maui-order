@@ -3,7 +3,7 @@
 <PageTitle>端末</PageTitle>
 
 <MudText Typo="Typo.h4">端末</MudText>
-<MudText Class="mt-2">店舗の端末の登録 (ペアリングコード)、置き場所と名前の変更、無効化</MudText>
+<MudText Class="mt-2">店舗の端末の登録 (ペアリングコード、EMM の登録トークン)、置き場所の割り当てと名前の変更、無効化</MudText>
 
 @if (Selection.StoreId is null)
 {
@@ -58,6 +58,72 @@ else
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">登録トークンを出す (EMM)</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">EMM の管理対象の構成で端末に配る値です。端末は起動したときにこの値で自分で登録します。テーブルと持ち場は、登録したあとに下の一覧で割り当てます。</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="3">
+                <MudSelect T="DeviceKind" @bind-Value="tokenKind" Label="端末の種類">
+                    @foreach (var kind in Kinds)
+                    {
+                        <MudSelectItem T="DeviceKind" Value="@kind">@KindName(kind)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="2">
+                <MudNumericField T="int" @bind-Value="tokenMaxUses" Label="台数" Min="1" Max="@DeviceEnrollmentService.MaxTokenUses" />
+            </MudItem>
+            <MudItem xs="6" sm="2">
+                <MudNumericField T="int" @bind-Value="tokenDays" Label="期限 (日)" Min="1" Max="@DeviceEnrollmentService.MaxTokenDays" />
+            </MudItem>
+            <MudItem xs="12" sm="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IssueTokenAsync">トークンを出す</MudButton>
+            </MudItem>
+        </MudGrid>
+        @if (issuedToken is not null)
+        {
+            <MudAlert Severity="Severity.Success" Class="mt-4">
+                <div>管理対象の構成に入れる値です (@FormatTime(issuedToken.ExpiresAt) まで)。トークンはこのときだけ見せます。</div>
+                <table class="managed-config mt-2">
+                    <tr>
+                        <th>apiEndPoint</th>
+                        <td>@ApiEndPoint</td>
+                    </tr>
+                    <tr>
+                        <th>enrollmentToken</th>
+                        <td>@issuedToken.Token</td>
+                    </tr>
+                </table>
+            </MudAlert>
+        }
+        <MudTable Items="tokens" Dense="true" Elevation="0" Class="mt-4 nowrap-table">
+            <HeaderContent>
+                <MudTh>種類</MudTh>
+                <MudTh>登録した台数</MudTh>
+                <MudTh>期限</MudTh>
+                <MudTh>出した日時</MudTh>
+                <MudTh>状態</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@KindName(context.Kind)</MudTd>
+                <MudTd>@context.UsedCount / @context.MaxUses</MudTd>
+                <MudTd>@FormatTime(context.ExpiresAt)</MudTd>
+                <MudTd>@FormatTime(context.CreatedAt)</MudTd>
+                <MudTd>@TokenStatusText(context)</MudTd>
+                <MudTd>
+                    @if (IsUsable(context))
+                    {
+                        <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => RevokeTokenAsync(context)">取り消す</MudButton>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>出した登録トークンはありません。</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
         <div class="d-flex align-center">
             <MudText Typo="Typo.h6">登録した端末</MudText>
             <MudSpacer />
@@ -77,7 +143,16 @@ else
             <RowTemplate>
                 <MudTd>@context.Device.Name</MudTd>
                 <MudTd>@KindName(context.Device.Kind)</MudTd>
-                <MudTd>@PlacementText(context)</MudTd>
+                <MudTd>
+                    @if (context.IsWaitingPlacement)
+                    {
+                        <span class="mud-warning-text">割り当て待ち</span>
+                    }
+                    else
+                    {
+                        @PlacementText(context)
+                    }
+                </MudTd>
                 <MudTd>@(context.Device.LastSeenAt is { } seen ? FormatTime(seen) : "--")</MudTd>
                 <MudTd>@BatteryText(context.Device)</MudTd>
                 <MudTd>@(context.Device.AppVersion ?? "--")</MudTd>
@@ -85,7 +160,7 @@ else
                 <MudTd>
                     @if (context.Device.IsActive)
                     {
-                        <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>
+                        <MudButton Size="Size.Small" OnClick="() => Edit(context)">@(context.IsWaitingPlacement ? "割り当てる" : "変更")</MudButton>
                     }
                 </MudTd>
             </RowTemplate>

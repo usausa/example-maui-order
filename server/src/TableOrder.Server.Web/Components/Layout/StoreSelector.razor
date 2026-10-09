@@ -3,12 +3,20 @@
 <MudPaper Class="pa-3 mb-4" Elevation="0" Outlined="true">
     <MudGrid Spacing="2">
         <MudItem xs="12" sm="4">
-            <MudSelect T="Guid?" Value="Selection.TenantId" ValueChanged="SelectTenantAsync" Label="テナント" Dense="true">
-                @foreach (var tenant in tenants)
-                {
-                    <MudSelectItem T="Guid?" Value="@tenant.Id">@tenant.Name</MudSelectItem>
-                }
-            </MudSelect>
+            @if (Scope.IsOperator)
+            {
+                <MudSelect T="Guid?" Value="Selection.TenantId" ValueChanged="SelectTenantAsync" Label="テナント" Dense="true">
+                    @foreach (var tenant in tenants)
+                    {
+                        <MudSelectItem T="Guid?" Value="@tenant.Id">@tenant.Name</MudSelectItem>
+                    }
+                </MudSelect>
+            }
+            else
+            {
+                @* テナントの利用者は自分のテナントだけを扱う *@
+                <MudTextField T="string" Value="@TenantName" Label="テナント" Margin="Margin.Dense" ReadOnly="true" />
+            }
         </MudItem>
         <MudItem xs="12" sm="4">
             <MudSelect T="Guid?" Value="Selection.StoreId" ValueChanged="SelectStore" Label="店舗" Dense="true" Disabled="Selection.TenantId is null">

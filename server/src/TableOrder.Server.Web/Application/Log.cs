@@ -33,6 +33,23 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Signing key is not configured. An ephemeral key is generated for development.")]
     public static partial void WarnEphemeralSigningKey(this ILogger logger);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Revocation list refresh failed.")]
+    public static partial void ErrorRevocationRefresh(this ILogger logger, Exception ex);
+
+    // Admin
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Initial operator created. email=[{email}]")]
+    public static partial void InfoInitialOperatorCreated(this ILogger logger, string email);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "No operator exists. Set Admin:InitialOperatorEmail and Admin:InitialOperatorPassword to create the first operator.")]
+    public static partial void WarnNoOperator(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Initial operator password does not meet the password policy.")]
+    public static partial void WarnInitialOperatorPasswordInvalid(this ILogger logger);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Authenticator key could not be read. user=[{userId}]")]
+    public static partial void WarnAuthenticatorKeyUnreadable(this ILogger logger, Exception ex, Guid userId);
+
     // Request
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Long execution. method=[{method}], route=[{route}], elapsed=[{elapsed}]")]
@@ -48,8 +65,8 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Expired events deleted. count=[{count}]")]
     public static partial void InfoEventCleanup(this ILogger logger, int count);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Expired pairing codes deleted. count=[{count}]")]
-    public static partial void InfoPairingCodeCleanup(this ILogger logger, int count);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Expired pairing codes and enrollment tokens deleted. count=[{count}]")]
+    public static partial void InfoEnrollmentCleanup(this ILogger logger, int count);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Cleanup failed.")]
     public static partial void ErrorCleanup(this ILogger logger, Exception ex);

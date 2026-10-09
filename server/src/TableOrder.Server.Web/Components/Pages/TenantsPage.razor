@@ -1,0 +1,64 @@
+@page "/tenants"
+@attribute [Authorize(Policy = AdminPolicies.Operator)]
+
+<PageTitle>テナント</PageTitle>
+
+<MudText Typo="Typo.h4">テナント</MudText>
+<MudText Class="mt-2">契約しているテナントの一覧、登録、止める・戻す</MudText>
+
+<MudPaper Class="pa-4 mt-4">
+    <MudText Typo="Typo.h6">テナントを登録する</MudText>
+    <MudText Typo="Typo.body2" Class="mt-1">登録したら、上でテナントを選び、利用者の画面でテナントの管理者を、店舗の画面で店舗を足します。</MudText>
+    <MudGrid Class="mt-2" Spacing="2">
+        <MudItem xs="12" sm="2">
+            <MudTextField T="string" @bind-Value="addCode" Label="コード" MaxLength="@TenantService.MaxCodeLength" HelperText="英小文字・数字・ハイフン" />
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudTextField T="string" @bind-Value="addName" Label="会社の名前" MaxLength="@TenantService.MaxNameLength" />
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudTextField T="string" @bind-Value="addBrandJa" Label="チェーンの名前 (日本語)" MaxLength="@Length.BrandName" />
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudTextField T="string" @bind-Value="addBrandEn" Label="チェーンの名前 (英語)" MaxLength="@Length.BrandName" />
+        </MudItem>
+        <MudItem xs="12" sm="2" Class="d-flex align-center">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">登録する</MudButton>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+<MudPaper Class="pa-4 mt-4">
+    <div class="d-flex align-center">
+        <MudText Typo="Typo.h6">テナント</MudText>
+        <MudSpacer />
+        <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+    </div>
+    <MudTable Items="tenants" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
+        <HeaderContent>
+            <MudTh>コード</MudTh>
+            <MudTh>会社の名前</MudTh>
+            <MudTh>チェーンの名前</MudTh>
+            <MudTh>使っている店舗</MudTh>
+            <MudTh>状態</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Code</MudTd>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.BrandName.Ja</MudTd>
+            <MudTd>@context.StoreCount</MudTd>
+            <MudTd>@AdminNames.TenantStatusName(context.Status)</MudTd>
+            <MudTd>
+                @if (context.Status == TenantStatus.Active)
+                {
+                    <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => SetSuspendedAsync(context, true)">止める</MudButton>
+                }
+                else if (context.Status == TenantStatus.Suspended)
+                {
+                    <MudButton Size="Size.Small" OnClick="() => SetSuspendedAsync(context, false)">戻す</MudButton>
+                }
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>

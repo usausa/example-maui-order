@@ -1,5 +1,5 @@
 -- スキーマ (起動のたびに DatabaseService が実行する。CREATE ... IF NOT EXISTS なので何度実行してもよい)
--- Tenants のほかのすべての表は TenantId を持ち、主キー・一意・索引・外部キーの先頭に置く
+-- Tenants と AdminUsers (運営者はテナントに属さない) のほかのすべての表は TenantId を持ち、主キー・一意・索引・外部キーの先頭に置く
 -- テナントのわからない要求で引く列と、テナントをまたぐ裏の処理の索引だけ TenantId を付けない
 
 PRAGMA journal_mode = WAL;
@@ -81,6 +81,44 @@ CREATE TABLE IF NOT EXISTS DiningTables (
     FOREIGN KEY (TenantId, StoreId) REFERENCES Stores (TenantId, Id)
 );
 
+-- 管理画面の利用者。運営者はテナントに属さないので、Tenants と同じくテナントの外に置く (TenantId は運営者のとき NULL)
+-- サインインはテナントのわからないまま、すべてのテナントで一意のメールアドレスで引く
+CREATE TABLE IF NOT EXISTS AdminUsers (
+    Id                  TEXT     NOT NULL,
+    TenantId            TEXT,
+    Role                TEXT     NOT NULL,
+    Email               TEXT     NOT NULL,
+    NormalizedEmail     TEXT     NOT NULL,
+    Name                TEXT     NOT NULL,
+    PasswordHash        TEXT     NOT NULL,
+    MustChangePassword  INTEGER  NOT NULL,
+    SecurityStamp       TEXT     NOT NULL,
+    AccessFailedCount   INTEGER  NOT NULL,
+    LockoutEnd          TEXT,
+    TwoFactorEnabled    INTEGER  NOT NULL,
+    AuthenticatorKey    TEXT,
+    RecoveryCodes       TEXT,
+    LastSignInAt        TEXT,
+    IsActive            INTEGER  NOT NULL,
+    CreatedAt           TEXT     NOT NULL,
+    UpdatedAt           TEXT     NOT NULL,
+    Version             INTEGER  NOT NULL,
+    PRIMARY KEY (Id),
+    UNIQUE (NormalizedEmail),
+    UNIQUE (TenantId, Id),
+    FOREIGN KEY (TenantId) REFERENCES Tenants (Id)
+);
+
+-- 店舗の担当が受け持つ店舗
+CREATE TABLE IF NOT EXISTS AdminUserStores (
+    TenantId  TEXT  NOT NULL,
+    UserId    TEXT  NOT NULL,
+    StoreId   TEXT  NOT NULL,
+    PRIMARY KEY (TenantId, UserId, StoreId),
+    FOREIGN KEY (TenantId, UserId) REFERENCES AdminUsers (TenantId, Id),
+    FOREIGN KEY (TenantId, StoreId) REFERENCES Stores (TenantId, Id)
+);
+
 CREATE TABLE IF NOT EXISTS Devices (
     TenantId      TEXT     NOT NULL,
     Id            TEXT     NOT NULL,
@@ -102,6 +140,8 @@ CREATE TABLE IF NOT EXISTS Devices (
 -- トークンの要求で、テナントのわからないまま端末を引く
 CREATE UNIQUE INDEX IF NOT EXISTS UX_Devices_Id ON Devices (Id);
 CREATE INDEX IF NOT EXISTS IX_Devices_StoreId ON Devices (TenantId, StoreId);
+-- すぐに拒む一覧で、テナントをまたいで近ごろ無効にした端末を引く
+CREATE INDEX IF NOT EXISTS IX_Devices_RevokedAt ON Devices (RevokedAt) WHERE RevokedAt IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS DeviceStations (
     TenantId   TEXT  NOT NULL,

@@ -1,0 +1,51 @@
+<MudGrid Class="mt-2" Spacing="2">
+    <MudItem xs="12" sm="2">
+        <MudTextField T="string" @bind-Value="Form.Code" Label="店舗コード" MaxLength="@StoreSetupService.MaxCodeLength" />
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudTextField T="string" @bind-Value="Form.NameJa" Label="名前 (日本語)" MaxLength="@Length.BrandName" />
+    </MudItem>
+    <MudItem xs="12" sm="3">
+        <MudTextField T="string" @bind-Value="Form.NameEn" Label="名前 (英語)" MaxLength="@Length.BrandName" />
+    </MudItem>
+    <MudItem xs="12" sm="2">
+        <MudTextField T="string" @bind-Value="Form.TimeZone" Label="タイムゾーン" />
+    </MudItem>
+    <MudItem xs="6" sm="1">
+        <MudTextField T="string" @bind-Value="Form.OpenTime" Label="開店" HelperText="HH:mm" />
+    </MudItem>
+    <MudItem xs="6" sm="1">
+        <MudTextField T="string" @bind-Value="Form.CloseTime" Label="閉店" HelperText="HH:mm" />
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudTextField T="string" @bind-Value="Form.LastOrderTime" Label="ラストオーダー" HelperText="ないときは空" />
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudSelect T="TaxRounding" @bind-Value="Form.TaxRounding" Label="税の丸め">
+            @foreach (var rounding in Roundings)
+            {
+                <MudSelectItem T="TaxRounding" Value="@rounding">@AdminNames.TaxRoundingName(rounding)</MudSelectItem>
+            }
+        </MudSelect>
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudNumericField T="int" @bind-Value="Form.MaxQuantityPerLine" Label="1 明細の数量の上限" Min="1" Max="@StoreSetupService.MaxQuantityLimit" />
+    </MudItem>
+    <MudItem xs="6" sm="2">
+        <MudNumericField T="int" @bind-Value="Form.MaxLinesPerOrder" Label="1 回の注文の明細の上限" Min="1" Max="@StoreSetupService.MaxLinesLimit" />
+    </MudItem>
+    @if (IsNew)
+    {
+        <MudItem xs="6" sm="2">
+            <MudTextField T="string" @bind-Value="Form.StaffPin" Label="スタッフの PIN" InputType="InputType.Password" MaxLength="@Length.StaffPinDigits" HelperText="@($"{Length.StaffPinDigits} 桁の数字")" />
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudSelect T="Guid?" @bind-Value="Form.SourceStoreId" Label="設定を写す店舗" Clearable="true">
+                @foreach (var store in Stores)
+                {
+                    <MudSelectItem T="Guid?" Value="@store.Id">@store.Name.Ja (@store.Code)</MudSelectItem>
+                }
+            </MudSelect>
+        </MudItem>
+    }
+</MudGrid>

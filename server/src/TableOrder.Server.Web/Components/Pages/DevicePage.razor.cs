@@ -8,7 +8,7 @@ using TableOrder.Contract.Menu;
 using TableOrder.Contract.Stores;
 using TableOrder.Server.Web.Application.Context;
 
-// 端末の管理 (選んだ店舗の端末の一覧、ペアリングコードの発行、置き場所と名前の変更、無効化)
+// 端末の管理 (選んだ店舗の端末の一覧、ペアリングコードと登録トークンの発行、登録トークンの取り消し、置き場所の割り当てと名前の変更、無効化)
 public sealed partial class DevicePage : IDisposable
 {
     private static readonly DeviceKind[] Kinds = [DeviceKind.Table, DeviceKind.Hall, DeviceKind.Kitchen, DeviceKind.Reception];
@@ -29,6 +29,16 @@ public sealed partial class DevicePage : IDisposable
 
     private PairingCodeResult? issued;
 
+    private List<DeviceEnrollmentEntity> tokens = [];
+
+    private DeviceKind tokenKind = DeviceKind.Table;
+
+    private int tokenMaxUses = 10;
+
+    private int tokenDays = 7;
+
+    private EnrollmentTokenResult? issuedToken;
+
     private DeviceSummaryResult? editing;
 
     private string editName = string.Empty;
@@ -40,6 +50,12 @@ public sealed partial class DevicePage : IDisposable
     //--------------------------------------------------------------------------------
     // Property
     //--------------------------------------------------------------------------------
+
+    [Inject]
+    public required TimeProvider TimeProvider { get; set; }
+
+    [Inject]
+    public required NavigationManager Navigation { get; set; }
 
     [Inject]
     public required StoreSelection Selection { get; set; }
@@ -71,11 +87,12 @@ public sealed partial class DevicePage : IDisposable
 
     public void Dispose() => Selection.Changed -= OnSelectionChanged;
 
-    // 店舗を選び直したら、出したコードと選んだ置き場所を消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
+    // 店舗を選び直したら、出したコードとトークンと選んだ置き場所を消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
         _ = InvokeAsync(async () =>
         {
             issued = null;
+            issuedToken = null;
             SelectIssueKind(issueKind);
             using (BeginServiceScope())
             {
@@ -85,7 +102,7 @@ public sealed partial class DevicePage : IDisposable
             StateHasChanged();
         });
 
-    // 読み直すと変更の欄を閉じる (出したペアリングコードは、端末に入れ終えるまで出しておく)
+    // 読み直すと変更の欄を閉じる (出したペアリングコードと登録トークンは、端末と EMM に入れ終えるまで出しておく)
     private async Task LoadAsync()
     {
         editing = null;
@@ -94,6 +111,7 @@ public sealed partial class DevicePage : IDisposable
             devices = [];
             tables = [];
             stations = [];
+            tokens = [];
             return;
         }
 
@@ -101,6 +119,7 @@ public sealed partial class DevicePage : IDisposable
         devices = await DeviceService.GetSummaryListAsync(CancellationToken.None);
         tables = (await StoreService.GetTablesAsync(null, CancellationToken.None)).Value?.Items.ToList() ?? [];
         stations = await DeviceService.GetStationListAsync(CancellationToken.None);
+        tokens = await EnrollmentService.GetTokenListAsync(CancellationToken.None);
     }
 
     //--------------------------------------------------------------------------------
@@ -128,6 +147,52 @@ public sealed partial class DevicePage : IDisposable
         }
 
         issued = result.Value;
+    }
+
+    //--------------------------------------------------------------------------------
+    // Enrollment token
+    //--------------------------------------------------------------------------------
+
+    private async Task IssueTokenAsync()
+    {
+        var result = await EnrollmentService.IssueEnrollmentTokenAsync(tokenKind, tokenMaxUses, tokenDays, CancellationToken.None);
+        if (!result.Succeeded)
+        {
+            Snackbar.Add(ErrorMessage(result.Error), Severity.Error);
+            return;
+        }
+
+        issuedToken = result.Value;
+        tokens = await EnrollmentService.GetTokenListAsync(CancellationToken.None);
+    }
+
+    // 取り消すと、それからの登録を断る (登録した端末はそのまま)。出したばかりのトークンなら、見せている値も消す
+    private async Task RevokeTokenAsync(DeviceEnrollmentEntity token)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "登録トークンを取り消す",
+            $"{FormatTime(token.CreatedAt)} に出した{KindName(token.Kind)}の登録トークンを取り消します。それからの登録を断ります (登録した端末はそのまま使えます)。",
+            yesText: "取り消す",
+            cancelText: "やめる");
+        if (confirmed != true)
+        {
+            return;
+        }
+
+        var error = await EnrollmentService.RevokeTokenAsync(token.Id, CancellationToken.None);
+        if (error is not null)
+        {
+            Snackbar.Add(ErrorMessage(error), Severity.Error);
+            return;
+        }
+
+        if (issuedToken?.Id == token.Id)
+        {
+            issuedToken = null;
+        }
+
+        Snackbar.Add("登録トークンを取り消しました", Severity.Success);
+        tokens = await EnrollmentService.GetTokenListAsync(CancellationToken.None);
     }
 
     //--------------------------------------------------------------------------------
@@ -217,6 +282,18 @@ public sealed partial class DevicePage : IDisposable
             DeviceKind.Kitchen => item.StationIds.Count > 0 ? String.Join("、", item.StationIds.Select(StationName)) : "未割り当て",
             _ => "--"
         };
+
+    // 管理対象の構成の接続先 (この管理画面のサーバの URL)
+    private string ApiEndPoint => Navigation.BaseUri;
+
+    private bool IsUsable(DeviceEnrollmentEntity token) =>
+        (token.RevokedAt is null) && (token.ExpiresAt > TimeProvider.GetUtcNow()) && (token.UsedCount < token.MaxUses);
+
+    private string TokenStatusText(DeviceEnrollmentEntity token) =>
+        token.RevokedAt is not null ? "取り消した" :
+        token.ExpiresAt <= TimeProvider.GetUtcNow() ? "期限切れ" :
+        token.UsedCount >= token.MaxUses ? "使い切った" :
+        "使える";
 
     private string StationName(Guid id) =>
         stations.FirstOrDefault(x => x.Id == id)?.Name ?? id.ToString("D");

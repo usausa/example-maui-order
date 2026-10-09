@@ -1,0 +1,80 @@
+@page "/stores"
+@attribute [Authorize(Policy = AdminPolicies.TenantAdmin)]
+
+<PageTitle>店舗</PageTitle>
+
+<MudText Typo="Typo.h4">店舗</MudText>
+<MudText Class="mt-2">テナントの店舗の追加、基本 (店舗コード、名前、営業時間、ラストオーダー、注文の上限) の変更、使わなくする</MudText>
+
+@if (Selection.TenantId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントを選んでください。</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">店舗を足す</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">言語・支払方法・機能・呼び出しの用件・メニューは、選んだ店舗から写します (写さないときは既定の設定とサンプルのメニュー)。</MudText>
+        <StoreFields Form="addForm" Stores="stores" IsNew="true" />
+        <div class="d-flex mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">足す</MudButton>
+        </div>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <div class="d-flex align-center">
+            <MudText Typo="Typo.h6">テナントの店舗</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+        </div>
+        <MudTable Items="stores" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
+            <HeaderContent>
+                <MudTh>店舗コード</MudTh>
+                <MudTh>名前</MudTh>
+                <MudTh>営業時間</MudTh>
+                <MudTh>ラストオーダー</MudTh>
+                <MudTh>注文の上限</MudTh>
+                <MudTh>状態</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Code</MudTd>
+                <MudTd>@context.Name.Ja</MudTd>
+                <MudTd>@context.OpenTime - @context.CloseTime</MudTd>
+                <MudTd>@(context.LastOrderTime ?? "--")</MudTd>
+                <MudTd>@context.MaxQuantityPerLine 個 / @context.MaxLinesPerOrder 明細</MudTd>
+                <MudTd>@(context.IsActive ? "使う" : "使っていない")</MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (context.Id == editing?.Id)
+                {
+                    <MudTr>
+                        <td colspan="7" class="pa-4">
+                            <MudText Typo="Typo.body2">保存すると店舗の端末に知らせ、端末は起動からやり直して読み直します。</MudText>
+                            <StoreFields Form="editForm" Stores="stores" IsNew="false" />
+                            <div class="d-flex gap-2 mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+                                <MudButton OnClick="CancelEdit">やめる</MudButton>
+                                <MudSpacer />
+                                @if (context.IsActive)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => SetActiveAsync(false)">使わなくする</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" OnClick="() => SetActiveAsync(true)">使う</MudButton>
+                                }
+                            </div>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+            <NoRecordsContent>
+                <MudText>店舗はありません。</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}

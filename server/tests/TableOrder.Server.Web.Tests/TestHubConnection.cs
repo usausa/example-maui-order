@@ -19,11 +19,18 @@ public sealed class TestHubConnection : IAsyncDisposable
 
     private readonly TaskCompletionSource<long> ready = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
+    private readonly TaskCompletionSource closed = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     private TestHubConnection(HubConnection connection)
     {
         this.connection = connection;
         connection.On<EventListResponseItem>(HubMethods.Event, x => events.Writer.TryWrite(x));
         connection.On<long>(HubMethods.Ready, OnReady);
+        connection.Closed += _ =>
+        {
+            closed.TrySetResult();
+            return Task.CompletedTask;
+        };
     }
 
     public ValueTask DisposeAsync() => connection.DisposeAsync();
@@ -69,6 +76,9 @@ public sealed class TestHubConnection : IAsyncDisposable
             }
         }
     }
+
+    // サーバが接続を切るまで待つ (テストの接続はつなぎ直さない)
+    public Task WaitClosedAsync() => closed.Task.WaitAsync(Timeout, TestContext.Current.CancellationToken);
 
     private void OnReady(long lastSeq) => ready.TrySetResult(lastSeq);
 

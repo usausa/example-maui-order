@@ -5,6 +5,7 @@ using TableOrder.Server.Core.Infrastructure.Data;
 // Accessor 共通の型変換 ([ExecuteConfig(typeof(DataProfile))] で参照する。新しい列挙型も登録する)
 [AccessorProfile]
 [TypeHandler(typeof(EnumTextConverter<TenantStatus>))]
+[TypeHandler(typeof(EnumTextConverter<AdminRole>))]
 [TypeHandler(typeof(EnumTextConverter<EnrollmentMethod>))]
 [TypeHandler(typeof(EnumTextConverter<DeviceKind>))]
 [TypeHandler(typeof(EnumTextConverter<TaxRounding>))]

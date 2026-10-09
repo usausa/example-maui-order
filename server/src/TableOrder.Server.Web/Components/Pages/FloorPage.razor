@@ -1,0 +1,185 @@
+@page "/floor"
+@using TableOrder.Contract.Stores
+
+<PageTitle>店内の今</PageTitle>
+
+<div class="d-flex align-center">
+    <MudText Typo="Typo.h4">店内の今</MudText>
+    <MudSpacer />
+    @if (loadedAt is { } loaded)
+    {
+        <MudText Typo="Typo.body2" Class="mr-2">@FormatTime(loaded) に読み直しました</MudText>
+    }
+    <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+</div>
+<MudText Class="mt-2">テーブルと来店、選んだ来店の注文、呼び出し、品切れ、通知の記録 (店舗の通知を送るたびに読み直します)。ホール端末が使えないときは、ここで来店を開く・閉じる</MudText>
+
+@if (Selection.StoreId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+}
+else
+{
+    <MudGrid Class="mt-2" Spacing="3">
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6">テーブル</MudText>
+                <MudTable Items="tables" Dense="true" Hover="true" Elevation="0" Class="mt-2 nowrap-table floor-tables" T="TableListResponseItem" OnRowClick="SelectAsync" RowClassFunc="@((table, _) => RowClass(table))">
+                    <HeaderContent>
+                        <MudTh>テーブル</MudTh>
+                        <MudTh>席</MudTh>
+                        <MudTh>状態</MudTh>
+                        <MudTh>人数</MudTh>
+                        <MudTh>経過</MudTh>
+                        <MudTh>出していない品</MudTh>
+                        <MudTh>呼び出し</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Name</MudTd>
+                        <MudTd>@context.Capacity</MudTd>
+                        <MudTd>@StatusText(context.Visit)</MudTd>
+                        <MudTd>@(context.Visit is { } visit ? GuestText(visit) : "--")</MudTd>
+                        <MudTd>@(context.Visit is { } opened ? ElapsedText(opened.OpenedAt) : "--")</MudTd>
+                        <MudTd>@CountText(context.Visit?.UnservedCount)</MudTd>
+                        <MudTd>@CountText(context.Visit?.OpenCallCount)</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText>テーブルはありません。</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-4">
+                @if (SelectedTable is not { } selected)
+                {
+                    <MudText Typo="Typo.h6">来店</MudText>
+                    <MudText Class="mt-2">テーブルを押すと、来店の注文と明細を出します。空いているテーブルは、ここで来店を開けます。</MudText>
+                }
+                else if (selected.Visit is not { } visit)
+                {
+                    <MudText Typo="Typo.h6">テーブル @selected.Name (空き)</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">人数を入れて来店を開くと、テーブル端末は待受から注文の画面になります (@selected.Capacity 席)。</MudText>
+                    <MudGrid Class="mt-2" Spacing="2">
+                        <MudItem xs="6">
+                            <MudNumericField T="int" @bind-Value="guideAdults" Label="大人" Min="0" Max="@Length.MaxGuests" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField T="int" @bind-Value="guideChildren" Label="子ども (小学生以下)" Min="0" Max="@Length.MaxGuests" />
+                        </MudItem>
+                    </MudGrid>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="() => OpenAsync(selected)">来店を開く</MudButton>
+                }
+                else
+                {
+                    <MudText Typo="Typo.h6">テーブル @selected.Name の来店 (@StatusText(visit))</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">@GuestText(visit)、@FormatTime(visit.OpenedAt) から。注文の額 @FormatAmount(orders.Sum(static x => x.Amount)) (税込、取消を除く)</MudText>
+                    <div class="d-flex gap-2 mt-2">
+                        <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="() => CloseAsync(selected)">閉じる (レジで払った)</MudButton>
+                        @if (CanCancel(visit))
+                        {
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Error" OnClick="() => CancelAsync(selected)">取りやめ</MudButton>
+                        }
+                    </div>
+                    @if (orders.Count == 0)
+                    {
+                        <MudText Class="mt-4">注文はまだありません。</MudText>
+                    }
+                    @foreach (var order in orders)
+                    {
+                        <MudText Typo="Typo.subtitle2" Class="mt-4">注文 @order.OrderNo (@FormatTime(order.OrderedAt)、@SourceName(order.Source)) @FormatAmount(order.Amount)</MudText>
+                        <MudSimpleTable Dense="true" Elevation="0" Class="mt-1">
+                            <tbody>
+                                @foreach (var line in order.Lines)
+                                {
+                                    <tr class="@(line.Status == OrderLineStatus.Cancelled ? "line-cancelled" : null)">
+                                        <td>@LineText(line) × @line.Quantity</td>
+                                        <td class="floor-nowrap">@LineStatusText(line.Status)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </MudSimpleTable>
+                    }
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6">呼び出し</MudText>
+                @if (calls.Count == 0)
+                {
+                    <MudText Class="mt-2">終わっていない呼び出しはありません。</MudText>
+                }
+                else
+                {
+                    <MudSimpleTable Dense="true" Elevation="0" Class="mt-2">
+                        <tbody>
+                            @foreach (var call in calls)
+                            {
+                                <tr>
+                                    <td class="floor-nowrap">@FormatTime(call.Call.CreatedAt)</td>
+                                    <td class="floor-nowrap">テーブル @call.Call.TableName</td>
+                                    <td>@call.ReasonName.Ja</td>
+                                    <td class="floor-nowrap">@CallStatusText(call.Call.Status)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6">品切れ</MudText>
+                @if (stock.Count == 0)
+                {
+                    <MudText Class="mt-2">品切れと残りの数のある品はありません。</MudText>
+                }
+                else
+                {
+                    <MudSimpleTable Dense="true" Elevation="0" Class="mt-2">
+                        <tbody>
+                            @foreach (var item in stock)
+                            {
+                                <tr>
+                                    <td>@StockName(item)</td>
+                                    <td class="floor-nowrap @(item.Stock.Status == StockStatus.SoldOut ? "mud-error-text" : "mud-warning-text")">@StockText(item.Stock)</td>
+                                    <td class="floor-nowrap">@FormatTime(item.Stock.UpdatedAt)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-4">
+                <MudText Typo="Typo.h6">通知の記録</MudText>
+                <MudText Typo="Typo.body2" Class="mt-1">店舗の端末に送った直近の通知です。</MudText>
+                @if (events.Count == 0)
+                {
+                    <MudText Class="mt-2">通知はまだありません。</MudText>
+                }
+                else
+                {
+                    <MudSimpleTable Dense="true" Elevation="0" Class="mt-2">
+                        <tbody>
+                            @foreach (var item in events)
+                            {
+                                <tr>
+                                    <td class="floor-nowrap">@FormatTime(item.OccurredAt)</td>
+                                    <td>@EventName(item.Type)</td>
+                                    <td class="floor-nowrap mud-text-secondary">@item.Seq</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </MudSimpleTable>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

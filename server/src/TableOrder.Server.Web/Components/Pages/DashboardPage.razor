@@ -1,19 +1,36 @@
 @page "/"
 
-<PageTitle>Dashboard</PageTitle>
+<PageTitle>ダッシュボード</PageTitle>
 
-<MudText Typo="Typo.h4">Dashboard</MudText>
-<MudText Class="mt-2">契約しているテナント (運営者の画面)</MudText>
+<MudText Typo="Typo.h4">ダッシュボード</MudText>
 
-<MudTable Items="tenants" Dense="true" Class="mt-4">
-    <HeaderContent>
-        <MudTh>コード</MudTh>
-        <MudTh>名前</MudTh>
-        <MudTh>状態</MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd>@context.Code</MudTd>
-        <MudTd>@context.Name</MudTd>
-        <MudTd>@context.Status</MudTd>
-    </RowTemplate>
-</MudTable>
+@if (Scope.IsOperator)
+{
+    <MudText Class="mt-2">契約しているテナント</MudText>
+    <MudTable Items="tenants" Dense="true" Class="mt-4">
+        <HeaderContent>
+            <MudTh>コード</MudTh>
+            <MudTh>名前</MudTh>
+            <MudTh>状態</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Code</MudTd>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Status</MudTd>
+        </RowTemplate>
+    </MudTable>
+}
+else
+{
+    <MudText Class="mt-2">扱える店舗</MudText>
+    <MudTable Items="stores" Dense="true" Class="mt-4">
+        <HeaderContent>
+            <MudTh>コード</MudTh>
+            <MudTh>名前</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd>@context.Code</MudTd>
+            <MudTd>@context.Name.Ja</MudTd>
+        </RowTemplate>
+    </MudTable>
+}

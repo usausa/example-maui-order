@@ -53,13 +53,14 @@
 
 ### テナントの持ち方
 
-`Tenants` のほかのすべての表に `TenantId` を持たせ、すべてのテナントのデータを 1 つのデータベースに置く。
+`Tenants` と管理画面の利用者 (`AdminUsers`) のほかのすべての表に `TenantId` を持たせ、すべてのテナントのデータを 1 つのデータベースに置く。  
+`AdminUsers` は運営者 (テナントに属さない) を含むので、`Tenants` と同じくテナントの外の表にし、テナントの利用者だけが `TenantId` を持つ。
 
 - 読み書きは、要求の文脈 (トークン) のテナントで必ず絞る (`AND TenantId = ...`)。  
   すべての SQL にテナントの条件を書き、書き忘れは SQL のファイルを調べるテストで見つける
 - 主キー・一意・索引は、先頭に `TenantId` を置く (各表の箇条書きでは省いて書く。主キーを書いていない表は `TenantId`、`Id`)
 - 外部キーも `TenantId` を含めて親の表を指し、子と親のテナントが食い違わないようにする
-- テナントのわからない要求で引く列は、`TenantId` を付けずにすべてのテナントで一意にする (端末の `Id`、ペアリングコード、登録トークン、クライアントの `Id`、決済の取引番号、電子レシートの `Token`)。  
+- テナントのわからない要求で引く列は、`TenantId` を付けずにすべてのテナントで一意にする (端末の `Id`、ペアリングコード、登録トークン、クライアントの `Id`、決済の取引番号、電子レシートの `Token`、管理画面の利用者のメールアドレス)。  
   ここで引いた行のテナントを、その後の処理の文脈にする
 - テナントをまたいで読むのは、裏の処理 (通知の送り手、Webhook の送り直し、古いデータの消去) と運営者の管理画面だけにする。  
   その SQL は置き場所を分けてテナントの条件を調べるテストから外し、索引には `TenantId` を付けない (`Events` の `OccurredAt`、`WebhookDeliveries` の `NextAttemptAt`)
@@ -76,6 +77,8 @@
 | 店舗 | `Stores` | 店舗と店舗の設定 (営業時間、注文の一時停止、注文の上限、支払方法) | 管理画面、`PUT /store/ordering` |
 | | `CallReasons` | 呼び出しの用件 | 管理画面 |
 | | `DiningTables` | テーブル (席) | 管理画面 |
+| 管理画面 | `AdminUsers` | 管理画面の利用者 (役割、パスワードのハッシュ、多要素)。運営者はテナントに属さない | 管理画面 (サインイン、利用者の管理) |
+| | `AdminUserStores` | 店舗の担当が受け持つ店舗 | 管理画面 |
 | 端末 | `Devices` | 登録した端末 (種類、置き場所、公開鍵) | `POST /devices/pair`、管理画面 |
 | | `DeviceStations` | キッチン端末が受け持つ持ち場 | `POST /devices/pair`、管理画面 |
 | | `DeviceStatuses` | 端末の状態 (電池、アプリの版、最後の通信) | `POST /devices/me/heartbeat`、ハブの接続 |
@@ -104,6 +107,9 @@
 ```mermaid
 erDiagram
     Tenants ||--o{ Stores : "店舗"
+    Tenants |o--o{ AdminUsers : "利用者"
+    AdminUsers ||--o{ AdminUserStores : "受け持つ店舗"
+    Stores ||--o{ AdminUserStores : "担当"
     Tenants ||--o{ ApiClients : "クライアント"
     Tenants ||--o{ WebhookEndpoints : "Webhook の送り先"
     Stores ||--|{ DiningTables : "テーブル"
@@ -221,6 +227,41 @@ erDiagram
 - 一意: `StoreId`、`Name`
 - `GET /tables` の来店の要約 (`visit`) は、開いている来店と、その明細 (まだ出していない品) と呼び出し (終わっていないもの) から求める
 
+### AdminUsers (管理画面の利用者)
+
+| 列 | 型 | 中身 |
+| --- | --- | --- |
+| `Id` | guid | |
+| `TenantId` | guid? | 属するテナント (運営者は null) |
+| `Role` | enum | `Operator` (運営者) / `TenantAdmin` (テナントの管理者) / `StoreStaff` (店舗の担当) |
+| `Email` / `NormalizedEmail` | string | サインインの名前 (メールアドレス) と、大文字にそろえたもの |
+| `Name` | string | 画面に出す名前 |
+| `PasswordHash` | string | パスワードのハッシュ (ASP.NET Core Identity の形式。PBKDF2)。平文は持たない |
+| `MustChangePassword` | bool | 管理者が出した仮のパスワード (次のサインインで替えさせる) |
+| `SecurityStamp` | string | 資格情報 (パスワード、役割、受け持つ店舗、多要素、止める) を替えたら替える印。開いている管理画面は 1 分のうちにやり直す |
+| `AccessFailedCount` / `LockoutEnd` | int / datetime? | 続けて間違えた回数と、止めている期限 (5 回で 15 分) |
+| `TwoFactorEnabled` | bool | 多要素 (認証アプリ) を使う |
+| `AuthenticatorKey` | string? | 認証アプリの鍵 (データ保護で暗号にしたもの) |
+| `RecoveryCodes` | json? | 回復用のコードのハッシュ (`["..."]`。使ったら除く) |
+| `LastSignInAt` | datetime? | |
+| `IsActive` | bool | 止めた利用者 (サインインできない。消さない) |
+| `CreatedAt` / `UpdatedAt` | datetime | |
+| `Version` | int | 資格情報と管理画面の編集の楽観ロック |
+
+- 主キー: `Id`、一意: `NormalizedEmail` (サインインはテナントのわからないまま引くので、すべてのテナントで一意)、一意: `TenantId`、`Id` (`AdminUserStores` から指す)
+- 運営者はテナントに属さないので、`Tenants` と同じくテナントの外の表にする。  
+  サインインと自分の資格情報の読み書きは利用者の `Id` かメールアドレスで引き、テナントの利用者の一覧と管理はテナントで絞る
+
+### AdminUserStores (店舗の担当が受け持つ店舗)
+
+| 列 | 型 | 中身 |
+| --- | --- | --- |
+| `TenantId` | guid | テナント (キーの先頭) |
+| `UserId` | guid | 利用者 (店舗の担当) |
+| `StoreId` | guid | 受け持つ店舗 |
+
+- 主キー: `UserId`、`StoreId`
+
 ---
 
 ## 📱 4. 端末と外部のクライアント
@@ -236,14 +277,14 @@ erDiagram
 | `Name` | string | `T12`、`ハンディ 1`、`キッチン 1` |
 | `TableId` | guid? | テーブル端末の置き場所 |
 | `PublicKey` | string | 端末の公開鍵 (JWK)。トークンの要求の署名を確かめる |
-| `IsActive` | bool | 無効にすると次のトークンを出さない |
+| `IsActive` | bool | 無効にすると次のトークンを出さず、出したトークンもすぐに拒む |
 | `RegisteredAt` | datetime | |
-| `RevokedAt` | datetime? | 無効にした時刻 |
+| `RevokedAt` | datetime? | 無効にした時刻 (トークンの期限を過ぎるまで、すぐに拒む一覧に入れる) |
 | `CreatedAt` / `UpdatedAt` | datetime | |
 | `Version` | int | |
 
 - すべてのテナントで一意: `Id` (トークンの要求で、テナントのわからないまま端末を引く)
-- 索引: `StoreId`
+- 索引: `StoreId`、`RevokedAt` (無効にした行だけ。すぐに拒む一覧で、テナントをまたいで近ごろ無効にした端末を引く)
 - 名前は端末が送った名前 (機種の名前と端末ごとの値の末尾) で、重なってよい (管理画面で付け替える)
 - 置き場所 (テーブル、持ち場) を替えても登録し直さない (次のトークンと端末の設定に出る)
 
@@ -288,11 +329,12 @@ erDiagram
 | `MaxUses` / `UsedCount` | int | 登録できる台数と、登録した台数 |
 | `ExpiresAt` | datetime | |
 | `CreatedAt` | datetime | |
-| `RevokedAt` | datetime? | 取り下げた時刻 |
+| `RevokedAt` | datetime? | 取り消した時刻 (登録トークン) |
 
 - すべてのテナントで一意: `PairingCode` (null でない行)、`TokenHash` (null でない行)
 - ペアリングの要求はテナントも店舗も知らないので、コードから引いた行のテナントと店舗で端末を登録する。  
   期限を過ぎたコードは消す (同じコードを出し直せるように)
+- 登録トークンは、期限を過ぎるか取り消してから 1 日で消す (それまでは管理画面の一覧に出す)
 
 ### ApiClients (外部のクライアント)
 

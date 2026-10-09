@@ -40,6 +40,188 @@ html, body {
     letter-spacing: 0.2em;
 }
 
+/* Managed configuration (管理対象の構成に入れる値。トークンは長いので折り返す) */
+.managed-config th {
+    padding-right: 16px;
+    font-family: monospace;
+    font-weight: 400;
+    text-align: left;
+    vertical-align: top;
+}
+
+.managed-config td {
+    font-family: monospace;
+    font-weight: 700;
+    word-break: break-all;
+}
+
+/* Floor (押して選ぶテーブルの行、選んだ行、折り返さない短い値、取り消した明細) */
+.floor-tables .mud-table-row {
+    cursor: pointer;
+}
+
+.floor-selected {
+    background-color: var(--mud-palette-action-default-hover);
+}
+
+.floor-nowrap {
+    white-space: nowrap;
+}
+
+.line-cancelled {
+    color: var(--mud-palette-text-disabled);
+    text-decoration: line-through;
+}
+
+/* Users */
+.temporary-password {
+    font-family: monospace;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+/* Account (static pages: plain inputs instead of interactive MudBlazor fields) */
+.account-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 16px;
+}
+
+.account-title {
+    margin-bottom: 24px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--mud-palette-primary);
+}
+
+.account-card {
+    width: 100%;
+    max-width: 440px;
+    box-sizing: border-box;
+}
+
+.account-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.account-field label {
+    font-size: 0.875rem;
+    color: var(--mud-palette-text-secondary);
+}
+
+.account-input {
+    padding: 10px 12px;
+    border: 1px solid var(--mud-palette-lines-inputs);
+    border-radius: 4px;
+    font-size: 1rem;
+}
+
+.account-input:focus {
+    outline: 2px solid var(--mud-palette-primary);
+    outline-offset: -1px;
+}
+
+.account-error {
+    font-size: 0.8rem;
+    color: var(--mud-palette-error);
+}
+
+.account-button {
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--mud-palette-primary);
+    color: var(--mud-palette-primary-text);
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.account-button-secondary {
+    border: 1px solid var(--mud-palette-primary);
+    background-color: transparent;
+    color: var(--mud-palette-primary);
+}
+
+.account-button-danger {
+    background-color: var(--mud-palette-error);
+    color: var(--mud-palette-error-text);
+}
+
+.account-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.account-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 24px;
+}
+
+.account-links a {
+    color: var(--mud-palette-primary);
+}
+
+.account-details {
+    margin-top: 24px;
+}
+
+.account-details summary {
+    margin-bottom: 12px;
+    cursor: pointer;
+    color: var(--mud-palette-text-secondary);
+}
+
+.account-signout {
+    margin-top: 24px;
+}
+
+.account-list {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 8px 16px;
+    margin: 0;
+}
+
+.account-list dt {
+    color: var(--mud-palette-text-secondary);
+}
+
+.account-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.account-key {
+    padding: 12px;
+    background-color: var(--mud-palette-background-gray);
+    font-family: monospace;
+    font-size: 1.1rem;
+    letter-spacing: 0.05em;
+    text-align: center;
+}
+
+.account-uri {
+    display: block;
+    overflow-wrap: anywhere;
+    font-size: 0.8rem;
+}
+
+.account-codes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 1rem;
+}
 
 /* Blazor error UI */
 #blazor-error-ui {

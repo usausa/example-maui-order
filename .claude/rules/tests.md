@@ -17,13 +17,18 @@ paths:
 - 期待する額はメニューの値 (価格) を書かず、明細と `Pricing` から求める (サンプルのメニューを変えてもテストを壊さない)
 - 通知は別のスレッドで届くので、届いた順に読んで時間を区切って待つ。送っていないことは、後から起こした通知が次に届くことで確かめる (通知は seq の順に届く)
 - サーバの API のテストは、クラスごとのサーバ (`ServerFactory`。一時ファイルの DB とサンプルのデータ) で行い、テストごとに端末を登録して (`TestDevice`) ほかのテストと状態を分ける
-- まだ API のない準備 (端末の無効化、テナントの停止、テスト用のテナント) は `ServerFactory` の決まった SQL と引数で行い、テナントを止めるテストは自分で作ったテナントを使う
+- 端末の無効化・テナントの停止・テスト用のテナントの準備は `ServerFactory` の決まった SQL で行い (無効化と停止は、管理画面の操作と同じくすぐに拒む一覧も読み直す)、テナントを止めるテストは自分で作ったテナントを使う
+- ほかのサーバで替えたものを一覧の読み直しで断ることは、読み直しの間隔を短くしたテストのサーバ (`new ServerFactory()` の `Settings`) で、一覧を読み直さずに DB だけを替えて (`RevokeDeviceAsync(refresh: false)`) 確かめる
+- サーバが通知の接続を切ることは `TestHubConnection.WaitClosedAsync` で確かめる (テストの接続はつなぎ直さない)
+- 店舗の通知を送ったことの画面への知らせは、`StoreActivity.Watch` で受けて時間を区切って待つ。知らせないことは `StoreActivity` を直接作り、`Notify` を呼んで確かめる
 - 来店や品切れを変えるテストは、テストごとの店舗 (`ServerFactory.CreateStoreAsync`) で行い、サンプルのデータの店舗を変えない
 - 通知のハブのテストは `TestHubConnection` (Long Polling) でつなぎ、`ready` を受けてから操作する。`ready` の番号までの通知は端末と同じく読み飛ばす (送り手の遅れで、つないだあとに届くことがある)
 - 端末のアプリの窓口 (`TableOrder.Client` の REST と SignalR) は、サーバのテストで `TestTerminal` (テストのサーバの中のハンドラと Long Polling) につないで確かめ、`Client/` の下に窓口と同じフォルダ (`Rest/`、`SignalR/`) で置く
 - 注文のテストの単価は `TestMenu` (サーバのメニューと `Pricing`) で求め、メニューの価格を書かない
 - 開発の環境の自動の進行は、`SimulationService` を DI から取り、時間を 0 にして店舗の文脈で呼んで確かめる (テストのサーバは自動の進行を止める)
-- 管理画面の操作 (端末の管理、案内、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
+- 管理画面の操作 (端末の管理、店内の今、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
+- 管理画面の画面 (サインイン、役割で絞った画面) は `TestAdmin` (Cookie を持ち、自動では移らない) で開き、フォームは画面の偽造防止の値と Blazor のフォームの名前を付けて送る。移る先は `TestAdmin.LocationOf`、画面の文字は `TestAdmin.ReadPageAsync` (日本語は文字参照で出る) で確かめる
+- 管理画面のテストの利用者は `ServerFactory.CreateAdminUserAsync` でテストごとに作り、サンプルの利用者の資格情報を替えない
 - テストのサーバの店舗の PIN は `ServerFactory.StaffPin` で、ハッシュの回数を少なくしている (テストを遅くしない)
 - テーブル端末のテストの来店は、ホール端末で開く (`ServerFactory.OpenVisitAsync`。テーブル端末と受付機は、来店の開き方を替えた店舗 (`CreateStoreAsync(VisitOpening.Xxx)`) でだけ開ける)
 - 画像は、サンプルの写真 (起動で `Assets/Images` から写したもの) か、`IImageStore` に直接置いたもので確かめる (テストのサーバの置き場はクラスごとの一時のフォルダ)

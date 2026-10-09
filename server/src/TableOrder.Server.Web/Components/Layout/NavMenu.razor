@@ -1,7 +1,18 @@
 <MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
-    <MudNavLink Href="visits" Icon="@Icons.Material.Filled.EventSeat">案内</MudNavLink>
+    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">ダッシュボード</MudNavLink>
+    <MudNavLink Href="floor" Icon="@Icons.Material.Filled.Restaurant">店内の今</MudNavLink>
+    <MudNavLink Href="tables" Icon="@Icons.Material.Filled.TableRestaurant">テーブル</MudNavLink>
     <MudNavLink Href="devices" Icon="@Icons.Material.Filled.TabletAndroid">端末</MudNavLink>
-    <MudNavLink Href="brand" Icon="@Icons.Material.Filled.Palette">チェーン</MudNavLink>
     <MudNavLink Href="store-settings" Icon="@Icons.Material.Filled.Storefront">店舗の設定</MudNavLink>
+    @if (Scope.CanManageTenant)
+    {
+        <MudNavLink Href="stores" Icon="@Icons.Material.Filled.Store">店舗</MudNavLink>
+        <MudNavLink Href="brand" Icon="@Icons.Material.Filled.Palette">チェーン</MudNavLink>
+        <MudNavLink Href="users" Icon="@Icons.Material.Filled.People">利用者</MudNavLink>
+    }
+    @if (Scope.IsOperator)
+    {
+        <MudNavLink Href="tenants" Icon="@Icons.Material.Filled.Business">テナント</MudNavLink>
+        <MudNavLink Href="operators" Icon="@Icons.Material.Filled.AdminPanelSettings">運営者</MudNavLink>
+    }
 </MudNavMenu>

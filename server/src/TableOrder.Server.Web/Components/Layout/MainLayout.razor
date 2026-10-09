@@ -9,6 +9,16 @@
     <MudAppBar Elevation="1">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudText Typo="Typo.h6" Class="ml-2">TableOrder</MudText>
+        <MudSpacer />
+        @if (Scope.IsInitialized)
+        {
+            <MudButton Href="@AccountPaths.Account" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.AccountCircle">@Scope.Name (@AdminNames.RoleName(Scope.Role))</MudButton>
+            @* サインアウトは Cookie を消すので、画面の回線ではなくフォームの POST で送る *@
+            <form action="@AccountPaths.SignOut" method="post">
+                <AntiforgeryToken />
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit" StartIcon="@Icons.Material.Filled.Logout">サインアウト</MudButton>
+            </form>
+        }
     </MudAppBar>
     <MudDrawer @bind-Open="drawerOpen" Elevation="2">
         <NavMenu />
@@ -16,28 +26,22 @@
     @* 余白は内側に付ける (MudMainContent の上の余白は上の帯の高さで、pa-4 で上書きすると帯の下に隠れる) *@
     <MudMainContent>
         <div class="pa-4">
-            <StoreSelector />
-            <ErrorBoundary @ref="errorBoundary">
-                <ChildContent>
-                    @Body
-                </ChildContent>
-                <ErrorContent>
-                    <MudAlert Severity="Severity.Error" Class="mb-4">エラーが発生しました。</MudAlert>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Recover">再試行</MudButton>
-                </ErrorContent>
-            </ErrorBoundary>
+            @if (initialized)
+            {
+                @if (Scope.IsInitialized)
+                {
+                    <StoreSelector />
+                }
+                <ErrorBoundary @ref="errorBoundary">
+                    <ChildContent>
+                        @Body
+                    </ChildContent>
+                    <ErrorContent>
+                        <MudAlert Severity="Severity.Error" Class="mb-4">エラーが発生しました。</MudAlert>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Recover">再試行</MudButton>
+                    </ErrorContent>
+                </ErrorBoundary>
+            }
         </div>
     </MudMainContent>
 </MudLayout>
-
-@code {
-    private ErrorBoundary? errorBoundary;
-
-    private bool drawerOpen = true;
-
-    private void ToggleDrawer() => drawerOpen = !drawerOpen;
-
-    private void Recover() => errorBoundary?.Recover();
-
-    protected override void OnParametersSet() => errorBoundary?.Recover();
-}

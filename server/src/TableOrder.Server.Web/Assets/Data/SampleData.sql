@@ -5,6 +5,7 @@
 -- テナントは別のチェーン (名前・ロゴ・色) にし、店舗の設定 (言語、支払方法、機能、スタッフの PIN) も変えて、登録し直すだけで替わることを確かめる
 -- 来店の開き方はデモがスタッフ (既定)、検証用が席 (テーブル端末の待受で人数を入れて始める)
 -- スタッフの PIN はデモが 1234、検証用が 5678 (ハッシュは PBKDF2-HMAC-SHA256、100000 回)
+-- 管理画面の利用者のパスワードはどれも tableorder-dev (ハッシュは ASP.NET Core Identity の形式。PBKDF2-HMAC-SHA512、100000 回)
 
 INSERT INTO
     Tenants (Id, Code, Name, BrandName, LogoImageName, Theme, Status, SuspendedAt, ClosedAt, CreatedAt, UpdatedAt, Version)
@@ -48,6 +49,20 @@ VALUES
     ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0004-000000000112', '00000000-0000-0000-0002-000000000001', '12', NULL, 6, 12, 1, @now, @now, 1),
     ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0004-000000000201', '00000000-0000-0000-0002-000000000002', '1', NULL, 4, 1, 1, @now, @now, 1),
     ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0004-000000000202', '00000000-0000-0000-0002-000000000002', '2', NULL, 4, 2, 1, @now, @now, 1);
+
+-- 管理画面の利用者 (運営者、デモの管理者、デモの駅前店の担当、検証用の管理者)
+INSERT INTO
+    AdminUsers (Id, TenantId, Role, Email, NormalizedEmail, Name, PasswordHash, MustChangePassword, SecurityStamp, AccessFailedCount, LockoutEnd, TwoFactorEnabled, AuthenticatorKey, RecoveryCodes, LastSignInAt, IsActive, CreatedAt, UpdatedAt, Version)
+VALUES
+    ('00000000-0000-0000-000a-000000000001', NULL, 'Operator', 'operator@example.com', 'OPERATOR@EXAMPLE.COM', '運営者', 'AQAAAAIAAYagAAAAEFUZ9G5DSRmc5FDzR7xsq19vaKk8rloDerq0s1WwK+31y5ob6Mc31wcztL3nJ4GV5A==', 0, '90CB62F1964710C209BFB664DA8F57F0', 0, NULL, 0, NULL, NULL, NULL, 1, @now, @now, 1),
+    ('00000000-0000-0000-000a-000000000002', '00000000-0000-0000-0001-000000000001', 'TenantAdmin', 'admin@demo.example.com', 'ADMIN@DEMO.EXAMPLE.COM', 'デモの管理者', 'AQAAAAIAAYagAAAAEMU6/lbHyMjfCIJgFT6bHU0k9qzamTPqKjfX+cEKcpKMofHQYbqKhDModxUVduPtRw==', 0, '0097B5B3DADD5486AB23F6EFB6EC866A', 0, NULL, 0, NULL, NULL, NULL, 1, @now, @now, 1),
+    ('00000000-0000-0000-000a-000000000003', '00000000-0000-0000-0001-000000000001', 'StoreStaff', 'staff@demo.example.com', 'STAFF@DEMO.EXAMPLE.COM', '駅前店の担当', 'AQAAAAIAAYagAAAAEOiIrAJqa0Gw3UUfrH1BehP5YpUnaSVbG9otTEUNLbk8XEuJdoP4pHqEJ47nyX/4Pw==', 0, '524A3EF53C55B12E1E29023B5DFE3E88', 0, NULL, 0, NULL, NULL, NULL, 1, @now, @now, 1),
+    ('00000000-0000-0000-000a-000000000004', '00000000-0000-0000-0001-000000000002', 'TenantAdmin', 'admin@test.example.com', 'ADMIN@TEST.EXAMPLE.COM', '検証用の管理者', 'AQAAAAIAAYagAAAAEGKZrrCAHkZqjnGApTIQxaG6tvv6bsjzn2s/AYVyXTAutKk463G/T7irvDswU7CDHQ==', 0, '57A017DF88CF94D1B9307153917867F8', 0, NULL, 0, NULL, NULL, NULL, 1, @now, @now, 1);
+
+INSERT INTO
+    AdminUserStores (TenantId, UserId, StoreId)
+VALUES
+    ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-000a-000000000003', '00000000-0000-0000-0002-000000000001');
 
 -- 開発で使うペアリングコード (期限を遠くにし、何台でも登録できる。本番のコードは 10 分、1 台)
 INSERT INTO

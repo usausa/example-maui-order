@@ -154,6 +154,40 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         Assert.Equal(HttpStatusCode.Unauthorized, ((HttpRequestException)exception).StatusCode);
     }
 
+    // 無効にした端末の接続は、トークンの期限の前でもサーバが切り、つなぎ直しも断る
+    [Fact]
+    public async Task RevokedDeviceConnectionIsClosed()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        await using var hub = await TestHubConnection.ConnectAsync(factory, table);
+
+        // Act
+        await factory.RevokeDeviceAsync(table.DeviceId);
+        var exception = await Record.ExceptionAsync(async () => await TestHubConnection.ConnectAsync(factory, table));
+
+        // Assert
+        await hub.WaitClosedAsync();
+        Assert.Equal(HttpStatusCode.Unauthorized, Assert.IsType<HttpRequestException>(exception).StatusCode);
+    }
+
+    // 止めたテナントの端末の接続は、サーバが切る
+    [Fact]
+    public async Task SuspendedTenantConnectionIsClosed()
+    {
+        // Arrange
+        var (tenantId, code) = await factory.CreateTenantAsync();
+        using var hall = await SignInAsync(code);
+        await using var hub = await TestHubConnection.ConnectAsync(factory, hall);
+
+        // Act
+        await factory.SuspendTenantAsync(tenantId);
+
+        // Assert
+        await hub.WaitClosedAsync();
+    }
+
     private async Task<TestDevice> SignInAsync(string code)
     {
         var device = new TestDevice(factory.CreateClient());

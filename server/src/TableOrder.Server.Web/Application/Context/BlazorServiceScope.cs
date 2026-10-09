@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Web.Application.Context;
 
-// Blazor の境界 (回線単位)。管理画面はまだサインインがないので運営者の文脈にし、テナントと店舗を選んでいればその店舗の文脈にする
+// Blazor の境界 (回線単位)。利用者の扱える範囲で選んだテナントと店舗の文脈にする (選んでいなければテナントも店舗もない文脈)
 public sealed class BlazorServiceScope
 {
     private readonly TimeProvider timeProvider;

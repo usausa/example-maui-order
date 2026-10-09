@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using TableOrder.Contract.Events;
 using TableOrder.Server.Web.Application.Context;
 
-// コミットした通知を、店舗ごとに通し番号の順でハブのグループに送る
+// コミットした通知を、店舗ごとに通し番号の順でハブのグループに送り、店舗を見ている管理画面にも送ったことを知らせる
 // 知らせのあった店舗のほか、一定の間隔ですべての店舗の通し番号を見て、ほかのサーバが書いた通知も送る (DB を共有するサーバを並べて動かすため)
 public sealed class EventDispatcher : BackgroundService
 {
@@ -18,6 +18,8 @@ public sealed class EventDispatcher : BackgroundService
     private readonly ApplicationServiceContextProvider contextProvider;
 
     private readonly EventSignal signal;
+
+    private readonly StoreActivity activity;
 
     private readonly EventService eventService;
 
@@ -32,6 +34,7 @@ public sealed class EventDispatcher : BackgroundService
         IHubContext<StoreHub> hubContext,
         ApplicationServiceContextProvider contextProvider,
         EventSignal signal,
+        StoreActivity activity,
         EventSetting setting,
         EventService eventService)
     {
@@ -40,6 +43,7 @@ public sealed class EventDispatcher : BackgroundService
         this.hubContext = hubContext;
         this.contextProvider = contextProvider;
         this.signal = signal;
+        this.activity = activity;
         this.eventService = eventService;
         sweepInterval = TimeSpan.FromSeconds(setting.SweepSeconds);
     }
@@ -125,13 +129,16 @@ public sealed class EventDispatcher : BackgroundService
             StoreId = store.StoreId
         });
 
+        var dispatched = false;
         while (true)
         {
             var deliveries = await eventService.GetPendingAsync(sent.GetValueOrDefault(store), cancellationToken);
             if (deliveries.Count == 0)
             {
-                return;
+                break;
             }
+
+            dispatched = true;
 
             foreach (var delivery in deliveries)
             {
@@ -143,6 +150,11 @@ public sealed class EventDispatcher : BackgroundService
 
                 sent[store] = delivery.Item.Seq;
             }
+        }
+
+        if (dispatched)
+        {
+            activity.Notify(store.TenantId, store.StoreId);
         }
     }
 }

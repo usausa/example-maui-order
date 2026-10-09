@@ -62,13 +62,19 @@ public sealed class TestTerminal : IAsyncDisposable
     }
 
     // 端末のアプリと同じく、鍵の公開鍵とペアリングコードで登録して、端末の id を設定に入れる
-    public async Task<DevicePairResponse> PairAsync(string code)
+    public Task<DevicePairResponse> PairAsync(string code) => PairAsync(code, null);
+
+    // EMM で配った登録トークンで登録する
+    public Task<DevicePairResponse> PairByTokenAsync(string enrollmentToken) => PairAsync(null, enrollmentToken);
+
+    private async Task<DevicePairResponse> PairAsync(string? code, string? enrollmentToken)
     {
         var publicKey = await Context.Key.GetPublicKeyAsync();
         var result = await Device.PairAsync(
             new DevicePairRequest
             {
                 PairingCode = code,
+                EnrollmentToken = enrollmentToken,
                 PublicKey = DeviceCredentials.CreatePublicKey(publicKey),
                 DeviceName = "test"
             },

@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Web.Application.Cleanup;
 
-// 古いデータを一定の間隔 (Event:CleanupMinutes) で消す。残す時間を過ぎた通知と、期限を過ぎたペアリングコード
+// 古いデータを一定の間隔 (Event:CleanupMinutes) で消す。残す時間を過ぎた通知と、期限を過ぎたペアリングコード・登録トークン
 public sealed class CleanupWorker : BackgroundService
 {
     private readonly ILogger<CleanupWorker> log;
@@ -55,10 +55,10 @@ public sealed class CleanupWorker : BackgroundService
             log.InfoEventCleanup(events);
         }
 
-        var codes = await enrollmentService.DeleteExpiredAsync(now, cancellationToken);
-        if (codes > 0)
+        var enrollments = await enrollmentService.DeleteExpiredAsync(now, cancellationToken);
+        if (enrollments > 0)
         {
-            log.InfoPairingCodeCleanup(codes);
+            log.InfoEnrollmentCleanup(enrollments);
         }
     }
 }

@@ -1,0 +1,101 @@
+@page "/tables"
+
+<PageTitle>テーブル</PageTitle>
+
+<MudText Typo="Typo.h4">テーブル</MudText>
+<MudText Class="mt-2">店舗のテーブルの追加、名前・エリア・席の数の変更、並べ替え、使わなくする</MudText>
+
+@if (Selection.StoreId is null)
+{
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+}
+else
+{
+    <MudPaper Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6">テーブルを足す</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">並びの最後に足します。テーブルを替えると店舗の端末に知らせ、端末は起動からやり直して読み直します。</MudText>
+        <MudGrid Class="mt-2" Spacing="2">
+            <MudItem xs="12" sm="3">
+                <MudTextField T="string" @bind-Value="addName" Label="名前" MaxLength="@TableSetupService.MaxNameLength" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MudTextField T="string" @bind-Value="addArea" Label="エリア" MaxLength="@TableSetupService.MaxAreaLength" HelperText="窓側、2F など (なくてもよい)" />
+            </MudItem>
+            <MudItem xs="12" sm="2">
+                <MudNumericField T="int" @bind-Value="addCapacity" Label="席の数" Min="1" Max="@TableSetupService.MaxCapacity" />
+            </MudItem>
+            <MudItem xs="12" sm="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">足す</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <MudPaper Class="pa-4 mt-4">
+        <div class="d-flex align-center">
+            <MudText Typo="Typo.h6">店舗のテーブル</MudText>
+            <MudSpacer />
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+        </div>
+        <MudTable Items="tables" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
+            <HeaderContent>
+                <MudTh>並び</MudTh>
+                <MudTh>名前</MudTh>
+                <MudTh>エリア</MudTh>
+                <MudTh>席の数</MudTh>
+                <MudTh>置いた端末</MudTh>
+                <MudTh>状態</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Disabled="IsFirst(context)" OnClick="() => MoveAsync(context, -1)" aria-label="前へ" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Disabled="IsLast(context)" OnClick="() => MoveAsync(context, 1)" aria-label="後ろへ" />
+                </MudTd>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@(context.Area ?? "--")</MudTd>
+                <MudTd>@context.Capacity</MudTd>
+                <MudTd>@(context.DeviceCount > 0 ? $"{context.DeviceCount} 台" : "--")</MudTd>
+                <MudTd>@StatusText(context)</MudTd>
+                <MudTd>
+                    <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>
+                </MudTd>
+            </RowTemplate>
+            <ChildRowContent>
+                @if (context.Id == editing?.Id)
+                {
+                    <MudTr>
+                        <td colspan="7" class="pa-4">
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" sm="3">
+                                    <MudTextField T="string" @bind-Value="editName" Label="名前" MaxLength="@TableSetupService.MaxNameLength" />
+                                </MudItem>
+                                <MudItem xs="12" sm="3">
+                                    <MudTextField T="string" @bind-Value="editArea" Label="エリア" MaxLength="@TableSetupService.MaxAreaLength" />
+                                </MudItem>
+                                <MudItem xs="12" sm="2">
+                                    <MudNumericField T="int" @bind-Value="editCapacity" Label="席の数" Min="1" Max="@TableSetupService.MaxCapacity" />
+                                </MudItem>
+                            </MudGrid>
+                            <div class="d-flex gap-2 mt-4">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
+                                <MudButton OnClick="CancelEdit">やめる</MudButton>
+                                <MudSpacer />
+                                @if (context.IsActive)
+                                {
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="() => SetActiveAsync(false)">使わなくする</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Variant="Variant.Outlined" OnClick="() => SetActiveAsync(true)">使う</MudButton>
+                                }
+                            </div>
+                        </td>
+                    </MudTr>
+                }
+            </ChildRowContent>
+            <NoRecordsContent>
+                <MudText>テーブルはありません。</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+}

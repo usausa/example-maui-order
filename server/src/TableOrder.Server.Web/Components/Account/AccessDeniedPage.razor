@@ -1,0 +1,15 @@
+@page "/account/access-denied"
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout AccountLayout
+
+<PageTitle>権限がありません</PageTitle>
+
+@* 役割で開けない画面の URL を開いたとき *@
+<MudPaper Class="account-card pa-8" Outlined="true">
+    <MudText Typo="Typo.h5" Class="mb-4">権限がありません</MudText>
+    <MudText>この画面を開く権限がありません。</MudText>
+    <div class="account-links">
+        <a href="">管理画面に戻る</a>
+    </div>
+</MudPaper>
