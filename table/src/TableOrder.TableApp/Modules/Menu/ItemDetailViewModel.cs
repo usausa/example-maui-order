@@ -147,7 +147,7 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
         var selected = line?.OptionIds ?? [];
         foreach (var group in menuState.GetOptionGroups(item))
         {
-            Groups.Add(new OptionGroupChoice(group, language, selected.ToList(), line is null));
+            Groups.Add(new OptionGroupChoice(group, language, menuState, selected.ToList(), line is null));
         }
 
         HasTiming = item.TimingSelectable;
@@ -169,8 +169,14 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
     //--------------------------------------------------------------------------------
 
     // 1 つだけ選ぶ組は選び替え、任意の組はもう一度押すと外す。複数を選べる組は上限まで
+    // 品切れのオプションは選べない (直すときに選んでいたものは、外すか選び替える)
     private void SelectOption(OptionChoice option)
     {
+        if (option.IsSoldOut && !option.IsSelected)
+        {
+            return;
+        }
+
         var group = option.Group;
         if (option.IsSelected)
         {
@@ -215,7 +221,7 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
         var unitPrice = Pricing.UnitPrice(item.Price, Groups.SelectMany(static x => x.Options).Where(static x => x.IsSelected).Select(static x => x.PriceDelta));
         TotalText = ViewHelper.Price(unitPrice * Quantity);
         CommitText = $"{commitName}  {TotalText}";
-        CanCommit = !IsSoldOut && Groups.All(static x => x.IsSatisfied);
+        CanCommit = !IsSoldOut && Groups.All(static x => x.IsSatisfied) && !Groups.SelectMany(static x => x.Options).Any(static x => x.IsSelected && x.IsSoldOut);
     }
 
     private ItemSelection CreateSelection() =>

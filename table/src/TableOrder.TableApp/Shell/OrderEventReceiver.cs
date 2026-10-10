@@ -143,6 +143,12 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
                 if (visitState.IsOpen && (visitState.Id == created.Order.VisitId))
                 {
                     visitState.SetOrdered(created.Order);
+
+                    // 送れたかわからなかった注文が届いていたら、送れたものとしてカートを空にして知らせる (知らずに直して送ると二重になる)
+                    if (orderUsecase.AcceptPendingOrder(created.Order.Id))
+                    {
+                        await Navigator.NotifyAsync(ShellEvent.OrderAccepted).ConfigureAwait(true);
+                    }
                 }
 
                 break;

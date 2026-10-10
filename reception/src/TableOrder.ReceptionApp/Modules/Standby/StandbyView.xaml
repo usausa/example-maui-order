@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
+             xmlns:fonts="clr-namespace:Fonts"
              xmlns:markup="clr-namespace:TableOrder.ReceptionApp.Markup"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Standby"
@@ -10,40 +11,45 @@
              x:DataType="{x:Type module:StandbyViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StandbyViewModel}">
 
-    <!-- 待受: お客様が受付するを押して人数の画面に進む。受け付けないときと満席のときは、文言だけを出す -->
-    <Grid Style="{StaticResource ReceptionGrid}"
-          RowDefinitions="Auto,*,Auto">
-        <!-- brand / language -->
+    <!-- 待受: 上にチェーンの帯、いらっしゃいませと受付の流れ、空席の状態、下に受付する -->
+    <!-- 受け付けないとき (受付を止めている、本日の受付の終了) と満席のときは、状態だけを出して受付するを出さない -->
+    <Grid Style="{StaticResource KioskGrid}"
+          RowDefinitions="Auto,*">
+        <!-- header -->
         <Grid Grid.Row="0"
-              ColumnDefinitions="*,Auto">
-            <HorizontalStackLayout Grid.Column="0"
-                                   Style="{StaticResource ReceptionBrandStack}">
-                <!-- ブランドの印 (長押しで PIN を確かめてスタッフメニューに入る、隠れた入口) -->
-                <!-- TouchBehavior は付けた要素の BindingContext を受け継がないので、印の BindingContext を渡す -->
-                <Border x:Name="BrandMark"
-                        Style="{StaticResource ReceptionMarkBorder}">
-                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                    <Border.Behaviors>
-                        <mct:TouchBehavior BindingContext="{Binding Source={x:Reference BrandMark}, Path=BindingContext, x:DataType={x:Type Border}}"
-                                           LongPressCommand="{Binding StaffCommand}"
-                                           LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
-                    </Border.Behaviors>
-                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                    <!-- ロゴがなければ名前の頭の文字 -->
-                    <Grid InputTransparent="True">
-                        <Label Style="{StaticResource ReceptionInitialLabel}"
-                               IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
-                               Text="{Binding Brand.Initial}" />
-                        <Image Style="{StaticResource BrandLogoImage}"
-                               IsVisible="{Binding Brand.HasLogo}"
-                               Source="{Binding Brand.LogoPath}" />
-                    </Grid>
-                </Border>
-                <Label Style="{StaticResource ReceptionBrandLabel}"
+              Style="{StaticResource KioskHeaderGrid}"
+              ColumnDefinitions="Auto,*,Auto">
+            <!-- ブランドの印 (長押しで PIN を確かめてスタッフメニューに入る、隠れた入口) -->
+            <!-- TouchBehavior は付けた要素の BindingContext を受け継がないので、印の BindingContext を渡す -->
+            <Border x:Name="BrandMark"
+                    Grid.Column="0"
+                    Style="{StaticResource KioskMarkBorder}">
+                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                <Border.Behaviors>
+                    <mct:TouchBehavior BindingContext="{Binding Source={x:Reference BrandMark}, Path=BindingContext, x:DataType={x:Type Border}}"
+                                       LongPressCommand="{Binding StaffCommand}"
+                                       LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
+                </Border.Behaviors>
+                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                <!-- ロゴがなければ名前の頭の文字 -->
+                <Grid InputTransparent="True">
+                    <Label Style="{StaticResource KioskInitialLabel}"
+                           IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
+                           Text="{Binding Brand.Initial}" />
+                    <Image Style="{StaticResource BrandLogoImage}"
+                           IsVisible="{Binding Brand.HasLogo}"
+                           Source="{Binding Brand.LogoPath}" />
+                </Grid>
+            </Border>
+            <VerticalStackLayout Grid.Column="1"
+                                 Style="{StaticResource KioskBrandStack}">
+                <Label Style="{StaticResource KioskBrandLabel}"
                        Text="{Binding Brand.Name}" />
-            </HorizontalStackLayout>
-            <Button Grid.Column="1"
-                    Style="{StaticResource ReceptionLanguageButton}"
+                <Label Style="{StaticResource KioskStoreLabel}"
+                       Text="{Binding StoreText}" />
+            </VerticalStackLayout>
+            <Button Grid.Column="2"
+                    Style="{StaticResource KioskLanguageButton}"
                     Command="{Binding LanguageCommand}"
                     IsVisible="{Binding HasLanguages}"
                     ContentLayout="Left,12"
@@ -51,25 +57,95 @@
                     Text="{Binding LanguageText}" />
         </Grid>
 
-        <!-- message -->
-        <VerticalStackLayout Grid.Row="1"
-                             Style="{StaticResource StandbyStack}">
-            <Label Style="{StaticResource StandbyTitleLabel}"
-                   Text="{x:Static strings:AppResources.StandbyWelcome}" />
-            <Label Style="{StaticResource StandbyMessageLabel}"
-                   Text="{Binding Message}" />
-            <Button Style="{StaticResource StandbyStartButton}"
+        <!-- body -->
+        <Grid Grid.Row="1"
+              Style="{StaticResource KioskBodyGrid}"
+              RowDefinitions="*,Auto,*,Auto">
+            <VerticalStackLayout Grid.Row="1"
+                                 Style="{StaticResource StandbyStack}">
+                <!-- welcome -->
+                <VerticalStackLayout Style="{StaticResource StandbyWelcomeStack}">
+                    <Label Style="{StaticResource StandbyWelcomeLabel}"
+                           Text="{x:Static strings:AppResources.StandbyWelcome}" />
+                    <Label Style="{StaticResource KioskLeadLabel}"
+                           IsVisible="{Binding CanStart}"
+                           Text="{x:Static strings:AppResources.StandbyMessage}" />
+                </VerticalStackLayout>
+
+                <!-- steps (受け付けられるときだけ) -->
+                <Grid Style="{StaticResource StandbyStepsGrid}"
+                      ColumnDefinitions="*,*,*"
+                      IsVisible="{Binding CanStart}">
+                    <Border Grid.Column="0"
+                            Style="{StaticResource StandbyStepBorder}">
+                        <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
+                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
+                                   Text="{x:Static fonts:MaterialIcons.Groups}" />
+                            <Label Style="{StaticResource StandbyStepNumberLabel}"
+                                   Text="1" />
+                            <Label Style="{StaticResource StandbyStepTextLabel}"
+                                   Text="{x:Static strings:AppResources.StandbyStepGuests}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="1"
+                            Style="{StaticResource StandbyStepBorder}">
+                        <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
+                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
+                                   Text="{x:Static fonts:MaterialIcons.Table_restaurant}" />
+                            <Label Style="{StaticResource StandbyStepNumberLabel}"
+                                   Text="2" />
+                            <Label Style="{StaticResource StandbyStepTextLabel}"
+                                   Text="{x:Static strings:AppResources.StandbyStepTable}" />
+                        </VerticalStackLayout>
+                    </Border>
+                    <Border Grid.Column="2"
+                            Style="{StaticResource StandbyStepBorder}">
+                        <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
+                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
+                                   Text="{x:Static fonts:MaterialIcons.Directions_walk}" />
+                            <Label Style="{StaticResource StandbyStepNumberLabel}"
+                                   Text="3" />
+                            <Label Style="{StaticResource StandbyStepTextLabel}"
+                                   Text="{x:Static strings:AppResources.StandbyStepSeat}" />
+                        </VerticalStackLayout>
+                    </Border>
+                </Grid>
+
+                <!-- status (記号の色で状態を示す: すぐに案内できる・満席・受付を止めている) -->
+                <Border Style="{StaticResource StandbyStatusBorder}">
+                    <Grid ColumnDefinitions="Auto,*">
+                        <Label Grid.Column="0"
+                               Style="{StaticResource StandbyStatusGlyphLabel}"
+                               Text="{Binding StatusGlyph}">
+                            <Label.Triggers>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding CanStart}"
+                                             Value="True">
+                                    <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
+                                </DataTrigger>
+                                <DataTrigger TargetType="Label"
+                                             Binding="{Binding IsFull}"
+                                             Value="True">
+                                    <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+                                </DataTrigger>
+                            </Label.Triggers>
+                        </Label>
+                        <Label Grid.Column="1"
+                               Style="{StaticResource StandbyStatusLabel}"
+                               Text="{Binding StatusText}" />
+                    </Grid>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- start -->
+            <Button Grid.Row="3"
+                    Style="{StaticResource StandbyStartButton}"
                     Command="{Binding StartCommand}"
                     IsVisible="{Binding CanStart}"
-                    ContentLayout="Left,16"
+                    ContentLayout="Left,20"
                     ImageSource="{x:Static markup:AppIcons.Start}"
                     Text="{x:Static strings:AppResources.StandbyStart}" />
-        </VerticalStackLayout>
-
-        <!-- store -->
-        <Label Grid.Row="2"
-               Style="{StaticResource ReceptionFooterLabel}"
-               Text="{Binding StoreText}" />
+        </Grid>
     </Grid>
 
 </ContentView>

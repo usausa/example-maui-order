@@ -71,6 +71,9 @@
   <data name="CardInstruction" xml:space="preserve">
     <value>決済端末にカードを差し込むか、タッチしてください</value>
   </data>
+  <data name="CartPendingMessage" xml:space="preserve">
+    <value>前のご注文が届いたか確かめられませんでした。ご注文リストを変える前に、「注文を確定する」からもう一度お送りください</value>
+  </data>
   <data name="CheckoutBackToMenu" xml:space="preserve">
     <value>メニューに戻る</value>
   </data>
@@ -140,6 +143,9 @@
   <data name="ConfirmDoneTitle" xml:space="preserve">
     <value>ご注文を承りました</value>
   </data>
+  <data name="ConfirmPendingMessage" xml:space="preserve">
+    <value>前のご注文が届いたか確かめられませんでした。同じ内容でもう一度お送りください</value>
+  </data>
   <data name="ConfirmRetry" xml:space="preserve">
     <value>もう一度送る</value>
   </data>
@@ -194,8 +200,14 @@
   <data name="DetailUpdate" xml:space="preserve">
     <value>変更する</value>
   </data>
+  <data name="ErrorBillChanged" xml:space="preserve">
+    <value>お会計の内容が変わりました。明細をお確かめのうえ、もう一度お選びください</value>
+  </data>
   <data name="ErrorCheckoutInProgress" xml:space="preserve">
     <value>お会計中のため、ご注文できません</value>
+  </data>
+  <data name="ErrorConfirmationRequired" xml:space="preserve">
+    <value>ご確認が必要な商品があります。ご注文リストを確かめてください</value>
   </data>
   <data name="ErrorDeviceKind" xml:space="preserve">
     <value>テーブル端末のペアリングコードではありません</value>
@@ -209,14 +221,32 @@
   <data name="ErrorLimit" xml:space="preserve">
     <value>ご注文の数の上限を超えています</value>
   </data>
+  <data name="ErrorMenuChanged" xml:space="preserve">
+    <value>メニューが変わりました。スタッフをお呼びください</value>
+  </data>
+  <data name="ErrorOptionInvalid" xml:space="preserve">
+    <value>オプションの選び方が正しくない商品があります。スタッフをお呼びください</value>
+  </data>
   <data name="ErrorOrderingPaused" xml:space="preserve">
     <value>ただいまご注文を一時停止しています。しばらくお待ちください</value>
   </data>
   <data name="ErrorPairingCodeInvalid" xml:space="preserve">
     <value>ペアリングコードが正しくないか、期限が切れています</value>
   </data>
+  <data name="ErrorPaymentAmountInvalid" xml:space="preserve">
+    <value>お手続き中のお支払いがあるため、お支払いできません。スタッフをお呼びください</value>
+  </data>
+  <data name="ErrorPaymentMethodUnavailable" xml:space="preserve">
+    <value>このお支払い方法は使えません。ほかの方法をお選びください</value>
+  </data>
   <data name="ErrorSoldOut" xml:space="preserve">
     <value>売り切れの商品があります。ご注文リストを確かめてください</value>
+  </data>
+  <data name="ErrorStockInsufficient" xml:space="preserve">
+    <value>残りの数が足りない商品があります。ご注文リストを確かめてください</value>
+  </data>
+  <data name="ErrorTableOccupied" xml:space="preserve">
+    <value>このテーブルはご利用中です。スタッフをお呼びください</value>
   </data>
   <data name="ErrorTenantSuspended" xml:space="preserve">
     <value>ご利用を停止しています。管理者にお問い合わせください</value>
@@ -229,6 +259,9 @@
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>通信できませんでした。しばらくしてからもう一度お試しください</value>
+  </data>
+  <data name="ErrorVisitNotOpen" xml:space="preserve">
+    <value>ご来店の受付が終わっています。スタッフをお呼びください</value>
   </data>
   <data name="GuestAdults" xml:space="preserve">
     <value>大人</value>
@@ -304,6 +337,9 @@
   </data>
   <data name="MaxLinesFormat" xml:space="preserve">
     <value>一度にご注文いただけるのは {0} 品までです。いったんご注文を確定してください</value>
+  </data>
+  <data name="MaxQuantityFormat" xml:space="preserve">
+    <value>同じ商品は 1 回のご注文で {0} 点までです</value>
   </data>
   <data name="MenuCall" xml:space="preserve">
     <value>店員呼出</value>

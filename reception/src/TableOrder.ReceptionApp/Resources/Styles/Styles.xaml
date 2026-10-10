@@ -7,6 +7,7 @@
     <!-- 形は角丸・影・グラデーションを使わず、四角い面と罫線と色の面で組む。色は Colors.xaml の役割の名前だけを使う -->
     <!-- チェーンの設定で替える色 (Brand・Neutral・Status) は DynamicResource で引く (スタイルはアプリの起動で作り、色は起動の画面で店舗の設定を読んでから替える) -->
     <!-- 起動・端末の設定・スタッフメニュー・電卓のスタイルは、TableOrder.Terminal の TerminalStyles にある -->
+    <!-- お客様の画面は、入口に縦に置いたタブレット (約 873x1396dp) を立って使う受付機の組み方にする (テーブル端末の画面を流用しない) -->
 
     <!-- ================================================================================ -->
     <!-- Brand -->
@@ -35,56 +36,78 @@
     </Style>
 
     <!-- ================================================================================ -->
-    <!-- Reception -->
+    <!-- Kiosk -->
     <!-- ================================================================================ -->
 
-    <!-- お客様の画面 (待受、人数、案内) は補助色の地に、上にチェーンの印、下に操作を置く -->
-    <Style x:Key="ReceptionGrid"
+    <!-- お客様の画面 (待受、人数、案内) は、上にチェーンの帯、地の色の本文、下に画面の幅いっぱいの操作を置く -->
+    <Style x:Key="KioskGrid"
            TargetType="Grid">
-        <Setter Property="Padding" Value="96,64" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource CanvasColor}" />
+    </Style>
+
+    <!-- 上の帯は補助色の地に、チェーンの印・名前・店舗の名前を置く (待受は右に言語) -->
+    <!-- 言語の列は出さないことがあるので、列の間は ColumnSpacing ではなく要素の Margin で空ける -->
+    <Style x:Key="KioskHeaderGrid"
+           TargetType="Grid">
+        <Setter Property="HeightRequest" Value="128" />
+        <Setter Property="Padding" Value="40,0" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SecondaryColor}" />
     </Style>
 
-    <Style x:Key="ReceptionBrandStack"
-           TargetType="HorizontalStackLayout">
-        <Setter Property="Spacing" Value="20" />
-    </Style>
-
-    <Style x:Key="ReceptionMarkBorder"
+    <Style x:Key="KioskMarkBorder"
            TargetType="Border">
-        <Setter Property="WidthRequest" Value="64" />
-        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="WidthRequest" Value="80" />
+        <Setter Property="HeightRequest" Value="80" />
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="StrokeThickness" Value="0" />
         <Setter Property="StrokeShape" Value="Rectangle" />
         <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryColor}" />
     </Style>
 
     <!-- ロゴがないときの印 (名前の頭の文字) -->
-    <Style x:Key="ReceptionInitialLabel"
+    <Style x:Key="KioskInitialLabel"
            TargetType="Label">
         <Setter Property="HorizontalOptions" Value="Center" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontSize" Value="40" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnPrimaryColor}" />
     </Style>
 
-    <Style x:Key="ReceptionBrandLabel"
-           TargetType="Label">
+    <Style x:Key="KioskBrandStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Margin" Value="24,0,0,0" />
+        <Setter Property="Spacing" Value="2" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontSize" Value="26" />
+    </Style>
+
+    <Style x:Key="KioskBrandLabel"
+           TargetType="Label">
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="30" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
     </Style>
 
-    <Style x:Key="ReceptionLanguageButton"
+    <Style x:Key="KioskStoreLabel"
+           TargetType="Label">
+        <Setter Property="MaxLines" Value="1" />
+        <Setter Property="LineBreakMode" Value="TailTruncation" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="Opacity" Value="0.72" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+    </Style>
+
+    <Style x:Key="KioskLanguageButton"
            TargetType="Button">
-        <Setter Property="HeightRequest" Value="64" />
+        <Setter Property="HeightRequest" Value="72" />
+        <Setter Property="Margin" Value="24,0,0,0" />
         <Setter Property="Padding" Value="24,0" />
         <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="BorderWidth" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="FontSize" Value="18" />
+        <Setter Property="FontSize" Value="22" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
         <Setter Property="VisualStateManager.VisualStateGroups">
@@ -105,39 +128,120 @@
         </Setter>
     </Style>
 
-    <Style x:Key="ReceptionTitleLabel"
-           TargetType="Label">
-        <Setter Property="FontSize" Value="48" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
-    </Style>
-
-    <Style x:Key="ReceptionFooterLabel"
-           TargetType="Label">
-        <Setter Property="FontSize" Value="20" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="Opacity" Value="0.6" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
-    </Style>
-
-    <!-- 下の操作は高さ 96 の四角いボタンを並べる (主な操作は広くする) -->
-    <Style x:Key="ReceptionActionGrid"
+    <!-- 受付の段階 (1 人数、2 ご案内)。今の段階を主色の面にし、終えた段階は番号の代わりに印を出す -->
+    <Style x:Key="KioskStepGrid"
            TargetType="Grid">
         <Setter Property="HeightRequest" Value="96" />
-        <Setter Property="ColumnSpacing" Value="24" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="ReceptionButtonBase"
+    <Style x:Key="KioskStepCellGrid"
+           TargetType="Grid">
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepCurrentGrid"
+           TargetType="Grid">
+        <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepStack"
+           TargetType="HorizontalStackLayout">
+        <Setter Property="Spacing" Value="16" />
+        <Setter Property="HorizontalOptions" Value="Center" />
+        <Setter Property="VerticalOptions" Value="Center" />
+    </Style>
+
+    <Style x:Key="KioskStepNumberLabel"
+           TargetType="Label">
+        <Setter Property="WidthRequest" Value="48" />
+        <Setter Property="HeightRequest" Value="48" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="VerticalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepCurrentNumberLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource KioskStepNumberLabel}">
+        <Setter Property="BackgroundColor" Value="{DynamicResource OnPrimaryColor}" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepDoneNumberLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource KioskStepNumberLabel}">
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontAttributes" Value="None" />
+        <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="KioskStepCurrentLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource KioskStepLabel}">
+        <Setter Property="TextColor" Value="{DynamicResource OnPrimaryColor}" />
+    </Style>
+
+    <!-- 本文は左右に 48 の余白を取り、文字は中央にそろえる -->
+    <Style x:Key="KioskBodyGrid"
+           TargetType="Grid">
+        <Setter Property="Padding" Value="48,40,48,48" />
+    </Style>
+
+    <Style x:Key="KioskTitleLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="48" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="KioskLeadLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 待受に戻るまでの時間などの添え書き -->
+    <Style x:Key="KioskNoteLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <!-- 下の操作は画面の幅いっぱいのボタンを縦に重ねる (主な操作を上の大きいボタンにする) -->
+    <Style x:Key="KioskActionStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="16" />
+    </Style>
+
+    <Style x:Key="KioskButtonBase"
            TargetType="Button">
         <Setter Property="BorderWidth" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
-        <Setter Property="FontSize" Value="28" />
         <Setter Property="FontAttributes" Value="Bold" />
     </Style>
 
-    <Style x:Key="ReceptionPrimaryButton"
+    <Style x:Key="KioskPrimaryButton"
            TargetType="Button"
-           BasedOn="{StaticResource ReceptionButtonBase}">
+           BasedOn="{StaticResource KioskButtonBase}">
+        <Setter Property="HeightRequest" Value="128" />
+        <Setter Property="FontSize" Value="36" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
@@ -164,22 +268,27 @@
         </Setter>
     </Style>
 
-    <Style x:Key="ReceptionSecondaryButton"
+    <!-- 戻るは面の色に枠を付けた低いボタンにする (主な操作と取り違えないように) -->
+    <Style x:Key="KioskSecondaryButton"
            TargetType="Button"
-           BasedOn="{StaticResource ReceptionButtonBase}">
+           BasedOn="{StaticResource KioskButtonBase}">
+        <Setter Property="HeightRequest" Value="88" />
+        <Setter Property="BorderWidth" Value="1" />
+        <Setter Property="BorderColor" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="FontSize" Value="28" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
                     <VisualState x:Name="Normal">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{DynamicResource SecondaryPressedColor}" />
-                            <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
                         </VisualState.Setters>
                     </VisualState>
                     <VisualState x:Name="Pressed">
                         <VisualState.Setters>
-                            <Setter Property="BackgroundColor" Value="{DynamicResource SecondaryColor}" />
-                            <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+                            <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceVariantColor}" />
+                            <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
                         </VisualState.Setters>
                     </VisualState>
                 </VisualStateGroup>
@@ -193,31 +302,97 @@
 
     <Style x:Key="StandbyStack"
            TargetType="VerticalStackLayout">
-        <Setter Property="Spacing" Value="20" />
-        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="Spacing" Value="40" />
     </Style>
 
-    <Style x:Key="StandbyTitleLabel"
-           TargetType="Label">
+    <Style x:Key="StandbyWelcomeStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="16" />
+    </Style>
+
+    <Style x:Key="StandbyWelcomeLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource KioskTitleLabel}">
         <Setter Property="FontSize" Value="72" />
-        <Setter Property="FontAttributes" Value="Bold" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
     </Style>
 
-    <Style x:Key="StandbyMessageLabel"
+    <!-- 受付の流れは、記号と番号と文言の面を 3 つ並べる -->
+    <Style x:Key="StandbyStepsGrid"
+           TargetType="Grid">
+        <Setter Property="ColumnSpacing" Value="16" />
+    </Style>
+
+    <Style x:Key="StandbyStepBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="12,28" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StandbyStepStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="8" />
+    </Style>
+
+    <Style x:Key="StandbyStepGlyphLabel"
            TargetType="Label">
-        <Setter Property="FontSize" Value="26" />
-        <Setter Property="Opacity" Value="0.72" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="56" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
     </Style>
 
+    <Style x:Key="StandbyStepNumberLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <Style x:Key="StandbyStepTextLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 空席の状態は、記号の色 (すぐに案内できる・満席・受付を止めている) と文言を面に出す -->
+    <Style x:Key="StandbyStatusBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="32,28" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
+        <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
+    </Style>
+
+    <Style x:Key="StandbyStatusGlyphLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="0,0,24,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="48" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="StandbyStatusLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 受付するは、立ったまま押せるように画面の下に大きく置く -->
     <Style x:Key="StandbyStartButton"
            TargetType="Button"
-           BasedOn="{StaticResource ReceptionPrimaryButton}">
-        <Setter Property="Margin" Value="0,40,0,0" />
-        <Setter Property="WidthRequest" Value="440" />
-        <Setter Property="HeightRequest" Value="96" />
-        <Setter Property="HorizontalOptions" Value="Start" />
+           BasedOn="{StaticResource KioskPrimaryButton}">
+        <Setter Property="HeightRequest" Value="168" />
+        <Setter Property="FontSize" Value="44" />
     </Style>
 
     <!-- ================================================================================ -->
@@ -226,44 +401,43 @@
 
     <Style x:Key="GuestsStack"
            TargetType="VerticalStackLayout">
-        <Setter Property="Spacing" Value="32" />
-        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="Spacing" Value="24" />
     </Style>
 
-    <!-- 人数は面の色のパネルに、名前と増減を 1 行ずつ並べる -->
-    <Style x:Key="GuestsPanelGrid"
-           TargetType="Grid">
-        <Setter Property="WidthRequest" Value="1000" />
-        <Setter Property="Padding" Value="48,8" />
-        <Setter Property="HorizontalOptions" Value="Start" />
+    <!-- 大人と子どもは面ごとに分け、名前の下に増減を画面の幅で並べる -->
+    <Style x:Key="GuestsPanelBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="32,24" />
+        <Setter Property="Stroke" Value="{DynamicResource OutlineColor}" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
     <Style x:Key="GuestsNameStack"
-           TargetType="VerticalStackLayout">
-        <Setter Property="Spacing" Value="4" />
-        <Setter Property="VerticalOptions" Value="Center" />
+           TargetType="HorizontalStackLayout">
+        <Setter Property="Spacing" Value="16" />
     </Style>
 
     <Style x:Key="GuestsNameLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontSize" Value="36" />
+        <Setter Property="FontSize" Value="32" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
     <Style x:Key="GuestsNoteLabel"
            TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
         <Setter Property="FontSize" Value="20" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
     <Style x:Key="GuestsStepperGrid"
            TargetType="Grid">
-        <Setter Property="Margin" Value="0,24" />
-        <Setter Property="HeightRequest" Value="112" />
-        <Setter Property="ColumnSpacing" Value="0" />
+        <Setter Property="Margin" Value="0,20,0,0" />
+        <Setter Property="HeightRequest" Value="128" />
     </Style>
 
     <!-- 人数の増減。− と + は沈んだ面の四角いボタンにする -->
@@ -273,7 +447,7 @@
         <Setter Property="BorderWidth" Value="0" />
         <Setter Property="CornerRadius" Value="0" />
         <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="40" />
+        <Setter Property="FontSize" Value="48" />
         <Setter Property="VisualStateManager.VisualStateGroups">
             <VisualStateGroupList>
                 <VisualStateGroup x:Name="CommonStates">
@@ -304,7 +478,15 @@
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
         <Setter Property="VerticalTextAlignment" Value="Center" />
-        <Setter Property="FontSize" Value="48" />
+        <Setter Property="FontSize" Value="72" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="GuestsTotalLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="32" />
         <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
@@ -316,31 +498,78 @@
     <Style x:Key="GuideStack"
            TargetType="VerticalStackLayout">
         <Setter Property="Spacing" Value="32" />
-        <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <!-- 決まったテーブルは主色の面に大きく出し、離れても読めるようにする -->
-    <Style x:Key="GuideTableLabel"
+    <!-- 案内の記号 (案内できた / 満席) -->
+    <Style x:Key="GuideGlyphLabel"
            TargetType="Label">
-        <Setter Property="Padding" Value="64,24" />
-        <Setter Property="HorizontalOptions" Value="Start" />
-        <Setter Property="FontSize" Value="120" />
-        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
+        <Setter Property="FontSize" Value="96" />
+        <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
+    </Style>
+
+    <Style x:Key="GuideFullGlyphLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource GuideGlyphLabel}">
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
+    <!-- 決まったテーブルは主色の札にして、離れても読める大きさで出す -->
+    <Style x:Key="GuideTicketBorder"
+           TargetType="Border">
+        <Setter Property="Padding" Value="40,32,40,40" />
+        <Setter Property="StrokeThickness" Value="0" />
+        <Setter Property="StrokeShape" Value="Rectangle" />
         <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryColor}" />
+    </Style>
+
+    <Style x:Key="GuideTicketCaptionLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="Opacity" Value="0.85" />
+        <Setter Property="TextColor" Value="{DynamicResource OnPrimaryColor}" />
+    </Style>
+
+    <Style x:Key="GuideTicketTableLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="160" />
+        <Setter Property="FontAttributes" Value="Bold" />
         <Setter Property="TextColor" Value="{DynamicResource OnPrimaryColor}" />
     </Style>
 
     <Style x:Key="GuideGuestsLabel"
            TargetType="Label">
-        <Setter Property="FontSize" Value="32" />
-        <Setter Property="Opacity" Value="0.72" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
-    <Style x:Key="GuideFullMessageLabel"
+    <Style x:Key="GuideMessageLabel"
            TargetType="Label">
-        <Setter Property="FontSize" Value="32" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSecondaryColor}" />
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="30" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <!-- 待受に戻るまでの残りは、減っていく帯で示す (帯の左を起点に縮める) -->
+    <Style x:Key="GuideCountdownGrid"
+           TargetType="Grid">
+        <Setter Property="HeightRequest" Value="8" />
+    </Style>
+
+    <Style x:Key="GuideCountdownTrack"
+           TargetType="BoxView">
+        <Setter Property="Color" Value="{DynamicResource SurfaceVariantColor}" />
+    </Style>
+
+    <Style x:Key="GuideCountdownBar"
+           TargetType="BoxView">
+        <Setter Property="AnchorX" Value="0" />
+        <Setter Property="Color" Value="{DynamicResource PrimaryColor}" />
     </Style>
 
     <!-- ================================================================================ -->

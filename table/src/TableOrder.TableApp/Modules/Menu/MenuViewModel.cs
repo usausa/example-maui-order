@@ -139,7 +139,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
         QuickAddCommand = MakeAsyncCommand<MenuCard>(QuickAddAsync);
         EditLineCommand = MakeAsyncCommand<CartLineItem>(EditLineAsync);
         IncreaseCommand = MakeAsyncCommand<CartLineItem>(IncreaseAsync);
-        DecreaseCommand = MakeDelegateCommand<CartLineItem>(x => ChangeQuantity(x, x.Quantity - 1));
+        DecreaseCommand = MakeAsyncCommand<CartLineItem>(DecreaseAsync);
         SubmitCommand = MakeAsyncCommand(SubmitAsync, () => HasCart && !IsOrderingStopped);
         HistoryCommand = MakeAsyncCommand(async () => await popupNavigator.OrderHistoryAsync());
         CallCommand = MakeAsyncCommand(async () => await popupNavigator.StaffCallAsync(), () => CanCall);
@@ -213,6 +213,17 @@ public sealed partial class MenuViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
+    // 送れたかわからなかった注文が届いていたら、空にしたカートを映して受け付けたことを知らせる
+    // 知らせを開いている間は、画面のボタンと重ならないように Busy にする
+    protected override async Task OnOrderAcceptedAsync()
+    {
+        SyncCart();
+        using (BusyState.Begin())
+        {
+            await popupNavigator.MessageAsync(AppResources.ConfirmDoneTitle, AppResources.ConfirmDoneMessage);
+        }
+    }
+
     // 来店を終えて待受に戻す。終える前に次の来店が開いていたら、次の来店の注文の画面にする
     // 次の来店の注文を読む間も画面の操作と重ならないように、Busy にする
     private async Task FinishVisitAsync()
@@ -282,7 +293,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private async Task OpenItemAsync(MenuCard card)
     {
-        if (card.IsSoldOut)
+        if (card.IsSoldOut || !await CanEditCartAsync())
         {
             return;
         }
@@ -294,8 +305,13 @@ public sealed partial class MenuViewModel : AppViewModelBase
     }
 
     // オプションのない商品は 1 つすぐ入れる (出す時機は商品の既定)
-    private Task QuickAddAsync(MenuCard card) =>
-        card.CanQuickAdd ? AddAsync(OrderUsecase.CreateSelection(menuState.GetItem(card.Id))) : Task.CompletedTask;
+    private async Task QuickAddAsync(MenuCard card)
+    {
+        if (card.CanQuickAdd && await CanEditCartAsync())
+        {
+            await AddAsync(OrderUsecase.CreateSelection(menuState.GetItem(card.Id)));
+        }
+    }
 
     private async Task AddAsync(ItemSelection selection)
     {
@@ -308,17 +324,17 @@ public sealed partial class MenuViewModel : AppViewModelBase
         SyncCart();
     }
 
-    // 1 回の注文の明細の上限、メニューのルール (確認、上限)、残りの数を確かめる
+    // 上限 (1 回の注文の明細の数、1 明細の数量、メニューのルールの上限、残りの数) と確認のルールを確かめる
+    // 端末の中で確かめられる上限を先に見て、入れられないものにお客様の確認を求めない
     private async Task<bool> AcceptAsync(ItemSelection selection, Guid? replacingLineId)
     {
-        var maxLines = menuState.Config.OrderRules.MaxLinesPerOrder;
-        if ((replacingLineId is null) && cartState.AddsLine(selection) && (cartState.Lines.Count >= maxLines))
+        var language = languageState.Current;
+        if (orderUsecase.FindExceededLimit(selection, replacingLineId) is { } limit)
         {
-            await popupNavigator.MessageAsync(AppResources.LimitTitle, ViewHelper.Format(AppResources.MaxLinesFormat, maxLines));
+            await popupNavigator.MessageAsync(AppResources.LimitTitle, ViewHelper.LimitMessage(limit, menuState, language));
             return false;
         }
 
-        var language = languageState.Current;
         foreach (var rule in orderUsecase.GetRequiredConfirmations(selection))
         {
             var message = rule.Message.Get(language, AppResources.RuleConfirmMessage)!;
@@ -335,23 +351,6 @@ public sealed partial class MenuViewModel : AppViewModelBase
             }
         }
 
-        if (orderUsecase.FindExceededLimit(selection, replacingLineId) is { } limit)
-        {
-            var name = menuState.TagName(limit.TargetTag, language);
-            await popupNavigator.MessageAsync(AppResources.LimitTitle, ViewHelper.Format(AppResources.LimitMessageFormat, name));
-            return false;
-        }
-
-        if (menuState.Remaining(selection.ItemId) is { } remaining)
-        {
-            var count = cartState.Lines.Where(x => (x.ItemId == selection.ItemId) && (x.Id != replacingLineId)).Sum(static x => x.Quantity);
-            if (count + selection.Quantity > remaining)
-            {
-                await popupNavigator.MessageAsync(AppResources.LimitTitle, ViewHelper.Format(AppResources.StockRemainingFormat, remaining));
-                return false;
-            }
-        }
-
         return true;
     }
 
@@ -361,7 +360,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private async Task EditLineAsync(CartLineItem item)
     {
-        if (await popupNavigator.ItemDetailAsync(item.Line.ItemId, item.Line) is not { } selection)
+        if (!await CanEditCartAsync() || (await popupNavigator.ItemDetailAsync(item.Line.ItemId, item.Line) is not { } selection))
         {
             return;
         }
@@ -375,21 +374,35 @@ public sealed partial class MenuViewModel : AppViewModelBase
         SyncCart();
     }
 
+    // 1 つ足した数で上限とルールを確かめる (この行の今の数は数に入っている)
     private async Task IncreaseAsync(CartLineItem item)
     {
         var line = item.Line;
-        if (line.Quantity >= menuState.MaxQuantity(menuState.GetItem(line.ItemId)))
+        if (await CanEditCartAsync() && await AcceptAsync(new ItemSelection(line.ItemId, line.OptionIds, line.Quantity + 1, line.Timing), line.Id))
         {
-            return;
+            ChangeQuantity(item, line.Quantity + 1);
+        }
+    }
+
+    private async Task DecreaseAsync(CartLineItem item)
+    {
+        if (await CanEditCartAsync())
+        {
+            ChangeQuantity(item, item.Quantity - 1);
+        }
+    }
+
+    // 送れたかわからない注文があるうちは、カートを直させずに同じ内容で送り直してもらう
+    // (直すと、届いていた注文と二重になるか、同じ Id の違う内容として断られる)
+    private async Task<bool> CanEditCartAsync()
+    {
+        if (!cartState.HasPendingOrder)
+        {
+            return true;
         }
 
-        // 1 つ足した数でルールを確かめる (この行の今の数は数に入っている)
-        if (!await AcceptAsync(new ItemSelection(line.ItemId, line.OptionIds, line.Quantity + 1, line.Timing), line.Id))
-        {
-            return;
-        }
-
-        ChangeQuantity(item, line.Quantity + 1);
+        await popupNavigator.MessageAsync(AppResources.ConfirmTitle, AppResources.CartPendingMessage);
+        return false;
     }
 
     private void ChangeQuantity(CartLineItem item, int quantity)

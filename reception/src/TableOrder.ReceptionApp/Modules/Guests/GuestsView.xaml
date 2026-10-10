@@ -9,15 +9,18 @@
              x:DataType="{x:Type module:GuestsViewModel}"
              s:BindingContextResolver.Type="{x:Type module:GuestsViewModel}">
 
-    <!-- 人数: 大人と子どもを増減のボタンで入れて、席を決める。入口に立ったまま押せるように大きくする -->
-    <Grid Style="{StaticResource ReceptionGrid}"
-          RowDefinitions="Auto,*,Auto">
-        <!-- brand -->
-        <HorizontalStackLayout Grid.Row="0"
-                               Style="{StaticResource ReceptionBrandStack}">
-            <Border Style="{StaticResource ReceptionMarkBorder}">
+    <!-- 人数: 受付の段階 (1 人数) を示し、大人と子どもを大きな増減のボタンで入れて合計を出す。下に席を決めると戻る -->
+    <!-- 入口に立ったまま押せるように、増減と操作は画面の幅で大きくする -->
+    <Grid Style="{StaticResource KioskGrid}"
+          RowDefinitions="Auto,Auto,1,*">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource KioskHeaderGrid}"
+              ColumnDefinitions="Auto,*">
+            <Border Grid.Column="0"
+                    Style="{StaticResource KioskMarkBorder}">
                 <Grid>
-                    <Label Style="{StaticResource ReceptionInitialLabel}"
+                    <Label Style="{StaticResource KioskInitialLabel}"
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
@@ -25,77 +28,115 @@
                            Source="{Binding Brand.LogoPath}" />
                 </Grid>
             </Border>
-            <Label Style="{StaticResource ReceptionBrandLabel}"
-                   Text="{Binding Brand.Name}" />
-        </HorizontalStackLayout>
+            <VerticalStackLayout Grid.Column="1"
+                                 Style="{StaticResource KioskBrandStack}">
+                <Label Style="{StaticResource KioskBrandLabel}"
+                       Text="{Binding Brand.Name}" />
+                <Label Style="{StaticResource KioskStoreLabel}"
+                       Text="{Binding StoreText}" />
+            </VerticalStackLayout>
+        </Grid>
 
-        <!-- guests -->
-        <VerticalStackLayout Grid.Row="1"
-                             Style="{StaticResource GuestsStack}">
-            <Label Style="{StaticResource ReceptionTitleLabel}"
-                   Text="{x:Static strings:AppResources.GuestsTitle}" />
-            <Grid Style="{StaticResource GuestsPanelGrid}"
-                  RowDefinitions="Auto,1,Auto"
-                  ColumnDefinitions="*,Auto">
-                <!-- adults -->
-                <Label Grid.Row="0" Grid.Column="0"
-                       Style="{StaticResource GuestsNameLabel}"
-                       Text="{x:Static strings:AppResources.GuestsAdults}" />
-                <Grid Grid.Row="0" Grid.Column="1"
-                      Style="{StaticResource GuestsStepperGrid}"
-                      ColumnDefinitions="112,140,112">
-                    <Button Grid.Column="0"
-                            Style="{StaticResource GuestsStepperButton}"
-                            Command="{Binding DecreaseAdultsCommand}"
-                            Text="{x:Static fonts:MaterialIcons.Remove}" />
-                    <Label Grid.Column="1"
-                           Style="{StaticResource GuestsValueLabel}"
-                           Text="{Binding Adults}" />
-                    <Button Grid.Column="2"
-                            Style="{StaticResource GuestsStepperButton}"
-                            Command="{Binding IncreaseAdultsCommand}"
-                            Text="{x:Static fonts:MaterialIcons.Add}" />
-                </Grid>
-                <BoxView Grid.Row="1" Grid.ColumnSpan="2"
-                         Style="{StaticResource HorizontalRule}" />
-                <!-- children -->
-                <VerticalStackLayout Grid.Row="2" Grid.Column="0"
-                                     Style="{StaticResource GuestsNameStack}">
-                    <Label Style="{StaticResource GuestsNameLabel}"
-                           Text="{x:Static strings:AppResources.GuestsChildren}" />
-                    <Label Style="{StaticResource GuestsNoteLabel}"
-                           Text="{x:Static strings:AppResources.GuestsChildrenNote}" />
-                </VerticalStackLayout>
-                <Grid Grid.Row="2" Grid.Column="1"
-                      Style="{StaticResource GuestsStepperGrid}"
-                      ColumnDefinitions="112,140,112">
-                    <Button Grid.Column="0"
-                            Style="{StaticResource GuestsStepperButton}"
-                            Command="{Binding DecreaseChildrenCommand}"
-                            Text="{x:Static fonts:MaterialIcons.Remove}" />
-                    <Label Grid.Column="1"
-                           Style="{StaticResource GuestsValueLabel}"
-                           Text="{Binding Children}" />
-                    <Button Grid.Column="2"
-                            Style="{StaticResource GuestsStepperButton}"
-                            Command="{Binding IncreaseChildrenCommand}"
-                            Text="{x:Static fonts:MaterialIcons.Add}" />
-                </Grid>
+        <!-- steps -->
+        <Grid Grid.Row="1"
+              Style="{StaticResource KioskStepGrid}"
+              ColumnDefinitions="*,*">
+            <Grid Grid.Column="0"
+                  Style="{StaticResource KioskStepCurrentGrid}">
+                <HorizontalStackLayout Style="{StaticResource KioskStepStack}">
+                    <Label Style="{StaticResource KioskStepCurrentNumberLabel}"
+                           Text="1" />
+                    <Label Style="{StaticResource KioskStepCurrentLabel}"
+                           Text="{x:Static strings:AppResources.StepGuests}" />
+                </HorizontalStackLayout>
             </Grid>
-        </VerticalStackLayout>
+            <Grid Grid.Column="1"
+                  Style="{StaticResource KioskStepCellGrid}">
+                <HorizontalStackLayout Style="{StaticResource KioskStepStack}">
+                    <Label Style="{StaticResource KioskStepNumberLabel}"
+                           Text="2" />
+                    <Label Style="{StaticResource KioskStepLabel}"
+                           Text="{x:Static strings:AppResources.StepGuide}" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+        <BoxView Grid.Row="2"
+                 Style="{StaticResource HorizontalRule}" />
 
-        <!-- action -->
-        <Grid Grid.Row="2"
-              Style="{StaticResource ReceptionActionGrid}"
-              ColumnDefinitions="*,2*">
-            <Button Grid.Column="0"
-                    Style="{StaticResource ReceptionSecondaryButton}"
-                    Command="{Binding BackCommand}"
-                    Text="{x:Static strings:AppResources.CommonBack}" />
-            <Button Grid.Column="1"
-                    Style="{StaticResource ReceptionPrimaryButton}"
-                    Command="{Binding DecideCommand}"
-                    Text="{x:Static strings:AppResources.GuestsDecide}" />
+        <!-- body -->
+        <Grid Grid.Row="3"
+              Style="{StaticResource KioskBodyGrid}"
+              RowDefinitions="Auto,*,Auto">
+            <VerticalStackLayout Grid.Row="0"
+                                 Style="{StaticResource GuestsStack}">
+                <Label Style="{StaticResource KioskTitleLabel}"
+                       Text="{x:Static strings:AppResources.GuestsTitle}" />
+
+                <!-- adults -->
+                <Border Style="{StaticResource GuestsPanelBorder}">
+                    <VerticalStackLayout>
+                        <Label Style="{StaticResource GuestsNameLabel}"
+                               Text="{x:Static strings:AppResources.GuestsAdults}" />
+                        <Grid Style="{StaticResource GuestsStepperGrid}"
+                              ColumnDefinitions="160,*,160">
+                            <Button Grid.Column="0"
+                                    Style="{StaticResource GuestsStepperButton}"
+                                    Command="{Binding DecreaseAdultsCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Remove}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource GuestsValueLabel}"
+                                   Text="{Binding Adults}" />
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource GuestsStepperButton}"
+                                    Command="{Binding IncreaseAdultsCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Add}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- children -->
+                <Border Style="{StaticResource GuestsPanelBorder}">
+                    <VerticalStackLayout>
+                        <HorizontalStackLayout Style="{StaticResource GuestsNameStack}">
+                            <Label Style="{StaticResource GuestsNameLabel}"
+                                   Text="{x:Static strings:AppResources.GuestsChildren}" />
+                            <Label Style="{StaticResource GuestsNoteLabel}"
+                                   Text="{x:Static strings:AppResources.GuestsChildrenNote}" />
+                        </HorizontalStackLayout>
+                        <Grid Style="{StaticResource GuestsStepperGrid}"
+                              ColumnDefinitions="160,*,160">
+                            <Button Grid.Column="0"
+                                    Style="{StaticResource GuestsStepperButton}"
+                                    Command="{Binding DecreaseChildrenCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Remove}" />
+                            <Label Grid.Column="1"
+                                   Style="{StaticResource GuestsValueLabel}"
+                                   Text="{Binding Children}" />
+                            <Button Grid.Column="2"
+                                    Style="{StaticResource GuestsStepperButton}"
+                                    Command="{Binding IncreaseChildrenCommand}"
+                                    Text="{x:Static fonts:MaterialIcons.Add}" />
+                        </Grid>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- total -->
+                <Label Style="{StaticResource GuestsTotalLabel}"
+                       Text="{Binding TotalText}" />
+            </VerticalStackLayout>
+
+            <!-- action -->
+            <VerticalStackLayout Grid.Row="2"
+                                 Style="{StaticResource KioskActionStack}">
+                <Button Style="{StaticResource KioskPrimaryButton}"
+                        Command="{Binding DecideCommand}"
+                        Text="{x:Static strings:AppResources.GuestsDecide}" />
+                <Button Style="{StaticResource KioskSecondaryButton}"
+                        Command="{Binding BackCommand}"
+                        Text="{x:Static strings:AppResources.CommonBack}" />
+                <Label Style="{StaticResource KioskNoteLabel}"
+                       Text="{Binding IdleText}" />
+            </VerticalStackLayout>
         </Grid>
     </Grid>
 

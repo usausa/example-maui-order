@@ -82,6 +82,7 @@ public abstract class AppViewModelBase :
             ShellEvent.VisitMoved => OnVisitMovedAsync(),
             ShellEvent.StoreUpdated => OnStoreUpdatedAsync(),
             ShellEvent.StockUpdated => OnStockUpdatedAsync(),
+            ShellEvent.OrderAccepted => OnOrderAcceptedAsync(),
             ShellEvent.Restart => OnRestartAsync(),
             _ => Task.CompletedTask
         };
@@ -104,6 +105,8 @@ public abstract class AppViewModelBase :
     protected virtual Task OnStoreUpdatedAsync() => Task.CompletedTask;
 
     protected virtual Task OnStockUpdatedAsync() => Task.CompletedTask;
+
+    protected virtual Task OnOrderAcceptedAsync() => Task.CompletedTask;
 
     // 起動からやり直す (起動で登録・トークン・店舗の設定を確かめ直す)。起動と端末の設定の画面は自分で確かめるので受けない
     protected virtual async Task OnRestartAsync() =>

@@ -483,12 +483,6 @@ namespace TableOrder.ReceptionApp.Resources.Strings {
             }
         }
 
-        internal static string TableFormat {
-            get {
-                return ResourceManager.GetString("TableFormat", resourceCulture);
-            }
-        }
-
         internal static string GuestsAdultsFormat {
             get {
                 return ResourceManager.GetString("GuestsAdultsFormat", resourceCulture);
@@ -540,6 +534,66 @@ namespace TableOrder.ReceptionApp.Resources.Strings {
         internal static string ErrorGeneric {
             get {
                 return ResourceManager.GetString("ErrorGeneric", resourceCulture);
+            }
+        }
+
+        internal static string StandbyAvailable {
+            get {
+                return ResourceManager.GetString("StandbyAvailable", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStepGuests {
+            get {
+                return ResourceManager.GetString("StandbyStepGuests", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStepTable {
+            get {
+                return ResourceManager.GetString("StandbyStepTable", resourceCulture);
+            }
+        }
+
+        internal static string StandbyStepSeat {
+            get {
+                return ResourceManager.GetString("StandbyStepSeat", resourceCulture);
+            }
+        }
+
+        internal static string StepGuests {
+            get {
+                return ResourceManager.GetString("StepGuests", resourceCulture);
+            }
+        }
+
+        internal static string StepGuide {
+            get {
+                return ResourceManager.GetString("StepGuide", resourceCulture);
+            }
+        }
+
+        internal static string GuestsTotalFormat {
+            get {
+                return ResourceManager.GetString("GuestsTotalFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuestsIdleFormat {
+            get {
+                return ResourceManager.GetString("GuestsIdleFormat", resourceCulture);
+            }
+        }
+
+        internal static string GuideTableCaption {
+            get {
+                return ResourceManager.GetString("GuideTableCaption", resourceCulture);
+            }
+        }
+
+        internal static string GuideCountdownFormat {
+            get {
+                return ResourceManager.GetString("GuideCountdownFormat", resourceCulture);
             }
         }
     }

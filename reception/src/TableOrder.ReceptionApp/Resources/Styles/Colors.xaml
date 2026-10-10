@@ -12,7 +12,7 @@
     <!-- Brand -->
     <!-- ================================================================================ -->
 
-    <!-- 主色: 受付する、席を決めるなどの主な操作、案内するテーブル -->
+    <!-- 主色: 受付する、席を決めるなどの主な操作、今の受付の段階、案内するテーブルの札 -->
     <Color x:Key="PrimaryColor">#C53D13</Color>
     <Color x:Key="PrimaryPressedColor">#9E300F</Color>
     <Color x:Key="OnPrimaryColor">#FFFFFF</Color>
@@ -21,7 +21,7 @@
     <Color x:Key="PrimaryContainerColor">#FBE4DA</Color>
     <Color x:Key="OnPrimaryContainerColor">#7A250B</Color>
 
-    <!-- 補助色: 待受と案内の地 -->
+    <!-- 補助色: お客様の画面の上の帯 (チェーンの印と名前) -->
     <Color x:Key="SecondaryColor">#22201C</Color>
     <Color x:Key="SecondaryPressedColor">#45413A</Color>
     <Color x:Key="OnSecondaryColor">#FFFFFF</Color>
@@ -30,10 +30,10 @@
     <!-- Neutral -->
     <!-- ================================================================================ -->
 
-    <!-- 画面の地 -->
+    <!-- お客様の画面の本文の地 -->
     <Color x:Key="CanvasColor">#F3F0EA</Color>
 
-    <!-- 面 (パネル) と、沈んだ面 (押下、人数の増減) -->
+    <!-- 面 (パネル、受付の流れ、空席の状態) と、沈んだ面 (押下、人数の増減、段階の番号) -->
     <Color x:Key="SurfaceColor">#FFFFFF</Color>
     <Color x:Key="SurfaceVariantColor">#EAE6DE</Color>
 
@@ -57,15 +57,15 @@
     <!-- Status -->
     <!-- ================================================================================ -->
 
-    <!-- 満席、失敗 -->
+    <!-- 失敗 -->
     <Color x:Key="ErrorColor">#B3261E</Color>
     <Color x:Key="OnErrorColor">#FFFFFF</Color>
 
-    <!-- 受付の完了 -->
+    <!-- すぐに案内できる、案内できた -->
     <Color x:Key="SuccessColor">#2E7D32</Color>
     <Color x:Key="OnSuccessColor">#FFFFFF</Color>
 
-    <!-- 受付を止めているとき -->
+    <!-- 満席 -->
     <Color x:Key="WarningColor">#A15C00</Color>
     <Color x:Key="OnWarningColor">#FFFFFF</Color>
 

@@ -169,7 +169,7 @@ public sealed partial class StartupViewModel : AppViewModelBase
         // トークンを取り直す (置き場所の変更とテナントの再開を反映する)。無効にされた端末は登録からやり直す
         await ReportAsync(0.3, AppResources.StartupStepConnect);
         var authenticated = await deviceApi.AuthenticateAsync();
-        if (authenticated.ErrorCode == "DEVICE_REVOKED")
+        if (authenticated.ErrorCode == ErrorCodes.DeviceRevoked)
         {
             deviceUsecase.Unregister();
             await Navigator.ForwardAsync(ViewId.Startup);

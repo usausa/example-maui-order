@@ -9,7 +9,7 @@ using Android.OS;
 
 using AndroidX.Activity;
 
-// 店の入口に置くタブレットなので横向きに固定する (台に逆さに置いても使えるように 180 度の回転は許す)
+// 店の入口に縦に置くタブレットなので縦向きに固定する (台に逆さに置いても使えるように 180 度の回転は許す)
 // ロックタスクを許されていれば (Device Owner / EMM)、起動したときにシステムがロックタスクに入れる (落ちて起動し直したときも)
 // 専用端末のホームアプリにもなる (Device Owner のときに KioskManager が常に使うホームにする)
 // ホームの候補に入るだけでは、ホームの役割 (Android 10 以降) は替わらず、開発中の端末のホームはそのまま
@@ -21,7 +21,7 @@ using AndroidX.Activity;
     LaunchMode = LaunchMode.SingleInstance,
     LockTaskMode = "if_whitelisted",
     ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density,
-    ScreenOrientation = ScreenOrientation.SensorLandscape)]
+    ScreenOrientation = ScreenOrientation.SensorPortrait)]
 [IntentFilter([Intent.ActionMain], Categories = [Intent.CategoryHome, Intent.CategoryDefault])]
 public sealed class MainActivity : MauiAppCompatActivity
 {

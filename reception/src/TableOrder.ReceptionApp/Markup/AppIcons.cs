@@ -5,9 +5,10 @@ using Fonts;
 // 記号の色はテーマの役割 (Colors.xaml) から引く。画面を作るたびに引き直すので、起動時に差し替えたテーマの色も反映される
 public static class AppIcons
 {
-    private const double HeaderSize = 24d;
+    private const double HeaderSize = 28d;
 
-    private const double ActionSize = 36d;
+    // 受付するの大きなボタンに合わせる
+    private const double ActionSize = 48d;
 
     // Header
 

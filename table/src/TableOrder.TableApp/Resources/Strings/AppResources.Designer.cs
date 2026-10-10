@@ -105,6 +105,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string CartPendingMessage {
+            get {
+                return ResourceManager.GetString("CartPendingMessage", resourceCulture);
+            }
+        }
+
         internal static string CheckoutBackToMenu {
             get {
                 return ResourceManager.GetString("CheckoutBackToMenu", resourceCulture);
@@ -243,6 +249,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string ConfirmPendingMessage {
+            get {
+                return ResourceManager.GetString("ConfirmPendingMessage", resourceCulture);
+            }
+        }
+
         internal static string ConfirmRetry {
             get {
                 return ResourceManager.GetString("ConfirmRetry", resourceCulture);
@@ -351,9 +363,21 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string ErrorBillChanged {
+            get {
+                return ResourceManager.GetString("ErrorBillChanged", resourceCulture);
+            }
+        }
+
         internal static string ErrorCheckoutInProgress {
             get {
                 return ResourceManager.GetString("ErrorCheckoutInProgress", resourceCulture);
+            }
+        }
+
+        internal static string ErrorConfirmationRequired {
+            get {
+                return ResourceManager.GetString("ErrorConfirmationRequired", resourceCulture);
             }
         }
 
@@ -381,6 +405,18 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string ErrorMenuChanged {
+            get {
+                return ResourceManager.GetString("ErrorMenuChanged", resourceCulture);
+            }
+        }
+
+        internal static string ErrorOptionInvalid {
+            get {
+                return ResourceManager.GetString("ErrorOptionInvalid", resourceCulture);
+            }
+        }
+
         internal static string ErrorOrderingPaused {
             get {
                 return ResourceManager.GetString("ErrorOrderingPaused", resourceCulture);
@@ -393,9 +429,33 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string ErrorPaymentAmountInvalid {
+            get {
+                return ResourceManager.GetString("ErrorPaymentAmountInvalid", resourceCulture);
+            }
+        }
+
+        internal static string ErrorPaymentMethodUnavailable {
+            get {
+                return ResourceManager.GetString("ErrorPaymentMethodUnavailable", resourceCulture);
+            }
+        }
+
         internal static string ErrorSoldOut {
             get {
                 return ResourceManager.GetString("ErrorSoldOut", resourceCulture);
+            }
+        }
+
+        internal static string ErrorStockInsufficient {
+            get {
+                return ResourceManager.GetString("ErrorStockInsufficient", resourceCulture);
+            }
+        }
+
+        internal static string ErrorTableOccupied {
+            get {
+                return ResourceManager.GetString("ErrorTableOccupied", resourceCulture);
             }
         }
 
@@ -420,6 +480,12 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string ErrorUnavailable {
             get {
                 return ResourceManager.GetString("ErrorUnavailable", resourceCulture);
+            }
+        }
+
+        internal static string ErrorVisitNotOpen {
+            get {
+                return ResourceManager.GetString("ErrorVisitNotOpen", resourceCulture);
             }
         }
 
@@ -570,6 +636,12 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string MaxLinesFormat {
             get {
                 return ResourceManager.GetString("MaxLinesFormat", resourceCulture);
+            }
+        }
+
+        internal static string MaxQuantityFormat {
+            get {
+                return ResourceManager.GetString("MaxQuantityFormat", resourceCulture);
             }
         }
 

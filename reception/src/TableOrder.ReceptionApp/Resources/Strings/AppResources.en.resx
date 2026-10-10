@@ -260,9 +260,6 @@
   <data name="GuideFullMessage" xml:space="preserve">
     <value>A staff member will seat you shortly</value>
   </data>
-  <data name="TableFormat" xml:space="preserve">
-    <value>Table {0}</value>
-  </data>
   <data name="GuestsAdultsFormat" xml:space="preserve">
     <value>Adults {0}</value>
   </data>
@@ -289,5 +286,35 @@
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Check-in failed. Please ask a staff member.</value>
+  </data>
+  <data name="StandbyAvailable" xml:space="preserve">
+    <value>Tables are available now</value>
+  </data>
+  <data name="StandbyStepGuests" xml:space="preserve">
+    <value>Enter your party size</value>
+  </data>
+  <data name="StandbyStepTable" xml:space="preserve">
+    <value>We find your table</value>
+  </data>
+  <data name="StandbyStepSeat" xml:space="preserve">
+    <value>Go to your table</value>
+  </data>
+  <data name="StepGuests" xml:space="preserve">
+    <value>Party size</value>
+  </data>
+  <data name="StepGuide" xml:space="preserve">
+    <value>Your table</value>
+  </data>
+  <data name="GuestsTotalFormat" xml:space="preserve">
+    <value>Total: {0}</value>
+  </data>
+  <data name="GuestsIdleFormat" xml:space="preserve">
+    <value>Returns to the start screen after {0} s without input</value>
+  </data>
+  <data name="GuideTableCaption" xml:space="preserve">
+    <value>Table</value>
+  </data>
+  <data name="GuideCountdownFormat" xml:space="preserve">
+    <value>Returning to the start screen in {0} s</value>
   </data>
 </root>

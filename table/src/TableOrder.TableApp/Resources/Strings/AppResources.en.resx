@@ -71,6 +71,9 @@
   <data name="CardInstruction" xml:space="preserve">
     <value>Insert or tap your card on the card reader</value>
   </data>
+  <data name="CartPendingMessage" xml:space="preserve">
+    <value>We could not confirm that your last order was received. Before changing your list, please send it again with "Place order".</value>
+  </data>
   <data name="CheckoutBackToMenu" xml:space="preserve">
     <value>Back to menu</value>
   </data>
@@ -140,6 +143,9 @@
   <data name="ConfirmDoneTitle" xml:space="preserve">
     <value>Thank you for your order</value>
   </data>
+  <data name="ConfirmPendingMessage" xml:space="preserve">
+    <value>We could not confirm that your last order was received. Please send the same order again.</value>
+  </data>
   <data name="ConfirmRetry" xml:space="preserve">
     <value>Send again</value>
   </data>
@@ -194,8 +200,14 @@
   <data name="DetailUpdate" xml:space="preserve">
     <value>Update</value>
   </data>
+  <data name="ErrorBillChanged" xml:space="preserve">
+    <value>Your bill has changed. Please check it and choose again.</value>
+  </data>
   <data name="ErrorCheckoutInProgress" xml:space="preserve">
     <value>You cannot order during checkout.</value>
+  </data>
+  <data name="ErrorConfirmationRequired" xml:space="preserve">
+    <value>Some items need your confirmation. Please check your order.</value>
   </data>
   <data name="ErrorDeviceKind" xml:space="preserve">
     <value>This pairing code is not for a table tablet</value>
@@ -209,14 +221,32 @@
   <data name="ErrorLimit" xml:space="preserve">
     <value>You have exceeded the order limit.</value>
   </data>
+  <data name="ErrorMenuChanged" xml:space="preserve">
+    <value>The menu has changed. Please call a staff member.</value>
+  </data>
+  <data name="ErrorOptionInvalid" xml:space="preserve">
+    <value>Some items have invalid options. Please call a staff member.</value>
+  </data>
   <data name="ErrorOrderingPaused" xml:space="preserve">
     <value>Ordering is paused for now. Please wait a moment.</value>
   </data>
   <data name="ErrorPairingCodeInvalid" xml:space="preserve">
     <value>The pairing code is incorrect or has expired</value>
   </data>
+  <data name="ErrorPaymentAmountInvalid" xml:space="preserve">
+    <value>Another payment is in progress. Please call a staff member.</value>
+  </data>
+  <data name="ErrorPaymentMethodUnavailable" xml:space="preserve">
+    <value>This payment method is not available. Please choose another.</value>
+  </data>
   <data name="ErrorSoldOut" xml:space="preserve">
     <value>Some items are sold out. Please check your order.</value>
+  </data>
+  <data name="ErrorStockInsufficient" xml:space="preserve">
+    <value>Some items do not have enough left. Please check your order.</value>
+  </data>
+  <data name="ErrorTableOccupied" xml:space="preserve">
+    <value>This table is in use. Please call a staff member.</value>
   </data>
   <data name="ErrorTenantSuspended" xml:space="preserve">
     <value>The service is suspended. Please contact your administrator</value>
@@ -229,6 +259,9 @@
   </data>
   <data name="ErrorUnavailable" xml:space="preserve">
     <value>Could not connect. Please try again in a moment.</value>
+  </data>
+  <data name="ErrorVisitNotOpen" xml:space="preserve">
+    <value>Your visit has ended. Please call a staff member.</value>
   </data>
   <data name="GuestAdults" xml:space="preserve">
     <value>Adults</value>
@@ -258,7 +291,7 @@
     <value>No orders yet</value>
   </data>
   <data name="HistoryHeldFormat" xml:space="preserve">
-    <value>{0} after-meal items</value>
+    <value>After-meal items: {0}</value>
   </data>
   <data name="HistoryOrderFormat" xml:space="preserve">
     <value>Order {0}</value>
@@ -304,6 +337,9 @@
   </data>
   <data name="MaxLinesFormat" xml:space="preserve">
     <value>You can order up to {0} items at a time. Please place this order first.</value>
+  </data>
+  <data name="MaxQuantityFormat" xml:space="preserve">
+    <value>You can order up to {0} of the same item at a time.</value>
   </data>
   <data name="MenuCall" xml:space="preserve">
     <value>Call staff</value>

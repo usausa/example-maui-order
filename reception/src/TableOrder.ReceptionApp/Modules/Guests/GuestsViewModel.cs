@@ -4,9 +4,9 @@ using TableOrder.ReceptionApp.Modules.Guide;
 using TableOrder.Terminal.Components;
 using TableOrder.Terminal.Messaging;
 
-// 人数。大人と子ども (小学生以下) を増減のボタンで入れ (合わせて 1 人以上)、席を決めるで来店を開いて案内の画面に進む
+// 人数。大人と子ども (小学生以下) を増減のボタンで入れ (合わせて 1 人以上)、席を決めるで来店を開いて案内の画面に進む。合計の人数を出す
 // 人数の入る空席がなければ、案内の画面に満席を出す。受付を止めていたら (来店の開き方が替わった)、知らせてから起動からやり直す
-// しばらく触らなければ待受に戻す (入口で入れかけて離れたお客様の人数を残さず、言語も店舗の初めの言語に戻す)
+// しばらく触らなければ待受に戻す (入口で入れかけて離れたお客様の人数を残さず、言語も店舗の初めの言語に戻す)。戻るまでの時間は画面に添える
 public sealed partial class GuestsViewModel : AppViewModelBase
 {
     // 触らなかったら待受に戻すまでの時間と、それを見る間隔
@@ -37,11 +37,19 @@ public sealed partial class GuestsViewModel : AppViewModelBase
 
     public BrandMark Brand { get; }
 
+    public string StoreText { get; }
+
+    // 触らずに待受に戻るまでの時間の添え書き
+    public string IdleText { get; }
+
     [ObservableProperty]
     public partial int Adults { get; set; } = 2;
 
     [ObservableProperty]
     public partial int Children { get; set; }
+
+    [ObservableProperty]
+    public partial string TotalText { get; set; }
 
     public IObserveCommand DecreaseAdultsCommand { get; }
 
@@ -76,7 +84,11 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         this.languageState = languageState;
         this.receptionUsecase = receptionUsecase;
 
-        Brand = ViewHelper.Brand(receptionState, imageCache, languageState.Current);
+        var language = languageState.Current;
+        Brand = ViewHelper.Brand(receptionState, imageCache, language);
+        StoreText = receptionState.StoreName(language);
+        IdleText = ViewHelper.Format(AppResources.GuestsIdleFormat, (int)IdleTimeout.TotalSeconds);
+        TotalText = ViewHelper.Total(Adults + Children);
         touchedAt = timeProvider.GetUtcNow();
 
         DecreaseAdultsCommand = MakeDelegateCommand(() => ChangeGuests(Adults - 1, Children), () => Adults > 0);
@@ -157,6 +169,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     {
         Adults = adults;
         Children = children;
+        TotalText = ViewHelper.Total(adults + children);
         touchedAt = timeProvider.GetUtcNow();
     }
 

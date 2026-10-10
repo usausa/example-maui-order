@@ -3,9 +3,10 @@ namespace TableOrder.TableApp.State;
 // 店舗の今の状態 (注文の一時停止、ラストオーダー、設定の版)。起動のときに読み、通知 (store.updated) で替える
 public sealed class StoreState
 {
-    private string timeZone = string.Empty;
-
     private TimeOnly openTime;
+
+    // 店舗のタイムゾーン (時刻は端末の設定によらず店舗の時刻で出す)
+    public string TimeZone { get; private set; } = string.Empty;
 
     public bool OrderingPaused { get; private set; }
 
@@ -18,7 +19,7 @@ public sealed class StoreState
 
     public void Update(StoreResponse store)
     {
-        timeZone = store.TimeZone;
+        TimeZone = store.TimeZone;
         openTime = StoreHours.Parse(store.OpenTime);
         LastOrderTime = store.LastOrderTime is { } last ? StoreHours.Parse(last) : null;
         OrderingPaused = store.OrderingPaused;
@@ -28,5 +29,5 @@ public sealed class StoreState
 
     // ラストオーダーまでの残り (ラストオーダーのない店は null、過ぎていれば負)
     public TimeSpan? UntilLastOrder(DateTimeOffset now) =>
-        LastOrderTime is { } last ? StoreHours.UntilLastOrder(StoreHours.LocalTime(now, timeZone), openTime, last) : null;
+        LastOrderTime is { } last ? StoreHours.UntilLastOrder(StoreHours.LocalTime(now, TimeZone), openTime, last) : null;
 }

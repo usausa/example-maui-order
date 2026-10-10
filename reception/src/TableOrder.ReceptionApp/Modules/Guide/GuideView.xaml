@@ -2,21 +2,25 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
+             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Guide"
              x:Class="TableOrder.ReceptionApp.Modules.Guide.GuideView"
              x:DataType="{x:Type module:GuideViewModel}"
              s:BindingContextResolver.Type="{x:Type module:GuideViewModel}">
 
-    <!-- 案内: 決まったテーブルを離れても読める大きさで出す。満席のときはスタッフが案内することを出す -->
-    <Grid Style="{StaticResource ReceptionGrid}"
-          RowDefinitions="Auto,*,Auto">
-        <!-- brand -->
-        <HorizontalStackLayout Grid.Row="0"
-                               Style="{StaticResource ReceptionBrandStack}">
-            <Border Style="{StaticResource ReceptionMarkBorder}">
+    <!-- 案内: 受付の段階 (2 ご案内) を示し、決まったテーブルを主色の札にして離れても読める大きさで出す -->
+    <!-- 満席のときはスタッフが案内することを出す。下に閉じると、待受に戻るまでの残りを減っていく帯と文字で出す -->
+    <Grid Style="{StaticResource KioskGrid}"
+          RowDefinitions="Auto,Auto,1,*">
+        <!-- header -->
+        <Grid Grid.Row="0"
+              Style="{StaticResource KioskHeaderGrid}"
+              ColumnDefinitions="Auto,*">
+            <Border Grid.Column="0"
+                    Style="{StaticResource KioskMarkBorder}">
                 <Grid>
-                    <Label Style="{StaticResource ReceptionInitialLabel}"
+                    <Label Style="{StaticResource KioskInitialLabel}"
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
@@ -24,42 +28,93 @@
                            Source="{Binding Brand.LogoPath}" />
                 </Grid>
             </Border>
-            <Label Style="{StaticResource ReceptionBrandLabel}"
-                   Text="{Binding Brand.Name}" />
-        </HorizontalStackLayout>
+            <VerticalStackLayout Grid.Column="1"
+                                 Style="{StaticResource KioskBrandStack}">
+                <Label Style="{StaticResource KioskBrandLabel}"
+                       Text="{Binding Brand.Name}" />
+                <Label Style="{StaticResource KioskStoreLabel}"
+                       Text="{Binding StoreText}" />
+            </VerticalStackLayout>
+        </Grid>
 
-        <!-- table -->
-        <VerticalStackLayout Grid.Row="1"
-                             Style="{StaticResource GuideStack}"
-                             IsVisible="{Binding IsFull, Converter={StaticResource ReverseConverter}}">
-            <Label Style="{StaticResource ReceptionTitleLabel}"
-                   Text="{x:Static strings:AppResources.GuideTitle}" />
-            <Label Style="{StaticResource GuideTableLabel}"
-                   Text="{Binding TableText}" />
-            <Label Style="{StaticResource GuideGuestsLabel}"
-                   Text="{Binding GuestsText}" />
-        </VerticalStackLayout>
+        <!-- steps -->
+        <Grid Grid.Row="1"
+              Style="{StaticResource KioskStepGrid}"
+              ColumnDefinitions="*,*">
+            <Grid Grid.Column="0"
+                  Style="{StaticResource KioskStepCellGrid}">
+                <HorizontalStackLayout Style="{StaticResource KioskStepStack}">
+                    <Label Style="{StaticResource KioskStepDoneNumberLabel}"
+                           Text="{x:Static fonts:MaterialIcons.Check}" />
+                    <Label Style="{StaticResource KioskStepLabel}"
+                           Text="{x:Static strings:AppResources.StepGuests}" />
+                </HorizontalStackLayout>
+            </Grid>
+            <Grid Grid.Column="1"
+                  Style="{StaticResource KioskStepCurrentGrid}">
+                <HorizontalStackLayout Style="{StaticResource KioskStepStack}">
+                    <Label Style="{StaticResource KioskStepCurrentNumberLabel}"
+                           Text="2" />
+                    <Label Style="{StaticResource KioskStepCurrentLabel}"
+                           Text="{x:Static strings:AppResources.StepGuide}" />
+                </HorizontalStackLayout>
+            </Grid>
+        </Grid>
+        <BoxView Grid.Row="2"
+                 Style="{StaticResource HorizontalRule}" />
 
-        <!-- full -->
-        <VerticalStackLayout Grid.Row="1"
-                             Style="{StaticResource GuideStack}"
-                             IsVisible="{Binding IsFull}">
-            <Label Style="{StaticResource ReceptionTitleLabel}"
-                   Text="{x:Static strings:AppResources.GuideFullTitle}" />
-            <Label Style="{StaticResource GuideFullMessageLabel}"
-                   Text="{x:Static strings:AppResources.GuideFullMessage}" />
-            <Label Style="{StaticResource GuideGuestsLabel}"
-                   Text="{Binding GuestsText}" />
-        </VerticalStackLayout>
+        <!-- body -->
+        <Grid Grid.Row="3"
+              Style="{StaticResource KioskBodyGrid}"
+              RowDefinitions="*,Auto,*,Auto">
+            <!-- table -->
+            <VerticalStackLayout Grid.Row="1"
+                                 Style="{StaticResource GuideStack}"
+                                 IsVisible="{Binding IsFull, Converter={StaticResource ReverseConverter}}">
+                <Label Style="{StaticResource GuideGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                <Label Style="{StaticResource KioskTitleLabel}"
+                       Text="{x:Static strings:AppResources.GuideTitle}" />
+                <Border Style="{StaticResource GuideTicketBorder}">
+                    <VerticalStackLayout>
+                        <Label Style="{StaticResource GuideTicketCaptionLabel}"
+                               Text="{x:Static strings:AppResources.GuideTableCaption}" />
+                        <Label Style="{StaticResource GuideTicketTableLabel}"
+                               Text="{Binding TableText}" />
+                    </VerticalStackLayout>
+                </Border>
+                <Label Style="{StaticResource GuideGuestsLabel}"
+                       Text="{Binding GuestsText}" />
+            </VerticalStackLayout>
 
-        <!-- action -->
-        <Grid Grid.Row="2"
-              Style="{StaticResource ReceptionActionGrid}"
-              ColumnDefinitions="*,2*">
-            <Button Grid.Column="1"
-                    Style="{StaticResource ReceptionPrimaryButton}"
-                    Command="{Binding CloseCommand}"
-                    Text="{x:Static strings:AppResources.CommonClose}" />
+            <!-- full -->
+            <VerticalStackLayout Grid.Row="1"
+                                 Style="{StaticResource GuideStack}"
+                                 IsVisible="{Binding IsFull}">
+                <Label Style="{StaticResource GuideFullGlyphLabel}"
+                       Text="{x:Static fonts:MaterialIcons.Hourglass_top}" />
+                <Label Style="{StaticResource KioskTitleLabel}"
+                       Text="{x:Static strings:AppResources.GuideFullTitle}" />
+                <Label Style="{StaticResource GuideMessageLabel}"
+                       Text="{x:Static strings:AppResources.GuideFullMessage}" />
+                <Label Style="{StaticResource GuideGuestsLabel}"
+                       Text="{Binding GuestsText}" />
+            </VerticalStackLayout>
+
+            <!-- close / countdown -->
+            <VerticalStackLayout Grid.Row="3"
+                                 Style="{StaticResource KioskActionStack}">
+                <Button Style="{StaticResource KioskPrimaryButton}"
+                        Command="{Binding CloseCommand}"
+                        Text="{x:Static strings:AppResources.CommonClose}" />
+                <Grid Style="{StaticResource GuideCountdownGrid}">
+                    <BoxView Style="{StaticResource GuideCountdownTrack}" />
+                    <BoxView Style="{StaticResource GuideCountdownBar}"
+                             ScaleX="{Binding RemainingRatio}" />
+                </Grid>
+                <Label Style="{StaticResource KioskNoteLabel}"
+                       Text="{Binding RemainingText}" />
+            </VerticalStackLayout>
         </Grid>
     </Grid>
 

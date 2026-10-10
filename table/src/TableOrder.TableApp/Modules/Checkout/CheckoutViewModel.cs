@@ -27,7 +27,9 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
     private BillResponse? bill;
 
-    private PaymentResponse? payment;
+    // 送ったが終わりを確かめていない支払 (作る要求の結果がわからない、待っている、取り消しが通らなかった)
+    // 同じ方法と額で払うときは同じ Id で送り直し (サーバは始めた支払を返す)、ほかの払い方にするときは先に取り消す
+    private PaymentCreateRequest? unsettled;
 
     // 割り勘の人数 (1 は残りをまとめて払う) と、今回払う額
     private int splitCount = 1;
@@ -236,7 +238,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     public override async Task OnNavigatedToAsync(INavigationContext context) =>
         await Navigator.PostActionAsync(LoadAsync);
 
-    // 戻るは画面の「戻る」と同じ (支払を待っている間とレジの案内の間は支払方法の選び直し)
+    // 戻るは画面のボタンと同じ (支払を待っている間とレジの案内の間は支払方法の選び直し、一部を払ったあとは何もしない)
     // コマンドの外で API を待つので、その間は Busy にして画面のボタンと重ならないようにする
     protected override async Task OnNotifyBackAsync()
     {
@@ -250,7 +252,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
             {
                 await FinishAsync();
             }
-            else
+            else if (CanBack)
             {
                 await BackAsync();
             }
@@ -273,7 +275,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         if (!IsCompleted)
         {
             StopWaiting();
-            payment = null;
+            unsettled = null;
             waiting = new CancellationTokenSource();
             _ = CompleteAsync(waiting.Token);
         }
@@ -354,6 +356,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
 
     // 会計を始めて (注文を止める) から支払を作り、完了を待つ
+    // 作る要求の結果がわからなければ支払を残し、同じ方法と額で払い直すときは同じ Id で送る (ほかの払い方にするときは先に取り消す)
     private async Task PayAsync(PaymentMethod method)
     {
         if (bill is null)
@@ -378,16 +381,53 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
             visitState.Update(visit);
         }
 
-        var result = await tableApi.CreatePaymentAsync(visitState.Id, new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = method, Amount = payAmount });
+        if ((unsettled is { } previous) && ((previous.Method != method) || (previous.Amount != payAmount)))
+        {
+            var status = await CancelUnsettledAsync();
+            if (status == PaymentStatus.Completed)
+            {
+                StartPaid();
+                return;
+            }
+
+            if (status is null)
+            {
+                ShowError(AppResources.ErrorUnavailable);
+                return;
+            }
+        }
+
+        unsettled ??= new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = method, Amount = payAmount };
+        var result = await tableApi.CreatePaymentAsync(visitState.Id, unsettled);
         if (result.Content is not { } created)
         {
             log.WarnApiFailed(nameof(ITableApi.CreatePaymentAsync), result.Status, result.ErrorCode);
+
+            // 断られた支払は作られていない (通信できなかったときは、作られたかわからないので残す)
+            if (result.Status == ApiStatus.Rejected)
+            {
+                unsettled = null;
+            }
+
             ShowError(ViewHelper.ErrorMessage(result));
             return;
         }
 
-        payment = created;
-        partialPayment = payAmount < bill.Balance;
+        // 送り直しで返った支払は、もう終わっていることがある
+        partialPayment = created.Amount < bill.Balance;
+        if (created.Status == PaymentStatus.Completed)
+        {
+            StartPaid();
+            return;
+        }
+
+        if (created.Status != PaymentStatus.Pending)
+        {
+            unsettled = null;
+            ShowError(AppResources.PaymentFailed);
+            return;
+        }
+
         QrValue = created.QrCode ?? string.Empty;
         SetStep(method == PaymentMethod.QrCode ? CheckoutStep.QrCode : CheckoutStep.CreditCard);
 
@@ -422,7 +462,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
                     return;
                 case PaymentStatus.Failed:
                 case PaymentStatus.Cancelled:
-                    payment = null;
+                    unsettled = null;
                     ShowError(AppResources.PaymentFailed);
                     SetStep(CheckoutStep.Method);
                     return;
@@ -435,7 +475,7 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     // 明細を待つ前に戻るを止め、払い終えたあとに注文の画面へ戻らないようにする
     private async Task PaidAsync(CancellationToken token)
     {
-        payment = null;
+        unsettled = null;
         if (!partialPayment)
         {
             await CompleteAsync(token);
@@ -521,29 +561,57 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
     }
 
     // 待っている支払をやめて支払方法の選び直しに戻る。取り消す前に払い終わっていたら false
+    // 取り消しが通らなければ支払を残して選び直しに戻る (同じ方法と額で払い直すときは同じ支払を待ち、ほかの払い方にするときは先に取り消す)
     private async Task<bool> ChangeMethodAsync()
     {
         StopWaiting();
 
-        if (payment is { } current)
+        if (await CancelUnsettledAsync() == PaymentStatus.Completed)
         {
-            payment = null;
-
-            var result = await tableApi.CancelPaymentAsync(current.Id);
-            if (result.Content is { Status: PaymentStatus.Completed })
-            {
-                // 払い終えたあとの待ち (次の方の支払、お礼から待受に戻る) は、コマンドの外で行う (画面の操作を止めないように)
-                waiting = new CancellationTokenSource();
-                _ = PaidAsync(waiting.Token);
-                return false;
-            }
+            StartPaid();
+            return false;
         }
 
         SetStep(CheckoutStep.Method);
         return true;
     }
 
-    // 会計をやめて注文の画面に戻る (支払がなければ来店は注文できる状態に戻る)
+    // 終わりを確かめていない支払を取り消し、終わった状態を返す (作られていなかった支払は取り消したものとする)
+    // 終わったら支払を残さず、通信できなければ残して null を返す。払い終わっていたら、割り勘の 1 人分かを合わせておく
+    private async Task<PaymentStatus?> CancelUnsettledAsync()
+    {
+        if (unsettled is not { } current)
+        {
+            return PaymentStatus.Cancelled;
+        }
+
+        var result = await tableApi.CancelPaymentAsync(current.Id);
+        if ((result.Content is null) && (result.Status != ApiStatus.Rejected))
+        {
+            log.WarnApiFailed(nameof(ITableApi.CancelPaymentAsync), result.Status, result.ErrorCode);
+            return null;
+        }
+
+        unsettled = null;
+        var status = result.Content?.Status ?? PaymentStatus.Cancelled;
+        if (status == PaymentStatus.Completed)
+        {
+            partialPayment = (bill is not null) && (current.Amount < bill.Balance);
+        }
+
+        return status;
+    }
+
+    // 払い終えたあとの待ち (次の方の支払、お礼から待受に戻る) は、コマンドの外で行う (画面の操作を止めないように)
+    private void StartPaid()
+    {
+        StopWaiting();
+        waiting = new CancellationTokenSource();
+        _ = PaidAsync(waiting.Token);
+    }
+
+    // 会計をやめて注文の画面に戻る (支払がなければ来店は注文できる状態に戻り、待っている支払はサーバが取り消す)
+    // 知らないうちに払い終えていた支払があれば会計中のまま返るので、明細を読み直して残りを払ってもらう
     private async Task BackAsync()
     {
         if (IsWaiting && !await ChangeMethodAsync())
@@ -557,6 +625,11 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
             if (result.Content is { } visit)
             {
                 visitState.Update(visit);
+                if (visit.Status == VisitStatus.Paying)
+                {
+                    await LoadAsync();
+                    return;
+                }
             }
             else
             {

@@ -2,8 +2,8 @@ namespace TableOrder.ReceptionApp.Modules.Standby;
 
 using TableOrder.Terminal.Components;
 
-// 待受。お客様が受付するを押すと人数の画面に進む
-// 受け付けないとき (来店の開き方が受付機でない店、ラストオーダーの後) と、空席がひとつもないときは、その文言を出して受付するを出さない
+// 待受。お客様が受付するを押すと人数の画面に進む。受付の流れと空席の状態 (すぐに案内できる) を出す
+// 受け付けないとき (来店の開き方が受付機でない店、ラストオーダーの後) と、空席がひとつもないときは、その状態を出して受付するを出さない
 // 空席は来店の通知で、ラストオーダーの後かは時刻で出し直す。チェーンと店舗の設定が替わったら (設定の版)、ここで起動からやり直して反映する
 // 通知のあとに空席を読み直せなかったときは、入ったときとしばらくごとに読み直す (次の来店の通知まで満席のままにしない)
 public sealed partial class StandbyViewModel : AppViewModelBase
@@ -37,12 +37,20 @@ public sealed partial class StandbyViewModel : AppViewModelBase
 
     public string StoreText { get; }
 
+    // 受付の状態の記号と文言
     [ObservableProperty]
-    public partial string Message { get; set; } = string.Empty;
+    public partial string StatusGlyph { get; set; } = string.Empty;
 
-    // 受け付けられる (受付するを出す)
+    [ObservableProperty]
+    public partial string StatusText { get; set; } = string.Empty;
+
+    // 受け付けられる (受付の流れと受付するを出す)
     [ObservableProperty]
     public partial bool CanStart { get; set; }
+
+    // 満席 (状態の記号を注意の色にする)
+    [ObservableProperty]
+    public partial bool IsFull { get; set; }
 
     public IObserveCommand StartCommand { get; }
 
@@ -167,26 +175,28 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     {
         if (!receptionState.IsReceptionStore)
         {
-            SetState(AppResources.StandbyStopped, false);
+            SetState(StandbyStatus.Stopped);
         }
         else if (storeState.IsAfterLastOrder(timeProvider.GetUtcNow()))
         {
-            SetState(AppResources.StandbyClosed, false);
+            SetState(StandbyStatus.Closed);
         }
         else if (receptionState.VacantTables == 0)
         {
-            SetState(AppResources.StandbyFull, false);
+            SetState(StandbyStatus.Full);
         }
         else
         {
-            SetState(AppResources.StandbyMessage, true);
+            SetState(StandbyStatus.Available);
         }
     }
 
-    private void SetState(string message, bool canStart)
+    private void SetState(StandbyStatus status)
     {
-        Message = message;
-        CanStart = canStart;
+        StatusGlyph = ViewHelper.Glyph(status);
+        StatusText = ViewHelper.Name(status);
+        CanStart = status == StandbyStatus.Available;
+        IsFull = status == StandbyStatus.Full;
     }
 
     // 言語を選び、替えたら文言を引き直すために画面を作り直す

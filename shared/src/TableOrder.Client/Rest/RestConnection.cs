@@ -277,7 +277,8 @@ public sealed class RestConnection : IDisposable
         {
             return ApiResult.Failure<T>(ApiStatus.Canceled, exception: ex);
         }
-        catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException or JsonException or IOException or NotSupportedException)
+        // Android の通信 (AndroidMessageHandler) は、時間切れで閉じた接続などで WebException を投げる
+        catch (Exception ex) when (ex is HttpRequestException or WebException or OperationCanceledException or JsonException or IOException or NotSupportedException)
         {
             return ApiResult.Failure<T>(ApiStatus.Unavailable, exception: ex);
         }

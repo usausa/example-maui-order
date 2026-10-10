@@ -13,7 +13,7 @@
 #   python emu.py emm set <apk> | config [key=value ...] | clear | status [--dpc パッケージ/受け口]
 #                                            外部の EMM の代わりにする DPC を入れる / 管理対象の構成を配る (値を省くと消す) / 外す / 今の状態
 #   python emu.py reboot [--timeout 秒]      エミュレータを再起動して、起動の完了まで待つ
-#   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200、スマートフォンは 1080x2400)
+#   python emu.py shot <file.png>            画面を撮る (タブレットは 1920x1200 か縦置きの 1200x1920、スマートフォンは 1080x2400)
 #   python emu.py tap <x> <y>                撮った画像の座標をタップする
 #   python emu.py text <ascii>               文字を入力する (英数字と記号だけ)
 #   python emu.py key <BACK|ENTER|DEL|...> [--repeat N]   キーを送る (入力欄を消すときは DEL を繰り返す)

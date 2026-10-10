@@ -6,6 +6,21 @@ public sealed record OrderSuggestion(
     int Shortage,
     IReadOnlyList<MenuResponseItem> Items);
 
+// カートに入れると超える上限の種類 (1 回の注文の明細の数、1 明細の数量、メニューのルールの上限、残りの数)
+public enum CartLimitKind
+{
+    Lines,
+    Quantity,
+    Rule,
+    Remaining
+}
+
+// カートに入れると超える上限と、その数 (メニューのルールの上限はルールも)
+public sealed record CartLimit(
+    CartLimitKind Kind,
+    int Max,
+    MenuResponseRule? Rule = null);
+
 // 来店の開始と終了、メニューのルール (確認・上限・提案) の判定、注文の送信。通信と状態の更新を組み合わせる手順をここに置く
 public sealed class OrderUsecase
 {
@@ -120,22 +135,36 @@ public sealed class OrderUsecase
         return result;
     }
 
-    // 上限を超えるルール。直している行 (replacingLineId) の数は数えない
-    public MenuResponseRule? FindExceededLimit(ItemSelection selection, Guid? replacingLineId = null)
+    // カートに入れると超える上限 (端末の中で確かめられるもの)。注文の画面と提案の追加で同じ確かめを通す
+    // 直している行 (replacingLineId) は、明細の数を増やさず、数量と残りの数に数えない
+    public CartLimit? FindExceededLimit(ItemSelection selection, Guid? replacingLineId = null)
     {
-        var tags = menuState.GetTags(selection.ItemId, selection.OptionIds);
-        foreach (var rule in menuState.GetRules(MenuRuleKind.Limit))
+        var same = cartState.FindSame(selection);
+        var maxLines = menuState.Config.OrderRules.MaxLinesPerOrder;
+        if ((replacingLineId is null) && (same is null) && (cartState.Lines.Count >= maxLines))
         {
-            if (!tags.Contains(rule.TargetTag) || (rule.Max is not { } max))
-            {
-                continue;
-            }
+            return new CartLimit(CartLimitKind.Lines, maxLines);
+        }
 
-            var scope = rule.Scope ?? RuleScope.Order;
-            var count = CountTagged(rule.TargetTag, scope != RuleScope.Order, replacingLineId) + selection.Quantity;
-            if (count > TagRules.Allowance(scope, max, visitState.Guests))
+        // 同じ内容の行にまとめるときは、まとめた数で比べる (サーバは 1 明細の数量で断る)
+        var maxQuantity = menuState.MaxQuantity(menuState.GetItem(selection.ItemId));
+        var merged = replacingLineId is null ? same?.Quantity ?? 0 : 0;
+        if (merged + selection.Quantity > maxQuantity)
+        {
+            return new CartLimit(CartLimitKind.Quantity, maxQuantity);
+        }
+
+        if (FindExceededRule(selection, replacingLineId) is { } rule)
+        {
+            return new CartLimit(CartLimitKind.Rule, rule.Max ?? 0, rule);
+        }
+
+        // 残りの数は、サーバと同じく商品とオプションごとにカートの行を合わせて数える
+        foreach (var targetId in selection.OptionIds.Prepend(selection.ItemId))
+        {
+            if ((menuState.Remaining(targetId) is { } remaining) && (CountUsing(targetId, replacingLineId) + selection.Quantity > remaining))
             {
-                return rule;
+                return new CartLimit(CartLimitKind.Remaining, remaining);
             }
         }
 
@@ -175,6 +204,28 @@ public sealed class OrderUsecase
     public static ItemSelection CreateSelection(MenuResponseItem item) =>
         new(item.Id, [], 1, item.DefaultTiming);
 
+    // 上限を超えるルール。直している行 (replacingLineId) の数は数えない
+    private MenuResponseRule? FindExceededRule(ItemSelection selection, Guid? replacingLineId)
+    {
+        var tags = menuState.GetTags(selection.ItemId, selection.OptionIds);
+        foreach (var rule in menuState.GetRules(MenuRuleKind.Limit))
+        {
+            if (!tags.Contains(rule.TargetTag) || (rule.Max is not { } max))
+            {
+                continue;
+            }
+
+            var scope = rule.Scope ?? RuleScope.Order;
+            var count = CountTagged(rule.TargetTag, scope != RuleScope.Order, replacingLineId) + selection.Quantity;
+            if (count > TagRules.Allowance(scope, max, visitState.Guests))
+            {
+                return rule;
+            }
+        }
+
+        return null;
+    }
+
     private int CountTagged(string tag, bool includeOrdered, Guid? excludingLineId)
     {
         var count = cartState.Lines
@@ -189,6 +240,12 @@ public sealed class OrderUsecase
 
         return count;
     }
+
+    // カートで商品かオプションを使う数
+    private int CountUsing(Guid targetId, Guid? excludingLineId) =>
+        cartState.Lines
+            .Where(x => (x.Id != excludingLineId) && ((x.ItemId == targetId) || x.OptionIds.Contains(targetId)))
+            .Sum(static x => x.Quantity);
 
     //--------------------------------------------------------------------------------
     // Order
@@ -227,5 +284,17 @@ public sealed class OrderUsecase
         }
 
         return result;
+    }
+
+    // 送れたかわからなかった注文が届いていた (注文の通知で知った) ら、送れたものとしてカートを空にする。空にしたら true
+    public bool AcceptPendingOrder(Guid orderId)
+    {
+        if (cartState.PendingOrderId != orderId)
+        {
+            return false;
+        }
+
+        cartState.Clear();
+        return true;
     }
 }

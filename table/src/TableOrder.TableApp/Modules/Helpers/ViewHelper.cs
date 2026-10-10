@@ -36,8 +36,19 @@ public static class ViewHelper
     public static string Version(IAppInfo appInfo) =>
         $"Version {appInfo.VersionString} ({appInfo.BuildString})";
 
-    public static string Time(DateTimeOffset value) =>
-        value.ToLocalTime().ToString("HH:mm", CultureInfo.InvariantCulture);
+    // 時刻は店舗のタイムゾーンで出す (端末のタイムゾーンの設定によらない)
+    public static string Time(DateTimeOffset value, string timeZone) =>
+        StoreHours.LocalDateTime(value, timeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    // カートに入れられないときの知らせ
+    public static string LimitMessage(CartLimit limit, MenuState menuState, Language language) =>
+        limit switch
+        {
+            { Kind: CartLimitKind.Lines } => Format(AppResources.MaxLinesFormat, limit.Max),
+            { Kind: CartLimitKind.Quantity } => Format(AppResources.MaxQuantityFormat, limit.Max),
+            { Rule: { } rule } => Format(AppResources.LimitMessageFormat, menuState.TagName(rule.TargetTag, language)),
+            _ => Format(AppResources.StockRemainingFormat, limit.Max)
+        };
 
     //--------------------------------------------------------------------------------
     // Name
@@ -107,22 +118,32 @@ public static class ViewHelper
     //--------------------------------------------------------------------------------
 
     // 通信の失敗をお客様向けの文言にする (端末の登録の失敗は、スタッフが読む端末の設定と起動の画面に出す)
+    // サーバの文言 (Detail) は担当者向けの日本語なので出さず、割り当てのないコードは共通の文言にする
     public static string ErrorMessage<T>(ApiResult<T> result) =>
         result.Status switch
         {
             ApiStatus.Unavailable => AppResources.ErrorUnavailable,
-            ApiStatus.Unauthorized => result.ErrorCode == "TENANT_SUSPENDED" ? AppResources.ErrorTenantSuspended : AppResources.ErrorUnauthorized,
+            ApiStatus.Unauthorized => result.ErrorCode == ErrorCodes.TenantSuspended ? AppResources.ErrorTenantSuspended : AppResources.ErrorUnauthorized,
             ApiStatus.Rejected => result.ErrorCode switch
             {
-                "ITEM_SOLD_OUT" or "STOCK_INSUFFICIENT" => AppResources.ErrorSoldOut,
-                "CHECKOUT_IN_PROGRESS" => AppResources.ErrorCheckoutInProgress,
-                "LIMIT_EXCEEDED" or "QUANTITY_EXCEEDED" => AppResources.ErrorLimit,
-                "ORDERING_PAUSED" => AppResources.ErrorOrderingPaused,
-                "LAST_ORDER_PASSED" => AppResources.ErrorLastOrderPassed,
-                "PAIRING_CODE_INVALID" => AppResources.ErrorPairingCodeInvalid,
-                "TENANT_SUSPENDED" => AppResources.ErrorTenantSuspended,
+                ErrorCodes.ItemSoldOut => AppResources.ErrorSoldOut,
+                ErrorCodes.StockInsufficient => AppResources.ErrorStockInsufficient,
+                ErrorCodes.LimitExceeded or ErrorCodes.QuantityExceeded => AppResources.ErrorLimit,
+                ErrorCodes.ConfirmationRequired => AppResources.ErrorConfirmationRequired,
+                ErrorCodes.OptionInvalid => AppResources.ErrorOptionInvalid,
+                ErrorCodes.MenuChanged => AppResources.ErrorMenuChanged,
+                ErrorCodes.CheckoutInProgress => AppResources.ErrorCheckoutInProgress,
+                ErrorCodes.OrderingPaused => AppResources.ErrorOrderingPaused,
+                ErrorCodes.LastOrderPassed => AppResources.ErrorLastOrderPassed,
+                ErrorCodes.VisitNotOpen => AppResources.ErrorVisitNotOpen,
+                ErrorCodes.TableOccupied => AppResources.ErrorTableOccupied,
+                ErrorCodes.BillChanged or ErrorCodes.VersionMismatch => AppResources.ErrorBillChanged,
+                ErrorCodes.PaymentAmountInvalid => AppResources.ErrorPaymentAmountInvalid,
+                ErrorCodes.PaymentMethodUnavailable => AppResources.ErrorPaymentMethodUnavailable,
+                ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
+                ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
                 DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
-                _ => result.Detail ?? AppResources.ErrorGeneric
+                _ => AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric
         };

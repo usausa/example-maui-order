@@ -9,11 +9,13 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
 
     private readonly ILogger<OrderHistoryViewModel> log;
 
-    private readonly ITableApi tableApi;
-
     private readonly VisitState visitState;
 
     private readonly LanguageState languageState;
+
+    private readonly StoreState storeState;
+
+    private readonly ITableApi tableApi;
 
     // 操作 (お願い) で内容を反映するたびに進める。読み直しの結果は、頼んだあとに操作で反映していたら古いので使わない
     private int revision;
@@ -46,14 +48,16 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
     public OrderHistoryViewModel(
         ILogger<OrderHistoryViewModel> log,
         IPopupNavigator popupNavigator,
-        ITableApi tableApi,
         VisitState visitState,
-        LanguageState languageState)
+        LanguageState languageState,
+        StoreState storeState,
+        ITableApi tableApi)
     {
         this.log = log;
-        this.tableApi = tableApi;
         this.visitState = visitState;
         this.languageState = languageState;
+        this.storeState = storeState;
+        this.tableApi = tableApi;
 
         ReleaseCommand = MakeAsyncCommand(ReleaseAsync, () => HasHeld);
         CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync());
@@ -141,7 +145,7 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
             {
                 Orders.Add(new HistoryOrder(
                     ViewHelper.Format(AppResources.HistoryOrderFormat, order.OrderNo),
-                    ViewHelper.Time(order.OrderedAt),
+                    ViewHelper.Time(order.OrderedAt, storeState.TimeZone),
                     order.Lines.Select(x => new HistoryLine(x, language)).ToList()));
             }
         }

@@ -123,10 +123,26 @@
                                                                     <VerticalStackLayout Grid.Column="0"
                                                                                          Style="{StaticResource OptionTextStack}">
                                                                         <Label Style="{StaticResource OptionNameLabel}"
-                                                                               Text="{Binding Name}" />
+                                                                               Text="{Binding Name}">
+                                                                            <Label.Triggers>
+                                                                                <DataTrigger TargetType="Label"
+                                                                                             Binding="{Binding IsSoldOut}"
+                                                                                             Value="True">
+                                                                                    <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
+                                                                                </DataTrigger>
+                                                                            </Label.Triggers>
+                                                                        </Label>
                                                                         <Label Style="{StaticResource OptionPriceLabel}"
-                                                                               IsVisible="{Binding HasPrice}"
-                                                                               Text="{Binding PriceText}" />
+                                                                               IsVisible="{Binding HasCaption}"
+                                                                               Text="{Binding CaptionText}">
+                                                                            <Label.Triggers>
+                                                                                <DataTrigger TargetType="Label"
+                                                                                             Binding="{Binding IsSoldOut}"
+                                                                                             Value="True">
+                                                                                    <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
+                                                                                </DataTrigger>
+                                                                            </Label.Triggers>
+                                                                        </Label>
                                                                     </VerticalStackLayout>
                                                                     <Label Grid.Column="1"
                                                                            Style="{StaticResource OptionCheckLabel}"

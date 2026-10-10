@@ -14,6 +14,7 @@ paths:
 - 注文サーバの実装は通信の方式を前に付け、REST の窓口は端末の種類ごと (`RestDeviceApi`、`Rest{種類}Api`) に分ける。要求の送り方 (接続先、トークンの取り直し、時間切れ、結果の分類) は `RestConnection` にまとめる
 - 複数の端末の種類の窓口が同じ手順で読むもの (メニューの `304` での使い回し) は、共通の部品 (`RestMenuCache`) にして窓口ごとに持ち、窓口ごとに書かない
 - 失敗は 4xx を `Rejected` (`errorCode` と文言を読む)、401 を `Unauthorized`、5xx・408・429・時間切れ・通信できないを `Unavailable`、呼び手の取り消しを `Canceled` にする
+- 通信の部品が投げる例外 (`HttpRequestException`、Android の通信の `WebException`、`IOException` など) は `Unavailable` にして返し、窓口の外に出さない (時間切れで閉じた接続でも投げられ、コマンドの外まで抜けるとアプリが落ちる)
 - 接続先と端末の id は要求のたびに `IDeviceContext` から読み、端末の設定で替えても窓口を作り直さない
 - JSON はソース生成の `ClientJsonContext` で読み書きする (端末のトリミングでリフレクションの型の情報が消えるため)。通信データと通知の中身の型を足したら `[JsonSerializable]` にも足す
 - 通知の受け口は、端末が今の状態を読む前につなぎ (`ConnectAsync`)、`ready` の番号から数える。つなぎ直したら抜けた通知を読み、その間に届いた通知と合わせて seq の順に渡す

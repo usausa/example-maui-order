@@ -260,9 +260,6 @@
   <data name="GuideFullMessage" xml:space="preserve">
     <value>スタッフがご案内しますので、少々お待ちください</value>
   </data>
-  <data name="TableFormat" xml:space="preserve">
-    <value>テーブル {0}</value>
-  </data>
   <data name="GuestsAdultsFormat" xml:space="preserve">
     <value>大人 {0}</value>
   </data>
@@ -289,5 +286,35 @@
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>受付できませんでした。スタッフにお声がけください</value>
+  </data>
+  <data name="StandbyAvailable" xml:space="preserve">
+    <value>ただいま、すぐにご案内できます</value>
+  </data>
+  <data name="StandbyStepGuests" xml:space="preserve">
+    <value>人数を入れる</value>
+  </data>
+  <data name="StandbyStepTable" xml:space="preserve">
+    <value>席が決まる</value>
+  </data>
+  <data name="StandbyStepSeat" xml:space="preserve">
+    <value>お席へ</value>
+  </data>
+  <data name="StepGuests" xml:space="preserve">
+    <value>人数</value>
+  </data>
+  <data name="StepGuide" xml:space="preserve">
+    <value>ご案内</value>
+  </data>
+  <data name="GuestsTotalFormat" xml:space="preserve">
+    <value>合計 {0} 名</value>
+  </data>
+  <data name="GuestsIdleFormat" xml:space="preserve">
+    <value>{0} 秒間操作がないと、最初の画面に戻ります</value>
+  </data>
+  <data name="GuideTableCaption" xml:space="preserve">
+    <value>テーブル</value>
+  </data>
+  <data name="GuideCountdownFormat" xml:space="preserve">
+    <value>{0} 秒後に最初の画面に戻ります</value>
   </data>
 </root>

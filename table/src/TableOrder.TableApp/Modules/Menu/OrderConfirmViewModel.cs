@@ -1,6 +1,7 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
 // 注文の確認。明細と合計を見せ、提案のルールに当たれば 1 枠だけ提案する。送れたら受け付けの知らせを出して閉じる
+// 送れたかわからない注文があるときは、同じ内容の送り直しとして開く (提案は出さない)
 public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 {
     private static readonly TimeSpan CompletedDisplay = TimeSpan.FromSeconds(2.5);
@@ -77,6 +78,13 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
         BackCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync(false));
         SubmitCommand = MakeAsyncCommand(SubmitAsync);
 
+        if (cartState.HasPendingOrder)
+        {
+            ErrorText = AppResources.ConfirmPendingMessage;
+            IsFailed = true;
+            SubmitText = AppResources.ConfirmRetry;
+        }
+
         Refresh();
     }
 
@@ -98,7 +106,7 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
         TotalText = ViewHelper.Price(cartState.Total);
 
         SuggestItems.Clear();
-        var suggestion = orderUsecase.GetSuggestion();
+        var suggestion = cartState.HasPendingOrder ? null : orderUsecase.GetSuggestion();
         HasSuggestion = suggestion is not null;
         if (suggestion is not null)
         {
@@ -111,12 +119,14 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
         }
     }
 
-    // 提案の品を 1 つ足す (足りなくなるまで続けて押せる)
+    // 提案の品を 1 つ足す (足りなくなるまで続けて押せる)。注文の画面と同じ上限を確かめ、入れられなければ理由を出す
     private void AddSuggestion(SuggestItem suggest)
     {
         var selection = OrderUsecase.CreateSelection(menuState.GetItem(suggest.Id));
-        if (orderUsecase.FindExceededLimit(selection) is not null)
+        if (orderUsecase.FindExceededLimit(selection) is { } limit)
         {
+            ErrorText = ViewHelper.LimitMessage(limit, menuState, languageState.Current);
+            IsFailed = true;
             return;
         }
 
