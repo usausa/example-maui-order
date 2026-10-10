@@ -21,6 +21,20 @@ public sealed class StoreHoursTests
         Assert.Equal("07:05", text);
     }
 
+    // 受けた値は HH:mm だけを読み、ほかの形と null は読めない
+    [Theory]
+    [InlineData("11:30", true)]
+    [InlineData("7:00", false)]
+    [InlineData("11:30:00", false)]
+    [InlineData("25:00", false)]
+    [InlineData(null, false)]
+    public void TryParse(string? value, bool expected)
+    {
+        var parsed = StoreHours.TryParse(value, out _);
+
+        Assert.Equal(expected, parsed);
+    }
+
     //--------------------------------------------------------------------------------
     // UntilLastOrder
     //--------------------------------------------------------------------------------
@@ -64,6 +78,66 @@ public sealed class StoreHoursTests
         var after = StoreHours.IsAfterLastOrder(DateTimeOffset.Parse(now, CultureInfo.InvariantCulture), "Asia/Tokyo", StoreHours.Parse("11:00"), lastOrder is null ? null : StoreHours.Parse(lastOrder));
 
         Assert.Equal(expected, after);
+    }
+
+    //--------------------------------------------------------------------------------
+    // Period
+    //--------------------------------------------------------------------------------
+
+    // 時間帯 (11:00〜15:00) は始まりを含み終わりを含まない。猶予 (2 分) は終わりのあとだけに付ける
+    [Theory]
+    [InlineData("10:59", 0, false)]
+    [InlineData("11:00", 0, true)]
+    [InlineData("14:59", 0, true)]
+    [InlineData("15:00", 0, false)]
+    [InlineData("10:59", 2, false)]
+    [InlineData("15:01", 2, true)]
+    [InlineData("15:02", 2, false)]
+    public void InPeriod(string now, int graceMinutes, bool expected)
+    {
+        var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), StoreHours.Parse("11:00"), StoreHours.Parse("15:00"), TimeSpan.FromMinutes(graceMinutes));
+
+        Assert.Equal(expected, inPeriod);
+    }
+
+    // 日をまたぐ時間帯 (22:00〜2:00) は、日付が変わっても終わりまで中にする
+    [Theory]
+    [InlineData("21:59", false)]
+    [InlineData("22:00", true)]
+    [InlineData("00:00", true)]
+    [InlineData("01:59", true)]
+    [InlineData("02:00", false)]
+    public void InPeriodAcrossMidnight(string now, bool expected)
+    {
+        var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), StoreHours.Parse("22:00"), StoreHours.Parse("02:00"));
+
+        Assert.Equal(expected, inPeriod);
+    }
+
+    // 始まりと終わりが同じ時間帯は空で、猶予があってもどの時刻も外
+    [Theory]
+    [InlineData("00:00")]
+    [InlineData("00:01")]
+    [InlineData("12:00")]
+    public void EmptyPeriodIsNeverIn(string now)
+    {
+        var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), TimeOnly.MinValue, TimeOnly.MinValue, TimeSpan.FromMinutes(2));
+
+        Assert.False(inPeriod);
+    }
+
+    // 時間帯の終わりまでの残り。日をまたぐ時間帯も数え、外は null
+    [Theory]
+    [InlineData("11:00", "15:00", "14:45", 15)]
+    [InlineData("11:00", "15:00", "11:00", 240)]
+    [InlineData("22:00", "02:00", "01:30", 30)]
+    [InlineData("11:00", "15:00", "15:00", null)]
+    [InlineData("11:00", "15:00", "10:00", null)]
+    public void UntilPeriodEnd(string start, string end, string now, int? expectedMinutes)
+    {
+        var remaining = StoreHours.UntilPeriodEnd(StoreHours.Parse(now), StoreHours.Parse(start), StoreHours.Parse(end));
+
+        Assert.Equal(expectedMinutes, (int?)remaining?.TotalMinutes);
     }
 
     //--------------------------------------------------------------------------------

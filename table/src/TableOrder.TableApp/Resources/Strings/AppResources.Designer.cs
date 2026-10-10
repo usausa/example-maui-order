@@ -393,6 +393,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string ErrorItemUnavailable {
+            get {
+                return ResourceManager.GetString("ErrorItemUnavailable", resourceCulture);
+            }
+        }
+
         internal static string ErrorLastOrderPassed {
             get {
                 return ResourceManager.GetString("ErrorLastOrderPassed", resourceCulture);
@@ -669,6 +675,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string MenuCartUnavailable {
+            get {
+                return ResourceManager.GetString("MenuCartUnavailable", resourceCulture);
+            }
+        }
+
         internal static string MenuCheckout {
             get {
                 return ResourceManager.GetString("MenuCheckout", resourceCulture);
@@ -678,6 +690,12 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string MenuCheckoutInProgress {
             get {
                 return ResourceManager.GetString("MenuCheckoutInProgress", resourceCulture);
+            }
+        }
+
+        internal static string MenuDaypartEndsFormat {
+            get {
+                return ResourceManager.GetString("MenuDaypartEndsFormat", resourceCulture);
             }
         }
 
@@ -1230,6 +1248,36 @@ namespace TableOrder.TableApp.Resources.Strings {
         internal static string PaymentExpired {
             get {
                 return ResourceManager.GetString("PaymentExpired", resourceCulture);
+            }
+        }
+
+        internal static string UnavailableKidsMessage {
+            get {
+                return ResourceManager.GetString("UnavailableKidsMessage", resourceCulture);
+            }
+        }
+
+        internal static string UnavailableKidsTag {
+            get {
+                return ResourceManager.GetString("UnavailableKidsTag", resourceCulture);
+            }
+        }
+
+        internal static string UnavailableTimeMessage {
+            get {
+                return ResourceManager.GetString("UnavailableTimeMessage", resourceCulture);
+            }
+        }
+
+        internal static string UnavailableTimeTag {
+            get {
+                return ResourceManager.GetString("UnavailableTimeTag", resourceCulture);
+            }
+        }
+
+        internal static string UnavailableTitle {
+            get {
+                return ResourceManager.GetString("UnavailableTitle", resourceCulture);
             }
         }
     }

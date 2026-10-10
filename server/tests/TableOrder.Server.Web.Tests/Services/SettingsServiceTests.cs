@@ -73,7 +73,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.VersionMismatch, stale.Error?.ErrorCode);
     }
 
-    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・言語・支払方法・電子レシート・呼び出しの用件・PIN になる
+    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・時間帯の猶予・言語・支払方法・電子レシート・呼び出しの用件・PIN になる
     [Fact]
     public async Task StoreSettingsUpdateChangesConfig()
     {
@@ -92,7 +92,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
             error = await Settings.UpdateStoreSettingsAsync(
                 settings with
                 {
-                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception, KitchenAlertMinutes = 0 },
+                    Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception, KitchenAlertMinutes = 0, DaypartGraceMinutes = 5 },
                     Languages = ["ja", "en"],
                     PaymentMethods = [PaymentMethod.QrCode],
                     ElectronicReceipt = false,
@@ -109,6 +109,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal((false, false, 0, 10), (config.Features.RegisterCheckout, config.Features.SplitPayment, config.Features.LastOrderNoticeMinutes, config.Features.FinishSeconds));
         Assert.Equal(VisitOpening.Reception, config.Features.VisitOpening);
         Assert.Equal(0, config.Features.KitchenAlertMinutes);
+        Assert.Equal(5, config.Features.DaypartGraceMinutes);
         Assert.Equal(["ja", "en"], config.Languages);
         Assert.Equal([PaymentMethod.QrCode], config.PaymentMethods);
         Assert.False(config.ElectronicReceipt);
@@ -145,7 +146,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Null(error);
     }
 
-    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、範囲の外のキッチンの遅れの時間、古い版は受けない
+    // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、範囲の外のキッチンの遅れの時間と時間帯の猶予、古い版は受けない
     [Fact]
     public async Task StoreSettingsKeepPinAndRejectInvalidSettings()
     {
@@ -164,6 +165,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         var noLanguage = await Settings.UpdateStoreSettingsAsync(settings with { Languages = [], Version = settings.Version + 1 }, null, cancel);
         var badOpening = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { VisitOpening = (VisitOpening)99 }, Version = settings.Version + 1 }, null, cancel);
         var badAlert = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { KitchenAlertMinutes = 121 }, Version = settings.Version + 1 }, null, cancel);
+        var badGrace = await Settings.UpdateStoreSettingsAsync(settings with { Features = new DeviceConfigResponseFeatures { DaypartGraceMinutes = 11 }, Version = settings.Version + 1 }, null, cancel);
         var stale = await Settings.UpdateStoreSettingsAsync(settings, null, cancel);
 
         // Assert
@@ -175,6 +177,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.ValidationError, noLanguage!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, badOpening!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, badAlert!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, badGrace!.ErrorCode);
         Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
     }
 }

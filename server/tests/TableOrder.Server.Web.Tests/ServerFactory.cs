@@ -10,8 +10,10 @@ using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using TableOrder.Contract.Menu;
 using TableOrder.Contract.Visits;
 using TableOrder.Server.Core.Infrastructure.Data;
+using TableOrder.Server.Core.Infrastructure.Json;
 using TableOrder.Server.Core.Models.Entity;
 using TableOrder.Server.Core.Models.Enums;
 using TableOrder.Server.Core.Services;
@@ -105,6 +107,48 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
         command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
         command.Parameters.AddWithValue("@lastOrderTime", (object?)lastOrderTime ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // 店舗の時間帯の終わりの猶予の分数
+    public async ValueTask SetDaypartGraceAsync(TestStore store, int minutes)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "UPDATE Stores SET Features = json_set(Features, '$.daypartGraceMinutes', @minutes) WHERE TenantId = @tenantId AND Id = @storeId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        command.Parameters.AddWithValue("@minutes", minutes);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // サンプルのメニューを直して店舗に公開する (時間帯や出せる条件のルールを持つメニューの代わり。版は新しくする)
+    public async ValueTask PublishMenuAsync(TestStore store, Action<MenuResponse> edit)
+    {
+        await using var con = await OpenAsync();
+        MenuResponse menu;
+        await using (var read = con.CreateCommand())
+        {
+            read.CommandText = "SELECT Content FROM MenuPublications WHERE Id = '00000000-0000-0000-0009-000000000001'";
+            menu = JsonSerializer.Deserialize<MenuResponse>((string)(await read.ExecuteScalarAsync(TestContext.Current.CancellationToken))!, JsonDefaults.Options)!;
+        }
+
+        var publicationId = Guid.CreateVersion7();
+        menu.MenuVersion = publicationId.ToString("N");
+        edit(menu);
+
+        await using var command = con.CreateCommand();
+        command.CommandText = """
+            INSERT INTO MenuPublications (TenantId, Id, StoreId, MenuVersion, Content, PublishedAt)
+                VALUES (@tenantId, @publicationId, @storeId, @menuVersion, @content, @now);
+            UPDATE Stores SET MenuPublicationId = @publicationId WHERE TenantId = @tenantId AND Id = @storeId;
+            """;
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        command.Parameters.AddWithValue("@publicationId", publicationId.ToString("D"));
+        command.Parameters.AddWithValue("@menuVersion", menu.MenuVersion);
+        command.Parameters.AddWithValue("@content", JsonSerializer.Serialize(menu, JsonDefaults.Options));
+        command.Parameters.AddWithValue("@now", Now);
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 

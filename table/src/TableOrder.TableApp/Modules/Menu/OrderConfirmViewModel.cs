@@ -136,9 +136,17 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
     }
 
     // 通信できないときはカートを残し、同じ注文として送り直せるようにする
+    // 送り直しでなければ、送る前に出せる条件を確かめる (時間帯が終わった品は送らずに知らせる。送り直しは届いていれば受けた注文が返る)
     private async Task SubmitAsync()
     {
         IsFailed = false;
+
+        if (!cartState.HasPendingOrder && orderUsecase.HasUnavailableLines(orderUsecase.GetAvailability()))
+        {
+            ErrorText = AppResources.ErrorItemUnavailable;
+            IsFailed = true;
+            return;
+        }
 
         var result = await orderUsecase.SubmitAsync();
         if (!result.IsSuccess)

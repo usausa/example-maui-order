@@ -218,7 +218,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§2.1)。置き場所はここで受け取る |
 | `brand` | object | チェーンの設定 `{ name (LocalizedText), logoImageName (string?), theme }`。ロゴは正方形の画像 (地の色を含む。[§2.3](#-23-メニュー-menu) の画像) で、なければ端末は印に名前の頭の文字を出す |
 | `brand.theme` | object[] | 替える色 `[{ role, color }]` (例: `{ "role": "PrimaryColor", "color": "#1E5FA8" }`)。役割は Brand・Neutral・Status の色 (`ThemeRoles`) で、色は `#RRGGBB` か `#AARRGGBB`。ない役割は端末の既定のまま |
-| `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening, kitchenAlertMinutes }` (下の表)。ない項目は既定の値 |
+| `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening, kitchenAlertMinutes, daypartGraceMinutes }` (下の表)。ない項目は既定の値 |
 | `staffPin` | object? | スタッフの PIN のハッシュ `{ iterations, salt, hash }` (PBKDF2-HMAC-SHA256。`salt` と `hash` は Base64)。端末は入れた PIN を同じ計算で確かめ、平文を持たない。PIN を使う端末 (テーブル端末、ホール端末、受付機) だけに返し、キッチン端末は null |
 | `settingsVersion` | int | チェーンと店舗の設定の版 (`store.updated` の店舗の `settingsVersion` と比べる) |
 
@@ -232,6 +232,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `finishSeconds` | int | `30` | お礼の画面から待受に戻るまでの秒数 |
 | `visitOpening` | enum | `Hall` | 来店の開き方。`Hall` (スタッフがホール端末で開く) / `Reception` (受付機でお客様が人数を入れ、サーバが席を決める) / `Table` (お客様がテーブル端末で始める)。ホール端末はどの形でも開ける |
 | `kitchenAlertMinutes` | int | `15` | キッチン端末で、チケットができてから何分で注意の色にするか (`0` は色を替えない) |
+| `daypartGraceMinutes` | int | `2` | 時間帯の終わりから何分までに届いた注文を受けるか (確定を押したあとの通信の遅れの猶予。`0` は受けない、`10` まで)。サーバだけが使い、端末は終わりの時刻で隠す |
 
 お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§2.3](#-23-メニュー-menu)) で決める。
 
@@ -302,8 +303,9 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `rules` | object[] | タグに対するルール (下の表) |
 | `allergens` | object[] | アレルギーの表示に使う原材料 `{ code, name (LocalizedText), isMandatory }`。特定原材料の 8 品目 (えび、かに、くるみ、小麦、そば、卵、乳、落花生) は `isMandatory` |
 | `stations` | object[] | 持ち場 `{ id, name, sortOrder }` (キッチン、デザート、ドリンク) |
+| `dayparts` | object[] | 時間帯 `{ code, name (LocalizedText), start, end }` (朝、ランチなど)。`start` と `end` は店舗の現地時刻の `HH:mm` で、`start` ≤ 時刻 < `end`。`end` が `start` より前なら日をまたぐ。出せる条件のルールがコードで指す |
 
-時間帯で出す品 (モーニング、ランチ) は、時間帯 (`dayparts`) とカテゴリ・商品の結び付けとして後で足す。
+時間帯で出す品と、子どもがいる来店だけに出す品は、タグと出せる条件のルール (`Availability`) で表し、時刻に合わせてメニューを公開し直さない (一日じゅう同じ版)。
 
 商品 (`MenuResponseItem`):
 
@@ -341,23 +343,27 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
 | `id` | guid | |
-| `kind` | enum | `Suggestion` (提案) / `Confirmation` (確認) / `Limit` (上限) |
-| `targetTag` | string | 対象のタグ。商品かオプションにタグがあれば対象になる |
+| `kind` | enum | `Suggestion` (提案) / `Confirmation` (確認) / `Limit` (上限) / `Availability` (出せる条件) |
+| `targetTag` | string | 対象のタグ。商品かオプションにタグがあれば対象になる (出せる条件は、カテゴリのタグにも効く) |
 | `basis` | enum? | 提案で比べる人数 `Guests` / `Adults` / `Children` |
 | `suggestItemIds` | guid[]? | 提案する商品 |
 | `scope` | enum? | 数える範囲 `Order` (注文ごと) / `Visit` (来店で 1 回、来店の合計) / `Guest` (1 人あたり × 人数) |
 | `max` | int? | 上限の数 |
 | `message` | LocalizedText? | お客様に出す文言 (提案と確認) |
+| `dayparts` | string[]? | 出せる時間帯のコード (出せる条件)。どれかの中なら出せる |
+| `requiresChildren` | bool? | 子ども (小学生以下) が 1 人以上の来店だけに出す (出せる条件) |
 
 | ルール | テーブル端末 | サーバ |
 | --- | --- | --- |
 | 提案 (`Suggestion`) | 注文の確認で、タグの品を誰かが頼んでいて人数より少なければ、提案する商品を 1 枠で出す | 何もしない |
 | 確認 (`Confirmation`) | タグの品を入れる前に `message` で確かめ、答えを記録する (`POST /visits/{id}/confirmations`) | 記録のない来店の注文は `422` (`CONFIRMATION_REQUIRED`) |
 | 上限 (`Limit`) | 来店の注文とカートを合わせて上限を超えたら入れない | 超える注文は `422` (`LIMIT_EXCEEDED`) |
+| 出せる条件 (`Availability`) | 条件を満たさない品とカテゴリを出さない (時刻の見直しと人数の変更で出し直し、カートに入れるときと確定するときにも確かめる)。カートの品が満たさなくなったら、外すまで確定させない | 満たさない明細は `422` (`ITEM_UNAVAILABLE`)。時間帯の終わりから店舗の設定の分数 (`daypartGraceMinutes`) のうちに届いた注文は受ける |
 
 数え方 (人数の取り方、足りない数、上限) は端末とサーバで同じ計算 (`TableOrder.Domain.TagRules`) を使う。  
 例えばドリンクバーは、単品の商品 (ドリンクバー、キッズドリンクバー) と料理のセットのオプション (セットドリンクバー) に `drink-bar` のタグを付け、提案のルール (`basis` = `Guests`) で人数分を提案する。  
-お酒は `alcohol` のタグと確認のルール (`scope` = `Visit`) で、来店で 1 回だけ年齢を確かめる。
+お酒は `alcohol` のタグと確認のルール (`scope` = `Visit`) で、来店で 1 回だけ年齢を確かめる。  
+ランチは `lunch` のタグと出せる条件のルール (`dayparts` = `["lunch"]`)、キッズメニューは `kids` のタグと出せる条件のルール (`requiresChildren` = `true`) で表す。
 
 ```jsonc
 {
@@ -518,9 +524,11 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 - 店舗が一時停止していない (`ORDERING_PAUSED`)、ラストオーダーを過ぎていない (`LAST_ORDER_PASSED`)
 - 表示していた単価が今のメニューと違うか、今のメニューにない商品・オプションは `MENU_CHANGED` (端末はメニューを読み直して確かめ直してもらう)。  
   `menuVersion` が違っても、価格と内容が同じなら受ける
-- 品切れ・残りの数 (`ITEM_SOLD_OUT` / `STOCK_INSUFFICIENT`)、時間帯 (`ITEM_UNAVAILABLE`)、オプションの数と組み合わせ (`OPTION_INVALID`)、数量と明細の数の上限 (`QUANTITY_EXCEEDED`)
+- 品切れ・残りの数 (`ITEM_SOLD_OUT` / `STOCK_INSUFFICIENT`)、オプションの数と組み合わせ (`OPTION_INVALID`)、数量と明細の数の上限 (`QUANTITY_EXCEEDED`)
+- 出せる条件のルールの対象の明細は、受けた時刻 (店舗のタイムゾーン) が時間帯のどれかの中か (終わりから `daypartGraceMinutes` の分数のうちは受ける)、来店に子どもがいるかを確かめる (`ITEM_UNAVAILABLE`)。  
+  同じ `id` の再送は、時間帯によらず受けた注文を返す
 - 確認のルールの対象の品は来店の記録 (`CONFIRMATION_REQUIRED`。`scope` によらず来店の記録で確かめ、注文ごとに確かめるのは端末)、上限のルールは来店のこれまでの注文と合わせた数 (`LIMIT_EXCEEDED`。`scope` が `Order` なら注文の中だけ)
-- 確かめる順はメニュー (`MENU_CHANGED`、`OPTION_INVALID`、`QUANTITY_EXCEEDED`)、品切れ、ルールで、先に見つけた種類の誤りを `errors` に明細の `id` ごとに返す
+- 確かめる順はメニュー (`MENU_CHANGED`、`OPTION_INVALID`、`QUANTITY_EXCEEDED`)、出せる条件 (`ITEM_UNAVAILABLE`)、品切れ、ルールで、先に見つけた種類の誤りを `errors` に明細の `id` ごとに返す
 - 注文の取消はお客様にはさせない (テーブル端末からは呼び出しでスタッフに頼む)
 
 ### 🍳 2.7 キッチン (Kitchen)
@@ -838,7 +846,7 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 422 | `LAST_ORDER_PASSED` | ラストオーダーの後の注文と、受付機の来店の開始 |
 | 422 | `MENU_CHANGED` | 表示していたメニューと価格・内容が違う |
 | 422 | `ITEM_SOLD_OUT` / `STOCK_INSUFFICIENT` | 品切れ / 残りの数を超える (`errors` に明細の `id`) |
-| 422 | `ITEM_UNAVAILABLE` | 時間帯の外の商品 |
+| 422 | `ITEM_UNAVAILABLE` | 出せる条件 (時間帯、子どもがいる) を満たさない商品 |
 | 422 | `OPTION_INVALID` | 必須のオプションがない、選べる数を超えた、商品にないオプション |
 | 422 | `QUANTITY_EXCEEDED` | 数量・明細の数の上限 |
 | 422 | `CONFIRMATION_REQUIRED` | 確認のルールに答えていない来店の、対象の品の注文 |

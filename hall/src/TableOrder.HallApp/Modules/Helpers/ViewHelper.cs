@@ -108,6 +108,19 @@ public static class ViewHelper
         };
 
     // 品の状態 (例: 品切れ、残り 3)
+    // 出せる条件を満たさない品の印 (カートの明細、オプション)。満たせば空
+    public static string UnavailableTag(UnavailableReason reason) =>
+        reason switch
+        {
+            UnavailableReason.Daypart => AppResources.OrderUnavailableTimeTag,
+            UnavailableReason.Children => AppResources.OrderUnavailableKidsTag,
+            _ => string.Empty
+        };
+
+    // カートに入れられないときの知らせ
+    public static string UnavailableMessage(UnavailableReason reason) =>
+        reason == UnavailableReason.Children ? AppResources.OrderUnavailableKidsMessage : AppResources.OrderUnavailableTimeMessage;
+
     public static string Name(StockStatus status, int? remaining) =>
         status switch
         {
@@ -153,6 +166,7 @@ public static class ViewHelper
                 ErrorCodes.LastOrderPassed => AppResources.ErrorLastOrderPassed,
                 ErrorCodes.MenuChanged => AppResources.ErrorMenuChanged,
                 ErrorCodes.ItemSoldOut => AppResources.ErrorItemSoldOut,
+                ErrorCodes.ItemUnavailable => AppResources.ErrorItemUnavailable,
                 ErrorCodes.StockInsufficient => AppResources.ErrorStockInsufficient,
                 ErrorCodes.LimitExceeded => AppResources.ErrorLimitExceeded,
                 ErrorCodes.ConfirmationRequired => AppResources.ErrorConfirmationRequired,

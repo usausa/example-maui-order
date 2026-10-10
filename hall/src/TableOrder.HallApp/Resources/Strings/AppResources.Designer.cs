@@ -873,6 +873,42 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
+        internal static string OrderUnavailableTitle {
+            get {
+                return ResourceManager.GetString("OrderUnavailableTitle", resourceCulture);
+            }
+        }
+
+        internal static string OrderUnavailableTimeMessage {
+            get {
+                return ResourceManager.GetString("OrderUnavailableTimeMessage", resourceCulture);
+            }
+        }
+
+        internal static string OrderUnavailableKidsMessage {
+            get {
+                return ResourceManager.GetString("OrderUnavailableKidsMessage", resourceCulture);
+            }
+        }
+
+        internal static string OrderUnavailableTimeTag {
+            get {
+                return ResourceManager.GetString("OrderUnavailableTimeTag", resourceCulture);
+            }
+        }
+
+        internal static string OrderUnavailableKidsTag {
+            get {
+                return ResourceManager.GetString("OrderUnavailableKidsTag", resourceCulture);
+            }
+        }
+
+        internal static string OrderCartUnavailable {
+            get {
+                return ResourceManager.GetString("OrderCartUnavailable", resourceCulture);
+            }
+        }
+
         internal static string ItemAdd {
             get {
                 return ResourceManager.GetString("ItemAdd", resourceCulture);
@@ -1200,6 +1236,12 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ErrorItemSoldOut {
             get {
                 return ResourceManager.GetString("ErrorItemSoldOut", resourceCulture);
+            }
+        }
+
+        internal static string ErrorItemUnavailable {
+            get {
+                return ResourceManager.GetString("ErrorItemUnavailable", resourceCulture);
             }
         }
 

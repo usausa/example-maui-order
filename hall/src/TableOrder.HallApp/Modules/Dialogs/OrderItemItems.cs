@@ -1,7 +1,7 @@
 namespace TableOrder.HallApp.Modules.Dialogs;
 
-// 入れる商品と、1 明細の数量の上限
-public sealed record OrderItemParameter(Guid ItemId, int MaxQuantity);
+// 入れる商品と、1 明細の数量の上限、出し分け (出せる条件を満たさないオプションを選べなくする)
+public sealed record OrderItemParameter(Guid ItemId, int MaxQuantity, MenuAvailability Availability);
 
 // オプションの組 (ソース、セットなど)。必須の組は選ぶまで入れられない
 public sealed class OrderOptionGroup
@@ -20,8 +20,8 @@ public sealed class OrderOptionGroup
 
     public bool IsSatisfied => Options.Count(static x => x.IsSelected) >= MinSelect;
 
-    // 既定のオプションを選んでおく (品切れのものは選ばない)
-    public OrderOptionGroup(MenuResponseOptionGroup group, MenuState menuState)
+    // 既定のオプションを選んでおく (品切れと、出せる条件を満たさないものは選ばない)
+    public OrderOptionGroup(MenuResponseOptionGroup group, MenuState menuState, MenuAvailability availability)
     {
         Name = ViewHelper.Text(group.Name);
         IsRequired = group.MinSelect > 0;
@@ -31,12 +31,12 @@ public sealed class OrderOptionGroup
             ? ViewHelper.Format(AppResources.ItemChooseUpToFormat, group.MaxSelect)
             : IsRequired ? AppResources.ItemChooseOne : AppResources.ItemOptional;
         Options = group.Options
-            .Select(x => new OrderOptionChoice(this, x, menuState.IsSoldOut(x.Id)))
+            .Select(x => new OrderOptionChoice(this, x, menuState.IsSoldOut(x.Id) ? AppResources.StockSoldOut : ViewHelper.UnavailableTag(availability.ReasonOf(x.Tags))))
             .ToList();
     }
 }
 
-// オプションの選択肢。品切れのオプションは選べない
+// オプションの選択肢。品切れと出せる条件を満たさないオプションは選べない
 public sealed partial class OrderOptionChoice : ObservableObject
 {
     public OrderOptionGroup Group { get; }
@@ -47,23 +47,24 @@ public sealed partial class OrderOptionChoice : ObservableObject
 
     public decimal PriceDelta { get; }
 
-    // 価格の差 (例: +¥100)。品切れは品切れと出す
+    // 価格の差 (例: +¥100)。選べないものは理由 (品切れ、時間外) を出す
     public string CaptionText { get; }
 
-    public bool IsSoldOut { get; }
+    public bool IsBlocked { get; }
 
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
 
-    public OrderOptionChoice(OrderOptionGroup group, MenuResponseOption option, bool soldOut)
+    // blockedText は選べない理由 (選べるときは空)
+    public OrderOptionChoice(OrderOptionGroup group, MenuResponseOption option, string blockedText)
     {
         Group = group;
         Id = option.Id;
         Name = ViewHelper.Text(option.Name);
         PriceDelta = option.PriceDelta;
-        IsSoldOut = soldOut;
-        CaptionText = soldOut ? AppResources.StockSoldOut : ViewHelper.PriceDelta(option.PriceDelta);
-        IsSelected = option.IsDefault && !soldOut;
+        IsBlocked = blockedText.Length > 0;
+        CaptionText = IsBlocked ? blockedText : ViewHelper.PriceDelta(option.PriceDelta);
+        IsSelected = option.IsDefault && !IsBlocked;
     }
 }
 

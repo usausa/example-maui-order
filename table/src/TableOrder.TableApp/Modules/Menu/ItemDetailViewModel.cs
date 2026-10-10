@@ -58,8 +58,12 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
     [ObservableProperty]
     public partial bool HasCalories { get; set; }
 
+    // 入れられない (品切れ、出せる条件を満たさない) ときは、写真に理由を重ねる
     [ObservableProperty]
-    public partial bool IsSoldOut { get; set; }
+    public partial bool IsBlocked { get; set; }
+
+    [ObservableProperty]
+    public partial string BlockedText { get; set; } = string.Empty;
 
     public ObservableCollection<OptionGroupChoice> Groups { get; } = [];
 
@@ -141,13 +145,14 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
             : AppResources.DetailAllergenNone;
         CaloriesText = item.Calories is { } calories ? ViewHelper.Format(AppResources.DetailCaloriesFormat, calories) : string.Empty;
         HasCalories = item.Calories is not null;
-        IsSoldOut = menuState.IsSoldOut(item.Id);
+        BlockedText = menuState.IsSoldOut(item.Id) ? AppResources.SoldOut : ViewHelper.UnavailableTag(parameter.Availability.ReasonOf(item.Tags));
+        IsBlocked = BlockedText.Length > 0;
 
         // 新しく入れるときは既定のオプション、直すときは選んでいたオプション
         var selected = line?.OptionIds ?? [];
         foreach (var group in menuState.GetOptionGroups(item))
         {
-            Groups.Add(new OptionGroupChoice(group, language, menuState, selected.ToList(), line is null));
+            Groups.Add(new OptionGroupChoice(group, language, menuState, parameter.Availability, selected.ToList(), line is null));
         }
 
         HasTiming = item.TimingSelectable;
@@ -169,10 +174,10 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
     //--------------------------------------------------------------------------------
 
     // 1 つだけ選ぶ組は選び替え、任意の組はもう一度押すと外す。複数を選べる組は上限まで
-    // 品切れのオプションは選べない (直すときに選んでいたものは、外すか選び替える)
+    // 選べないオプション (品切れ、出せる条件を満たさない) は選べない (直すときに選んでいたものは、外すか選び替える)
     private void SelectOption(OptionChoice option)
     {
-        if (option.IsSoldOut && !option.IsSelected)
+        if (option.IsBlocked && !option.IsSelected)
         {
             return;
         }
@@ -221,7 +226,7 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
         var unitPrice = Pricing.UnitPrice(item.Price, Groups.SelectMany(static x => x.Options).Where(static x => x.IsSelected).Select(static x => x.PriceDelta));
         TotalText = ViewHelper.Price(unitPrice * Quantity);
         CommitText = $"{commitName}  {TotalText}";
-        CanCommit = !IsSoldOut && Groups.All(static x => x.IsSatisfied) && !Groups.SelectMany(static x => x.Options).Any(static x => x.IsSelected && x.IsSoldOut);
+        CanCommit = !IsBlocked && Groups.All(static x => x.IsSatisfied) && !Groups.SelectMany(static x => x.Options).Any(static x => x.IsSelected && x.IsBlocked);
     }
 
     private ItemSelection CreateSelection() =>

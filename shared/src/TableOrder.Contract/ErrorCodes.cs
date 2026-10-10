@@ -46,6 +46,9 @@ public static class ErrorCodes
 
     public const string MenuChanged = "MENU_CHANGED";
 
+    // 出せる条件 (時間帯、子どもがいる) を満たさない商品
+    public const string ItemUnavailable = "ITEM_UNAVAILABLE";
+
     public const string ItemSoldOut = "ITEM_SOLD_OUT";
 
     public const string StockInsufficient = "STOCK_INSUFFICIENT";

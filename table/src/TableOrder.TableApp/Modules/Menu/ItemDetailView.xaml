@@ -37,9 +37,9 @@
                                    Text="{Binding BadgeText}" />
                         </Border>
                         <Grid Style="{StaticResource SoldOutGrid}"
-                              IsVisible="{Binding IsSoldOut}">
+                              IsVisible="{Binding IsBlocked}">
                             <Label Style="{StaticResource SoldOutLabel}"
-                                   Text="{x:Static strings:AppResources.SoldOut}" />
+                                   Text="{Binding BlockedText}" />
                         </Grid>
                     </Grid>
                     <VerticalStackLayout Style="{StaticResource DetailTextStack}">
@@ -126,7 +126,7 @@
                                                                                Text="{Binding Name}">
                                                                             <Label.Triggers>
                                                                                 <DataTrigger TargetType="Label"
-                                                                                             Binding="{Binding IsSoldOut}"
+                                                                                             Binding="{Binding IsBlocked}"
                                                                                              Value="True">
                                                                                     <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
                                                                                 </DataTrigger>
@@ -137,7 +137,7 @@
                                                                                Text="{Binding CaptionText}">
                                                                             <Label.Triggers>
                                                                                 <DataTrigger TargetType="Label"
-                                                                                             Binding="{Binding IsSoldOut}"
+                                                                                             Binding="{Binding IsBlocked}"
                                                                                              Value="True">
                                                                                     <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
                                                                                 </DataTrigger>

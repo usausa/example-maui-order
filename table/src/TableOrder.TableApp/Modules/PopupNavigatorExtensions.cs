@@ -27,8 +27,9 @@ public static class PopupNavigatorExtensions
     //--------------------------------------------------------------------------------
 
     // カートの行を直すときは line に今の内容を渡す
-    public static ValueTask<ItemSelection?> ItemDetailAsync(this IPopupNavigator popupNavigator, Guid itemId, CartLine? line = null) =>
-        popupNavigator.PopupAsync<ItemDetailParameter, ItemSelection?>(DialogId.ItemDetail, new ItemDetailParameter(itemId, line));
+    // 出し分け (availability) で、出せる条件を満たさない商品とオプションを選べなくする
+    public static ValueTask<ItemSelection?> ItemDetailAsync(this IPopupNavigator popupNavigator, Guid itemId, MenuAvailability availability, CartLine? line = null) =>
+        popupNavigator.PopupAsync<ItemDetailParameter, ItemSelection?>(DialogId.ItemDetail, new ItemDetailParameter(itemId, line, availability));
 
     // 注文を送れたら true
     public static ValueTask<bool> OrderConfirmAsync(this IPopupNavigator popupNavigator) =>

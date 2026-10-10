@@ -295,8 +295,9 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(15, demoConfig.Features.KitchenAlertMinutes);
         Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin!.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
 
-        Assert.Equal("あおぞら食堂", testConfig.Brand.Name.Ja);
-        Assert.Contains(testConfig.Brand.Theme, static x => (x.Role == "PrimaryColor") && (x.Color == "#1E5FA8"));
+        Assert.Equal("さつき軒", testConfig.Brand.Name.Ja);
+        Assert.StartsWith("logo-satsuki.", testConfig.Brand.LogoImageName, StringComparison.Ordinal);
+        Assert.Contains(testConfig.Brand.Theme, static x => (x.Role == "PrimaryColor") && (x.Color == "#B32B53"));
         Assert.All(testConfig.Brand.Theme, static x => Assert.True(ThemeRoles.IsRole(x.Role) && ThemeRoles.IsColor(x.Color)));
         Assert.Equal(["ja"], testConfig.Languages);
         Assert.Equal([PaymentMethod.QrCode], testConfig.PaymentMethods);

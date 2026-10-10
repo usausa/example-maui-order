@@ -1,9 +1,10 @@
 -- サンプルのデータ (開発の環境とテスト。テナントが 1 つもないときだけ DatabaseService が入れる)
--- @now は入れた時刻、@menuVersion と @menuContent は Menu.json のメニュー
--- ID は表の番号を入れた固定値 (4 つ目の区切り)。メニューの品と持ち場の ID は Menu.json と同じ
+-- @now は入れた時刻、@menuVersion と @menuContent は Menu.json のメニュー (デモ)、@washokuMenuVersion と @washokuMenuContent は MenuWashoku.json のメニュー (検証用)
+-- ID は表の番号を入れた固定値 (4 つ目の区切り)。メニューの品と持ち場の ID は Menu.json (デモ) と MenuWashoku.json (検証用) と同じ
 -- 2 つのテナントに同じ店舗コード (001) の店舗を置き、テナントで分けられていることを確かめられるようにする
 -- テナントは別のチェーン (名前・ロゴ・色) にし、店舗の設定 (言語、支払方法、機能、スタッフの PIN) も変えて、登録し直すだけで替わることを確かめる
 -- 来店の開き方はデモがスタッフ (既定)、検証用が席 (テーブル端末の待受で人数を入れて始める)
+-- メニューはデモが洋食 (キッズは子どもがいる来店だけ)、検証用が和食の定食 (朝定食とランチは時間帯だけ、お子様は子どもがいる来店だけ)
 -- スタッフの PIN はデモが 1234、検証用が 5678 (ハッシュは PBKDF2-HMAC-SHA256、100000 回)
 -- 管理画面の利用者のパスワードはどれも tableorder-dev (ハッシュは ASP.NET Core Identity の形式。PBKDF2-HMAC-SHA512、100000 回)
 
@@ -11,7 +12,7 @@ INSERT INTO
     Tenants (Id, Code, Name, BrandName, LogoImageName, Theme, Status, SuspendedAt, ClosedAt, CreatedAt, UpdatedAt, Version)
 VALUES
     ('00000000-0000-0000-0001-000000000001', 'demo', 'デモ', '{"ja":"バニーズ","en":"Bunny''s"}', 'logo-bunnys.96e5d680.png', NULL, 'Active', NULL, NULL, @now, @now, 1),
-    ('00000000-0000-0000-0001-000000000002', 'test', '検証用', '{"ja":"あおぞら食堂","en":"Aozora Diner"}', 'logo-aozora.ce7bb2a8.png', '[{"role":"PrimaryColor","color":"#1E5FA8"},{"role":"PrimaryPressedColor","color":"#164A84"},{"role":"OnPrimaryColor","color":"#FFFFFF"},{"role":"PrimaryContainerColor","color":"#DCE8F7"},{"role":"OnPrimaryContainerColor","color":"#123A66"},{"role":"SecondaryColor","color":"#0F2742"},{"role":"SecondaryPressedColor","color":"#22405F"},{"role":"OnSecondaryColor","color":"#FFFFFF"},{"role":"CanvasColor","color":"#EEF2F6"},{"role":"SurfaceVariantColor","color":"#E1E7EE"},{"role":"OnSurfaceColor","color":"#1A2430"},{"role":"OnSurfaceVariantColor","color":"#5A6675"},{"role":"OutlineColor","color":"#C9D2DC"},{"role":"OutlineVariantColor","color":"#DEE4EA"},{"role":"DisabledColor","color":"#E2E6EB"},{"role":"OnDisabledColor","color":"#98A2AE"}]', 'Active', NULL, NULL, @now, @now, 1);
+    ('00000000-0000-0000-0001-000000000002', 'test', '検証用', '{"ja":"さつき軒","en":"Satsukiken"}', 'logo-satsuki.eaf55532.png', '[{"role":"PrimaryColor","color":"#B32B53"},{"role":"PrimaryPressedColor","color":"#8E2242"},{"role":"OnPrimaryColor","color":"#FFFFFF"},{"role":"PrimaryContainerColor","color":"#F8E0E7"},{"role":"OnPrimaryContainerColor","color":"#6B1A32"},{"role":"SecondaryColor","color":"#1F2E52"},{"role":"SecondaryPressedColor","color":"#33446E"},{"role":"OnSecondaryColor","color":"#FFFFFF"},{"role":"CanvasColor","color":"#F4EFE7"},{"role":"SurfaceVariantColor","color":"#E9E1D5"},{"role":"OnSurfaceColor","color":"#24201C"},{"role":"OnSurfaceVariantColor","color":"#655D53"},{"role":"OutlineColor","color":"#D6CCBE"},{"role":"OutlineVariantColor","color":"#E6DED2"},{"role":"DisabledColor","color":"#E6E0D6"},{"role":"OnDisabledColor","color":"#A0978B"}]', 'Active', NULL, NULL, @now, @now, 1);
 
 INSERT INTO
     Stores (TenantId, Id, Code, Name, TimeZone, OpenTime, CloseTime, LastOrderTime, OrderingPaused, PausedMessage, TaxRounding, MaxQuantityPerLine, MaxLinesPerOrder, Languages, PaymentMethods, ElectronicReceipt, Features, StaffPinHash, SettingsVersion, MenuPublicationId, IsActive, CreatedAt, UpdatedAt, Version)
@@ -73,13 +74,16 @@ VALUES
     ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0007-000000000003', '00000000-0000-0000-0002-000000000001', 'Hall', 'PairingCode', '100101', NULL, NULL, NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
     ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0007-000000000004', '00000000-0000-0000-0002-000000000001', 'Kitchen', 'PairingCode', '100201', NULL, NULL, '["0000005b-0000-0000-0000-000000000000","0000005c-0000-0000-0000-000000000000","0000005d-0000-0000-0000-000000000000"]', 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
     ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0007-000000000005', '00000000-0000-0000-0002-000000000001', 'Reception', 'PairingCode', '100301', NULL, NULL, NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
-    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0007-000000000006', '00000000-0000-0000-0002-000000000002', 'Table', 'PairingCode', '200001', NULL, '00000000-0000-0000-0004-000000000201', NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL);
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0007-000000000006', '00000000-0000-0000-0002-000000000002', 'Table', 'PairingCode', '200001', NULL, '00000000-0000-0000-0004-000000000201', NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0007-000000000007', '00000000-0000-0000-0002-000000000002', 'Table', 'PairingCode', '200002', NULL, '00000000-0000-0000-0004-000000000202', NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0007-000000000008', '00000000-0000-0000-0002-000000000002', 'Hall', 'PairingCode', '200101', NULL, NULL, NULL, 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL),
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0007-000000000009', '00000000-0000-0000-0002-000000000002', 'Kitchen', 'PairingCode', '200201', NULL, NULL, '["0000005b-0000-0000-0000-000000000002","0000005c-0000-0000-0000-000000000002","0000005d-0000-0000-0000-000000000002"]', 1000, 0, '9999-12-31 00:00:00.0000000', @now, NULL);
 
 INSERT INTO
     MenuPublications (TenantId, Id, StoreId, MenuVersion, Content, PublishedAt, ApiClientId)
 VALUES
     ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0009-000000000001', '00000000-0000-0000-0002-000000000001', @menuVersion, @menuContent, @now, NULL),
-    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0009-000000000002', '00000000-0000-0000-0002-000000000002', @menuVersion, @menuContent, @now, NULL);
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0009-000000000002', '00000000-0000-0000-0002-000000000002', @washokuMenuVersion, @washokuMenuContent, @now, NULL);
 
 -- パンケーキは売り切れ、サーロインステーキは残り 3 点 (駅前店だけ)
 INSERT INTO

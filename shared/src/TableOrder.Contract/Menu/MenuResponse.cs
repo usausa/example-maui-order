@@ -1,6 +1,6 @@
 namespace TableOrder.Contract.Menu;
 
-// 店舗で出すメニュー全体。特定の商品 (ドリンクバー、お酒、キッズ) はタグとルールで表す
+// 店舗で出すメニュー全体。特定の商品 (ドリンクバー、お酒、キッズ) と時間帯で出す品はタグとルールで表す
 public sealed class MenuResponse
 {
     public string MenuVersion { get; set; } = default!;
@@ -18,6 +18,9 @@ public sealed class MenuResponse
     public IReadOnlyList<MenuResponseAllergen> Allergens { get; set; } = default!;
 
     public IReadOnlyList<MenuResponseStation> Stations { get; set; } = default!;
+
+    // 時間帯 (出せる条件のルールがコードで指す)。時間帯を持たない公開の内容では空にする
+    public IReadOnlyList<MenuResponseDaypart> Dayparts { get; set; } = [];
 }
 
 public sealed class MenuResponseCategory
@@ -112,7 +115,8 @@ public sealed class MenuResponseTag
     public LocalizedText Name { get; set; } = default!;
 }
 
-// 種類 (Kind) ごとに使う項目が違う。Suggestion は Basis と SuggestItemIds、Confirmation は Scope と Message、Limit は Scope と Max
+// 種類 (Kind) ごとに使う項目が違う。Suggestion は Basis と SuggestItemIds、Confirmation は Scope と Message、Limit は Scope と Max、
+// Availability は Dayparts と RequiresChildren
 public sealed class MenuResponseRule
 {
     public Guid Id { get; set; }
@@ -130,6 +134,12 @@ public sealed class MenuResponseRule
     public int? Max { get; set; }
 
     public LocalizedText? Message { get; set; }
+
+    // 出せる時間帯のコード (どれかの中なら出せる)
+    public IReadOnlyList<string>? Dayparts { get; set; }
+
+    // 子どもが 1 人以上の来店だけに出す
+    public bool? RequiresChildren { get; set; }
 }
 
 public sealed class MenuResponseAllergen
@@ -140,6 +150,18 @@ public sealed class MenuResponseAllergen
 
     // 特定原材料 (表示が必須の 8 品目)
     public bool IsMandatory { get; set; }
+}
+
+// 時間帯。始まりと終わりは店舗の現地時刻の HH:mm で、終わりが始まりより前なら日をまたぐ
+public sealed class MenuResponseDaypart
+{
+    public string Code { get; set; } = default!;
+
+    public LocalizedText Name { get; set; } = default!;
+
+    public string Start { get; set; } = default!;
+
+    public string End { get; set; } = default!;
 }
 
 public sealed class MenuResponseStation

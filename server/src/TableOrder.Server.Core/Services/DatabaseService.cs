@@ -34,7 +34,8 @@ public sealed class DatabaseService
     }
 
     // サンプルのデータ (開発とテストで使うテナント) は、テナントが 1 つもないときだけ入れる
-    public async ValueTask<bool> LoadSampleDataAsync(string sqlPath, string menuPath, CancellationToken cancellationToken)
+    // メニューはデモのテナント (menuPath) と検証用のテナント (washokuMenuPath) で分ける
+    public async ValueTask<bool> LoadSampleDataAsync(string sqlPath, string menuPath, string washokuMenuPath, CancellationToken cancellationToken)
     {
         if (await tenantAccessor.CountAsync(cancellationToken) > 0)
         {
@@ -43,11 +44,12 @@ public sealed class DatabaseService
 
         var sql = await File.ReadAllTextAsync(sqlPath, cancellationToken);
         var menu = await ReadSampleMenuAsync(menuPath, cancellationToken);
+        var washokuMenu = await ReadSampleMenuAsync(washokuMenuPath, cancellationToken);
 
         var now = timeProvider.GetUtcNow();
         await provider.UsingTxAsync(async (_, tx) =>
         {
-            await genericAccessor.ExecuteScriptAsync(tx, sql, now, menu.MenuVersion, menu.Content, cancellationToken);
+            await genericAccessor.ExecuteScriptAsync(tx, sql, now, menu.MenuVersion, menu.Content, washokuMenu.MenuVersion, washokuMenu.Content, cancellationToken);
             await tx.CommitAsync(cancellationToken);
         }, cancellationToken);
 

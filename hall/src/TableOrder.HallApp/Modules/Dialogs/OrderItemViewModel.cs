@@ -1,6 +1,6 @@
 namespace TableOrder.HallApp.Modules.Dialogs;
 
-// 代わりの注文の品の詳細。オプション (品切れは選べない)、出す時機 (選べる品だけ)、数量を選び、選んだ内容を返す (閉じたら null)
+// 代わりの注文の品の詳細。オプション (品切れと出せる条件を満たさないものは選べない)、出す時機 (選べる品だけ)、数量を選び、選んだ内容を返す (閉じたら null)
 // カートに入れる前のルールの確かめ (確認、上限) は開いた画面が行う
 public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupInitialize<OrderItemParameter>
 {
@@ -70,7 +70,7 @@ public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupI
         Name = ViewHelper.Text(item.Name);
         foreach (var group in menuState.GetOptionGroups(item))
         {
-            Groups.Add(new OrderOptionGroup(group, menuState));
+            Groups.Add(new OrderOptionGroup(group, menuState, parameter.Availability));
         }
 
         HasTiming = item.TimingSelectable;
@@ -87,7 +87,7 @@ public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupI
     // 1 つだけ選ぶ組は選び替え、任意の組はもう一度押すと外す。複数を選べる組は上限まで
     private void SelectOption(OrderOptionChoice option)
     {
-        if (option.IsSoldOut)
+        if (option.IsBlocked)
         {
             return;
         }

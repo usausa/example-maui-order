@@ -8,5 +8,7 @@ public enum MenuRuleKind
     // タグの品を入れるときに確かめる
     Confirmation,
     // タグの品の数の上限
-    Limit
+    Limit,
+    // タグの品とカテゴリを出せる条件 (時間帯のどれかの中、子どもがいる)。満たさないときは出さず、受け付けない
+    Availability
 }

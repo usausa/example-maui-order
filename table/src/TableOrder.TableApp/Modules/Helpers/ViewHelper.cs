@@ -51,6 +51,23 @@ public static class ViewHelper
         };
 
     //--------------------------------------------------------------------------------
+    // Availability
+    //--------------------------------------------------------------------------------
+
+    // 出せる条件を満たさない品の印 (カートの行、オプション、詳細の写真)。満たせば空
+    public static string UnavailableTag(UnavailableReason reason) =>
+        reason switch
+        {
+            UnavailableReason.Daypart => AppResources.UnavailableTimeTag,
+            UnavailableReason.Children => AppResources.UnavailableKidsTag,
+            _ => string.Empty
+        };
+
+    // カートに入れられないときの知らせ
+    public static string UnavailableMessage(UnavailableReason reason) =>
+        reason == UnavailableReason.Children ? AppResources.UnavailableKidsMessage : AppResources.UnavailableTimeMessage;
+
+    //--------------------------------------------------------------------------------
     // Name
     //--------------------------------------------------------------------------------
 
@@ -99,6 +116,9 @@ public static class ViewHelper
     // 会計中の知らせ (お会計のボタンと同じ記号)
     public static string CheckoutNoticeGlyph => MaterialIcons.Payments;
 
+    // 今は注文できない品がカートにある知らせ
+    public static string UnavailableNoticeGlyph => MaterialIcons.Error_outline;
+
     // 呼び出しの用件の記号 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの記号にする)
     public static string CallGlyph(string code) =>
         code switch
@@ -127,6 +147,7 @@ public static class ViewHelper
             ApiStatus.Rejected => result.ErrorCode switch
             {
                 ErrorCodes.ItemSoldOut => AppResources.ErrorSoldOut,
+                ErrorCodes.ItemUnavailable => AppResources.ErrorItemUnavailable,
                 ErrorCodes.StockInsufficient => AppResources.ErrorStockInsufficient,
                 ErrorCodes.LimitExceeded or ErrorCodes.QuantityExceeded => AppResources.ErrorLimit,
                 ErrorCodes.ConfirmationRequired => AppResources.ErrorConfirmationRequired,

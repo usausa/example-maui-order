@@ -1,9 +1,9 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-public sealed record ItemDetailParameter(Guid ItemId, CartLine? Line);
+public sealed record ItemDetailParameter(Guid ItemId, CartLine? Line, MenuAvailability Availability);
 
 // オプションの組 (ソース、セットなど)。必須の組は選ぶまで入れられない
-// 新しく入れるときは既定のオプションを選んでおき (品切れのものは選ばない)、直すときは選んでいたオプションを選んでおく
+// 新しく入れるときは既定のオプションを選んでおき (品切れと、出せる条件を満たさないものは選ばない)、直すときは選んでいたオプションを選んでおく
 public sealed class OptionGroupChoice
 {
     public string Name { get; }
@@ -23,7 +23,7 @@ public sealed class OptionGroupChoice
 
     public bool IsSatisfied => Options.Count(static x => x.IsSelected) >= MinSelect;
 
-    public OptionGroupChoice(MenuResponseOptionGroup group, Language language, MenuState menuState, IReadOnlyCollection<Guid> selectedIds, bool useDefault)
+    public OptionGroupChoice(MenuResponseOptionGroup group, Language language, MenuState menuState, MenuAvailability availability, IReadOnlyCollection<Guid> selectedIds, bool useDefault)
     {
         Name = group.Name.Get(language);
         IsRequired = group.MinSelect > 0;
@@ -35,8 +35,8 @@ public sealed class OptionGroupChoice
         Options = group.Options
             .Select(x =>
             {
-                var soldOut = menuState.IsSoldOut(x.Id);
-                return new OptionChoice(this, x, language, soldOut, useDefault ? x.IsDefault && !soldOut : selectedIds.Contains(x.Id));
+                var blockedText = menuState.IsSoldOut(x.Id) ? AppResources.SoldOut : ViewHelper.UnavailableTag(availability.ReasonOf(x.Tags));
+                return new OptionChoice(this, x, language, blockedText, useDefault ? x.IsDefault && (blockedText.Length == 0) : selectedIds.Contains(x.Id));
             })
             .ToList();
         Rows = Options.Chunk(2).Select(static x => new OptionRow(x)).ToList();
@@ -54,7 +54,7 @@ public sealed class OptionRow
     }
 }
 
-// オプションのタイル (選んだものを主色の枠で示す)。品切れのオプションは選べない (直すときに選んでいたものは外せる)
+// オプションのタイル (選んだものを主色の枠で示す)。品切れと出せる条件を満たさないオプションは選べない (直すときに選んでいたものは外せる)
 public sealed partial class OptionChoice : ObservableObject
 {
     public OptionGroupChoice Group { get; }
@@ -65,9 +65,9 @@ public sealed partial class OptionChoice : ObservableObject
 
     public decimal PriceDelta { get; }
 
-    public bool IsSoldOut { get; }
+    public bool IsBlocked { get; }
 
-    // 価格の差 (例: +¥100)。品切れは品切れと出す
+    // 価格の差 (例: +¥100)。選べないものは理由 (品切れ、時間外) を出す
     public string CaptionText { get; }
 
     public bool HasCaption => CaptionText.Length > 0;
@@ -75,14 +75,15 @@ public sealed partial class OptionChoice : ObservableObject
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
 
-    public OptionChoice(OptionGroupChoice group, MenuResponseOption option, Language language, bool soldOut, bool selected)
+    // blockedText は選べない理由 (選べるときは空)
+    public OptionChoice(OptionGroupChoice group, MenuResponseOption option, Language language, string blockedText, bool selected)
     {
         Group = group;
         Id = option.Id;
         Name = option.Name.Get(language);
         PriceDelta = option.PriceDelta;
-        IsSoldOut = soldOut;
-        CaptionText = soldOut ? AppResources.SoldOut : ViewHelper.PriceDelta(option.PriceDelta);
+        IsBlocked = blockedText.Length > 0;
+        CaptionText = IsBlocked ? blockedText : ViewHelper.PriceDelta(option.PriceDelta);
         IsSelected = selected;
     }
 }

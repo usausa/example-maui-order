@@ -21,8 +21,16 @@ public sealed class TestMenu
     // シーザーサラダ (キッチン。オプションなし)
     public static readonly Guid Salad = Guid.Parse("00000bb9-0000-0000-0000-000000000000");
 
+    // コーンスープ、マルゲリータ (キッチン。オプションなし)
+    public static readonly Guid Soup = Guid.Parse("00000bbb-0000-0000-0000-000000000000");
+
+    public static readonly Guid Pizza = Guid.Parse("00000bbc-0000-0000-0000-000000000000");
+
     // いちごパフェ (デザート。食後と選べる)
     public static readonly Guid Parfait = Guid.Parse("00000fa1-0000-0000-0000-000000000000");
+
+    // キッズプレート (子どもがいる来店だけ)
+    public static readonly Guid KidsPlate = Guid.Parse("00001389-0000-0000-0000-000000000000");
 
     // ドリンクバー (お客様がとる)
     public static readonly Guid DrinkBar = Guid.Parse("00001771-0000-0000-0000-000000000000");

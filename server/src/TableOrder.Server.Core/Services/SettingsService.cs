@@ -228,6 +228,11 @@ public sealed class SettingsService
             return ServiceError.Validation("kitchenAlertMinutes", "キッチンの遅れの時間は 0 から 120 分で入れてください");
         }
 
+        if (features.DaypartGraceMinutes is < 0 or > 10)
+        {
+            return ServiceError.Validation("daypartGraceMinutes", "時間帯の終わりから注文を受ける分数は 0 から 10 分で入れてください");
+        }
+
         if ((newStaffPin is not null) && !StaffPins.IsValid(newStaffPin))
         {
             return ServiceError.Validation("staffPin", $"PIN は {Length.StaffPinDigits} 桁の数字で入れてください");

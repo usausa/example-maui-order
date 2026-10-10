@@ -27,6 +27,7 @@ public static class ApiProblems
         [ErrorCodes.OrderingPaused] = (StatusCodes.Status422UnprocessableEntity, "注文を一時停止しています"),
         [ErrorCodes.LastOrderPassed] = (StatusCodes.Status422UnprocessableEntity, "ラストオーダーを過ぎました"),
         [ErrorCodes.MenuChanged] = (StatusCodes.Status422UnprocessableEntity, "メニューが変わりました"),
+        [ErrorCodes.ItemUnavailable] = (StatusCodes.Status422UnprocessableEntity, "今は出していない商品があります"),
         [ErrorCodes.ItemSoldOut] = (StatusCodes.Status422UnprocessableEntity, "売り切れの商品があります"),
         [ErrorCodes.StockInsufficient] = (StatusCodes.Status422UnprocessableEntity, "残りの数を超える商品があります"),
         [ErrorCodes.OptionInvalid] = (StatusCodes.Status422UnprocessableEntity, "オプションの選び方を確かめてください"),

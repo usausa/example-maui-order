@@ -455,6 +455,24 @@
   <data name="OrderConfirmRuleFallback" xml:space="preserve">
     <value>This item requires a check with the guest.</value>
   </data>
+  <data name="OrderUnavailableTitle" xml:space="preserve">
+    <value>Not available</value>
+  </data>
+  <data name="OrderUnavailableTimeMessage" xml:space="preserve">
+    <value>This item is not available at this time.</value>
+  </data>
+  <data name="OrderUnavailableKidsMessage" xml:space="preserve">
+    <value>This item is only for parties with children.</value>
+  </data>
+  <data name="OrderUnavailableTimeTag" xml:space="preserve">
+    <value>Out of hours</value>
+  </data>
+  <data name="OrderUnavailableKidsTag" xml:space="preserve">
+    <value>Kids only</value>
+  </data>
+  <data name="OrderCartUnavailable" xml:space="preserve">
+    <value>The cart has items that can't be ordered now. Remove them before sending.</value>
+  </data>
   <data name="ItemAdd" xml:space="preserve">
     <value>Add to cart</value>
   </data>
@@ -619,6 +637,9 @@
   </data>
   <data name="ErrorItemSoldOut" xml:space="preserve">
     <value>Some items are sold out.</value>
+  </data>
+  <data name="ErrorItemUnavailable" xml:space="preserve">
+    <value>Some items are out of hours or only for parties with children.</value>
   </data>
   <data name="ErrorStockInsufficient" xml:space="preserve">
     <value>Some items do not have enough left.</value>

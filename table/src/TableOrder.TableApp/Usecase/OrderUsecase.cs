@@ -34,6 +34,8 @@ public sealed class OrderUsecase
 
     private readonly LanguageState languageState;
 
+    private readonly StoreState storeState;
+
     private readonly ITableApi tableApi;
 
     public OrderUsecase(
@@ -42,6 +44,7 @@ public sealed class OrderUsecase
         VisitState visitState,
         CartState cartState,
         LanguageState languageState,
+        StoreState storeState,
         ITableApi tableApi)
     {
         this.log = log;
@@ -49,6 +52,7 @@ public sealed class OrderUsecase
         this.visitState = visitState;
         this.cartState = cartState;
         this.languageState = languageState;
+        this.storeState = storeState;
         this.tableApi = tableApi;
     }
 
@@ -110,6 +114,26 @@ public sealed class OrderUsecase
 
         return next is not null ? OpenMovedVisitAsync(next) : ValueTask.CompletedTask;
     }
+
+    //--------------------------------------------------------------------------------
+    // Availability
+    //--------------------------------------------------------------------------------
+
+    // 今の出し分け (端末の時計を店舗の現地時刻にし、来店の子どもの人数で求める)
+    public MenuAvailability GetAvailability() =>
+        MenuAvailability.Evaluate(menuState.Menu, storeState.LocalTime(DateTimeOffset.UtcNow), visitState.Children);
+
+    // 商品と選んだオプションが出せる条件を満たさない理由 (満たせば None)
+    public UnavailableReason FindUnavailable(MenuAvailability availability, Guid itemId, IEnumerable<Guid> optionIds) =>
+        availability.ReasonOf(menuState.GetTags(itemId, optionIds));
+
+    // カートに出せる条件を満たさない行があるか
+    public bool HasUnavailableLines(MenuAvailability availability) =>
+        cartState.Lines.Any(x => FindUnavailable(availability, x.ItemId, x.OptionIds) != UnavailableReason.None);
+
+    // 終わる前の知らせを出す時間帯 (今の中で、いちばん早く終わるもの)
+    public (MenuResponseDaypart Daypart, TimeSpan Remaining)? FindEndingDaypart() =>
+        MenuAvailability.FindEnding(menuState.Menu, storeState.LocalTime(DateTimeOffset.UtcNow));
 
     //--------------------------------------------------------------------------------
     // Rule
@@ -174,6 +198,7 @@ public sealed class OrderUsecase
     // 注文の確認で出す提案。タグの品を誰かが頼んでいて、人数より少ないときだけ出す (頼んでいない来店に毎回は出さない)
     public OrderSuggestion? GetSuggestion()
     {
+        var availability = GetAvailability();
         foreach (var rule in menuState.GetRules(MenuRuleKind.Suggestion))
         {
             var count = CountTagged(rule.TargetTag, true, null);
@@ -184,10 +209,11 @@ public sealed class OrderUsecase
                 continue;
             }
 
-            // 確認の画面の中でそのまま入れられる品 (必須のオプションと確認のルールがない) だけを出す
+            // 確認の画面の中でそのまま入れられる品 (出せる条件を満たし、必須のオプションと確認のルールがない) だけを出す
             var items = (rule.SuggestItemIds ?? [])
                 .Select(menuState.GetItem)
                 .Where(x => !menuState.IsSoldOut(x.Id) &&
+                            availability.IsAvailable(x.Tags) &&
                             menuState.GetOptionGroups(x).All(static g => g.MinSelect == 0) &&
                             (GetRequiredConfirmations(CreateSelection(x)).Count == 0))
                 .ToList();

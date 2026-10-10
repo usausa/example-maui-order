@@ -838,7 +838,7 @@ public static class ApplicationExtensions
         // サンプルのデータ (開発の環境とテスト)。料理の写真は、まだ置いていないテナントの置き場に起動のたびに写す
         if (app.Services.GetRequiredService<DatabaseSetting>().SampleData)
         {
-            if (await database.LoadSampleDataAsync(AssetPaths.SampleData, AssetPaths.SampleMenu, CancellationToken.None))
+            if (await database.LoadSampleDataAsync(AssetPaths.SampleData, AssetPaths.SampleMenu, AssetPaths.SampleWashokuMenu, CancellationToken.None))
             {
                 app.Logger.InfoSampleDataLoaded();
             }

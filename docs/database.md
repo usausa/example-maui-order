@@ -184,7 +184,7 @@ erDiagram
 | `Languages` | json | 画面で選べる言語 (`["ja", "en"]`) |
 | `PaymentMethods` | json | テーブルで使える支払方法 (`["QrCode", "CreditCard"]`) |
 | `ElectronicReceipt` | bool | 電子レシートを出すか |
-| `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30, "visitOpening": "Hall", "kitchenAlertMinutes": 15 }`)。増えていくので列にせず、ない項目は既定の値にする |
+| `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30, "visitOpening": "Hall", "kitchenAlertMinutes": 15, "daypartGraceMinutes": 2 }`)。増えていくので列にせず、ない項目は既定の値にする |
 | `StaffPinHash` | json | スタッフの PIN のハッシュ (`{ "iterations": 100000, "salt": "...", "hash": "..." }`。PBKDF2-HMAC-SHA256)。平文は持たない |
 | `SettingsVersion` | int | チェーンと店舗の設定の版。設定 (チェーン、店舗、テーブル) を替えるたびに上げる (端末が読み直すかを決める。店舗の行の編集の `Version` と分ける) |
 | `MenuPublicationId` | guid? | 今のメニュー |
@@ -367,7 +367,7 @@ erDiagram
 | `Id` | guid | |
 | `StoreId` | guid | |
 | `MenuVersion` | string | 公開のたびに変わる (公開の時刻と通し番号。`2026-10-01T02:00:00.000Z-17`)。`GET /menu` の `ETag` |
-| `Content` | json | 公開されたメニュー (`MenuResponse` の形) |
+| `Content` | json | 公開されたメニュー (`MenuResponse` の形。時間帯と出せる条件のルールも含む) |
 | `PublishedAt` | datetime | |
 | `ApiClientId` | guid? | 公開した外部のクライアント |
 

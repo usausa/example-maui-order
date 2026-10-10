@@ -5,7 +5,7 @@ using TableOrder.Terminal.Components;
 // 注文の画面。上にカテゴリのタブ、左にメニューのカード、右に注文リスト、下に履歴・呼出・会計を置く
 public sealed partial class MenuViewModel : AppViewModelBase
 {
-    // ラストオーダーの知らせは時刻で変わるので、しばらくごとに見直す
+    // ラストオーダーの知らせと時間帯の出し分けは時刻で変わるので、しばらくごとに見直す
     private static readonly TimeSpan OrderNoticeInterval = TimeSpan.FromSeconds(30);
 
     private readonly ILogger<MenuViewModel> log;
@@ -26,6 +26,12 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private readonly OrderUsecase orderUsecase;
 
+    // すべてのカテゴリのタブ (出せる条件を満たさないものも含む)。出すタブは Categories
+    private readonly List<CategoryTab> allCategories;
+
+    // 出しているタブとカードの出し分け
+    private MenuAvailability availability = MenuAvailability.All;
+
     public BrandMark Brand { get; }
 
     public string TableText { get; }
@@ -43,7 +49,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     public int HistorySpan => CanCall ? 1 : 2;
 
-    public IReadOnlyList<CategoryTab> Categories { get; }
+    // 出せる品のあるカテゴリのタブ。出し分けが替わったら差し替えずに入れ直す
+    public ObservableCollection<CategoryTab> Categories { get; } = [];
 
     // カテゴリを替えたら差し替えずに入れ直す
     public ObservableCollection<MenuCard> Cards { get; } = [];
@@ -59,7 +66,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
     [ObservableProperty]
     public partial bool HasCart { get; set; }
 
-    // 注文の知らせ (会計中、注文の一時停止、ラストオーダー)。会計中・一時停止・ラストオーダーの後は注文を確定できない
+    // 注文の知らせ (会計中、注文の一時停止、ラストオーダー、今は注文できない品、時間帯の終わり)
+    // 会計中・一時停止・ラストオーダーの後と、今は注文できない品がカートにある間 (送り直しを除く) は注文を確定できない
 
     [ObservableProperty]
     public partial bool HasOrderNotice { get; set; }
@@ -130,8 +138,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
         LanguageText = language.NativeName();
         HasLanguages = languageState.HasChoice;
         CanCall = menuState.Config.CallReasons.Count > 0;
-        Categories = menuState.GetCategories(language)
-            .Select(x => new CategoryTab(x.Id, x.Name, x.Products.Select(p => new MenuCard(p, menuState.GetItem(p.Id).OptionGroupIds.Count > 0, imageCache.PathOf(p.ImageName), Brand.LogoPath)).ToList()))
+        allCategories = menuState.GetCategories(language)
+            .Select(x => new CategoryTab(x.Id, x.Name, x.Tags, x.Products.Select(p => new MenuCard(p, menuState.GetItem(p.Id).OptionGroupIds.Count > 0, imageCache.PathOf(p.ImageName), Brand.LogoPath)).ToList()))
             .ToList();
 
         SelectCategoryCommand = MakeDelegateCommand<CategoryTab>(SelectCategory);
@@ -147,21 +155,21 @@ public sealed partial class MenuViewModel : AppViewModelBase
         LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
+        ShowAvailability(orderUsecase.GetAvailability());
         SyncCart();
-        UpdateOrderNotice();
 
-        Disposables.Add(Observable.Interval(OrderNoticeInterval).ObserveOnCurrentContext().Subscribe(_ => UpdateOrderNotice()));
+        Disposables.Add(Observable.Interval(OrderNoticeInterval).ObserveOnCurrentContext().Subscribe(_ => OnInterval()));
     }
 
     //--------------------------------------------------------------------------------
     // Navigation
     //--------------------------------------------------------------------------------
 
-    // 言語を切り替えて作り直したときは、選んでいたカテゴリを開く
+    // 言語を切り替えて作り直したときは、選んでいたカテゴリを開く (出せないカテゴリになっていたら先頭)
     public override Task OnNavigatingToAsync(INavigationContext context)
     {
         var id = context.Parameter.GetCategoryId();
-        var tab = Categories.FirstOrDefault(x => x.Id == id) ?? (Categories.Count > 0 ? Categories[0] : null);
+        var tab = Categories.FirstOrDefault(x => x.Id == id) ?? Categories.FirstOrDefault();
         if (tab is not null)
         {
             SelectCategory(tab);
@@ -188,10 +196,11 @@ public sealed partial class MenuViewModel : AppViewModelBase
     // ほかのテーブルに移ったら、このテーブルは待受に戻す
     protected override Task OnVisitMovedAsync() => FinishVisitAsync();
 
-    // ホール端末で人数を直したときと、会計を始めた・やめたときに出し直す
+    // ホール端末で人数を直したとき (子どもの人数で出し分けが替わる) と、会計を始めた・やめたときに出し直す
     protected override Task OnVisitUpdatedAsync()
     {
         GuestsText = ViewHelper.Guests(visitState.Guests);
+        UpdateAvailability();
         UpdateOrderNotice();
         return Task.CompletedTask;
     }
@@ -205,7 +214,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
     // ホール端末・キッチン端末で売り切れにしたら、カードの表示を替える
     protected override Task OnStockUpdatedAsync()
     {
-        foreach (var card in Categories.SelectMany(static x => x.Cards))
+        foreach (var card in allCategories.SelectMany(static x => x.Cards))
         {
             card.UpdateSoldOut(menuState.IsSoldOut(card.Id));
         }
@@ -240,9 +249,12 @@ public sealed partial class MenuViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
 
     // ほかの端末 (ホール端末) で会計を始めたら、会計の明細が変わらないように確定を止める (お会計の画面には進める)
+    // 今は注文できない品がカートにあれば、外すまで確定を止める (送れたかわからない注文の送り直しは止めない)
+    // 時間帯の終わりは、ラストオーダーと同じ分数の前から知らせる (注文の停止とラストオーダーの知らせを先に出す)
     private void UpdateOrderNotice()
     {
         var until = storeState.UntilLastOrder(DateTimeOffset.UtcNow);
+        var notice = TimeSpan.FromMinutes(menuState.Features.LastOrderNoticeMinutes);
         if (visitState.Status == VisitStatus.Paying)
         {
             SetOrderNotice(true, ViewHelper.CheckoutNoticeGlyph, AppResources.MenuCheckoutInProgress);
@@ -255,9 +267,17 @@ public sealed partial class MenuViewModel : AppViewModelBase
         {
             SetOrderNotice(true, ViewHelper.OrderNoticeGlyph(false), AppResources.MenuLastOrderPassed);
         }
-        else if ((menuState.Features.LastOrderNoticeMinutes > 0) && (until <= TimeSpan.FromMinutes(menuState.Features.LastOrderNoticeMinutes)) && (storeState.LastOrderTime is { } last))
+        else if (!cartState.HasPendingOrder && CartLines.Any(static x => x.IsUnavailable))
+        {
+            SetOrderNotice(true, ViewHelper.UnavailableNoticeGlyph, AppResources.MenuCartUnavailable);
+        }
+        else if ((notice > TimeSpan.Zero) && (until <= notice) && (storeState.LastOrderTime is { } last))
         {
             SetOrderNotice(false, ViewHelper.OrderNoticeGlyph(false), ViewHelper.Format(AppResources.MenuLastOrderSoonFormat, StoreHours.Format(last)));
+        }
+        else if ((notice > TimeSpan.Zero) && (orderUsecase.FindEndingDaypart() is { } ending) && (ending.Remaining <= notice))
+        {
+            SetOrderNotice(false, ViewHelper.OrderNoticeGlyph(false), ViewHelper.Format(AppResources.MenuDaypartEndsFormat, ending.Daypart.Name.Get(languageState.Current), ending.Daypart.End));
         }
         else
         {
@@ -274,18 +294,77 @@ public sealed partial class MenuViewModel : AppViewModelBase
     }
 
     //--------------------------------------------------------------------------------
+    // Availability
+    //--------------------------------------------------------------------------------
+
+    // 時刻の見直し。タブとカードの並べ直しは、お客様の操作の途中 (ポップアップを開いている間など) は行わず、次の見直しで行う
+    private void OnInterval()
+    {
+        if (!BusyState.IsBusy)
+        {
+            UpdateAvailability();
+        }
+
+        UpdateOrderNotice();
+    }
+
+    // 出し分けを求め直し、替わっていればタブとカードを並べ直す。カートの行の印はいつも見直す
+    private void UpdateAvailability()
+    {
+        var current = orderUsecase.GetAvailability();
+        if (!current.IsSame(availability))
+        {
+            ShowAvailability(current);
+        }
+
+        foreach (var line in CartLines)
+        {
+            line.UpdateAvailability(orderUsecase.FindUnavailable(availability, line.Line.ItemId, line.Line.OptionIds));
+        }
+    }
+
+    // 出せる品のあるカテゴリだけをタブにする。選んでいたタブがなくなったら先頭のタブを選ぶ (はじめは画面に入るときに選ぶ)
+    private void ShowAvailability(MenuAvailability current)
+    {
+        availability = current;
+
+        var selected = Categories.FirstOrDefault(static x => x.IsSelected);
+        Categories.Clear();
+        foreach (var category in allCategories.Where(x => availability.IsAvailable(x.Tags) && x.Cards.Any(card => availability.IsAvailable(card.Tags))))
+        {
+            Categories.Add(category);
+        }
+
+        if (selected is null)
+        {
+            return;
+        }
+
+        var tab = Categories.Contains(selected) ? selected : Categories.FirstOrDefault();
+        if (tab is not null)
+        {
+            SelectCategory(tab);
+        }
+        else
+        {
+            Cards.Clear();
+        }
+    }
+
+    //--------------------------------------------------------------------------------
     // Category
     //--------------------------------------------------------------------------------
 
+    // カテゴリの中の出せる品のカードを出す
     private void SelectCategory(CategoryTab tab)
     {
-        foreach (var category in Categories)
+        foreach (var category in allCategories)
         {
             category.IsSelected = category == tab;
         }
 
         Cards.Clear();
-        foreach (var card in tab.Cards)
+        foreach (var card in tab.Cards.Where(x => availability.IsAvailable(x.Tags)))
         {
             Cards.Add(card);
         }
@@ -302,7 +381,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
             return;
         }
 
-        if (await popupNavigator.ItemDetailAsync(card.Id) is { } selection)
+        if (await popupNavigator.ItemDetailAsync(card.Id, orderUsecase.GetAvailability()) is { } selection)
         {
             await AddAsync(selection);
         }
@@ -328,11 +407,21 @@ public sealed partial class MenuViewModel : AppViewModelBase
         SyncCart();
     }
 
-    // 上限 (1 回の注文の明細の数、1 明細の数量、メニューのルールの上限、残りの数) と確認のルールを確かめる
-    // 端末の中で確かめられる上限を先に見て、入れられないものにお客様の確認を求めない
+    // 出せる条件 (時間帯、子どもがいる)、上限 (1 回の注文の明細の数、1 明細の数量、メニューのルールの上限、残りの数)、確認のルールを確かめる
+    // 端末の中で確かめられるものを先に見て、入れられないものにお客様の確認を求めない
+    // 出せる条件を満たさないときは、知らせてから出し分けを直す (出したままの品が時間帯の終わりを過ぎていた)
     private async Task<bool> AcceptAsync(ItemSelection selection, Guid? replacingLineId)
     {
         var language = languageState.Current;
+        var reason = orderUsecase.FindUnavailable(orderUsecase.GetAvailability(), selection.ItemId, selection.OptionIds);
+        if (reason != UnavailableReason.None)
+        {
+            await popupNavigator.MessageAsync(AppResources.UnavailableTitle, ViewHelper.UnavailableMessage(reason));
+            UpdateAvailability();
+            UpdateOrderNotice();
+            return false;
+        }
+
         if (orderUsecase.FindExceededLimit(selection, replacingLineId) is { } limit)
         {
             await popupNavigator.MessageAsync(AppResources.LimitTitle, ViewHelper.LimitMessage(limit, menuState, language));
@@ -364,7 +453,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     private async Task EditLineAsync(CartLineItem item)
     {
-        if (!await CanEditCartAsync() || (await popupNavigator.ItemDetailAsync(item.Line.ItemId, item.Line) is not { } selection))
+        if (!await CanEditCartAsync() || (await popupNavigator.ItemDetailAsync(item.Line.ItemId, orderUsecase.GetAvailability(), item.Line) is not { } selection))
         {
             return;
         }
@@ -416,6 +505,7 @@ public sealed partial class MenuViewModel : AppViewModelBase
     }
 
     // 行を作り直さずに数量と金額を替える (スクロールの位置を保つ)。内容を直した行だけ作り直す
+    // 行の出せる条件の印と、確定を止める知らせも見直す
     private void SyncCart()
     {
         for (var i = CartLines.Count - 1; i >= 0; i--)
@@ -452,6 +542,9 @@ public sealed partial class MenuViewModel : AppViewModelBase
         HasCart = cartState.Lines.Count > 0;
         CartCountText = cartState.Count.ToString(CultureInfo.InvariantCulture);
         CartTotalText = ViewHelper.Price(cartState.Total);
+
+        UpdateAvailability();
+        UpdateOrderNotice();
     }
 
     private int IndexOf(Guid id)

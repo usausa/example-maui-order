@@ -246,6 +246,102 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal([OrderLineStatus.Served, OrderLineStatus.Ordered], orders.Items[0].Lines.Select(static x => x.Status));
     }
 
+    // キッズの品は、子どもがいる来店だけ受ける
+    [Fact]
+    public async Task KidsItemRequiresChildren()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        var adults = await OpenAsync(hall, store.TableIds[0]);
+        var family = await OpenAsync(hall, store.TableIds[1], 1);
+        var menu = await TestMenu.LoadAsync(hall);
+        var line = menu.Line(TestMenu.KidsPlate);
+
+        // Act
+        using var rejected = await hall.PostAsync($"/api/v1/visits/{adults.Id}/orders", menu.Order(line));
+        using var accepted = await hall.PostAsync($"/api/v1/visits/{family.Id}/orders", menu.Order(menu.Line(TestMenu.KidsPlate)));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, rejected.StatusCode);
+        var (errorCode, keys) = await ReadProblemAsync(rejected);
+        Assert.Equal("ITEM_UNAVAILABLE", errorCode);
+        Assert.Equal([line.Id.ToString()], keys);
+        Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
+    }
+
+    // 時間帯の品は、時間帯の中と、終わりから猶予 (店舗の設定。既定は 2 分) のうちに届いた注文を受ける
+    // 始まりの前、猶予のあと、メニューにない時間帯を指す品は受けず、明細の Id で知らせる
+    [Fact]
+    public async Task DaypartItemIsAcceptedInPeriodAndGrace()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        await PublishDaypartsAsync(store, (TestMenu.Salad, -60, 60), (TestMenu.Soup, -60, 0), (TestMenu.Pizza, -60, -3), (TestMenu.Parfait, 60, 120), (TestMenu.DrinkBar, null, null));
+        using var hall = await SignInAsync(store.HallCode);
+        var visit = await OpenAsync(hall, store.TableIds[0]);
+        var menu = await TestMenu.LoadAsync(hall);
+        var expired = menu.Line(TestMenu.Pizza);
+        var later = menu.Line(TestMenu.Parfait);
+        var unknown = menu.Line(TestMenu.DrinkBar);
+
+        // Act
+        using var accepted = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), menu.Line(TestMenu.Soup)));
+        using var rejected = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), expired, later, unknown));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, rejected.StatusCode);
+        var (errorCode, keys) = await ReadProblemAsync(rejected);
+        Assert.Equal("ITEM_UNAVAILABLE", errorCode);
+        Assert.Equal([expired.Id.ToString(), later.Id.ToString(), unknown.Id.ToString()], keys);
+    }
+
+    // 猶予を 0 分にした店舗は、終わった時間帯の品をすぐに受けない
+    [Fact]
+    public async Task DaypartWithoutGraceRejectsAtEnd()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        await factory.SetDaypartGraceAsync(store, 0);
+        await PublishDaypartsAsync(store, (TestMenu.Soup, -60, 0));
+        using var hall = await SignInAsync(store.HallCode);
+        var visit = await OpenAsync(hall, store.TableIds[0]);
+        var menu = await TestMenu.LoadAsync(hall);
+
+        // Act
+        using var response = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Soup)));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("ITEM_UNAVAILABLE", await TestDevice.ReadErrorCodeAsync(response));
+    }
+
+    // 時間帯の中で受けた注文の送り直しは、時間帯が終わったあとでも受け付けた注文を返す (新しい注文は受けない)
+    [Fact]
+    public async Task ResendAfterDaypartReturnsAcceptedOrder()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        await PublishDaypartsAsync(store, (TestMenu.Salad, -60, 60));
+        using var table = await SignInAsync(store.TableCodes[0]);
+        var visit = await factory.OpenVisitAsync(store, 0);
+        var menu = await TestMenu.LoadAsync(table);
+        var request = menu.Order(menu.Line(TestMenu.Salad));
+        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        await PublishDaypartsAsync(store, (TestMenu.Salad, -60, -3));
+
+        // Act
+        using var resent = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var other = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        Assert.Equal(request.Id, (await TestDevice.ReadAsync<OrderListResponseItem>(resent)).Id);
+        Assert.Equal("ITEM_UNAVAILABLE", await TestDevice.ReadErrorCodeAsync(other));
+    }
+
     //--------------------------------------------------------------------------------
     // Cancel
     //--------------------------------------------------------------------------------
@@ -311,11 +407,38 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         return device;
     }
 
-    private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId)
+    private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId, int children = 0)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2, Children = children });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
+
+    // 品ごとに、今の分からずらした分の時間帯 (店舗の現地時刻。終わりは含まない) をタグと出せる条件のルールで付けたメニューを公開する
+    // ずらす分のない品は、メニューにない時間帯を指す。終わりを今の分にした時間帯は、注文が届いたときには終わっている (1 分より前ではない)
+    private ValueTask PublishDaypartsAsync(TestStore store, params (Guid ItemId, int? From, int? To)[] parts) =>
+        factory.PublishMenuAsync(store, menu =>
+        {
+            var now = StoreHours.LocalTime(DateTimeOffset.UtcNow, "Asia/Tokyo");
+            var minute = new TimeOnly(now.Hour, now.Minute);
+            var dayparts = new List<MenuResponseDaypart>();
+            var rules = menu.Rules.ToList();
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var (itemId, from, to) = parts[i];
+                var code = $"part-{i}";
+                if ((from is { } start) && (to is { } end))
+                {
+                    dayparts.Add(new MenuResponseDaypart { Code = code, Name = new LocalizedText { Ja = code }, Start = StoreHours.Format(minute.AddMinutes(start)), End = StoreHours.Format(minute.AddMinutes(end)) });
+                }
+
+                var item = menu.Items.Single(x => x.Id == itemId);
+                item.Tags = [.. item.Tags, code];
+                rules.Add(new MenuResponseRule { Id = Guid.CreateVersion7(), Kind = MenuRuleKind.Availability, TargetTag = code, Dayparts = [code] });
+            }
+
+            menu.Dayparts = dayparts;
+            menu.Rules = rules;
+        });
 
     // Problem Details の errorCode と、errors のキー (明細の Id)
     private static async Task<(string? ErrorCode, List<string> Keys)> ReadProblemAsync(HttpResponseMessage response)

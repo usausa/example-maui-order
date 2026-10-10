@@ -76,6 +76,7 @@ public sealed class MenuState
             .Select(x => new MenuCategory(
                 x.Id,
                 x.Name.Get(language),
+                x.Tags,
                 x.ItemIds
                     .Where(items.ContainsKey)
                     .Select(id => ToProduct(items[id], language))
@@ -87,7 +88,7 @@ public sealed class MenuState
         Menu.Items.Select(static x => x.ImageName).Append(LogoImageName).OfType<string>().Distinct(StringComparer.Ordinal).ToList();
 
     private MenuProduct ToProduct(MenuResponseItem item, Language language) =>
-        new(item.Id, item.Name.Get(language), item.Price, item.ImageName, item.Badges, IsSoldOut(item.Id));
+        new(item.Id, item.Name.Get(language), item.Price, item.ImageName, item.Badges, item.Tags, IsSoldOut(item.Id));
 
     public string AllergenName(string code, Language language) =>
         allergens.TryGetValue(code, out var allergen) ? allergen.Name.Get(language) : code;

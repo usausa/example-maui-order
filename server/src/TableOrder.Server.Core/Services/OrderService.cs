@@ -77,8 +77,8 @@ public sealed class OrderService
     // Create
     //--------------------------------------------------------------------------------
 
-    // 注文の送信。同じ Id の送り直しは、同じ内容なら受け付けた注文を返す (201 ではなく 200)
-    // 確かめる順: 来店と店舗 → メニューとオプションと数量 → 品切れ → ルール (先に見つけた種類の誤りを、明細の Id ごとに返す)
+    // 注文の送信。同じ Id の送り直しは、同じ内容なら受け付けた注文を返す (201 ではなく 200。時間帯の終わりを過ぎていても)
+    // 確かめる順: 来店と店舗 → メニューとオプションと数量 → 出せる条件 → 品切れ → ルール (先に見つけた種類の誤りを、明細の Id ごとに返す)
     public async ValueTask<ServiceResult<OrderListResponseItem>> CreateAsync(Guid visitId, OrderCreateRequest request, CancellationToken cancellationToken)
     {
         if (ValidateRequest(request) is { } invalid)
@@ -148,6 +148,7 @@ public sealed class OrderService
 
             var plans = new List<LinePlan>();
             var error = Plan(request, store, catalog, plans) ??
+                        CheckAvailability(plans, catalog, visit, StoreHours.LocalTime(now, store.TimeZone), TimeSpan.FromMinutes(SettingsService.ReadFeatures(store.Features).DaypartGraceMinutes)) ??
                         CheckStock(plans, (await stockAccessor.QueryListAsync(tx, tenantId, storeId, cancellationToken)).ToDictionary(static x => x.TargetId)) ??
                         CheckRules(
                             plans,
@@ -588,6 +589,30 @@ public sealed class OrderService
         }
 
         return true;
+    }
+
+    // 出せる条件 (時間帯、子どもがいる)。時間帯は受けた時刻 (店舗の現地時刻) で確かめ、終わりから grace のうちに届いた注文は受ける (確定を押したあとの通信の遅れ)
+    private static ServiceError? CheckAvailability(IEnumerable<LinePlan> plans, MenuCatalog catalog, VisitEntity visit, TimeOnly now, TimeSpan grace)
+    {
+        if (catalog.AvailabilityRules.Count == 0)
+        {
+            return null;
+        }
+
+        var unavailable = new Dictionary<string, string[]>();
+        foreach (var plan in plans)
+        {
+            var reason = catalog.AvailabilityRules
+                .Where(x => plan.Tags.Contains(x.TargetTag, StringComparer.Ordinal))
+                .Select(x => TagRules.CheckAvailability(catalog.PeriodsOf(x), x.RequiresChildren == true, now, visit.Children, grace))
+                .FirstOrDefault(static x => x != UnavailableReason.None);
+            if (reason != UnavailableReason.None)
+            {
+                unavailable[plan.Id.ToString()] = [reason == UnavailableReason.Children ? "お子様のいる来店だけの商品です" : "出している時間の外の商品です"];
+            }
+        }
+
+        return unavailable.Count > 0 ? new ServiceError(ErrorCodes.ItemUnavailable, unavailable) : null;
     }
 
     // 品切れと残りの数 (同じ品の明細は合わせて数える)

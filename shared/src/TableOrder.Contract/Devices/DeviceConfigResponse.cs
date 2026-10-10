@@ -76,6 +76,9 @@ public sealed class DeviceConfigResponseFeatures
 
     // キッチン端末で、チケットができてから何分で注意の色にするか (0 は色を替えない)
     public int KitchenAlertMinutes { get; set; } = 15;
+
+    // 時間帯の終わりから何分までに届いた注文を受けるか (確定を押したあとの通信の遅れの猶予。0 は受けない)。サーバだけが使う
+    public int DaypartGraceMinutes { get; set; } = 2;
 }
 
 // PBKDF2-HMAC-SHA256 の回数と、Base64 の塩とハッシュ (店舗の設定に持つ JSON の形も兼ねる)

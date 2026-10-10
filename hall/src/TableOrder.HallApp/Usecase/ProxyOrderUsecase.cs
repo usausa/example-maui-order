@@ -1,10 +1,12 @@
 namespace TableOrder.HallApp.Usecase;
 
-// 代わりの注文。メニューのルール (確認・上限) の判定、確認の記録、注文の送信 (カートは画面が持ち、判定に渡す)
+// 代わりの注文。メニューのルール (出せる条件・確認・上限) の判定、確認の記録、注文の送信 (カートは画面が持ち、判定に渡す)
 // 数え方はテーブル端末とサーバと同じ (TagRules)
 public sealed class ProxyOrderUsecase
 {
     private readonly MenuState menuState;
+
+    private readonly StoreState storeState;
 
     private readonly IHallApi hallApi;
 
@@ -13,11 +15,25 @@ public sealed class ProxyOrderUsecase
 
     public ProxyOrderUsecase(
         MenuState menuState,
+        StoreState storeState,
         IHallApi hallApi)
     {
         this.menuState = menuState;
+        this.storeState = storeState;
         this.hallApi = hallApi;
     }
+
+    //--------------------------------------------------------------------------------
+    // Availability
+    //--------------------------------------------------------------------------------
+
+    // 来店の出し分け (端末の時計を店舗の現地時刻にし、来店の子どもの人数で求める)
+    public MenuAvailability GetAvailability(VisitResponse visit) =>
+        MenuAvailability.Evaluate(menuState.Menu, StoreHours.LocalTime(DateTimeOffset.UtcNow, storeState.Store.TimeZone), visit.Children);
+
+    // 商品と選んだオプションが出せる条件を満たさない理由 (満たせば None)
+    public UnavailableReason FindUnavailable(MenuAvailability availability, Guid itemId, IEnumerable<Guid> optionIds) =>
+        availability.ReasonOf(menuState.GetTags(itemId, optionIds));
 
     //--------------------------------------------------------------------------------
     // Rule
@@ -71,20 +87,14 @@ public sealed class ProxyOrderUsecase
     // Order
     //--------------------------------------------------------------------------------
 
+    // 送れたかわからなかった注文の送り直しになる (同じ来店の同じカート)。送り直しは出せる条件で止めない (届いていれば受けた注文が返る)
+    public bool IsResend(VisitResponse visit, IEnumerable<CartLine> cart) =>
+        (pendingOrder is { } pending) && (pending.VisitId == visit.Id) && IsSameLines(pending.Request.Lines, ToLines(cart));
+
     // カートを注文として送る (サーバは同じ id の送り直しに、受けた注文を返す)
     public async ValueTask<ApiResult<OrderListResponseItem>> SubmitAsync(VisitResponse visit, IEnumerable<CartLine> cart)
     {
-        var lines = cart
-            .Select(static x => new OrderCreateRequestLine
-            {
-                Id = x.Id,
-                ItemId = x.ItemId,
-                OptionIds = x.OptionIds,
-                Quantity = x.Quantity,
-                UnitPrice = x.UnitPrice,
-                Timing = x.Timing
-            })
-            .ToList();
+        var lines = ToLines(cart);
         var resend = (pendingOrder is { } pending) && (pending.VisitId == visit.Id) && IsSameLines(pending.Request.Lines, lines);
         var request = new OrderCreateRequest
         {
@@ -97,6 +107,19 @@ public sealed class ProxyOrderUsecase
         pendingOrder = result.Status == ApiStatus.Unavailable ? (visit.Id, request) : null;
         return result;
     }
+
+    private static List<OrderCreateRequestLine> ToLines(IEnumerable<CartLine> cart) =>
+        cart
+            .Select(static x => new OrderCreateRequestLine
+            {
+                Id = x.Id,
+                ItemId = x.ItemId,
+                OptionIds = x.OptionIds,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Timing = x.Timing
+            })
+            .ToList();
 
     private static bool IsSameLines(IReadOnlyList<OrderCreateRequestLine> previous, List<OrderCreateRequestLine> lines) =>
         (previous.Count == lines.Count) &&

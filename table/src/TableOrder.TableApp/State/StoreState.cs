@@ -27,7 +27,10 @@ public sealed class StoreState
         SettingsVersion = store.SettingsVersion;
     }
 
+    // 店舗の現地時刻 (端末の時計を店舗のタイムゾーンにする)
+    public TimeOnly LocalTime(DateTimeOffset now) => StoreHours.LocalTime(now, TimeZone);
+
     // ラストオーダーまでの残り (ラストオーダーのない店は null、過ぎていれば負)
     public TimeSpan? UntilLastOrder(DateTimeOffset now) =>
-        LastOrderTime is { } last ? StoreHours.UntilLastOrder(StoreHours.LocalTime(now, TimeZone), openTime, last) : null;
+        LastOrderTime is { } last ? StoreHours.UntilLastOrder(LocalTime(now), openTime, last) : null;
 }

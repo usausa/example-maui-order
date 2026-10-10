@@ -46,4 +46,59 @@ public sealed class TagRulesTests
 
         Assert.Equal(2, allowance);
     }
+
+    // 出せる条件の時間帯 (朝 7:00〜10:30、ランチ 11:00〜15:00) は、どれかの中なら出せる。猶予 (2 分) は終わりのあとに付ける
+    [Theory]
+    [InlineData("06:59", 0, UnavailableReason.Daypart)]
+    [InlineData("08:00", 0, UnavailableReason.None)]
+    [InlineData("10:45", 0, UnavailableReason.Daypart)]
+    [InlineData("12:00", 0, UnavailableReason.None)]
+    [InlineData("15:01", 0, UnavailableReason.Daypart)]
+    [InlineData("15:01", 2, UnavailableReason.None)]
+    [InlineData("15:02", 2, UnavailableReason.Daypart)]
+    public void AvailableInAnyPeriod(string now, int graceMinutes, UnavailableReason expected)
+    {
+        // Arrange
+        var periods = new[] { (StoreHours.Parse("07:00"), StoreHours.Parse("10:30")), (StoreHours.Parse("11:00"), StoreHours.Parse("15:00")) };
+
+        // Act
+        var reason = TagRules.CheckAvailability(periods, false, StoreHours.Parse(now), 0, TimeSpan.FromMinutes(graceMinutes));
+
+        // Assert
+        Assert.Equal(expected, reason);
+    }
+
+    // 子どもを求める品は子どもが 1 人以上の来店だけ。時間帯がなければ時刻によらない
+    [Theory]
+    [InlineData(0, UnavailableReason.Children)]
+    [InlineData(1, UnavailableReason.None)]
+    [InlineData(3, UnavailableReason.None)]
+    public void AvailableWithChildren(int children, UnavailableReason expected)
+    {
+        var reason = TagRules.CheckAvailability([], true, StoreHours.Parse("03:00"), children);
+
+        Assert.Equal(expected, reason);
+    }
+
+    // 時間帯と子どもの両方を求める品は、両方を満たすときだけ出せる (どちらも満たさなければ子どもを理由にする)
+    [Theory]
+    [InlineData("12:00", 1, UnavailableReason.None)]
+    [InlineData("12:00", 0, UnavailableReason.Children)]
+    [InlineData("16:00", 1, UnavailableReason.Daypart)]
+    [InlineData("16:00", 0, UnavailableReason.Children)]
+    public void AvailableNeedsAllConditions(string now, int children, UnavailableReason expected)
+    {
+        var reason = TagRules.CheckAvailability([(StoreHours.Parse("11:00"), StoreHours.Parse("15:00"))], true, StoreHours.Parse(now), children);
+
+        Assert.Equal(expected, reason);
+    }
+
+    // 空の時間帯 (メニューにない時間帯のコード) だけを指す品は、猶予があっても出さない
+    [Fact]
+    public void EmptyPeriodIsNeverAvailable()
+    {
+        var reason = TagRules.CheckAvailability([(TimeOnly.MinValue, TimeOnly.MinValue)], false, TimeOnly.MinValue.AddMinutes(1), 1, TimeSpan.FromMinutes(2));
+
+        Assert.Equal(UnavailableReason.Daypart, reason);
+    }
 }

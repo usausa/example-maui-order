@@ -1,0 +1,1042 @@
+{
+  "menuVersion": "sample-washoku-1",
+  "categories": [
+    {
+      "id": "00000065-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "おすすめ",
+        "en": "Recommended"
+      },
+      "sortOrder": 101,
+      "tags": [],
+      "itemIds": [
+        "000007d1-0000-0000-0000-000000000002",
+        "000007d3-0000-0000-0000-000000000002",
+        "000003ea-0000-0000-0000-000000000002",
+        "000007d4-0000-0000-0000-000000000002",
+        "00000bb9-0000-0000-0000-000000000002",
+        "00000bbc-0000-0000-0000-000000000002",
+        "00000fa2-0000-0000-0000-000000000002",
+        "0000138a-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "00000066-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "朝定食",
+        "en": "Breakfast"
+      },
+      "sortOrder": 102,
+      "tags": [
+        "morning"
+      ],
+      "itemIds": [
+        "000003e9-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "00000067-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "ランチ",
+        "en": "Lunch"
+      },
+      "sortOrder": 103,
+      "tags": [
+        "lunch"
+      ],
+      "itemIds": [
+        "000003ea-0000-0000-0000-000000000002",
+        "000003eb-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "00000068-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "定食",
+        "en": "Set Meals"
+      },
+      "sortOrder": 104,
+      "tags": [],
+      "itemIds": [
+        "000007d1-0000-0000-0000-000000000002",
+        "000007d2-0000-0000-0000-000000000002",
+        "000007d3-0000-0000-0000-000000000002",
+        "000007d4-0000-0000-0000-000000000002",
+        "000007d5-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "00000069-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "丼・麺",
+        "en": "Rice Bowls and Noodles"
+      },
+      "sortOrder": 105,
+      "tags": [],
+      "itemIds": [
+        "00000bb9-0000-0000-0000-000000000002",
+        "00000bba-0000-0000-0000-000000000002",
+        "00000bbb-0000-0000-0000-000000000002",
+        "00000bbc-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "0000006a-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "一品",
+        "en": "Side Dishes"
+      },
+      "sortOrder": 106,
+      "tags": [],
+      "itemIds": [
+        "00000fa1-0000-0000-0000-000000000002",
+        "00000fa2-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "0000006b-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "甘味",
+        "en": "Sweets"
+      },
+      "sortOrder": 107,
+      "tags": [
+        "dessert"
+      ],
+      "itemIds": [
+        "00001389-0000-0000-0000-000000000002",
+        "0000138a-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "0000006c-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "お子様",
+        "en": "Kids"
+      },
+      "sortOrder": 108,
+      "tags": [
+        "kids"
+      ],
+      "itemIds": [
+        "00001771-0000-0000-0000-000000000002"
+      ]
+    },
+    {
+      "id": "0000006d-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "ドリンク",
+        "en": "Drinks"
+      },
+      "sortOrder": 109,
+      "tags": [],
+      "itemIds": [
+        "00001b59-0000-0000-0000-000000000002",
+        "00001b5a-0000-0000-0000-000000000002",
+        "00001b5b-0000-0000-0000-000000000002",
+        "00001b5c-0000-0000-0000-000000000002"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "000003e9-0000-0000-0000-000000000002",
+      "code": "1001",
+      "name": {
+        "ja": "焼き鮭朝定食",
+        "en": "Grilled Salmon Breakfast"
+      },
+      "description": {
+        "ja": "焼き鮭に、ごはん・味噌汁・納豆・お新香を付けた朝の定食です。",
+        "en": "Grilled salmon with rice, miso soup, natto and pickles."
+      },
+      "price": 490,
+      "taxRate": 0.10,
+      "imageName": "salmon-breakfast.76525788.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 520,
+      "tags": [
+        "morning"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000003ea-0000-0000-0000-000000000002",
+      "code": "1002",
+      "name": {
+        "ja": "日替わり定食",
+        "en": "Daily Special"
+      },
+      "description": {
+        "ja": "日ごとに替わる主菜に、ごはん・味噌汁・小鉢を付けたランチの定食です。",
+        "en": "Lunch set with the main dish of the day, rice, miso soup and a small side."
+      },
+      "price": 790,
+      "taxRate": 0.10,
+      "imageName": "daily-lunch.9990b913.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat"
+      ],
+      "calories": 780,
+      "tags": [
+        "lunch"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000003eb-0000-0000-0000-000000000002",
+      "code": "1003",
+      "name": {
+        "ja": "ミニ丼とうどんのセット",
+        "en": "Mini Rice Bowl and Udon"
+      },
+      "description": {
+        "ja": "ミニ親子丼と、温かいか冷たいうどんのセットです。",
+        "en": "A mini chicken-and-egg rice bowl with hot or cold udon."
+      },
+      "price": 890,
+      "taxRate": 0.10,
+      "imageName": "mini-don-udon.ad8acc25.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg"
+      ],
+      "calories": 830,
+      "tags": [
+        "lunch"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000322-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d1-0000-0000-0000-000000000002",
+      "code": "2001",
+      "name": {
+        "ja": "鯖の塩焼き定食",
+        "en": "Grilled Mackerel Set"
+      },
+      "description": {
+        "ja": "脂ののった鯖を塩焼きにし、大根おろしを添えました。",
+        "en": "Salt-grilled mackerel with grated daikon."
+      },
+      "price": 890,
+      "taxRate": 0.10,
+      "imageName": "saba.ce59388e.png",
+      "badges": [
+        "Recommended"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 760,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d2-0000-0000-0000-000000000002",
+      "code": "2002",
+      "name": {
+        "ja": "生姜焼き定食",
+        "en": "Ginger Pork Set"
+      },
+      "description": {
+        "ja": "豚肉を生姜のたれで焼き、千切りキャベツを添えました。",
+        "en": "Pork sauteed in ginger sauce with shredded cabbage."
+      },
+      "price": 850,
+      "taxRate": 0.10,
+      "imageName": "shogayaki.4964ce15.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat"
+      ],
+      "calories": 850,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d3-0000-0000-0000-000000000002",
+      "code": "2003",
+      "name": {
+        "ja": "唐揚げ定食",
+        "en": "Fried Chicken Set"
+      },
+      "description": {
+        "ja": "醤油とにんにくで下味を付けた鶏の唐揚げです。",
+        "en": "Japanese fried chicken marinated in soy sauce and garlic."
+      },
+      "price": 820,
+      "taxRate": 0.10,
+      "imageName": "karaage.74f7801a.png",
+      "badges": [
+        "Popular"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg"
+      ],
+      "calories": 920,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d4-0000-0000-0000-000000000002",
+      "code": "2004",
+      "name": {
+        "ja": "天ぷら定食",
+        "en": "Tempura Set"
+      },
+      "description": {
+        "ja": "海老と季節の野菜の天ぷらを、天つゆでどうぞ。",
+        "en": "Shrimp and seasonal vegetable tempura with dipping sauce."
+      },
+      "price": 1090,
+      "taxRate": 0.10,
+      "imageName": "tempura-set.1a8f9e5d.png",
+      "badges": [
+        "New"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "shrimp",
+        "wheat",
+        "egg"
+      ],
+      "calories": 880,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "000007d5-0000-0000-0000-000000000002",
+      "code": "2005",
+      "name": {
+        "ja": "ヒレかつ定食",
+        "en": "Pork Fillet Cutlet Set"
+      },
+      "description": {
+        "ja": "やわらかいヒレ肉を、さくっと揚げました。",
+        "en": "Tender pork fillet fried in crispy panko."
+      },
+      "price": 990,
+      "taxRate": 0.10,
+      "imageName": "hirekatsu.42be1cfb.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg"
+      ],
+      "calories": 900,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bb9-0000-0000-0000-000000000002",
+      "code": "3001",
+      "name": {
+        "ja": "親子丼",
+        "en": "Oyakodon"
+      },
+      "description": {
+        "ja": "鶏肉と玉ねぎを、だしと卵でふんわりとじました。",
+        "en": "Chicken and onion simmered in dashi and soft egg over rice."
+      },
+      "price": 690,
+      "taxRate": 0.10,
+      "imageName": "oyakodon.57a4315b.png",
+      "badges": [
+        "Popular"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg"
+      ],
+      "calories": 720,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bba-0000-0000-0000-000000000002",
+      "code": "3002",
+      "name": {
+        "ja": "天丼",
+        "en": "Tendon"
+      },
+      "description": {
+        "ja": "海老と野菜の天ぷらに、甘辛いたれをかけた丼です。",
+        "en": "Rice bowl topped with shrimp and vegetable tempura and sweet soy sauce."
+      },
+      "price": 790,
+      "taxRate": 0.10,
+      "imageName": "tendon.3cc80477.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "shrimp",
+        "wheat",
+        "egg"
+      ],
+      "calories": 840,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000321-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bbb-0000-0000-0000-000000000002",
+      "code": "3003",
+      "name": {
+        "ja": "きつねうどん",
+        "en": "Kitsune Udon"
+      },
+      "description": {
+        "ja": "甘く煮たお揚げをのせたうどんです。温・冷を選べます。",
+        "en": "Udon with sweet simmered fried tofu. Hot or cold."
+      },
+      "price": 590,
+      "taxRate": 0.10,
+      "imageName": "kitsune-udon.fbca460b.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat"
+      ],
+      "calories": 480,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000322-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000bbc-0000-0000-0000-000000000002",
+      "code": "3004",
+      "name": {
+        "ja": "ざるそば",
+        "en": "Zaru Soba"
+      },
+      "description": {
+        "ja": "冷たいそばを、つゆとわさび・ねぎでどうぞ。",
+        "en": "Chilled buckwheat noodles with dipping sauce, wasabi and scallions."
+      },
+      "price": 590,
+      "taxRate": 0.10,
+      "imageName": "zaru-soba.7ccf2294.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "buckwheat",
+        "wheat"
+      ],
+      "calories": 400,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000fa1-0000-0000-0000-000000000002",
+      "code": "4001",
+      "name": {
+        "ja": "茶碗蒸し",
+        "en": "Chawanmushi"
+      },
+      "description": {
+        "ja": "だしのきいた、なめらかな蒸し物です。",
+        "en": "Silky steamed egg custard with dashi."
+      },
+      "price": 290,
+      "taxRate": 0.10,
+      "imageName": "chawanmushi.f5683b10.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "shrimp",
+        "egg"
+      ],
+      "calories": 90,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00000fa2-0000-0000-0000-000000000002",
+      "code": "4002",
+      "name": {
+        "ja": "出し巻き玉子",
+        "en": "Dashimaki Tamago"
+      },
+      "description": {
+        "ja": "だしをたっぷり含ませて焼いた玉子焼きです。",
+        "en": "Rolled omelette with plenty of dashi."
+      },
+      "price": 390,
+      "taxRate": 0.10,
+      "imageName": "dashimaki.5fd29e5d.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "egg"
+      ],
+      "calories": 180,
+      "tags": [],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001389-0000-0000-0000-000000000002",
+      "code": "5001",
+      "name": {
+        "ja": "抹茶アイス",
+        "en": "Matcha Ice Cream"
+      },
+      "description": {
+        "ja": "香りのよい抹茶のアイスに、粒あんを添えました。",
+        "en": "Fragrant green tea ice cream with sweet red beans."
+      },
+      "price": 290,
+      "taxRate": 0.10,
+      "imageName": "matcha-ice.a1f93679.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "milk"
+      ],
+      "calories": 200,
+      "tags": [
+        "dessert"
+      ],
+      "stationId": "0000005c-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "AfterMeal",
+      "timingSelectable": true
+    },
+    {
+      "id": "0000138a-0000-0000-0000-000000000002",
+      "code": "5002",
+      "name": {
+        "ja": "わらび餅",
+        "en": "Warabi Mochi"
+      },
+      "description": {
+        "ja": "きなこと黒蜜でいただく、ぷるぷるのわらび餅です。",
+        "en": "Jiggly bracken-starch mochi with roasted soybean flour and brown sugar syrup."
+      },
+      "price": 350,
+      "taxRate": 0.10,
+      "imageName": "warabimochi.d6ec9be1.png",
+      "badges": [
+        "Limited"
+      ],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 220,
+      "tags": [
+        "dessert"
+      ],
+      "stationId": "0000005c-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "AfterMeal",
+      "timingSelectable": true
+    },
+    {
+      "id": "00001771-0000-0000-0000-000000000002",
+      "code": "6001",
+      "name": {
+        "ja": "お子様うどんセット",
+        "en": "Kids Udon Set"
+      },
+      "description": {
+        "ja": "小さなうどん、おにぎり、唐揚げ、ゼリーのセットです。",
+        "en": "Small udon, rice ball, fried chicken and jelly."
+      },
+      "price": 490,
+      "taxRate": 0.10,
+      "imageName": "kids-udon.cd15e966.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [
+        "wheat",
+        "egg"
+      ],
+      "calories": 450,
+      "tags": [
+        "kids"
+      ],
+      "stationId": "0000005b-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001b59-0000-0000-0000-000000000002",
+      "code": "7001",
+      "name": {
+        "ja": "生ビール",
+        "en": "Draft Beer"
+      },
+      "description": {
+        "ja": "よく冷えた生ビールです。",
+        "en": "Well-chilled draft beer."
+      },
+      "price": 550,
+      "taxRate": 0.10,
+      "imageName": "beer.73643b5b.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 200,
+      "tags": [
+        "alcohol"
+      ],
+      "stationId": "0000005d-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001b5a-0000-0000-0000-000000000002",
+      "code": "7002",
+      "name": {
+        "ja": "日本酒",
+        "en": "Sake"
+      },
+      "description": {
+        "ja": "冷やか熱燗を選べます (1 合)。",
+        "en": "Chilled or hot (180 ml)."
+      },
+      "price": 600,
+      "taxRate": 0.10,
+      "imageName": "sake.01f68c74.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 190,
+      "tags": [
+        "alcohol"
+      ],
+      "stationId": "0000005d-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [
+        "00000323-0000-0000-0000-000000000002"
+      ],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001b5b-0000-0000-0000-000000000002",
+      "code": "7003",
+      "name": {
+        "ja": "ウーロン茶",
+        "en": "Oolong Tea"
+      },
+      "description": {
+        "ja": "すっきりした冷たいウーロン茶です。",
+        "en": "Refreshing iced oolong tea."
+      },
+      "price": 250,
+      "taxRate": 0.10,
+      "imageName": "oolong.22ff48af.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "tags": [],
+      "stationId": "0000005d-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    },
+    {
+      "id": "00001b5c-0000-0000-0000-000000000002",
+      "code": "7004",
+      "name": {
+        "ja": "オレンジジュース",
+        "en": "Orange Juice"
+      },
+      "description": {
+        "ja": "果汁 100% のオレンジジュースです。",
+        "en": "100% orange juice."
+      },
+      "price": 250,
+      "taxRate": 0.10,
+      "imageName": "orange-juice.5b11c762.png",
+      "badges": [],
+      "spiceLevel": 0,
+      "allergenCodes": [],
+      "calories": 110,
+      "tags": [],
+      "stationId": "0000005d-0000-0000-0000-000000000002",
+      "servedBy": "Staff",
+      "optionGroupIds": [],
+      "defaultTiming": "Now",
+      "timingSelectable": false
+    }
+  ],
+  "optionGroups": [
+    {
+      "id": "00000321-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "ごはんの量",
+        "en": "Rice"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f4b-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "普通",
+            "en": "Regular"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f4c-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "少なめ",
+            "en": "Small"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f4d-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "大盛り",
+            "en": "Large"
+          },
+          "priceDelta": 100,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000322-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "温・冷",
+        "en": "Hot or cold"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f55-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "温かい",
+            "en": "Hot"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f56-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "冷たい",
+            "en": "Cold"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    },
+    {
+      "id": "00000323-0000-0000-0000-000000000002",
+      "name": {
+        "ja": "飲み方",
+        "en": "Serving"
+      },
+      "minSelect": 1,
+      "maxSelect": 1,
+      "options": [
+        {
+          "id": "00001f5f-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "冷や",
+            "en": "Chilled"
+          },
+          "priceDelta": 0,
+          "isDefault": true,
+          "tags": [],
+          "allergenCodes": []
+        },
+        {
+          "id": "00001f60-0000-0000-0000-000000000002",
+          "name": {
+            "ja": "熱燗",
+            "en": "Hot"
+          },
+          "priceDelta": 0,
+          "isDefault": false,
+          "tags": [],
+          "allergenCodes": []
+        }
+      ]
+    }
+  ],
+  "tags": [
+    {
+      "code": "morning",
+      "name": {
+        "ja": "朝",
+        "en": "Morning"
+      }
+    },
+    {
+      "code": "lunch",
+      "name": {
+        "ja": "ランチ",
+        "en": "Lunch"
+      }
+    },
+    {
+      "code": "kids",
+      "name": {
+        "ja": "お子様",
+        "en": "Kids"
+      }
+    },
+    {
+      "code": "alcohol",
+      "name": {
+        "ja": "お酒",
+        "en": "Alcohol"
+      }
+    },
+    {
+      "code": "dessert",
+      "name": {
+        "ja": "甘味",
+        "en": "Sweets"
+      }
+    }
+  ],
+  "rules": [
+    {
+      "id": "000003df-0000-0000-0000-000000000002",
+      "kind": "Confirmation",
+      "targetTag": "alcohol",
+      "scope": "Visit",
+      "message": {
+        "ja": "20 歳以上で、車を運転されない方ですか？",
+        "en": "Are you 20 or older and not driving?"
+      }
+    },
+    {
+      "id": "000003e0-0000-0000-0000-000000000002",
+      "kind": "Availability",
+      "targetTag": "morning",
+      "dayparts": [
+        "morning"
+      ]
+    },
+    {
+      "id": "000003e1-0000-0000-0000-000000000002",
+      "kind": "Availability",
+      "targetTag": "lunch",
+      "dayparts": [
+        "lunch"
+      ]
+    },
+    {
+      "id": "000003e2-0000-0000-0000-000000000002",
+      "kind": "Availability",
+      "targetTag": "kids",
+      "requiresChildren": true
+    }
+  ],
+  "allergens": [
+    {
+      "code": "shrimp",
+      "name": {
+        "ja": "えび",
+        "en": "Shrimp"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "crab",
+      "name": {
+        "ja": "かに",
+        "en": "Crab"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "walnut",
+      "name": {
+        "ja": "くるみ",
+        "en": "Walnut"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "wheat",
+      "name": {
+        "ja": "小麦",
+        "en": "Wheat"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "buckwheat",
+      "name": {
+        "ja": "そば",
+        "en": "Buckwheat"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "egg",
+      "name": {
+        "ja": "卵",
+        "en": "Egg"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "milk",
+      "name": {
+        "ja": "乳",
+        "en": "Milk"
+      },
+      "isMandatory": true
+    },
+    {
+      "code": "peanut",
+      "name": {
+        "ja": "落花生",
+        "en": "Peanut"
+      },
+      "isMandatory": true
+    }
+  ],
+  "stations": [
+    {
+      "id": "0000005b-0000-0000-0000-000000000002",
+      "name": "厨房",
+      "sortOrder": 1
+    },
+    {
+      "id": "0000005c-0000-0000-0000-000000000002",
+      "name": "甘味",
+      "sortOrder": 2
+    },
+    {
+      "id": "0000005d-0000-0000-0000-000000000002",
+      "name": "ドリンク",
+      "sortOrder": 3
+    }
+  ],
+  "dayparts": [
+    {
+      "code": "morning",
+      "name": {
+        "ja": "朝",
+        "en": "Morning"
+      },
+      "start": "07:00",
+      "end": "10:30"
+    },
+    {
+      "code": "lunch",
+      "name": {
+        "ja": "ランチ",
+        "en": "Lunch"
+      },
+      "start": "11:00",
+      "end": "15:00"
+    }
+  ]
+}

@@ -26,6 +26,8 @@ public sealed partial class StoreSettingsPage : IDisposable
 
     private int kitchenAlertMinutes;
 
+    private int daypartGraceMinutes;
+
     private bool japanese;
 
     private bool english;
@@ -82,6 +84,7 @@ public sealed partial class StoreSettingsPage : IDisposable
         lastOrderNoticeMinutes = settings.Features.LastOrderNoticeMinutes;
         finishSeconds = settings.Features.FinishSeconds;
         kitchenAlertMinutes = settings.Features.KitchenAlertMinutes;
+        daypartGraceMinutes = settings.Features.DaypartGraceMinutes;
         japanese = settings.Languages.Contains("ja");
         english = settings.Languages.Contains("en");
         qrCode = settings.PaymentMethods.Contains(PaymentMethod.QrCode);
@@ -110,7 +113,8 @@ public sealed partial class StoreSettingsPage : IDisposable
                 LastOrderNoticeMinutes = lastOrderNoticeMinutes,
                 FinishSeconds = finishSeconds,
                 VisitOpening = visitOpening,
-                KitchenAlertMinutes = kitchenAlertMinutes
+                KitchenAlertMinutes = kitchenAlertMinutes,
+                DaypartGraceMinutes = daypartGraceMinutes
             },
             Choose(("ja", japanese), ("en", english)),
             Choose((PaymentMethod.QrCode, qrCode), (PaymentMethod.CreditCard, creditCard)),

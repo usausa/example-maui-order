@@ -215,6 +215,9 @@
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Something went wrong. Please call a staff member.</value>
   </data>
+  <data name="ErrorItemUnavailable" xml:space="preserve">
+    <value>Some items can't be ordered right now. Please check your order.</value>
+  </data>
   <data name="ErrorLastOrderPassed" xml:space="preserve">
     <value>Last orders have closed, so we cannot take your order.</value>
   </data>
@@ -353,11 +356,17 @@
   <data name="MenuCartTitle" xml:space="preserve">
     <value>Your order</value>
   </data>
+  <data name="MenuCartUnavailable" xml:space="preserve">
+    <value>Please remove the marked items.</value>
+  </data>
   <data name="MenuCheckout" xml:space="preserve">
     <value>Checkout</value>
   </data>
   <data name="MenuCheckoutInProgress" xml:space="preserve">
     <value>No more orders during checkout</value>
+  </data>
+  <data name="MenuDaypartEndsFormat" xml:space="preserve">
+    <value>{0} orders until {1}</value>
   </data>
   <data name="MenuHistory" xml:space="preserve">
     <value>History</value>
@@ -634,5 +643,20 @@
   </data>
   <data name="PaymentExpired" xml:space="preserve">
     <value>The payment has expired. Please choose a method again.</value>
+  </data>
+  <data name="UnavailableKidsMessage" xml:space="preserve">
+    <value>This item is only for parties with children.</value>
+  </data>
+  <data name="UnavailableKidsTag" xml:space="preserve">
+    <value>Kids only</value>
+  </data>
+  <data name="UnavailableTimeMessage" xml:space="preserve">
+    <value>This item is not available at this time.</value>
+  </data>
+  <data name="UnavailableTimeTag" xml:space="preserve">
+    <value>Out of hours</value>
+  </data>
+  <data name="UnavailableTitle" xml:space="preserve">
+    <value>Not available</value>
   </data>
 </root>

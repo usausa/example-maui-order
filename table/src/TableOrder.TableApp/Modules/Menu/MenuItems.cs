@@ -1,21 +1,24 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-// カテゴリのタブ (選んでいるタブを主色の面で示す)
+// カテゴリのタブ (選んでいるタブを主色の面で示す)。カードは出せる条件を満たさないものも含めて持ち、出すときに絞る
 public sealed partial class CategoryTab : ObservableObject
 {
     public Guid Id { get; }
 
     public string Name { get; }
 
+    public IReadOnlyList<string> Tags { get; }
+
     public IReadOnlyList<MenuCard> Cards { get; }
 
     [ObservableProperty]
     public partial bool IsSelected { get; set; }
 
-    public CategoryTab(Guid id, string name, IReadOnlyList<MenuCard> cards)
+    public CategoryTab(Guid id, string name, IReadOnlyList<string> tags, IReadOnlyList<MenuCard> cards)
     {
         Id = id;
         Name = name;
+        Tags = tags;
         Cards = cards;
     }
 }
@@ -30,6 +33,8 @@ public sealed partial class MenuCard : ObservableObject
     public string Name { get; }
 
     public string PriceText { get; }
+
+    public IReadOnlyList<string> Tags { get; }
 
     // 保存した写真のファイル (保存していなければ null で、代わりにチェーンのロゴか記号を出す)
     public string? ImagePath { get; }
@@ -56,6 +61,7 @@ public sealed partial class MenuCard : ObservableObject
         Id = product.Id;
         Name = product.Name;
         PriceText = ViewHelper.Price(product.Price);
+        Tags = product.Tags;
         ImagePath = imagePath;
         LogoPath = logoPath;
         BadgeText = product.Badges.Count > 0 ? ViewHelper.Name(product.Badges[0]) : string.Empty;
@@ -69,7 +75,7 @@ public sealed partial class MenuCard : ObservableObject
     }
 }
 
-// 注文リストの行 (数量の増減で金額を替える)
+// 注文リストの行 (数量の増減で金額を替える)。出せる条件を満たさなくなった行には印を出す
 public sealed partial class CartLineItem : ObservableObject
 {
     public CartLine Line { get; private set; }
@@ -90,6 +96,13 @@ public sealed partial class CartLineItem : ObservableObject
     [ObservableProperty]
     public partial string AmountText { get; set; } = string.Empty;
 
+    [ObservableProperty]
+    public partial bool IsUnavailable { get; set; }
+
+    // 時間外、お子様のみ
+    [ObservableProperty]
+    public partial string UnavailableText { get; set; } = string.Empty;
+
     public CartLineItem(CartLine line, string name, string optionText)
     {
         Line = line;
@@ -103,5 +116,11 @@ public sealed partial class CartLineItem : ObservableObject
         Line = line;
         Quantity = line.Quantity;
         AmountText = ViewHelper.Price(line.Amount);
+    }
+
+    public void UpdateAvailability(UnavailableReason reason)
+    {
+        IsUnavailable = reason != UnavailableReason.None;
+        UnavailableText = ViewHelper.UnavailableTag(reason);
     }
 }

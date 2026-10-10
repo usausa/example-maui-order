@@ -39,6 +39,9 @@ else if (version is not null)
             <MudItem xs="12" sm="6">
                 <MudNumericField T="int" @bind-Value="kitchenAlertMinutes" Label="キッチン端末で、チケットができてから何分で注意の色にするか (0 は替えない)" Min="0" Max="120" />
             </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField T="int" @bind-Value="daypartGraceMinutes" Label="時間帯 (ランチなど) の終わりから、何分までに届いた注文を受けるか (送ったあとの通信の遅れ。0 は受けない)" Min="0" Max="10" />
+            </MudItem>
         </MudGrid>
     </MudPaper>
 

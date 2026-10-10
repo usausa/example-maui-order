@@ -18,6 +18,12 @@ public sealed class MenuCatalog
 
     public IReadOnlyDictionary<Guid, MenuResponseRule> Rules { get; }
 
+    // 出せる条件のルール (Availability)
+    public IReadOnlyList<MenuResponseRule> AvailabilityRules { get; }
+
+    // 時間帯の始まりと終わり (コードで引く。時刻を読めない時間帯は入れない)
+    public IReadOnlyDictionary<string, (TimeOnly Start, TimeOnly End)> Periods { get; }
+
     public MenuCatalog(Guid publicationId, MenuResponse menu)
     {
         PublicationId = publicationId;
@@ -47,9 +53,24 @@ public sealed class MenuCatalog
             rules.TryAdd(rule.Id, rule);
         }
 
+        var periods = new Dictionary<string, (TimeOnly, TimeOnly)>(StringComparer.Ordinal);
+        foreach (var daypart in menu.Dayparts)
+        {
+            if (StoreHours.TryParse(daypart.Start, out var start) && StoreHours.TryParse(daypart.End, out var end))
+            {
+                periods.TryAdd(daypart.Code, (start, end));
+            }
+        }
+
         Items = items;
         OptionGroups = groups;
         Options = options;
         Rules = rules;
+        AvailabilityRules = menu.Rules.Where(static x => x.Kind == MenuRuleKind.Availability).ToList();
+        Periods = periods;
     }
+
+    // ルールの時間帯。ない時間帯は空の時間帯 (どの時刻も外) にして、指したものを出さない (誤った公開の内容で、時間帯の品をいつでも出さない)
+    public IEnumerable<(TimeOnly Start, TimeOnly End)> PeriodsOf(MenuResponseRule rule) =>
+        (rule.Dayparts ?? []).Select(x => Periods.TryGetValue(x, out var period) ? period : (TimeOnly.MinValue, TimeOnly.MinValue));
 }

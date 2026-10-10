@@ -543,6 +543,19 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
+    <!-- 出せる条件を満たさなくなった行の印 (時間外、お子様のみ) -->
+    <Style x:Key="CartUnavailableTagBorder"
+           TargetType="Border"
+           BasedOn="{StaticResource CartTagBorder}">
+        <Setter Property="BackgroundColor" Value="{DynamicResource ErrorColor}" />
+    </Style>
+
+    <Style x:Key="UnavailableTagLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource TagLabel}">
+        <Setter Property="TextColor" Value="{DynamicResource OnErrorColor}" />
+    </Style>
+
     <Style x:Key="CartStepperGrid"
            TargetType="Grid">
         <Setter Property="HeightRequest" Value="64" />

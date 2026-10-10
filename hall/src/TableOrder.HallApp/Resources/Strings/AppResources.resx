@@ -455,6 +455,24 @@
   <data name="OrderConfirmRuleFallback" xml:space="preserve">
     <value>この品はお客様への確認が必要です</value>
   </data>
+  <data name="OrderUnavailableTitle" xml:space="preserve">
+    <value>入れられません</value>
+  </data>
+  <data name="OrderUnavailableTimeMessage" xml:space="preserve">
+    <value>今の時間は出せない品です</value>
+  </data>
+  <data name="OrderUnavailableKidsMessage" xml:space="preserve">
+    <value>お子様のいる来店だけに出せる品です</value>
+  </data>
+  <data name="OrderUnavailableTimeTag" xml:space="preserve">
+    <value>時間外</value>
+  </data>
+  <data name="OrderUnavailableKidsTag" xml:space="preserve">
+    <value>お子様のみ</value>
+  </data>
+  <data name="OrderCartUnavailable" xml:space="preserve">
+    <value>今は出せない品がカートにあります。外してから送ってください</value>
+  </data>
   <data name="ItemAdd" xml:space="preserve">
     <value>カートに入れる</value>
   </data>
@@ -619,6 +637,9 @@
   </data>
   <data name="ErrorItemSoldOut" xml:space="preserve">
     <value>品切れの品があります</value>
+  </data>
+  <data name="ErrorItemUnavailable" xml:space="preserve">
+    <value>時間外か、お子様のいない来店では出せない品があります</value>
   </data>
   <data name="ErrorStockInsufficient" xml:space="preserve">
     <value>残りの数が足りない品があります</value>

@@ -351,21 +351,27 @@
                                         <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                     </Grid>
 
-                                    <!-- after meal / options / amount -->
+                                    <!-- unavailable / after meal / options / amount -->
                                     <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2"
                                           Style="{StaticResource CartLineDetailGrid}"
-                                          ColumnDefinitions="Auto,*,Auto"
+                                          ColumnDefinitions="Auto,Auto,*,Auto"
                                           InputTransparent="True">
                                         <Border Grid.Column="0"
+                                                Style="{StaticResource CartUnavailableTagBorder}"
+                                                IsVisible="{Binding IsUnavailable}">
+                                            <Label Style="{StaticResource UnavailableTagLabel}"
+                                                   Text="{Binding UnavailableText}" />
+                                        </Border>
+                                        <Border Grid.Column="1"
                                                 Style="{StaticResource CartTagBorder}"
                                                 IsVisible="{Binding IsAfterMeal}">
                                             <Label Style="{StaticResource TagLabel}"
                                                    Text="{x:Static strings:AppResources.AfterMealTag}" />
                                         </Border>
-                                        <Label Grid.Column="1"
+                                        <Label Grid.Column="2"
                                                Style="{StaticResource CartLineOptionLabel}"
                                                Text="{Binding OptionText}" />
-                                        <Label Grid.Column="2"
+                                        <Label Grid.Column="3"
                                                Style="{StaticResource CartAmountLabel}"
                                                Text="{Binding AmountText}" />
                                     </Grid>
@@ -379,7 +385,7 @@
                 <BoxView Grid.Row="3"
                          Style="{StaticResource HorizontalRule}" />
 
-                <!-- order notice (会計中、注文の一時停止、ラストオーダー。注文できない間は失敗の色にする) -->
+                <!-- order notice (会計中、注文の一時停止、ラストオーダー、今は注文できない品、時間帯の終わり。注文できない間は失敗の色にする) -->
                 <Grid Grid.Row="4"
                       Style="{StaticResource OrderNoticeGrid}"
                       ColumnDefinitions="Auto,*"

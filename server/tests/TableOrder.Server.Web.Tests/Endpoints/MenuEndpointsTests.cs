@@ -34,6 +34,30 @@ public sealed class MenuEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(3, menu.Stations.Count);
     }
 
+    // メニューはテナント (店舗) ごと。検証用のテナントは和食のメニューで、時間帯 (朝、ランチ) と出せる条件のルールを持ち、写真はサンプルの画像にある
+    [Fact]
+    public async Task MenuIsSeparatedByTenant()
+    {
+        // Arrange
+        using var demo = new TestDevice(factory.CreateClient());
+        await demo.SignInAsync(SampleData.DemoTableCode);
+        using var test = new TestDevice(factory.CreateClient());
+        await test.SignInAsync(SampleData.TestTableCode);
+
+        // Act
+        var demoMenu = await demo.GetAsync<MenuResponse>("/api/v1/menu");
+        var testMenu = await test.GetAsync<MenuResponse>("/api/v1/menu");
+
+        // Assert
+        Assert.Empty(demoMenu.Dayparts);
+        Assert.Equal(["kids"], demoMenu.Rules.Where(static x => x.Kind == MenuRuleKind.Availability).Select(static x => x.TargetTag));
+        Assert.NotEqual(demoMenu.MenuVersion, testMenu.MenuVersion);
+        Assert.Empty(testMenu.Items.Select(static x => x.Id).Intersect(demoMenu.Items.Select(static x => x.Id)));
+        Assert.Equal(["morning", "lunch"], testMenu.Dayparts.Select(static x => x.Code));
+        Assert.Equal(["morning", "lunch", "kids"], testMenu.Rules.Where(static x => x.Kind == MenuRuleKind.Availability).Select(static x => x.TargetTag));
+        Assert.All(testMenu.Items, static x => Assert.True(File.Exists(Path.Combine("Assets", "Images", x.ImageName!))));
+    }
+
     // 端末の持っているメニューと同じなら 304
     [Fact]
     public async Task MenuReturnsNotModifiedForSameVersion()

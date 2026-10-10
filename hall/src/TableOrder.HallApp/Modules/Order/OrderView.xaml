@@ -130,7 +130,7 @@
                                        Text="{Binding Name}">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label"
-                                                     Binding="{Binding IsSoldOut}"
+                                                     Binding="{Binding IsBlocked}"
                                                      Value="True">
                                             <Setter Property="TextColor" Value="{DynamicResource OnDisabledColor}" />
                                         </DataTrigger>
@@ -149,7 +149,7 @@
                                        Text="{Binding StatusText}">
                                     <Label.Triggers>
                                         <DataTrigger TargetType="Label"
-                                                     Binding="{Binding IsSoldOut}"
+                                                     Binding="{Binding IsBlocked}"
                                                      Value="True">
                                             <Setter Property="TextColor" Value="{DynamicResource ErrorColor}" />
                                         </DataTrigger>

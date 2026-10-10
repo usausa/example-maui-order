@@ -937,6 +937,12 @@
       "targetTag": "one-per-guest",
       "scope": "Guest",
       "max": 1
+    },
+    {
+      "id": "000003e2-0000-0000-0000-000000000000",
+      "kind": "Availability",
+      "targetTag": "kids",
+      "requiresChildren": true
     }
   ],
   "allergens": [

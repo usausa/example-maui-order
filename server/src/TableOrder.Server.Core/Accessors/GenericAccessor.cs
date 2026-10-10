@@ -9,8 +9,9 @@ public sealed partial class GenericAccessor
     [Execute]
     public partial ValueTask<int> ExecuteSchemaAsync(DbConnection con, string sql, CancellationToken cancellationToken);
 
-    // サンプルのデータの SQL を実行する。@now を実行の時刻、@menuVersion と @menuContent をサンプルのメニューに束縛する
+    // サンプルのデータの SQL を実行する。@now を実行の時刻、@menuVersion と @menuContent をサンプルのメニュー、
+    // @washokuMenuVersion と @washokuMenuContent を検証用のテナントの和食のメニューに束縛する
     [DirectSql]
     [Execute]
-    public partial ValueTask<int> ExecuteScriptAsync(DbTransaction tx, string sql, DateTimeOffset now, string menuVersion, string menuContent, CancellationToken cancellationToken);
+    public partial ValueTask<int> ExecuteScriptAsync(DbTransaction tx, string sql, DateTimeOffset now, string menuVersion, string menuContent, string washokuMenuVersion, string washokuMenuContent, CancellationToken cancellationToken);
 }
