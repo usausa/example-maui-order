@@ -26,7 +26,10 @@ paths:
 - 状態の色の使い分けもホール端末にそろえる (品切れは失敗の色、残りの数と遅れは注意の色)
 - 角丸・影・グラデーション・すりガラスを使わない。記号は Material Icons のグリフ (`Components/Icons`) を `class="icon"` で出し、絵文字を使わない
 - 横に送る帯 (タブ) は指でなぞって送り、スクロールバーを出さない (`scrollbar-width: none`。選んだタブの下線に重なる)
-- 画面の文言は `Resources/Strings/AppResources.resx` (日本語) と `.en.resx` (英語) に置いて `AppResources.Xxx` で引き、`AppResources.Designer.cs` も合わせる。値を埋め込む文言は `ViewHelper.Format`、サーバの文字は `ViewHelper.Text` で選ぶ
+- 画面の文言は `Resources/Strings/AppResources.resx` (日本語) と `.en.resx` (英語) に置いて `AppResources.Xxx` で引き、`AppResources.Designer.cs` も合わせる。値を埋め込む文言は `ViewHelper.Format`、サーバの文字 (店舗の名前) は `ViewHelper.Text` で選ぶ
+- メニューの名前 (料理、オプション、カテゴリ) と持ち場の名前は、ブラウザの言語によらずサーバが返す日本語のまま出す (チケットと品切れの画面で同じ名前にする)
+- 入力の桁 (ペアリングコード、残りの数) は共有の `Length` から求め、数を直接書かない (サーバと端末のアプリと同じ値を使う)
+- 使っていないスタイルを `app.css` に残さない
 
 ## ブラウザ
 

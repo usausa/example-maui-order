@@ -96,6 +96,25 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal([line.Id.ToString()], keys);
     }
 
+    // 明細の一覧に null があれば、入力の誤りとして受けない (500 にしない)
+    [Fact]
+    public async Task NullLineIsInvalid()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        var visit = await factory.OpenVisitAsync(store, 0);
+        var menu = await TestMenu.LoadAsync(table);
+        var order = menu.Order(menu.Line(TestMenu.Salad));
+
+        // Act
+        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", new { order.Id, order.MenuVersion, Lines = new OrderCreateRequestLine?[] { null } });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(response));
+    }
+
     // 必ず選ぶオプションがなければ受けない
     [Fact]
     public async Task MissingRequiredOptionIsInvalid()

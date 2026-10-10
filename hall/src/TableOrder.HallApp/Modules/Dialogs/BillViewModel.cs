@@ -53,6 +53,17 @@ public sealed partial class BillViewModel : AppDialogViewModelBase, IPopupInitia
     [ObservableProperty]
     public partial bool IsPaying { get; set; }
 
+    // 会計を取りやめられる (払い終えた支払のない会計中)
+    [ObservableProperty]
+    public partial bool CanCancelCheckout { get; set; }
+
+    // 払い終えた支払があるので取りやめられない (サーバは会計中のまま返す)。取りやめを出さずに理由を出し、戻るを幅いっぱいにする
+    [ObservableProperty]
+    public partial bool IsCancelBlocked { get; set; }
+
+    [ObservableProperty]
+    public partial int BackColumnSpan { get; set; } = 1;
+
     public IObserveCommand StartCommand { get; }
 
     public IObserveCommand CancelCheckoutCommand { get; }
@@ -88,5 +99,8 @@ public sealed partial class BillViewModel : AppDialogViewModelBase, IPopupInitia
         BalanceText = ViewHelper.Price(bill.Balance);
         HasUnserved = bill.HasUnservedLines;
         IsPaying = parameter.IsPaying;
+        CanCancelCheckout = IsPaying && !HasPaid;
+        IsCancelBlocked = IsPaying && HasPaid;
+        BackColumnSpan = IsCancelBlocked ? 2 : 1;
     }
 }

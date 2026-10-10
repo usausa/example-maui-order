@@ -61,8 +61,6 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
     [ObservableProperty]
     public partial NetworkState NetworkState { get; private set; }
 
-    public int WiFiSignalStrength { get; private set; }
-
     public DeviceState(
         ILogger<DeviceState> log,
         DeviceInformation deviceInformation)
@@ -85,17 +83,12 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
         }
 
         deviceInformation.NetworkChanged += OnNetworkChanged;
-
-        UpdateWiFi(deviceInformation.WiFi);
-
-        deviceInformation.WiFiChanged += OnWiFiChanged;
     }
 
     public void Dispose()
     {
         deviceInformation.BatteryChanged -= OnBatteryChanged;
         deviceInformation.NetworkChanged -= OnNetworkChanged;
-        deviceInformation.WiFiChanged -= OnWiFiChanged;
     }
 
     private void OnBatteryChanged(object? sender, EventArgs args)
@@ -112,12 +105,6 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
         {
             MainThread.BeginInvokeOnMainThread(() => UpdateConnectivity(network));
         }
-    }
-
-    private void OnWiFiChanged(object? sender, EventArgs args)
-    {
-        var status = deviceInformation.WiFi;
-        MainThread.BeginInvokeOnMainThread(() => UpdateWiFi(status));
     }
 
     // ------------------------------------------------------------
@@ -167,10 +154,5 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
         NetworkState = access.IsConnected()
             ? (profile.IsHighSpeed() ? NetworkState.ConnectedHighSpeed : NetworkState.Connected)
             : NetworkState.Disconnected;
-    }
-
-    private void UpdateWiFi(WiFiStatus? status)
-    {
-        WiFiSignalStrength = status?.SignalStrength ?? 0;
     }
 }

@@ -17,7 +17,7 @@
             <MudTextField T="string" @bind-Value="addName" Label="名前" MaxLength="@AdminUserService.MaxNameLength" />
         </MudItem>
         <MudItem xs="12" sm="2" Class="d-flex align-center">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">足す</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="AddAsync">足す</MudButton>
         </MudItem>
     </MudGrid>
     @if (issued is not null)

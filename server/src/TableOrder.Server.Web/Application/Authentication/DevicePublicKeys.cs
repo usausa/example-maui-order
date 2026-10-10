@@ -35,12 +35,13 @@ public static class DevicePublicKeys
             return false;
         }
 
+        // 座標は読んだ値から書き直す (同じ鍵を同じ文字列で持ち、登録し直した端末を同じ鍵で引けるように)
         jwk = JsonSerializer.Serialize(new Dictionary<string, string>
         {
             ["kty"] = key.Kty,
             ["crv"] = key.Crv,
-            ["x"] = key.X,
-            ["y"] = key.Y
+            ["x"] = Base64UrlEncoder.Encode(x),
+            ["y"] = Base64UrlEncoder.Encode(y)
         });
         return true;
     }

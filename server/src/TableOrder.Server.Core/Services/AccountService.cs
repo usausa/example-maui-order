@@ -68,7 +68,7 @@ public sealed class AccountService
     // Update
     //--------------------------------------------------------------------------------
 
-    // 資格情報 (パスワード、印、間違えた回数、多要素) を書く。読んだときの版でなければ書かずに false を返す
+    // 資格情報 (パスワード、印、多要素) を書く。読んだときの版でなければ書かずに false を返す
     // 止めた利用者の資格情報は書かない (止める前のサインインのまま、パスワードを替えて Cookie を出し直させない)
     public async ValueTask<bool> UpdateCredentialAsync(AdminUserEntity user, CancellationToken cancellationToken)
     {
@@ -78,8 +78,6 @@ public sealed class AccountService
             user.PasswordHash,
             user.MustChangePassword,
             user.SecurityStamp,
-            user.AccessFailedCount,
-            user.LockoutEnd,
             user.TwoFactorEnabled,
             user.AuthenticatorKey,
             user.RecoveryCodes,
@@ -96,19 +94,34 @@ public sealed class AccountService
         return true;
     }
 
+    // 間違えた回数と止める時刻は、資格情報の版を見ずにすぐに書く
+    // (同時に間違えたサインインを数え漏らさず、止めたことをほかの書き込みが消さないように)
+    public ValueTask<int> AddAccessFailedCountAsync(Guid id, CancellationToken cancellationToken) =>
+        accountAccessor.AddAccessFailedCountAsync(id, cancellationToken);
+
+    public ValueTask<int> GetAccessFailedCountAsync(Guid id, CancellationToken cancellationToken) =>
+        accountAccessor.QueryAccessFailedCountAsync(id, cancellationToken);
+
+    public async ValueTask ResetAccessFailedCountAsync(Guid id, CancellationToken cancellationToken) =>
+        await accountAccessor.UpdateAccessFailedCountAsync(id, 0, cancellationToken);
+
+    public async ValueTask SetLockoutEndAsync(Guid id, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken) =>
+        await accountAccessor.UpdateLockoutEndAsync(id, lockoutEnd, cancellationToken);
+
     public async ValueTask RecordSignInAsync(Guid id, CancellationToken cancellationToken) =>
         await accountAccessor.UpdateSignedInAsync(id, timeProvider.GetUtcNow(), cancellationToken);
 
     // 初めの運営者 (運営者がひとりもいないときに、起動のときに設定から作る。次のサインインでパスワードを替えさせる)
-    public async ValueTask<bool> CreateInitialOperatorAsync(string email, string normalizedEmail, string name, string passwordHash, CancellationToken cancellationToken)
+    public async ValueTask<Guid?> CreateInitialOperatorAsync(string email, string normalizedEmail, string name, string passwordHash, CancellationToken cancellationToken)
     {
         if (await HasOperatorAsync(cancellationToken))
         {
-            return false;
+            return null;
         }
 
+        var id = Guid.CreateVersion7();
         await accountAccessor.InsertAsync(
-            Guid.CreateVersion7(),
+            id,
             null,
             AdminRole.Operator,
             email,
@@ -119,6 +132,6 @@ public sealed class AccountService
             Guid.NewGuid().ToString("N"),
             timeProvider.GetUtcNow(),
             cancellationToken);
-        return true;
+        return id;
     }
 }

@@ -20,24 +20,24 @@ public sealed class TableSetupService
 
     private readonly IDialect dialect;
 
-    private readonly EventService eventService;
-
     private readonly StoreAccessor storeAccessor;
 
     private readonly SettingsAccessor settingsAccessor;
 
+    private readonly EventService eventService;
+
     public TableSetupService(
         ServiceContextProvider contextProvider,
         IDialect dialect,
-        EventService eventService,
         StoreAccessor storeAccessor,
-        SettingsAccessor settingsAccessor)
+        SettingsAccessor settingsAccessor,
+        EventService eventService)
     {
         this.contextProvider = contextProvider;
         this.dialect = dialect;
-        this.eventService = eventService;
         this.storeAccessor = storeAccessor;
         this.settingsAccessor = settingsAccessor;
+        this.eventService = eventService;
     }
 
     //--------------------------------------------------------------------------------
@@ -85,7 +85,7 @@ public sealed class TableSetupService
         return await WriteAsync(tenantId, storeId, async transaction =>
             await storeAccessor.UpdateTableAsync(transaction.Tx, tenantId, storeId, tableId, input.Name.Trim(), NullIfEmpty(input.Area), input.Capacity, version, context.Now, cancellationToken) > 0
                 ? null
-                : new ServiceError(ErrorCodes.VersionMismatch),
+                : await UpdateFailedAsync(transaction.Tx, tenantId, storeId, tableId, cancellationToken),
             cancellationToken);
     }
 
@@ -150,7 +150,7 @@ public sealed class TableSetupService
 
             return await storeAccessor.UpdateTableActiveAsync(transaction.Tx, tenantId, storeId, tableId, isActive, version, context.Now, cancellationToken) > 0
                 ? null
-                : new ServiceError(ErrorCodes.VersionMismatch);
+                : await UpdateFailedAsync(transaction.Tx, tenantId, storeId, tableId, cancellationToken);
         }, cancellationToken);
     }
 
@@ -183,6 +183,12 @@ public sealed class TableSetupService
             return ServiceError.Validation("name", "同じ名前のテーブルがあります");
         }
     }
+
+    // 替えられなかったときに、店舗のテーブルでなければ NOT_FOUND (ほかの店舗の id も含む)、店舗のテーブルなら版の違い
+    private async ValueTask<ServiceError> UpdateFailedAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid tableId, CancellationToken cancellationToken) =>
+        (await storeAccessor.QueryTableSetupListAsync(tx, tenantId, storeId, cancellationToken)).Exists(x => x.Id == tableId)
+            ? new ServiceError(ErrorCodes.VersionMismatch)
+            : ServiceError.NotFound;
 
     private static ServiceError? Validate(TableInput input)
     {

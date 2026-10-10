@@ -8,7 +8,7 @@ public sealed partial class DeviceAccessor
     [QueryFirst]
     public partial ValueTask<DeviceEntity?> QueryAsync(Guid tenantId, Guid id, CancellationToken cancellationToken);
 
-    // 書き込みの中で読む (管理画面で替える端末の種類と店舗を確かめる)
+    // 書き込みの中で読む (無効にできなかった端末が、ほかで替えたものか、ないものかを見分ける)
     [QueryFirst]
     public partial ValueTask<DeviceEntity?> QueryAsync(DbTransaction tx, Guid tenantId, Guid id, CancellationToken cancellationToken);
 
@@ -40,6 +40,10 @@ public sealed partial class DeviceAccessor
     // 持ち場を替えるときに、前の持ち場を消す
     [Execute]
     public partial ValueTask<int> DeleteStationAsync(DbTransaction tx, Guid tenantId, Guid deviceId, CancellationToken cancellationToken);
+
+    // 登録と同じ書き込みで、はじめの状態 (アプリの版) を書く
+    [Execute]
+    public partial ValueTask<int> UpsertStatusAsync(DbTransaction tx, Guid tenantId, Guid deviceId, string? appVersion, decimal? batteryLevel, bool? isCharging, DateTimeOffset lastSeenAt, CancellationToken cancellationToken);
 
     // 状態の報告。アプリの版は送られたときだけ替える
     [Execute]

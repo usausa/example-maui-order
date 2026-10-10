@@ -89,17 +89,12 @@ public sealed partial class DevicePage : IDisposable
 
     // 店舗を選び直したら、出したコードとトークンと選んだ置き場所を消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
+        _ = ReloadAsync(() =>
         {
             issued = null;
             issuedToken = null;
             SelectIssueKind(issueKind);
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
+            return LoadAsync();
         });
 
     // 読み直すと変更の欄を閉じる (出したペアリングコードと登録トークンは、端末と EMM に入れ終えるまで出しておく)
@@ -133,38 +128,40 @@ public sealed partial class DevicePage : IDisposable
         issueStationIds = [];
     }
 
-    private async Task IssueAsync()
-    {
-        var result = await EnrollmentService.IssuePairingCodeAsync(
-            issueKind,
-            issueKind == DeviceKind.Table ? issueTableId : null,
-            issueKind == DeviceKind.Kitchen ? issueStationIds.ToList() : [],
-            CancellationToken.None);
-        if (!result.Succeeded)
+    private Task IssueAsync() =>
+        RunOnceAsync(async () =>
         {
-            Snackbar.Add(ErrorMessage(result.Error), Severity.Error);
-            return;
-        }
+            var result = await EnrollmentService.IssuePairingCodeAsync(
+                issueKind,
+                issueKind == DeviceKind.Table ? issueTableId : null,
+                issueKind == DeviceKind.Kitchen ? issueStationIds.ToList() : [],
+                CancellationToken.None);
+            if (!result.Succeeded)
+            {
+                Snackbar.Add(ErrorMessage(result.Error), Severity.Error);
+                return;
+            }
 
-        issued = result.Value;
-    }
+            issued = result.Value;
+        });
 
     //--------------------------------------------------------------------------------
     // Enrollment token
     //--------------------------------------------------------------------------------
 
-    private async Task IssueTokenAsync()
-    {
-        var result = await EnrollmentService.IssueEnrollmentTokenAsync(tokenKind, tokenMaxUses, tokenDays, CancellationToken.None);
-        if (!result.Succeeded)
+    private Task IssueTokenAsync() =>
+        RunOnceAsync(async () =>
         {
-            Snackbar.Add(ErrorMessage(result.Error), Severity.Error);
-            return;
-        }
+            var result = await EnrollmentService.IssueEnrollmentTokenAsync(tokenKind, tokenMaxUses, tokenDays, CancellationToken.None);
+            if (!result.Succeeded)
+            {
+                Snackbar.Add(ErrorMessage(result.Error), Severity.Error);
+                return;
+            }
 
-        issuedToken = result.Value;
-        tokens = await EnrollmentService.GetTokenListAsync(CancellationToken.None);
-    }
+            issuedToken = result.Value;
+            tokens = await EnrollmentService.GetTokenListAsync(CancellationToken.None);
+        });
 
     // 取り消すと、それからの登録を断る (登録した端末はそのまま)。出したばかりのトークンなら、見せている値も消す
     private async Task RevokeTokenAsync(DeviceEnrollmentEntity token)
@@ -308,10 +305,5 @@ public sealed partial class DevicePage : IDisposable
         StoreHours.LocalDateTime(value, timeZone).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
 
     private static string ErrorMessage(ServiceError error) =>
-        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ?? error.ErrorCode switch
-        {
-            ErrorCodes.NotFound => "見つかりません。読み直してください",
-            ErrorCodes.VersionMismatch => "ほかで替えられたか、無効にされています。読み直してください",
-            _ => error.ErrorCode
-        };
+        AdminNames.ErrorMessage(error, static code => code == ErrorCodes.VersionMismatch ? "ほかで替えられたか、無効にされています。読み直してください" : null);
 }

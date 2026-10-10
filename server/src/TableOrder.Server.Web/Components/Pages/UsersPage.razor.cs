@@ -12,10 +12,9 @@ using TableOrder.Server.Web.Application.Context;
 // 仮のパスワードはこの画面で作ってハッシュにし、平文は出した直後に一度だけ見せる
 public sealed partial class UsersPage : IDisposable
 {
-    private static readonly AdminRole[] Roles = [AdminRole.TenantAdmin, AdminRole.StoreStaff];
+    private const string UtcName = "UTC";
 
-    // 出した仮のパスワード (この画面を離れるまで見せる)
-    private sealed record IssuedPassword(string Email, string Password);
+    private static readonly AdminRole[] Roles = [AdminRole.TenantAdmin, AdminRole.StoreStaff];
 
     private List<AdminUserListItem> users = [];
 
@@ -79,17 +78,13 @@ public sealed partial class UsersPage : IDisposable
 
     public void Dispose() => Selection.Changed -= OnSelectionChanged;
 
-    // テナントを選び直したら、出した仮のパスワードを消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
+    // テナントを選び直したら、出した仮のパスワードと前のテナントの店舗を指す入力 (受け持つ店舗) を消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
+        _ = ReloadAsync(() =>
         {
             issued = null;
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
+            addStoreIds = [];
+            return LoadAsync();
         });
 
     private async Task LoadAsync()
@@ -110,25 +105,26 @@ public sealed partial class UsersPage : IDisposable
     // Add
     //--------------------------------------------------------------------------------
 
-    private async Task AddAsync()
-    {
-        var password = TemporaryPassword.Create();
-        var result = await AdminUserService.AddAsync(
-            new AdminUserInput(addEmail, UserManager.NormalizeName(addEmail.Trim()), addName, addRole, addStoreIds.ToList()),
-            UserManager.PasswordHasher.HashPassword(new AdminUserEntity(), password),
-            CancellationToken.None);
-        if (!result.Succeeded)
+    private Task AddAsync() =>
+        RunOnceAsync(async () =>
         {
-            Snackbar.Add(AdminNames.ErrorMessage(result.Error), Severity.Error);
-            return;
-        }
+            var password = TemporaryPassword.Create();
+            var result = await AdminUserService.AddAsync(
+                new AdminUserInput(addEmail, UserManager.NormalizeName(addEmail.Trim()), addName, addRole, addStoreIds.ToList()),
+                UserManager.PasswordHasher.HashPassword(new AdminUserEntity(), password),
+                CancellationToken.None);
+            if (!result.Succeeded)
+            {
+                Snackbar.Add(AdminNames.ErrorMessage(result.Error), Severity.Error);
+                return;
+            }
 
-        issued = new IssuedPassword(result.Value.Email, password);
-        addEmail = string.Empty;
-        addName = string.Empty;
-        addStoreIds = [];
-        await LoadAsync();
-    }
+            issued = new IssuedPassword(result.Value.Email, password);
+            addEmail = string.Empty;
+            addName = string.Empty;
+            addStoreIds = [];
+            await LoadAsync();
+        });
 
     //--------------------------------------------------------------------------------
     // Edit
@@ -167,7 +163,7 @@ public sealed partial class UsersPage : IDisposable
     private async Task ResetPasswordAsync()
     {
         if (editing is not { } item ||
-            !await ConfirmAsync("仮のパスワードを出し直す", $"{item.User.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
+            !await DialogService.ConfirmAsync("仮のパスワードを出し直す", $"{item.User.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
         {
             return;
         }
@@ -187,7 +183,7 @@ public sealed partial class UsersPage : IDisposable
     private async Task ResetTwoFactorAsync()
     {
         if (editing is not { } item ||
-            !await ConfirmAsync("多要素を外す", $"{item.User.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、利用者が登録し直します。", "外す"))
+            !await DialogService.ConfirmAsync("多要素を外す", $"{item.User.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、利用者が登録し直します。", "外す"))
         {
             return;
         }
@@ -210,7 +206,7 @@ public sealed partial class UsersPage : IDisposable
             return;
         }
 
-        if (!isActive && !await ConfirmAsync("利用者を止める", $"{item.User.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
+        if (!isActive && !await DialogService.ConfirmAsync("利用者を止める", $"{item.User.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
         {
             return;
         }
@@ -226,9 +222,6 @@ public sealed partial class UsersPage : IDisposable
         await LoadAsync();
     }
 
-    private async Task<bool> ConfirmAsync(string title, string message, string yesText) =>
-        await DialogService.ShowMessageBoxAsync(title, message, yesText: yesText, cancelText: "やめる") == true;
-
     //--------------------------------------------------------------------------------
     // Display
     //--------------------------------------------------------------------------------
@@ -239,13 +232,12 @@ public sealed partial class UsersPage : IDisposable
     private string StoresText(AdminUserListItem item) =>
         item.User.Role == AdminRole.StoreStaff ? String.Join("、", item.StoreIds.Select(StoreName)) : "すべて";
 
-    private string StatusText(AdminUserSummaryEntity user) =>
-        !user.IsActive ? "止めた" :
-        user.LockoutEnd > TimeProvider.GetUtcNow() ? "間違えたため止めている" :
-        user.MustChangePassword ? "仮のパスワード" :
-        "使える";
+    private string StatusText(AdminUserSummaryEntity user) => AdminNames.UserStatusName(user, TimeProvider.GetUtcNow());
 
-    // テナントの店舗の現地の時刻で出す (店舗がなければ UTC)
+    // 時刻を出すタイムゾーン。テナントの店舗が 1 つのタイムゾーンにそろっていればそれ、そろっていない (店舗がない) なら UTC にし、見出しに出す
+    private string TimeZoneName =>
+        stores.Select(static x => x.TimeZone).Distinct().ToList() is [var single] ? single : UtcName;
+
     private string FormatTime(DateTimeOffset value) =>
-        (stores.Count > 0 ? StoreHours.LocalDateTime(value, stores[0].TimeZone) : value.UtcDateTime).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
+        (TimeZoneName == UtcName ? value.UtcDateTime : StoreHours.LocalDateTime(value, TimeZoneName)).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
 }

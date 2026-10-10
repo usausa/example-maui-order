@@ -596,5 +596,11 @@ namespace TableOrder.ReceptionApp.Resources.Strings {
                 return ResourceManager.GetString("GuideCountdownFormat", resourceCulture);
             }
         }
+
+        internal static string StandbyBeforeOpenFormat {
+            get {
+                return ResourceManager.GetString("StandbyBeforeOpenFormat", resourceCulture);
+            }
+        }
     }
 }

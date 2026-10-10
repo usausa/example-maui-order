@@ -38,7 +38,7 @@
 
     private static readonly IComponentRenderMode InteractiveServerWithoutPrerender = new InteractiveServerRenderMode(prerender: false);
 
-    // Static SSR for pages with [ExcludeFromInteractiveRouting]
+    // Cookie を書く画面 ([ExcludeFromInteractiveRouting]) は、回線を使わない静的な画面で出す
     private IComponentRenderMode? PageRenderMode =>
         HttpContext.AcceptsInteractiveRouting() ? InteractiveServerWithoutPrerender : null;
 }

@@ -29,7 +29,7 @@ public sealed partial class OrderAccessor
     public partial ValueTask<long> QueryNextOrderNoAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
 
     [Execute]
-    public partial ValueTask<int> InsertAsync(DbTransaction tx, Guid tenantId, Guid id, Guid storeId, Guid visitId, int orderNo, OrderSource source, Guid? deviceId, string? staffId, string menuVersion, byte[] requestHash, DateTimeOffset now, CancellationToken cancellationToken);
+    public partial ValueTask<int> InsertAsync(DbTransaction tx, Guid tenantId, Guid id, Guid storeId, Guid visitId, int orderNo, OrderSource source, Guid? deviceId, string menuVersion, byte[] requestHash, DateTimeOffset now, CancellationToken cancellationToken);
 
     //--------------------------------------------------------------------------------
     // Line

@@ -21,11 +21,18 @@ public sealed partial class ServingGroup : ObservableObject
         Update(item, now);
     }
 
-    // 明細の中身は替わらないので、並びが替わったときだけ作り直す (テーブルは席の移動で替わる)
+    // 並びが替わったときだけ明細を作り直し (テーブルは席の移動で替わる)、残る明細は数量とできあがりの時刻を替える (一部の取消は同じ明細の数量を減らす)
     public void Update(ServingListResponseItem item, DateTimeOffset now)
     {
         TableText = ViewHelper.Table(item.TableName);
-        if (!Lines.Select(static x => x.LineId).SequenceEqual(item.Lines.Select(static x => x.LineId)))
+        if (Lines.Select(static x => x.LineId).SequenceEqual(item.Lines.Select(static x => x.LineId)))
+        {
+            for (var i = 0; i < Lines.Count; i++)
+            {
+                Lines[i].Update(item.Lines[i]);
+            }
+        }
+        else
         {
             Lines = item.Lines.Select(x => new ServingLine(x, now)).ToList();
             HasMany = Lines.Count > 1;
@@ -46,7 +53,7 @@ public sealed partial class ServingGroup : ObservableObject
 // 提供を待つ明細。名前、オプション、数量と、できあがってからの時間を出す
 public sealed partial class ServingLine : ObservableObject
 {
-    private readonly DateTimeOffset? readyAt;
+    private DateTimeOffset? readyAt;
 
     public Guid LineId { get; }
 
@@ -56,7 +63,8 @@ public sealed partial class ServingLine : ObservableObject
 
     public bool HasOptions => OptionText.Length > 0;
 
-    public string QuantityText { get; }
+    [ObservableProperty]
+    public partial string QuantityText { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string ElapsedText { get; set; } = string.Empty;
@@ -64,11 +72,17 @@ public sealed partial class ServingLine : ObservableObject
     public ServingLine(ServingListResponseLine line, DateTimeOffset now)
     {
         LineId = line.LineId;
-        readyAt = line.ReadyAt;
         Name = ViewHelper.Text(line.Name);
         OptionText = String.Join(" / ", line.Options.Select(ViewHelper.Text));
-        QuantityText = $"× {line.Quantity}";
+        Update(line);
         Tick(now);
+    }
+
+    // 品とオプションは明細ごとに替わらない。数量 (一部の取消) とできあがりの時刻 (作り直し) は替わる
+    public void Update(ServingListResponseLine line)
+    {
+        readyAt = line.ReadyAt;
+        QuantityText = $"× {line.Quantity}";
     }
 
     public void Tick(DateTimeOffset now)

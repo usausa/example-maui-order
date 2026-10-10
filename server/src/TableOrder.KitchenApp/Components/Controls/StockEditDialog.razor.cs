@@ -8,8 +8,8 @@ using TableOrder.KitchenApp.Components.Pages;
 // 残りの数は続けて数のボタンで入れる (0 はサーバが品切れにする)
 public sealed partial class StockEditDialog
 {
-    // 残りの数の桁
-    private const int RemainingDigits = 4;
+    // 残りの数の桁 (サーバが受ける上限の桁)
+    private static readonly int RemainingDigits = Length.MaxStockRemaining.ToString(CultureInfo.InvariantCulture).Length;
 
     private bool isEnteringRemaining;
 

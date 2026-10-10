@@ -7,15 +7,12 @@ public sealed class ApplicationInstrument : IDisposable
 {
     private readonly Meter meter;
 
-    public ActivitySource ActivitySource { get; }
-
     private readonly Counter<long> requestLongExecution;
 
     private readonly Counter<long> requestExecution;
 
     public ApplicationInstrument(IMeterFactory meterFactory)
     {
-        ActivitySource = new ActivitySource(Source.Name, Source.Version);
         meter = meterFactory.Create(Source.Name, Source.Version);
 
         meter.CreateObservableCounter("application.uptime", ObserveApplicationUptime);
@@ -26,7 +23,6 @@ public sealed class ApplicationInstrument : IDisposable
 
     public void Dispose()
     {
-        ActivitySource.Dispose();
         meter.Dispose();
     }
 

@@ -433,10 +433,11 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
 
         StopWaiting();
         waiting = new CancellationTokenSource();
-        _ = WaitPaymentAsync(created.Id, waiting.Token);
+        _ = WaitPaymentAsync(created.Id, created.ExpiresAt, waiting.Token);
     }
 
-    private async Task WaitPaymentAsync(Guid paymentId, CancellationToken token)
+    // QR の期限 (expiresAt) を過ぎたら、使えない QR を出したまま待たずに、取り消して選び直しに戻す
+    private async Task WaitPaymentAsync(Guid paymentId, DateTimeOffset? expiresAt, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
@@ -467,6 +468,24 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
                     SetStep(CheckoutStep.Method);
                     return;
             }
+
+            if ((expiresAt is { } at) && (DateTimeOffset.UtcNow >= at))
+            {
+                // 取り消す前に払い終わっていたら、払い終えたものとして進める。取り消しが通らなければ次の回にやり直す
+                var status = await CancelUnsettledAsync();
+                if (status == PaymentStatus.Completed)
+                {
+                    await PaidAsync(token);
+                    return;
+                }
+
+                if (status is not null)
+                {
+                    ShowError(AppResources.PaymentExpired);
+                    SetStep(CheckoutStep.Method);
+                    return;
+                }
+            }
         }
     }
 
@@ -486,20 +505,32 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         CanBack = false;
         SetStep(CheckoutStep.Loading);
 
-        var result = await tableApi.GetBillAsync(visitState.Id, token);
-        if (token.IsCancellationRequested)
+        // 払い終えた 1 人分は割る人数から外し、明細を読み直せるまでやり直してから選び直しに戻る
+        // (古い明細と人数のまま戻ると、同じ額をもう一度払わせて、払う回数が人数より増える)
+        splitCount = Math.Max(splitCount - 1, 1);
+        while (true)
         {
-            return;
-        }
+            var result = await tableApi.GetBillAsync(visitState.Id, token);
+            if (token.IsCancellationRequested)
+            {
+                return;
+            }
 
-        if (result.Content is { } content)
-        {
-            splitCount--;
-            ApplyBill(content);
-        }
-        else
-        {
+            if (result.Content is { } content)
+            {
+                ApplyBill(content);
+                break;
+            }
+
             log.WarnApiFailed(nameof(ITableApi.GetBillAsync), result.Status, result.ErrorCode);
+            try
+            {
+                await Task.Delay(PollInterval, token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
         }
 
         if (bill is { Balance: <= 0 })
@@ -542,17 +573,16 @@ public sealed partial class CheckoutViewModel : AppViewModelBase
         ReceiptValue = receipt.Content?.Url.ToString() ?? string.Empty;
         HasReceipt = ReceiptValue.Length > 0;
 
+        // 操作の途中 (スタッフメニューの PIN など) なら、終わるのを待ってから待受に戻す (戻すのをやめると、お礼とレシートが出たままになる)
         try
         {
             await Task.Delay(finishAfter, token);
+            while (BusyState.IsBusy)
+            {
+                await Task.Delay(PollInterval, token);
+            }
         }
         catch (OperationCanceledException)
-        {
-            return;
-        }
-
-        // 操作の途中 (スタッフメニューの PIN など) なら待受に戻さない
-        if (BusyState.IsBusy)
         {
             return;
         }

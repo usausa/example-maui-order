@@ -37,6 +37,13 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
     [ObservableProperty]
     public partial string HeldText { get; set; } = string.Empty;
 
+    // 食後の品のお願いが通らなかった (店員呼出と同じく、頼めたと思わせないように出す)
+    [ObservableProperty]
+    public partial bool IsFailed { get; set; }
+
+    [ObservableProperty]
+    public partial string ErrorText { get; set; } = string.Empty;
+
     public IObserveCommand ReleaseCommand { get; }
 
     public IObserveCommand CloseCommand { get; }
@@ -111,6 +118,8 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
 
     private async Task ReleaseAsync()
     {
+        IsFailed = false;
+
         var result = await tableApi.ReleaseAsync(visitState.Id, new OrderReleaseRequest { LineIds = [] });
         if (result.Content is { } content)
         {
@@ -120,6 +129,8 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
         else
         {
             log.WarnApiFailed(nameof(ITableApi.ReleaseAsync), result.Status, result.ErrorCode);
+            ErrorText = ViewHelper.ErrorMessage(result);
+            IsFailed = true;
         }
     }
 

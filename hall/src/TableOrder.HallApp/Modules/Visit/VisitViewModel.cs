@@ -5,7 +5,7 @@ using TableOrder.HallApp.Modules.Dialogs;
 // 来店の詳細。状態、人数、開いた時刻と経過時間、注文の合計、注文と明細の状態を出し、人数の変更・席の移動・代わりの注文・食後の品のお願い・明細の取消・会計の手伝い・来店を終える操作を行う
 // 来店と注文は開いたときと、席の一覧を読み直した知らせ (TablesChanged) で読み直し、来店が終わっていたら席のタブに戻る
 // 来店を終える操作は、注文のある来店と会計中はレジで払った、注文のない来店は取りやめにする (サーバはどちらかしか通さない)
-// 会計中は、注文を入れる・食後の品のお願い・取消を押せない (サーバが断る)
+// 会計中は、注文を入れる・席を移る・食後の品のお願い・取消を押せない (会計の明細を替えないように画面で止める)
 public sealed partial class VisitViewModel : AppViewModelBase
 {
     // 経過時間を出し直す間隔
@@ -158,7 +158,14 @@ public sealed partial class VisitViewModel : AppViewModelBase
 
     protected override Task OnNotifyBackAsync() => BackAsync();
 
-    protected override Task OnTablesChangedAsync() => LoadAsync();
+    // 通知での読み直しはコマンドの外なので、読み直しの間は処理中にしてボタンと重ねない
+    protected override async Task OnTablesChangedAsync()
+    {
+        using (BusyState.Begin())
+        {
+            await LoadAsync();
+        }
+    }
 
     // 開いたときの読み込み (遷移の途中) からも戻るので、遷移を終えてから戻る
     // 開いたときの読み込みと通知での読み直しが重なっても、戻るのは表示中のこの画面からの 1 回だけにする
@@ -321,7 +328,14 @@ public sealed partial class VisitViewModel : AppViewModelBase
         }
         else if (action == BillAction.CancelCheckout)
         {
-            await AfterOperationAsync(AppResources.BillCancel, await hallUsecase.CancelCheckoutAsync(visit));
+            var cancelled = await hallUsecase.CancelCheckoutAsync(visit);
+            await AfterOperationAsync(AppResources.BillCancel, cancelled);
+
+            // 明細を出したあとに払い終えた支払があると、サーバは取りやめずに会計中のまま返す
+            if (cancelled.Content is { Status: VisitStatus.Paying })
+            {
+                await popupNavigator.MessageAsync(AppResources.BillCancel, AppResources.BillCancelUnavailable);
+            }
         }
     }
 
@@ -350,15 +364,17 @@ public sealed partial class VisitViewModel : AppViewModelBase
             return;
         }
 
-        await AfterOrderChangeAsync(AppResources.LineCancelTitle, await hallUsecase.CancelLineAsync(line.OrderId, line.LineId, quantity));
+        // 取消で断られる明細は、ほかの端末が先に提供したか取り消したもの (提供のときとは理由が違う)
+        var result = await hallUsecase.CancelLineAsync(line.OrderId, line.LineId, quantity);
+        await AfterOrderChangeAsync(AppResources.LineCancelTitle, result, result.ErrorCode == ErrorCodes.LineStatusInvalid ? AppResources.ErrorLineCancelInvalid : null);
     }
 
     // 注文を替えたら来店と注文を読み直す (合計も替わる)。断られたら知らせてから読み直す
-    private async Task AfterOrderChangeAsync<T>(string title, ApiResult<T> result)
+    private async Task AfterOrderChangeAsync<T>(string title, ApiResult<T> result, string? message = null)
     {
         if (!result.IsSuccess)
         {
-            await popupNavigator.MessageAsync(title, ViewHelper.ErrorMessage(result));
+            await popupNavigator.MessageAsync(title, message ?? ViewHelper.ErrorMessage(result));
         }
 
         await LoadAsync();

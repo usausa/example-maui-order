@@ -10,9 +10,7 @@ FROM
     JOIN DiningTables T ON T.TenantId = V.TenantId AND T.Id = V.TableId
 WHERE
     K.TenantId = /*@ tenantId */''
-    AND K.StoreId = /*@ storeId */''
-    AND K.Status = 'Done'
+    AND K.VisitId = /*@ visitId */''
+    AND K.Status = 'Open'
 ORDER BY
-    K.DoneAt DESC
-LIMIT
-    /*@ limit */0
+    K.CreatedAt

@@ -59,43 +59,43 @@ public sealed class EventDispatcher : BackgroundService
         await base.StartAsync(cancellationToken);
     }
 
+    // 見回りは知らせの合間ではなく、前の見回りから間隔ごとに行う (知らせが続くサーバでも、ほかのサーバが書いた通知を送る)
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        var sweepAt = timeProvider.GetUtcNow() + sweepInterval;
         while (!stoppingToken.IsCancellationRequested)
         {
-            var signaled = await WaitSignalAsync(stoppingToken);
-            try
+            if (await WaitSignalAsync(sweepAt - timeProvider.GetUtcNow(), stoppingToken))
             {
-                if (signaled)
+                var stores = new HashSet<(Guid TenantId, Guid StoreId)>();
+                while (signal.Reader.TryRead(out var store))
                 {
-                    var stores = new HashSet<(Guid TenantId, Guid StoreId)>();
-                    while (signal.Reader.TryRead(out var store))
-                    {
-                        stores.Add(store);
-                    }
-
-                    foreach (var store in stores)
-                    {
-                        await DispatchAsync(store, stoppingToken);
-                    }
+                    stores.Add(store);
                 }
-                else
+
+                foreach (var store in stores)
                 {
-                    await SweepAsync(stoppingToken);
+                    await TryDispatchAsync(store, stoppingToken);
                 }
             }
-            catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+
+            if (timeProvider.GetUtcNow() >= sweepAt)
             {
-                // 送れなかった通知は送り終えた位置を進めていないので、次の知らせか見回りで送り直す
-                log.ErrorEventDispatch(ex);
+                await SweepAsync(stoppingToken);
+                sweepAt = timeProvider.GetUtcNow() + sweepInterval;
             }
         }
     }
 
-    // 知らせを待つ。間隔の間に知らせがなければ false (すべての店舗を見回る)
-    private async ValueTask<bool> WaitSignalAsync(CancellationToken stoppingToken)
+    // 次の見回りまで知らせを待つ。知らせがないまま見回りの時刻になれば false
+    private async ValueTask<bool> WaitSignalAsync(TimeSpan wait, CancellationToken stoppingToken)
     {
-        using var timeout = new CancellationTokenSource(sweepInterval, timeProvider);
+        if (wait <= TimeSpan.Zero)
+        {
+            return false;
+        }
+
+        using var timeout = new CancellationTokenSource(wait, timeProvider);
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken, timeout.Token);
         try
         {
@@ -107,16 +107,40 @@ public sealed class EventDispatcher : BackgroundService
         }
     }
 
-    // 送り終えた位置より通し番号が進んでいる店舗 (ほかのサーバが書いた、起動のあとにできた店舗) に送る
+    // 送り終えた位置より通し番号が進んでいる店舗 (ほかのサーバが書いた、起動のあとにできた、送れなかった店舗) に送る
     private async ValueTask SweepAsync(CancellationToken cancellationToken)
     {
-        foreach (var sequence in await eventService.GetSequenceAllAsync(cancellationToken))
+        List<EventSequenceEntity> sequences;
+        try
+        {
+            sequences = await eventService.GetSequenceAllAsync(cancellationToken);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            log.ErrorEventDispatch(ex);
+            return;
+        }
+
+        foreach (var sequence in sequences)
         {
             var store = (sequence.TenantId, sequence.StoreId);
             if (sequence.LastSeq > sent.GetValueOrDefault(store))
             {
-                await DispatchAsync(store, cancellationToken);
+                await TryDispatchAsync(store, cancellationToken);
             }
+        }
+    }
+
+    // 1 つの店舗で失敗しても、ほかの店舗には送る (送れなかった通知は送り終えた位置を進めていないので、次の知らせか見回りで送り直す)
+    private async ValueTask TryDispatchAsync((Guid TenantId, Guid StoreId) store, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await DispatchAsync(store, cancellationToken);
+        }
+        catch (Exception ex) when (!cancellationToken.IsCancellationRequested)
+        {
+            log.ErrorStoreEventDispatch(ex, store.TenantId, store.StoreId);
         }
     }
 

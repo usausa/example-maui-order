@@ -142,7 +142,7 @@ public static class ViewHelper
                 ErrorCodes.PaymentMethodUnavailable => AppResources.ErrorPaymentMethodUnavailable,
                 ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
                 ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
-                DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
+                ErrorCodes.DeviceKindMismatch => AppResources.ErrorDeviceKind,
                 _ => AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric

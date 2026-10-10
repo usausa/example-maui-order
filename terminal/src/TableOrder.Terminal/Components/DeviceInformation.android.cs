@@ -3,7 +3,6 @@ namespace TableOrder.Terminal.Components;
 using Android.App;
 using Android.Content;
 using Android.Net;
-using Android.Net.Wifi;
 
 using AndroidX.Core.Content;
 
@@ -109,7 +108,7 @@ public sealed partial class DeviceInformation
         WiFi = 0x08
     }
 
-    private readonly record struct NetworkEntry(Transport Transport, bool Validated, WiFiStatus? WiFi);
+    private readonly record struct NetworkEntry(Transport Transport, bool Validated);
 
     private partial void StartNetwork()
     {
@@ -156,11 +155,7 @@ public sealed partial class DeviceInformation
             transport |= Transport.WiFi;
         }
 
-        var wifi = OperatingSystem.IsAndroidVersionAtLeast(29) && (capabilities.TransportInfo is WifiInfo info)
-            ? new WiFiStatus(info.Rssi, info.LinkSpeed)
-            : null;
-
-        networks[network.NetworkHandle] = new NetworkEntry(transport, capabilities.HasCapability(NetCapability.Validated), wifi);
+        networks[network.NetworkHandle] = new NetworkEntry(transport, capabilities.HasCapability(NetCapability.Validated));
         Refresh();
     }
 
@@ -174,7 +169,6 @@ public sealed partial class DeviceInformation
     {
         var access = NetworkAccess.None;
         var transports = Transport.None;
-        WiFiStatus? wifi = null;
         foreach (var entry in networks.Values)
         {
             if (entry.Validated)
@@ -187,18 +181,12 @@ public sealed partial class DeviceInformation
             }
 
             transports |= entry.Transport;
-            wifi ??= entry.WiFi;
         }
 
         if ((Network is null) || (access != Network.Access) || (transports != currentTransports))
         {
             currentTransports = transports;
             UpdateNetwork(new NetworkStatus(access, ToProfiles(transports)));
-        }
-
-        if (wifi != WiFi)
-        {
-            UpdateWiFi(wifi);
         }
     }
 

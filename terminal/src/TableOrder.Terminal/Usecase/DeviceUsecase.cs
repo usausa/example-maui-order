@@ -4,11 +4,9 @@ using TableOrder.Terminal.Components;
 
 // 端末の登録 (ペアリングコード、EMM の登録トークン) と解除、状態の報告
 // 登録した端末の id は今の接続先と組にして設定に持つ。鍵は登録し直しても使い回し、無効にされたときに作り直す
+// アプリの端末の種類を送り、違う種類のコードやトークンはサーバが登録せずに断る (DEVICE_KIND_MISMATCH)
 public sealed class DeviceUsecase
 {
-    // アプリの端末の種類と違うコードで登録しようとした (この端末は登録しない。サーバに残った端末は管理画面で無効にする)
-    public const string KindMismatch = "DEVICE_KIND_MISMATCH";
-
     // 管理画面で見分けられるように、端末の名前に付ける端末ごとの値の桁数
     private const int SuffixLength = 4;
 
@@ -63,8 +61,11 @@ public sealed class DeviceUsecase
     // 無効にされた端末の登録と鍵を消す (登録からやり直す)
     public void Unregister() => settings.Unregister();
 
+    // 登録は送った接続先の登録として覚える。送っている間に接続先が替わった (EMM) ら覚えない (前の接続先の端末を新しい接続先で使わない)
     private async ValueTask<ApiResult<DevicePairResponse>> PairAsync(DevicePairRequest request)
     {
+        var endPoint = settings.ApiEndPoint;
+        request.Kind = options.Kind;
         request.PublicKey = DeviceCredentials.CreatePublicKey(await settings.Key.GetPublicKeyAsync());
         request.DeviceName = DeviceName();
         request.AppVersion = AppVersion();
@@ -76,13 +77,13 @@ public sealed class DeviceUsecase
             return result;
         }
 
-        if (device.Kind != options.Kind)
+        if (settings.ApiEndPoint != endPoint)
         {
-            log.WarnDeviceRegistrationFailed(ApiStatus.Rejected, KindMismatch);
-            return ApiResult.Failure<DevicePairResponse>(ApiStatus.Rejected, KindMismatch);
+            log.WarnEndPointChangedWhileRegistering();
+            return ApiResult.Failure<DevicePairResponse>(ApiStatus.Unavailable);
         }
 
-        settings.Register(device.DeviceId);
+        settings.Register(device.DeviceId, endPoint);
         log.InfoDeviceRegistered(device.DeviceId, device.StoreId);
         return result;
     }

@@ -425,11 +425,6 @@ button {
     font-weight: 700;
 }
 
-.notice-warning {
-    background-color: var(--warning-color);
-    color: var(--on-warning-color);
-}
-
 /*-------------------------------------------------
  Placeholder
 -------------------------------------------------*/

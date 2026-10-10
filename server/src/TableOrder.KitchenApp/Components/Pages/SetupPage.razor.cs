@@ -6,7 +6,7 @@ namespace TableOrder.KitchenApp.Components.Pages;
 public sealed partial class SetupPage
 {
     // ペアリングコードの桁数
-    private const int CodeLength = 6;
+    private const int CodeLength = Length.PairingCodeDigits;
 
     private string pairingCode = string.Empty;
 

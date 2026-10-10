@@ -122,6 +122,40 @@ public sealed class TableSetupServiceTests : IClassFixture<ServerFactory>
         Assert.DoesNotContain(list.Items, x => x.Id == store.TableIds[2]);
     }
 
+    // 替えられなかったときは、ほかの店舗のテーブルを見つからないとし、店舗のテーブルの古い版を版の違いにする
+    [Fact]
+    public async Task UpdateFailureDistinguishesNotFoundFromVersion()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        var other = await factory.CreateStoreAsync();
+        Core.Models.Entity.TableSetupEntity table;
+        using (factory.BeginStore(store))
+        {
+            table = (await Service.GetListAsync(TestContext.Current.CancellationToken))[0];
+        }
+
+        // Act
+        ServiceError? updatedFromOther;
+        ServiceError? deactivatedFromOther;
+        ServiceError? stale;
+        using (factory.BeginStore(other))
+        {
+            updatedFromOther = await Service.UpdateAsync(table.Id, new TableInput("X1", null, 2), table.Version, TestContext.Current.CancellationToken);
+            deactivatedFromOther = await Service.SetActiveAsync(table.Id, false, table.Version, TestContext.Current.CancellationToken);
+        }
+
+        using (factory.BeginStore(store))
+        {
+            stale = await Service.UpdateAsync(table.Id, new TableInput("X1", null, 2), table.Version - 1, TestContext.Current.CancellationToken);
+        }
+
+        // Assert
+        Assert.Equal(ErrorCodes.NotFound, updatedFromOther?.ErrorCode);
+        Assert.Equal(ErrorCodes.NotFound, deactivatedFromOther?.ErrorCode);
+        Assert.Equal(ErrorCodes.VersionMismatch, stale?.ErrorCode);
+    }
+
     private async ValueTask<int> SettingsVersionAsync(TestStore store) =>
         (await factory.Services.GetRequiredService<StoreAccessor>().QueryAsync(store.TenantId, store.StoreId, TestContext.Current.CancellationToken))!.SettingsVersion;
 }

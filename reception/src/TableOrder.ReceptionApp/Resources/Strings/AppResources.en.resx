@@ -96,7 +96,7 @@
     <value>Server (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>Enter the order server URL (http or https)</value>
+    <value>Enter the order server URL (https)</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>Uses the server set by EMM (cannot be changed on this device)</value>
@@ -316,5 +316,8 @@
   </data>
   <data name="GuideCountdownFormat" xml:space="preserve">
     <value>Returning to the start screen in {0} s</value>
+  </data>
+  <data name="StandbyBeforeOpenFormat" xml:space="preserve">
+    <value>Check-in opens at {0}</value>
   </data>
 </root>

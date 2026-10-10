@@ -3,7 +3,7 @@ UPDATE
 SET
     Role = /*@ role */'TenantAdmin',
     Name = /*@ name */'',
-    SecurityStamp = /*@ securityStamp */'',
+    SecurityStamp = COALESCE(/*@ securityStamp */NULL, SecurityStamp),
     UpdatedAt = /*@ now */'',
     Version = Version + 1
 WHERE

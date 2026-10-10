@@ -1,5 +1,7 @@
 namespace TableOrder.Server.Core.Services;
 
+using System.Net.Mail;
+
 using TableOrder.Server.Core.Accessors;
 
 // 利用者の一覧の行と、受け持つ店舗 (店舗の担当だけ)
@@ -67,6 +69,11 @@ public sealed class AdminUserService
             return new(ServiceError.Validation("email", "メールアドレスを入れてください"));
         }
 
+        if (!IsEmail(email))
+        {
+            return new(ServiceError.Validation("email", "メールアドレスの形で入れてください"));
+        }
+
         if (await ValidateAsync(tenantId, input.Name, input.Role, input.StoreIds, cancellationToken) is { } invalid)
         {
             return new(invalid);
@@ -112,10 +119,14 @@ public sealed class AdminUserService
             return ServiceError.Validation("role", "自分の役割は替えられません");
         }
 
+        // 資格の印は、扱える範囲 (役割と受け持つ店舗) が替わるときだけ替える (名前だけなら開いている管理画面をやり直させない)
+        var currentStores = (await adminUserAccessor.QueryStoreListAsync(tenantId, cancellationToken)).Where(x => x.UserId == userId).Select(static x => x.StoreId).ToHashSet();
+        var newStores = role == AdminRole.StoreStaff ? storeIds.ToHashSet() : [];
+        var stamp = (role != user.Role) || !currentStores.SetEquals(newStores) ? NewStamp() : null;
         return await provider.UsingTxAsync<ServiceError?>(async (_, tx) =>
         {
             // 表示していた版でなければ (ほかで替えた)、読み直してもらう
-            if (await adminUserAccessor.UpdateAsync(tx, tenantId, userId, role, name.Trim(), NewStamp(), context.Now, version, cancellationToken) == 0)
+            if (await adminUserAccessor.UpdateAsync(tx, tenantId, userId, role, name.Trim(), stamp, context.Now, version, cancellationToken) == 0)
             {
                 return new ServiceError(ErrorCodes.VersionMismatch);
             }
@@ -209,4 +220,8 @@ public sealed class AdminUserService
     }
 
     private static string NewStamp() => Guid.NewGuid().ToString("N");
+
+    // サインインの名前にするメールアドレスの形 (表示名や山括弧の付かない、アドレスだけ)
+    internal static bool IsEmail(string email) =>
+        MailAddress.TryCreate(email, out var address) && (address.Address == email);
 }

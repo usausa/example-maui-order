@@ -63,7 +63,7 @@ public static class ViewHelper
         {
             StandbyStatus.Available => MaterialIcons.Event_available,
             StandbyStatus.Full => MaterialIcons.Hourglass_top,
-            StandbyStatus.Closed => MaterialIcons.Schedule,
+            StandbyStatus.Closed or StandbyStatus.BeforeOpen => MaterialIcons.Schedule,
             _ => MaterialIcons.Do_not_disturb_on
         };
 
@@ -82,7 +82,7 @@ public static class ViewHelper
             {
                 ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
                 ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
-                DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
+                ErrorCodes.DeviceKindMismatch => AppResources.ErrorDeviceKind,
                 _ => AppResources.ErrorGeneric
             },
             _ => AppResources.ErrorGeneric

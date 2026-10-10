@@ -50,7 +50,9 @@ public sealed partial class TenantsPage
     // Tenant
     //--------------------------------------------------------------------------------
 
-    private async Task AddAsync()
+    private Task AddAsync() => RunOnceAsync(AddCoreAsync);
+
+    private async Task AddCoreAsync()
     {
         var result = await TenantService.CreateAsync(addCode, addName, new LocalizedText { Ja = addBrandJa, En = addBrandEn }, CancellationToken.None);
         if (!result.Succeeded)

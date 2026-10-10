@@ -136,9 +136,23 @@ public sealed partial class OrderViewModel : AppViewModelBase
         }
     }
 
-    protected override Task OnNotifyBackAsync() => BackAsync();
+    // 端末の戻ると通知での読み直しはコマンドの外なので、処理中にしてボタンとほかの通知と重ねない
+    // (カートを捨てるかを確かめている間に、通知で下の画面が移らないように)
+    protected override async Task OnNotifyBackAsync()
+    {
+        using (BusyState.Begin())
+        {
+            await BackAsync();
+        }
+    }
 
-    protected override Task OnTablesChangedAsync() => LoadAsync();
+    protected override async Task OnTablesChangedAsync()
+    {
+        using (BusyState.Begin())
+        {
+            await LoadAsync();
+        }
+    }
 
     protected override Task OnStockChangedAsync()
     {

@@ -59,15 +59,17 @@ public sealed class KitchenService
             return new(new KitchenTicketListResponse { Items = tickets.Select(x => OrderResponses.ToTicket(x, lines[x.Id], options)).ToList() });
         }
 
+        // 持ち場ごとに直近のものを引き (ほかの持ち場が続けて下げても、受け持つ持ち場のものが抜けない)、下げた新しい順に並べ直す
         var items = new List<KitchenTicketListResponseItem>();
-        foreach (var ticket in (await kitchenAccessor.QueryDoneTicketListAsync(tenantId, storeId, DoneLimit * 4, cancellationToken)).Where(x => stations.Contains(x.StationId)).Take(DoneLimit))
+        foreach (var station in stations)
         {
-            var lines = await kitchenAccessor.QueryTicketLineListAsync(tenantId, ticket.Id, cancellationToken);
-            var options = await kitchenAccessor.QueryTicketLineOptionListAsync(tenantId, ticket.Id, cancellationToken);
-            items.Add(OrderResponses.ToTicket(ticket, lines, options.ToLookup(static x => x.LineId)));
+            var tickets = await kitchenAccessor.QueryDoneTicketListByStationAsync(tenantId, storeId, station, DoneLimit, cancellationToken);
+            var lines = (await kitchenAccessor.QueryDoneTicketLineListByStationAsync(tenantId, storeId, station, DoneLimit, cancellationToken)).ToLookup(static x => x.TicketId);
+            var options = (await kitchenAccessor.QueryDoneTicketLineOptionListByStationAsync(tenantId, storeId, station, DoneLimit, cancellationToken)).ToLookup(static x => x.LineId);
+            items.AddRange(tickets.Select(x => OrderResponses.ToTicket(x, lines[x.Id], options)));
         }
 
-        return new(new KitchenTicketListResponse { Items = items });
+        return new(new KitchenTicketListResponse { Items = items.OrderByDescending(static x => x.DoneAt).Take(DoneLimit).ToList() });
     }
 
     //--------------------------------------------------------------------------------
@@ -165,7 +167,11 @@ public sealed class KitchenService
                 }
             }
 
-            await kitchenAccessor.UpdateTicketDoneAsync(tx, tenantId, ticketId, context.Now, cancellationToken);
+            if (await kitchenAccessor.UpdateTicketDoneAsync(tx, tenantId, ticketId, context.Now, cancellationToken) == 0)
+            {
+                return new(new ServiceError(ErrorCodes.LineStatusInvalid));
+            }
+
             var item = await AppendChangesAsync(transaction, ticket, changed, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(item);
@@ -206,7 +212,11 @@ public sealed class KitchenService
                 }
             }
 
-            await kitchenAccessor.UpdateTicketReopenedAsync(tx, tenantId, ticketId, cancellationToken);
+            if (await kitchenAccessor.UpdateTicketReopenedAsync(tx, tenantId, ticketId, cancellationToken) == 0)
+            {
+                return new(new ServiceError(ErrorCodes.LineStatusInvalid));
+            }
+
             var item = await AppendChangesAsync(transaction, ticket, changed, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(item);

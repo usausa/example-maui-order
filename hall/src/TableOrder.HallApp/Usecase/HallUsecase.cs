@@ -16,8 +16,8 @@ public sealed class HallUsecase
 
     private readonly IHallApi hallApi;
 
-    // 送れたかわからなかった案内 (同じテーブルの次の案内で、同じ来店の id を送り直す)
-    private (Guid TableId, Guid VisitId)? pendingOpen;
+    // 送れたかわからなかった案内 (同じテーブルと人数の次の案内で、同じ来店の id を送り直す)
+    private (Guid TableId, Guid VisitId, int Adults, int Children)? pendingOpen;
 
     public HallUsecase(
         StoreState storeState,
@@ -46,6 +46,12 @@ public sealed class HallUsecase
         if (result.Content is { } tables)
         {
             tableState.Update(tables);
+
+            // 送れたかわからなかった案内が開いていたら、送り直さない
+            if ((pendingOpen is { } pending) && tableState.Items.Any(x => x.Visit?.VisitId == pending.VisitId))
+            {
+                pendingOpen = null;
+            }
         }
 
         return result;
@@ -79,12 +85,20 @@ public sealed class HallUsecase
     // Visit
     //--------------------------------------------------------------------------------
 
-    // 案内したテーブルに来店を開く。サーバは同じ id の送り直しに、同じテーブルなら開いた来店を返す
+    // 案内したテーブルに来店を開く。サーバは同じ id の送り直しに、同じテーブルなら開いた来店を返す (状態と人数は見ない)
+    // 送り直すのは同じテーブルと人数のときだけにし (人数を替えたら新しい案内)、返った来店が終わっていたら (開いたあとに閉じた) 使わずに新しく開く
     public async ValueTask<ApiResult<VisitResponse>> OpenVisitAsync(Guid tableId, int adults, int children)
     {
-        var id = (pendingOpen is { } pending) && (pending.TableId == tableId) ? pending.VisitId : Guid.CreateVersion7();
+        var resend = (pendingOpen is { } pending) && (pending.TableId == tableId) && (pending.Adults == adults) && (pending.Children == children);
+        var id = resend ? pendingOpen!.Value.VisitId : Guid.CreateVersion7();
         var result = await hallApi.OpenVisitAsync(new VisitCreateRequest { Id = id, TableId = tableId, Adults = adults, Children = children });
-        pendingOpen = result.Status == ApiStatus.Unavailable ? (tableId, id) : null;
+        if (resend && (result.Content is { Status: VisitStatus.Closed or VisitStatus.Cancelled }))
+        {
+            id = Guid.CreateVersion7();
+            result = await hallApi.OpenVisitAsync(new VisitCreateRequest { Id = id, TableId = tableId, Adults = adults, Children = children });
+        }
+
+        pendingOpen = result.Status == ApiStatus.Unavailable ? (tableId, id, adults, children) : null;
         return await AfterChangeAsync(result, RefreshTablesAsync);
     }
 

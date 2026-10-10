@@ -88,6 +88,9 @@ public abstract class OrderEventReceiverBase
     // 待っていた通知を、操作の途中と遷移の間を避けて届いた順に扱う (状態を替え、表示中の画面に知らせる)
     protected abstract Task ApplyAsync(OrderEvent e);
 
+    // 表示中の画面が起動からやり直す知らせを受けるか (起動と端末の設定の画面は、自分で確かめるので受けない)
+    protected abstract bool AcceptsRestart { get; }
+
     // 起動からやり直すように、表示中の画面に知らせる
     protected abstract Task NotifyRestartAsync();
 
@@ -190,10 +193,15 @@ public abstract class OrderEventReceiverBase
 
     // 開いているポップアップを閉じてから知らせる
     // スタッフメニューのポップアップも閉じる (端末が使えなくなったので、操作を続けさせない)
+    // 知らせを受けない画面 (起動、端末の設定) では閉じない (止めたテナントの知らせが繰り返し届いても、PIN や登録の入力を閉じない)
     private void RequestRestart()
     {
         restartRequested = true;
-        ClosePopups();
+        if (AcceptsRestart)
+        {
+            ClosePopups();
+        }
+
         Deliver();
     }
 
@@ -224,8 +232,15 @@ public abstract class OrderEventReceiverBase
             while (!busyState.IsBusy && !Navigator.Executing)
             {
                 // 起動で読み直すので、待っている通知は捨てる
+                // 表示中の画面が受けない (起動の途中、端末の設定) ときは印を残して待ち、受ける画面に移ってから知らせる
+                // (起動の途中に届いた端末の変更を捨てると、前に読んだ設定とトークンのまま進む)
                 if (restartRequested)
                 {
+                    if (!AcceptsRestart)
+                    {
+                        break;
+                    }
+
                     restartRequested = false;
                     drainPending = false;
                     pending.Clear();

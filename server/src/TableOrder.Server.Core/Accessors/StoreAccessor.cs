@@ -12,7 +12,7 @@ public sealed partial class StoreAccessor
     [Query]
     public partial ValueTask<List<StoreEntity>> QueryAllAsync(Guid tenantId, CancellationToken cancellationToken);
 
-    // 書き込みの中で読む (変えたあとの店舗を通知に入れる)
+    // 書き込みの中で読む (変えたあとの店舗を通知に入れる、端末を登録する店舗を確かめる)
     [QueryFirst]
     public partial ValueTask<StoreEntity?> QueryAsync(DbTransaction tx, Guid tenantId, Guid id, CancellationToken cancellationToken);
 

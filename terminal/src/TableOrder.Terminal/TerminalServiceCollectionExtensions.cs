@@ -21,11 +21,11 @@ public static class TerminalServiceCollectionExtensions
         // Components
         services.AddSingleton<DeviceInformation>();
         services.AddSingleton<DeviceKey>();
-        services.AddSingleton<IStorageManager, StorageManager>();
         services.AddSingleton<KioskManager>();
         services.AddSingleton<ManagedConfiguration>();
 
         // State
+        services.AddSingleton<StartupState>();
         services.AddSingleton<DeviceState>();
         services.AddSingleton<Settings>();
         services.AddSingleton<StaffLock>();

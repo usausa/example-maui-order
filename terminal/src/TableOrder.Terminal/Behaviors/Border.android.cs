@@ -14,19 +14,16 @@ public static partial class Border
             EntryHandler.Mapper.AppendToMapping(WidthProperty.PropertyName, static (handler, _) => UpdateBehaviors((Entry)handler.VirtualView));
             EntryHandler.Mapper.AppendToMapping(ColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Entry)handler.VirtualView));
             EntryHandler.Mapper.AppendToMapping(PaddingProperty.PropertyName, static (handler, _) => UpdateBehaviors((Entry)handler.VirtualView));
-            EntryHandler.Mapper.AppendToMapping(RadiusProperty.PropertyName, static (handler, _) => UpdateBehaviors((Entry)handler.VirtualView));
             EntryHandler.Mapper.AppendToMapping(VisualElement.BackgroundColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Entry)handler.VirtualView));
 
             EditorHandler.Mapper.AppendToMapping(WidthProperty.PropertyName, static (handler, _) => UpdateBehaviors((Editor)handler.VirtualView));
             EditorHandler.Mapper.AppendToMapping(ColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Editor)handler.VirtualView));
             EditorHandler.Mapper.AppendToMapping(PaddingProperty.PropertyName, static (handler, _) => UpdateBehaviors((Editor)handler.VirtualView));
-            EditorHandler.Mapper.AppendToMapping(RadiusProperty.PropertyName, static (handler, _) => UpdateBehaviors((Editor)handler.VirtualView));
             EditorHandler.Mapper.AppendToMapping(VisualElement.BackgroundColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Editor)handler.VirtualView));
 
             LabelHandler.Mapper.AppendToMapping(WidthProperty.PropertyName, static (handler, _) => UpdateBehaviors((Label)handler.VirtualView));
             LabelHandler.Mapper.AppendToMapping(ColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Label)handler.VirtualView));
             LabelHandler.Mapper.AppendToMapping(PaddingProperty.PropertyName, static (handler, _) => UpdateBehaviors((Label)handler.VirtualView));
-            LabelHandler.Mapper.AppendToMapping(RadiusProperty.PropertyName, static (handler, _) => UpdateBehaviors((Label)handler.VirtualView));
             LabelHandler.Mapper.AppendToMapping(VisualElement.BackgroundColorProperty.PropertyName, static (handler, _) => UpdateBehaviors((Label)handler.VirtualView));
         }
     }
@@ -35,10 +32,9 @@ public static partial class Border
     {
         var width = GetWidth(element);
         var padding = GetPadding(element);
-        var radius = GetRadius(element);
 
         var behavior = element.Behaviors.OfType<BorderBehavior>().FirstOrDefault();
-        if (width.HasValue || (padding != Thickness.Zero) || radius.HasValue)
+        if (width.HasValue || (padding != Thickness.Zero))
         {
             if (behavior is not null)
             {
@@ -104,13 +100,6 @@ public static partial class Border
                 var strokeWidth = (int)view.Context.ToPixels(width.Value);
                 var color = GetColor(element).ToPlatform();
                 drawable.SetStroke(strokeWidth, color);
-            }
-
-            var radius = GetRadius(element);
-            if (radius.HasValue)
-            {
-                var cornerRadius = (int)view.Context.ToPixels(radius.Value);
-                drawable.SetCornerRadius(cornerRadius);
             }
 
             if (element.BackgroundColor is not null)

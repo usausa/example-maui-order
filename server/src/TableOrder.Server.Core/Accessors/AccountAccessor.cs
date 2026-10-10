@@ -21,9 +21,25 @@ public sealed partial class AccountAccessor
     [Execute]
     public partial ValueTask<int> InsertAsync(Guid id, Guid? tenantId, AdminRole role, string email, string normalizedEmail, string name, string passwordHash, bool mustChangePassword, string securityStamp, DateTimeOffset now, CancellationToken cancellationToken);
 
-    // 読んだときの版のときだけ書く (0 件ならほかで替えたので書かない)
+    // 読んだときの版のときだけ書く (0 件ならほかで替えたので書かない)。間違えた回数と止める時刻は別に書く
     [Execute]
-    public partial ValueTask<int> UpdateCredentialAsync(Guid id, string passwordHash, bool mustChangePassword, string securityStamp, int accessFailedCount, DateTimeOffset? lockoutEnd, bool twoFactorEnabled, string? authenticatorKey, string? recoveryCodes, DateTimeOffset now, int version, CancellationToken cancellationToken);
+    public partial ValueTask<int> UpdateCredentialAsync(Guid id, string passwordHash, bool mustChangePassword, string securityStamp, bool twoFactorEnabled, string? authenticatorKey, string? recoveryCodes, DateTimeOffset now, int version, CancellationToken cancellationToken);
+
+    // サインインの失敗を数える。版を見ずに 1 文で足して、足したあとの数を返す (同時に間違えたサインインを数え漏らさない)
+    [ExecuteScalar]
+    public partial ValueTask<int> AddAccessFailedCountAsync(Guid id, CancellationToken cancellationToken);
+
+    // 今の間違えた回数 (読んだあとにほかのサインインが数えていることがある)
+    [ExecuteScalar]
+    public partial ValueTask<int> QueryAccessFailedCountAsync(Guid id, CancellationToken cancellationToken);
+
+    // 間違えた回数を戻す (正しいパスワードのときと、止めたとき)
+    [Execute]
+    public partial ValueTask<int> UpdateAccessFailedCountAsync(Guid id, int accessFailedCount, CancellationToken cancellationToken);
+
+    // 止める時刻は版を見ずに書く (同時に書いたほかの資格情報の書き込みで、止めたことを消さない)
+    [Execute]
+    public partial ValueTask<int> UpdateLockoutEndAsync(Guid id, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken);
 
     // 最後のサインインは資格情報ではないので、版を上げない (開いているサインインの処理の版をずらさない)
     [Execute]
@@ -40,7 +56,7 @@ public sealed partial class AccountAccessor
     public partial ValueTask<AdminUserSummaryEntity?> QueryOperatorAsync(Guid id, CancellationToken cancellationToken);
 
     [Execute]
-    public partial ValueTask<int> UpdateOperatorAsync(Guid id, string name, string securityStamp, DateTimeOffset now, int version, CancellationToken cancellationToken);
+    public partial ValueTask<int> UpdateOperatorAsync(Guid id, string name, DateTimeOffset now, int version, CancellationToken cancellationToken);
 
     [Execute]
     public partial ValueTask<int> UpdateOperatorPasswordAsync(Guid id, string passwordHash, string securityStamp, DateTimeOffset now, CancellationToken cancellationToken);

@@ -16,12 +16,16 @@ public sealed class AdminUserStore :
     IUserAuthenticatorKeyStore<AdminUserEntity>,
     IUserTwoFactorRecoveryCodeStore<AdminUserEntity>
 {
-    // 認証アプリの鍵の暗号の用途 (ほかの用途の暗号と鍵を分ける)
+    // 認証アプリの鍵と回復用のコードの暗号の用途 (ほかの用途の暗号と鍵を分ける)
     private const string AuthenticatorKeyPurpose = "TableOrder.Admin.AuthenticatorKey";
+
+    private const string RecoveryCodePurpose = "TableOrder.Admin.RecoveryCode";
 
     private readonly ILogger<AdminUserStore> log;
 
     private readonly IDataProtector protector;
+
+    private readonly IDataProtector codeProtector;
 
     private readonly AccountService accountService;
 
@@ -32,6 +36,7 @@ public sealed class AdminUserStore :
     {
         this.log = log;
         protector = dataProtectionProvider.CreateProtector(AuthenticatorKeyPurpose);
+        codeProtector = dataProtectionProvider.CreateProtector(RecoveryCodePurpose);
         this.accountService = accountService;
     }
 
@@ -116,29 +121,36 @@ public sealed class AdminUserStore :
     // Lockout
     //--------------------------------------------------------------------------------
 
+    // 間違えた回数と止める時刻は、資格情報の書き込み (UpdateAsync。版を見る) と分けて、すぐに 1 文で書く
+    // (同時に間違えたサインインは版が違って書けず、数え漏らす。止めたことも、ほかの書き込みで消さない)
+
     public Task<DateTimeOffset?> GetLockoutEndDateAsync(AdminUserEntity user, CancellationToken cancellationToken) =>
         Task.FromResult(user.LockoutEnd);
 
-    public Task SetLockoutEndDateAsync(AdminUserEntity user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+    public async Task SetLockoutEndDateAsync(AdminUserEntity user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
     {
         user.LockoutEnd = lockoutEnd;
-        return Task.CompletedTask;
+        await accountService.SetLockoutEndAsync(user.Id, lockoutEnd, cancellationToken);
     }
 
-    public Task<int> IncrementAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken)
+    public async Task<int> IncrementAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken)
     {
-        user.AccessFailedCount++;
-        return Task.FromResult(user.AccessFailedCount);
+        user.AccessFailedCount = await accountService.AddAccessFailedCountAsync(user.Id, cancellationToken);
+        return user.AccessFailedCount;
     }
 
-    public Task ResetAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken)
+    public async Task ResetAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken)
     {
         user.AccessFailedCount = 0;
-        return Task.CompletedTask;
+        await accountService.ResetAccessFailedCountAsync(user.Id, cancellationToken);
     }
 
-    public Task<int> GetAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken) =>
-        Task.FromResult(user.AccessFailedCount);
+    // 読んだあとにほかのサインインが数えていることがあるので、今の数を読む (正しいパスワードのときに戻し損ねないように)
+    public async Task<int> GetAccessFailedCountAsync(AdminUserEntity user, CancellationToken cancellationToken)
+    {
+        user.AccessFailedCount = await accountService.GetAccessFailedCountAsync(user.Id, cancellationToken);
+        return user.AccessFailedCount;
+    }
 
     // 続けて間違えたら止める仕組みは、すべての利用者に使う
     public Task<bool> GetLockoutEnabledAsync(AdminUserEntity user, CancellationToken cancellationToken) =>
@@ -186,31 +198,56 @@ public sealed class AdminUserStore :
         }
     }
 
-    // 回復用のコードは、パスワードと同じく元に戻せない形 (ハッシュ) で持つ
+    // 回復用のコードは、認証アプリの鍵と同じくデータ保護の鍵で暗号にして持つ (DB だけが漏れても使えない)
+    // 桁の少ないコードを塩のないハッシュで持つと、すべての利用者の分を一度に総当たりで戻せる
     public Task ReplaceCodesAsync(AdminUserEntity user, IEnumerable<string> recoveryCodes, CancellationToken cancellationToken)
     {
-        user.RecoveryCodes = JsonSerializer.Serialize(recoveryCodes.Select(HashRecoveryCode).ToList());
+        user.RecoveryCodes = WriteCodes(recoveryCodes.Select(static x => x.Trim()));
         return Task.CompletedTask;
     }
 
     public Task<bool> RedeemCodeAsync(AdminUserEntity user, string code, CancellationToken cancellationToken)
     {
-        var hashes = ReadCodes(user);
-        if (!hashes.Remove(HashRecoveryCode(code)))
+        var codes = ReadCodes(user);
+        var entered = Encoding.UTF8.GetBytes(code.Trim());
+        var index = codes.FindIndex(x => CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(x), entered));
+        if (index < 0)
         {
             return Task.FromResult(false);
         }
 
-        user.RecoveryCodes = JsonSerializer.Serialize(hashes);
+        codes.RemoveAt(index);
+        user.RecoveryCodes = WriteCodes(codes);
         return Task.FromResult(true);
     }
 
     public Task<int> CountCodesAsync(AdminUserEntity user, CancellationToken cancellationToken) =>
         Task.FromResult(ReadCodes(user).Count);
 
-    private static List<string> ReadCodes(AdminUserEntity user) =>
-        user.RecoveryCodes is null ? [] : JsonSerializer.Deserialize<List<string>>(user.RecoveryCodes) ?? [];
+    // 読めないコード (データ保護の鍵をなくした、前の形のハッシュ) は、ないものとする (利用者は出し直す)
+    private List<string> ReadCodes(AdminUserEntity user)
+    {
+        if (user.RecoveryCodes is null)
+        {
+            return [];
+        }
 
-    private static string HashRecoveryCode(string code) =>
-        Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code.Trim())));
+        var codes = new List<string>();
+        foreach (var value in JsonSerializer.Deserialize<List<string>>(user.RecoveryCodes) ?? [])
+        {
+            try
+            {
+                codes.Add(codeProtector.Unprotect(value));
+            }
+            catch (CryptographicException)
+            {
+                // 読めないものは使わない
+            }
+        }
+
+        return codes;
+    }
+
+    private string WriteCodes(IEnumerable<string> codes) =>
+        JsonSerializer.Serialize(codes.Select(codeProtector.Protect).ToList());
 }

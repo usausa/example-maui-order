@@ -18,13 +18,6 @@ public abstract class AppDialogViewModelBase :
     {
     }
 
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
-
-        System.Diagnostics.Debug.WriteLine($"{GetType()} is Disposed");
-    }
-
     public void Validate(string name)
     {
         propertyAccessor ??= AccessorProvider.FindAccessor(GetType());
@@ -32,7 +25,6 @@ public abstract class AppDialogViewModelBase :
         {
             throw new InvalidOperationException($"Accessor is not supported. type=[{GetType()}]");
         }
-        validationResults ??= [];
 
         var value = propertyAccessor.GetValue(this, name);
         var context = new ValidationContext(this, ResolveProvider.Default, null)

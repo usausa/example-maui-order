@@ -136,11 +136,18 @@ public sealed class DeviceEnrollmentService
         return enrollmentAccessor.QueryTokenListAsync(context.RequireTenantId(), context.RequireStoreId(), cancellationToken);
     }
 
-    // 取り消して、それからの登録を断る (登録した端末はそのまま)
+    // 取り消して、それからの登録を断る (登録した端末はそのまま)。取り消してあったものは成功にする (2 つの画面で同じトークンを取り消す)
     public async ValueTask<ServiceError?> RevokeTokenAsync(Guid id, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
-        return await enrollmentAccessor.UpdateRevokedAsync(context.RequireTenantId(), context.RequireStoreId(), id, timeProvider.GetUtcNow(), cancellationToken) > 0
+        var tenantId = context.RequireTenantId();
+        var storeId = context.RequireStoreId();
+        if (await enrollmentAccessor.UpdateRevokedAsync(tenantId, storeId, id, timeProvider.GetUtcNow(), cancellationToken) > 0)
+        {
+            return null;
+        }
+
+        return (await enrollmentAccessor.QueryTokenListAsync(tenantId, storeId, cancellationToken)).Exists(x => (x.Id == id) && (x.RevokedAt is not null))
             ? null
             : ServiceError.NotFound;
     }

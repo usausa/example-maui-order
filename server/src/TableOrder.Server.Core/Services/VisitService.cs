@@ -12,7 +12,13 @@ public sealed class VisitService
 
     private readonly VisitAccessor visitAccessor;
 
+    private readonly PaymentAccessor paymentAccessor;
+
+    private readonly KitchenAccessor kitchenAccessor;
+
     private readonly MenuService menuService;
+
+    private readonly CallService callService;
 
     private readonly EventService eventService;
 
@@ -20,13 +26,19 @@ public sealed class VisitService
         ServiceContextProvider contextProvider,
         StoreAccessor storeAccessor,
         VisitAccessor visitAccessor,
+        PaymentAccessor paymentAccessor,
+        KitchenAccessor kitchenAccessor,
         MenuService menuService,
+        CallService callService,
         EventService eventService)
     {
         this.contextProvider = contextProvider;
         this.storeAccessor = storeAccessor;
         this.visitAccessor = visitAccessor;
+        this.paymentAccessor = paymentAccessor;
+        this.kitchenAccessor = kitchenAccessor;
         this.menuService = menuService;
+        this.callService = callService;
         this.eventService = eventService;
     }
 
@@ -70,7 +82,7 @@ public sealed class VisitService
     //--------------------------------------------------------------------------------
 
     // 来店の開始。スタッフ (ホール端末、管理画面の案内) はいつでも開き、受付機とテーブル端末は来店の開き方で許した店だけ開く
-    // 受付機はテーブルを送らず、サーバが人数の入る空席を選ぶ。テーブル端末は自分のテーブルにだけ開く
+    // 受付機はテーブルを送らず、サーバが人数の入る空席を選ぶ。ラストオーダーを過ぎたら受け付けない (開いても注文できない)。テーブル端末は自分のテーブルにだけ開く
     // 同じ Id の送り直しは、同じテーブル (受付機は同じ端末) なら開いた来店を返す (201 ではなく 200)
     public async ValueTask<ServiceResult<VisitResponse>> CreateAsync(VisitCreateRequest request, CancellationToken cancellationToken)
     {
@@ -115,8 +127,14 @@ public sealed class VisitService
                 // 受付機はテーブルを送らないので、同じ端末が開いたかで送り直しを見分ける
                 var resent = requestedTableId is { } requested ? existing.TableId == requested : existing.OpenedDeviceId == context.DeviceId;
                 return resent
-                    ? new(await ToResponseAsync(existing, cancellationToken))
+                    ? new(await ToResponseAsync(transaction.Tx, existing, cancellationToken))
                     : new(new ServiceError(ErrorCodes.DuplicateIdMismatch));
+            }
+
+            // 送り直しは時刻を問わず開いた来店を返す (ラストオーダーの直前に開いて、応答が届かなかった受付)
+            if ((openedBy == VisitOpenedBy.Reception) && OrderService.IsAfterLastOrder(store, context.Now))
+            {
+                return new(new ServiceError(ErrorCodes.LastOrderPassed));
             }
 
             Guid tableId;
@@ -183,7 +201,7 @@ public sealed class VisitService
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            var response = await ToResponseAsync((await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, id, cancellationToken))!, cancellationToken);
+            var response = await LoadResponseAsync(transaction.Tx, tenantId, storeId, id, cancellationToken);
             await transaction.AppendEventAsync(EventTypes.VisitUpdated, response, [response.TableId], null, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(response);
@@ -191,6 +209,7 @@ public sealed class VisitService
     }
 
     // テーブルの移動 (会計を始める前だけ)。元のテーブル端末は待受に、移動先は注文の画面になる
+    // キッチン端末はチケットの通知で一覧を読み直すので、開いているチケットも知らせる (チケットは来店の今のテーブルを出す)
     public ValueTask<ServiceResult<VisitResponse>> MoveAsync(Guid id, VisitMoveRequest request, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
@@ -224,7 +243,7 @@ public sealed class VisitService
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            var response = await ToResponseAsync((await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, id, cancellationToken))!, cancellationToken);
+            var response = await LoadResponseAsync(transaction.Tx, tenantId, storeId, id, cancellationToken);
             var data = new VisitMovedEventData
             {
                 Visit = response,
@@ -232,6 +251,12 @@ public sealed class VisitService
                 FromTableName = visit.TableName
             };
             await transaction.AppendEventAsync(EventTypes.VisitMoved, data, [visit.TableId, request.ToTableId], null, context.Now, cancellationToken);
+            foreach (var ticket in await kitchenAccessor.QueryOpenTicketListByVisitAsync(transaction.Tx, tenantId, id, cancellationToken))
+            {
+                var item = await OrderResponses.LoadTicketAsync(kitchenAccessor, transaction.Tx, tenantId, storeId, ticket.Id, cancellationToken);
+                await transaction.AppendEventAsync(EventTypes.TicketUpdated, item, null, ticket.StationId, context.Now, cancellationToken);
+            }
+
             await transaction.CommitAsync(cancellationToken);
             return new(response);
         }, cancellationToken);
@@ -263,7 +288,7 @@ public sealed class VisitService
                 return new(new ServiceError(ErrorCodes.VisitNotOpen));
             }
 
-            var store = await storeAccessor.QueryAsync(tenantId, storeId, cancellationToken);
+            var store = await storeAccessor.QueryAsync(transaction.Tx, tenantId, storeId, cancellationToken);
             var catalog = store is null ? null : await menuService.GetCatalogAsync(store, cancellationToken);
             if ((catalog is null) || !catalog.Rules.TryGetValue(request.RuleId, out var rule) || (rule.Kind != MenuRuleKind.Confirmation))
             {
@@ -288,6 +313,7 @@ public sealed class VisitService
     //--------------------------------------------------------------------------------
 
     // テーブルの外で会計した来店を終える (レジで払った、スタッフが閉じた)。テーブルで払い終えた来店はサーバが閉じる
+    // 会計中の来店の待っている支払はやめ、終わっていない呼び出しは終える
     public async ValueTask<ServiceResult<VisitResponse>> CloseAsync(Guid id, VisitCloseRequest request, CancellationToken cancellationToken)
     {
         if (request.ClosedBy is not (VisitClosedBy.Register or VisitClosedBy.Hall))
@@ -316,14 +342,21 @@ public sealed class VisitService
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            var response = await ToResponseAsync((await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, id, cancellationToken))!, cancellationToken);
+            var response = await LoadResponseAsync(transaction.Tx, tenantId, storeId, id, cancellationToken);
             await transaction.AppendEventAsync(EventTypes.VisitClosed, response, [response.TableId], null, context.Now, cancellationToken);
+            if (visit!.Status == VisitStatus.Paying)
+            {
+                var payments = await paymentAccessor.QueryListAsync(transaction.Tx, tenantId, id, cancellationToken);
+                await PaymentService.CancelPendingAsync(paymentAccessor, transaction, payments, visit.TableId, context.Now, cancellationToken);
+            }
+
+            await callService.FinishVisitCallsAsync(transaction, id, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(response);
         }, cancellationToken);
     }
 
-    // 注文のないまま帰った来店の取りやめ。テーブル端末と受付機には来店を終えたときと同じ通知を送る
+    // 注文のないまま帰った来店の取りやめ。テーブル端末と受付機には来店を終えたときと同じ通知を送る。終わっていない呼び出しは終える
     public ValueTask<ServiceResult<VisitResponse>> CancelAsync(Guid id, VisitCancelRequest request, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
@@ -347,8 +380,9 @@ public sealed class VisitService
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            var response = await ToResponseAsync((await visitAccessor.QueryAsync(transaction.Tx, tenantId, storeId, id, cancellationToken))!, cancellationToken);
+            var response = await LoadResponseAsync(transaction.Tx, tenantId, storeId, id, cancellationToken);
             await transaction.AppendEventAsync(EventTypes.VisitClosed, response, [response.TableId], null, context.Now, cancellationToken);
+            await callService.FinishVisitCallsAsync(transaction, id, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(response);
         }, cancellationToken);
@@ -434,6 +468,17 @@ public sealed class VisitService
         var confirmations = await visitAccessor.QueryConfirmationListAsync(visit.TenantId, visit.Id, cancellationToken);
         return ToResponse(visit, confirmations.Select(static x => x.RuleId).ToList());
     }
+
+    // 書き込みの中で作る応答 (同じトランザクションで書いた確認の記録も入れる)
+    internal async ValueTask<VisitResponse> ToResponseAsync(DbTransaction tx, VisitEntity visit, CancellationToken cancellationToken)
+    {
+        var confirmations = await visitAccessor.QueryConfirmationListAsync(tx, visit.TenantId, visit.Id, cancellationToken);
+        return ToResponse(visit, confirmations.Select(static x => x.RuleId).ToList());
+    }
+
+    // 書き込んだあとの来店を読み直して応答にする
+    internal async ValueTask<VisitResponse> LoadResponseAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid id, CancellationToken cancellationToken) =>
+        await ToResponseAsync(tx, (await visitAccessor.QueryAsync(tx, tenantId, storeId, id, cancellationToken))!, cancellationToken);
 
     private static VisitResponse ToResponse(VisitEntity visit, IReadOnlyList<Guid> confirmedRuleIds) =>
         new()

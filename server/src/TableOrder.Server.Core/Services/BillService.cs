@@ -98,7 +98,7 @@ public sealed class BillService
 
             if (visit.Status == VisitStatus.Paying)
             {
-                return new(await visitService.ToResponseAsync(visit, cancellationToken));
+                return new(await visitService.ToResponseAsync(tx, visit, cancellationToken));
             }
 
             if (visit.Status != VisitStatus.Open)
@@ -125,7 +125,7 @@ public sealed class BillService
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            var response = await visitService.ToResponseAsync((await visitAccessor.QueryAsync(tx, tenantId, storeId, visitId, cancellationToken))!, cancellationToken);
+            var response = await visitService.LoadResponseAsync(tx, tenantId, storeId, visitId, cancellationToken);
             await transaction.AppendEventAsync(EventTypes.VisitUpdated, response, [visit.TableId], null, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(response);
@@ -155,7 +155,7 @@ public sealed class BillService
 
             if (visit.Status == VisitStatus.Open)
             {
-                return new(await visitService.ToResponseAsync(visit, cancellationToken));
+                return new(await visitService.ToResponseAsync(tx, visit, cancellationToken));
             }
 
             if (visit.Status != VisitStatus.Paying)
@@ -166,18 +166,17 @@ public sealed class BillService
             var payments = await paymentAccessor.QueryListAsync(tx, tenantId, visitId, cancellationToken);
             if (payments.Any(static x => x.Status == PaymentStatus.Completed))
             {
-                return new(await visitService.ToResponseAsync(visit, cancellationToken));
+                return new(await visitService.ToResponseAsync(tx, visit, cancellationToken));
             }
 
-            foreach (var payment in payments.Where(static x => x.Status == PaymentStatus.Pending))
+            await PaymentService.CancelPendingAsync(paymentAccessor, transaction, payments, visit.TableId, context.Now, cancellationToken);
+
+            if (await visitAccessor.UpdateReopenedAsync(tx, tenantId, visitId, context.Now, cancellationToken) == 0)
             {
-                await paymentAccessor.UpdateCancelledAsync(tx, tenantId, payment.Id, context.Now, cancellationToken);
-                var cancelled = PaymentService.ToResponse((await paymentAccessor.QueryAsync(tx, tenantId, storeId, payment.Id, cancellationToken))!);
-                await transaction.AppendEventAsync(EventTypes.PaymentUpdated, cancelled, [visit.TableId], null, context.Now, cancellationToken);
+                return new(new ServiceError(ErrorCodes.VersionMismatch));
             }
 
-            await visitAccessor.UpdateReopenedAsync(tx, tenantId, visitId, context.Now, cancellationToken);
-            var response = await visitService.ToResponseAsync((await visitAccessor.QueryAsync(tx, tenantId, storeId, visitId, cancellationToken))!, cancellationToken);
+            var response = await visitService.LoadResponseAsync(tx, tenantId, storeId, visitId, cancellationToken);
             await transaction.AppendEventAsync(EventTypes.VisitUpdated, response, [visit.TableId], null, context.Now, cancellationToken);
             await transaction.CommitAsync(cancellationToken);
             return new(response);

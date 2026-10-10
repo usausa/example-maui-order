@@ -99,7 +99,7 @@
     <value>接続先 (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>注文サーバの URL (http か https) を入れます</value>
+    <value>注文サーバの URL (https) を入れます</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>EMM で配られた接続先を使います (この端末では変えられません)</value>
@@ -634,5 +634,20 @@
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>処理できませんでした</value>
+  </data>
+  <data name="CallWatchChannel" xml:space="preserve">
+    <value>呼び出しの待ち受け</value>
+  </data>
+  <data name="CallWatchTitle" xml:space="preserve">
+    <value>呼び出しを待ち受けています</value>
+  </data>
+  <data name="CallWatchText" xml:space="preserve">
+    <value>画面が消えている間も、新しい呼び出しを音と振動で知らせます</value>
+  </data>
+  <data name="BillCancelUnavailable" xml:space="preserve">
+    <value>払い終えた支払があるので、会計を取りやめられません</value>
+  </data>
+  <data name="ErrorLineCancelInvalid" xml:space="preserve">
+    <value>ほかの端末で提供したか、取り消した品です</value>
   </data>
 </root>

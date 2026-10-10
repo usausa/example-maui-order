@@ -1232,5 +1232,35 @@ namespace TableOrder.HallApp.Resources.Strings {
                 return ResourceManager.GetString("ErrorGeneric", resourceCulture);
             }
         }
+
+        internal static string CallWatchChannel {
+            get {
+                return ResourceManager.GetString("CallWatchChannel", resourceCulture);
+            }
+        }
+
+        internal static string CallWatchTitle {
+            get {
+                return ResourceManager.GetString("CallWatchTitle", resourceCulture);
+            }
+        }
+
+        internal static string CallWatchText {
+            get {
+                return ResourceManager.GetString("CallWatchText", resourceCulture);
+            }
+        }
+
+        internal static string BillCancelUnavailable {
+            get {
+                return ResourceManager.GetString("BillCancelUnavailable", resourceCulture);
+            }
+        }
+
+        internal static string ErrorLineCancelInvalid {
+            get {
+                return ResourceManager.GetString("ErrorLineCancelInvalid", resourceCulture);
+            }
+        }
     }
 }

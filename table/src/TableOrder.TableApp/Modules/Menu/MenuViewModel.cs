@@ -45,8 +45,8 @@ public sealed partial class MenuViewModel : AppViewModelBase
 
     public IReadOnlyList<CategoryTab> Categories { get; }
 
-    [ObservableProperty]
-    public partial IReadOnlyList<MenuCard> Cards { get; set; } = [];
+    // カテゴリを替えたら差し替えずに入れ直す
+    public ObservableCollection<MenuCard> Cards { get; } = [];
 
     public ObservableCollection<CartLineItem> CartLines { get; } = [];
 
@@ -284,7 +284,11 @@ public sealed partial class MenuViewModel : AppViewModelBase
             category.IsSelected = category == tab;
         }
 
-        Cards = tab.Cards;
+        Cards.Clear();
+        foreach (var card in tab.Cards)
+        {
+            Cards.Add(card);
+        }
     }
 
     //--------------------------------------------------------------------------------

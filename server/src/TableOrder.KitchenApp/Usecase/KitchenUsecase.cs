@@ -6,9 +6,6 @@ using System.Security.Cryptography;
 // 操作が通ったら替わった一覧を読み直す (通知でも読み直すが、操作した画面がすぐ替わるように)
 public sealed class KitchenUsecase
 {
-    // 登録したコードがキッチン端末のものでなかった
-    public const string KindMismatch = "DEVICE_KIND_MISMATCH";
-
     // このブラウザでは端末の鍵を作れなかった
     public const string KeyUnavailable = "DEVICE_KEY_UNAVAILABLE";
 
@@ -60,7 +57,7 @@ public sealed class KitchenUsecase
     // Device
     //--------------------------------------------------------------------------------
 
-    // 管理画面で出したペアリングコードで登録する (受け持つ持ち場はコードで決まる)
+    // 管理画面で出したペアリングコードで登録する (受け持つ持ち場はコードで決まる。ほかの種類のコードは、サーバが登録せずに断る)
     public async ValueTask<ApiResult<DevicePairResponse>> PairAsync(string pairingCode)
     {
         DevicePublicKey publicKey;
@@ -77,6 +74,7 @@ public sealed class KitchenUsecase
         var result = await deviceApi.PairAsync(new DevicePairRequest
         {
             PairingCode = pairingCode,
+            Kind = DeviceKind.Kitchen,
             PublicKey = publicKey,
             DeviceName = DeviceName(),
             AppVersion = AppInfo.Version
@@ -85,12 +83,6 @@ public sealed class KitchenUsecase
         {
             log.WarnDeviceRegistrationFailed(result.Status, result.ErrorCode);
             return result;
-        }
-
-        if (device.Kind != DeviceKind.Kitchen)
-        {
-            log.WarnDeviceRegistrationFailed(ApiStatus.Rejected, KindMismatch);
-            return ApiResult.Failure<DevicePairResponse>(ApiStatus.Rejected, KindMismatch);
         }
 
         settings.Register(device.DeviceId);

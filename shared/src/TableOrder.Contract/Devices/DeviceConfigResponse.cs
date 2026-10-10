@@ -30,8 +30,8 @@ public sealed class DeviceConfigResponse
     // 機能の有無 (店舗の設定。ない項目は既定の値)
     public DeviceConfigResponseFeatures Features { get; set; } = default!;
 
-    // スタッフの PIN のハッシュ (端末は入れた PIN を同じ計算で確かめ、平文を持たない)
-    public DeviceConfigResponseStaffPin StaffPin { get; set; } = default!;
+    // スタッフの PIN のハッシュ (端末は入れた PIN を同じ計算で確かめ、平文を持たない)。PIN を使わないキッチン端末は null
+    public DeviceConfigResponseStaffPin? StaffPin { get; set; }
 
     // チェーンと店舗の設定の版 (store.updated の店舗の版と違えば、待受のときに起動からやり直す)
     public int SettingsVersion { get; set; }

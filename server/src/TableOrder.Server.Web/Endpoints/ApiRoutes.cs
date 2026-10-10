@@ -9,6 +9,13 @@ public static class ApiRoutes
 
     public const string Devices = Prefix + "/devices";
 
+    // 秘密を運ぶ端末の API (HTTP のログに本文を出さない)
+    public const string DevicePair = Devices + "/pair";
+
+    public const string DeviceToken = Devices + "/token";
+
+    public const string DeviceConfig = Devices + "/me/config";
+
     public const string Store = Prefix + "/store";
 
     public const string Tables = Prefix + "/tables";

@@ -3,11 +3,11 @@ namespace TableOrder.Terminal.Extender;
 using Smart.Maui;
 using Smart.Navigation.Plugins;
 
+// 画面を移ったら、前の画面で押したボタンの押した見た目 (Android の波紋) を止める (新しい画面に残らないように)
 public sealed class NavigationFeedbackPlugin : PluginBase
 {
     public override void OnNavigatedTo(IPluginContext pluginContext, INavigationContext navigationContext, object view, object? target)
     {
-        // Disable footer button feedback on Android when navigating to a new page to prevent feedback from continuing on the new page
 #if ANDROID
         if (view is not Element element)
         {
@@ -22,7 +22,7 @@ public sealed class NavigationFeedbackPlugin : PluginBase
 
         Application.Current?.Dispatcher.Dispatch(() =>
         {
-            // ViewGroup jumpDrawablesToCurrentState call propagates to descendants
+            // ViewGroup の JumpDrawablesToCurrentState は子孫にも伝わる
             if (page.Handler?.PlatformView is Android.Views.View platformView)
             {
                 platformView.JumpDrawablesToCurrentState();

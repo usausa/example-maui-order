@@ -1,5 +1,6 @@
 namespace TableOrder.ReceptionApp.Shell;
 
+using TableOrder.ReceptionApp.Modules;
 using TableOrder.Terminal.Components;
 using TableOrder.Terminal.Shell;
 
@@ -50,6 +51,9 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
     }
 
     // 起動で空席を読み直すので、印は消す
+    // 起動と端末の設定の画面は、自分で確かめるので受けない
+    protected override bool AcceptsRestart => Navigator.CurrentViewId is not (ViewId.Startup or ViewId.Setup);
+
     protected override async Task NotifyRestartAsync()
     {
         vacancyChanged = false;

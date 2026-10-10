@@ -71,7 +71,7 @@ public sealed partial class SetupViewModel : AppViewModelBase
                 UpdatePairingCode(value);
             }
         });
-        SaveCommand = MakeAsyncCommand(SaveAsync, () => (IsEndPointManaged || IsValidEndPoint(ApiEndPoint)) && (PairingCode.Length is 0 or Length.PairingCodeDigits));
+        SaveCommand = MakeAsyncCommand(SaveAsync, () => (IsEndPointManaged || ApiEndPoints.IsValid(ApiEndPoint)) && (PairingCode.Length is 0 or Length.PairingCodeDigits));
     }
 
     //--------------------------------------------------------------------------------
@@ -93,10 +93,6 @@ public sealed partial class SetupViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
     // Operation
     //--------------------------------------------------------------------------------
-
-    // 接続先は http か https の URL にする (空では保存しない)
-    private static bool IsValidEndPoint(string value) =>
-        Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri) && ((uri.Scheme == Uri.UriSchemeHttp) || (uri.Scheme == Uri.UriSchemeHttps));
 
     private void UpdatePairingCode(string value)
     {

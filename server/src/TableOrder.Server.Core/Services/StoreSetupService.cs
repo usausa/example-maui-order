@@ -44,8 +44,6 @@ public sealed partial class StoreSetupService
 
     private readonly IDialect dialect;
 
-    private readonly EventService eventService;
-
     private readonly StoreAccessor storeAccessor;
 
     private readonly SettingsAccessor settingsAccessor;
@@ -54,24 +52,26 @@ public sealed partial class StoreSetupService
 
     private readonly EventAccessor eventAccessor;
 
+    private readonly EventService eventService;
+
     public StoreSetupService(
         ServiceContextProvider contextProvider,
         IDbProvider provider,
         IDialect dialect,
-        EventService eventService,
         StoreAccessor storeAccessor,
         SettingsAccessor settingsAccessor,
         MenuAccessor menuAccessor,
-        EventAccessor eventAccessor)
+        EventAccessor eventAccessor,
+        EventService eventService)
     {
         this.contextProvider = contextProvider;
         this.provider = provider;
         this.dialect = dialect;
-        this.eventService = eventService;
         this.storeAccessor = storeAccessor;
         this.settingsAccessor = settingsAccessor;
         this.menuAccessor = menuAccessor;
         this.eventAccessor = eventAccessor;
+        this.eventService = eventService;
     }
 
     //--------------------------------------------------------------------------------

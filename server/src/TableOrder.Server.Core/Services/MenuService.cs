@@ -31,6 +31,7 @@ public sealed class MenuService
     }
 
     // 業務の確かめに使う店舗の今のメニュー (公開していなければ null)
+    // 公開したメニューは書き換えないので、書き込みの中からもトランザクションの外で読む (読んだものを店舗ごとに使い回す)
     public async ValueTask<MenuCatalog?> GetCatalogAsync(StoreEntity store, CancellationToken cancellationToken)
     {
         if (store.MenuPublicationId is not { } publicationId)

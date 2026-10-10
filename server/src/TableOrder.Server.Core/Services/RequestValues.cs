@@ -4,4 +4,9 @@ namespace TableOrder.Server.Core.Services;
 internal static class RequestValues
 {
     public static IReadOnlyList<T> ListOf<T>(IReadOnlyList<T>? values) => values ?? [];
+
+    // 一覧の要素の null (JSON の読み込みは、null にしないと宣言した要素にも null を通す)
+    public static bool HasNull<T>(IEnumerable<T?> values)
+        where T : class =>
+        values.Any(static x => x is null);
 }

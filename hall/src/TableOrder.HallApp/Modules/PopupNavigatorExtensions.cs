@@ -5,6 +5,9 @@ using TableOrder.HallApp.Modules.Dialogs;
 // ホール端末のポップアップの種類ごとにメソッドを置く (どの端末でも同じもの (電卓、知らせ、確認、PIN) は TableOrder.Terminal の PopupNavigatorExtensions)。null = キャンセル
 public static class PopupNavigatorExtensions
 {
+    // 残りの数の桁 (上限の桁まで)
+    private static readonly int RemainingDigits = Length.MaxStockRemaining.ToString(CultureInfo.InvariantCulture).Length;
+
     // 人数 (大人と子ども)。案内と人数の変更で使う
     public static ValueTask<GuestCountResult?> GuestCountAsync(this IPopupNavigator popupNavigator, GuestCountParameter parameter) =>
         popupNavigator.PopupAsync<GuestCountParameter, GuestCountResult?>(DialogId.GuestCount, parameter);
@@ -24,6 +27,10 @@ public static class PopupNavigatorExtensions
     // 代わりの注文の品の詳細 (選んだ内容)
     public static ValueTask<ItemSelection?> OrderItemAsync(this IPopupNavigator popupNavigator, OrderItemParameter parameter) =>
         popupNavigator.PopupAsync<OrderItemParameter, ItemSelection?>(DialogId.OrderItem, parameter);
+
+    // 残りの数 (電卓で入れる。0 はサーバが品切れにする)
+    public static ValueTask<string?> InputRemainingAsync(this IPopupNavigator popupNavigator, string value) =>
+        popupNavigator.InputNumberAsync(AppResources.StockRemainingTitle, value, RemainingDigits);
 
     // 品の状態 (売れる、残りの数を決める、品切れ) を選ぶ
     public static ValueTask<StockStatus?> StockEditAsync(this IPopupNavigator popupNavigator, StockEditParameter parameter) =>

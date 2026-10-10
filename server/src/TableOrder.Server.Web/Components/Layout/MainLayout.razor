@@ -28,12 +28,13 @@
         <div class="pa-4">
             @if (initialized)
             {
-                @if (Scope.IsInitialized)
-                {
-                    <StoreSelector />
-                }
+                @* 店舗の選択の失敗も画面の失敗として出す (外に置くと、回線ごと終わって選択と入力を失う) *@
                 <ErrorBoundary @ref="errorBoundary">
                     <ChildContent>
+                        @if (Scope.IsInitialized)
+                        {
+                            <StoreSelector />
+                        }
                         @Body
                     </ChildContent>
                     <ErrorContent>

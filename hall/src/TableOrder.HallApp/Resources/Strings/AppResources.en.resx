@@ -99,7 +99,7 @@
     <value>Server (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>Enter the order server URL (http or https)</value>
+    <value>Enter the order server URL (https)</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>Uses the server set by EMM (cannot be changed on this device)</value>
@@ -634,5 +634,20 @@
   </data>
   <data name="ErrorGeneric" xml:space="preserve">
     <value>Something went wrong.</value>
+  </data>
+  <data name="CallWatchChannel" xml:space="preserve">
+    <value>Call standby</value>
+  </data>
+  <data name="CallWatchTitle" xml:space="preserve">
+    <value>Waiting for calls</value>
+  </data>
+  <data name="CallWatchText" xml:space="preserve">
+    <value>New calls sound and vibrate even while the screen is off</value>
+  </data>
+  <data name="BillCancelUnavailable" xml:space="preserve">
+    <value>Checkout cannot be cancelled because part of the bill has been paid.</value>
+  </data>
+  <data name="ErrorLineCancelInvalid" xml:space="preserve">
+    <value>This item has already been served or canceled on another device.</value>
   </data>
 </root>

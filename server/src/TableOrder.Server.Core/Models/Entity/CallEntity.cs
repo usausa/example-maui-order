@@ -23,8 +23,6 @@ public sealed class CallEntity
 
     public DateTimeOffset? DoneAt { get; set; }
 
-    public string? StaffId { get; set; }
-
     // 読み出しで足す値
     public Guid TableId { get; set; }
 

@@ -12,7 +12,7 @@
 
     <!-- 代わりの注文: カテゴリの帯 (カート、メニューのカテゴリ) で選んだ品を並べ、品を押すと詳細で選んでカートに入れる。カートの品を押すと外す。下に注文する (点数と合計) を置く -->
     <Grid Style="{StaticResource ScreenGrid}"
-          RowDefinitions="Auto,Auto,56,1,*,Auto">
+          RowDefinitions="Auto,Auto,64,1,*,Auto">
         <!-- header -->
         <VerticalStackLayout Grid.Row="0"
                              Style="{StaticResource HeaderStack}">

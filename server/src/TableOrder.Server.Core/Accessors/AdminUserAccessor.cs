@@ -23,9 +23,9 @@ public sealed partial class AdminUserAccessor
     [Execute]
     public partial ValueTask<int> DeleteStoreAsync(DbTransaction tx, Guid tenantId, Guid userId, CancellationToken cancellationToken);
 
-    // 役割と名前を替える (読んだときの版のときだけ。資格の印も替えて、開いている管理画面をやり直させる)
+    // 役割と名前を替える (読んだときの版のときだけ)。役割か受け持つ店舗を替えるときは資格の印も替えて、開いている管理画面をやり直させる (null は替えない)
     [Execute]
-    public partial ValueTask<int> UpdateAsync(DbTransaction tx, Guid tenantId, Guid id, AdminRole role, string name, string securityStamp, DateTimeOffset now, int version, CancellationToken cancellationToken);
+    public partial ValueTask<int> UpdateAsync(DbTransaction tx, Guid tenantId, Guid id, AdminRole role, string name, string? securityStamp, DateTimeOffset now, int version, CancellationToken cancellationToken);
 
     // 仮のパスワードにする (次のサインインで替えさせ、続けて間違えた回数と止めた期限を戻す)
     [Execute]

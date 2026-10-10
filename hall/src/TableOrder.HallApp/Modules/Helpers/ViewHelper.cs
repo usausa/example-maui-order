@@ -142,7 +142,7 @@ public static class ViewHelper
             {
                 ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
                 ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
-                DeviceUsecase.KindMismatch => AppResources.ErrorDeviceKind,
+                ErrorCodes.DeviceKindMismatch => AppResources.ErrorDeviceKind,
                 ErrorCodes.TableOccupied => AppResources.ErrorTableOccupied,
                 ErrorCodes.VersionMismatch => AppResources.ErrorVersionMismatch,
                 ErrorCodes.VisitHasOrders => AppResources.ErrorVisitHasOrders,

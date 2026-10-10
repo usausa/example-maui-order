@@ -63,15 +63,7 @@ public sealed partial class StoreSettingsPage : IDisposable
 
     // 店舗を選び直したら読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
-        {
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
-        });
+        _ = ReloadAsync(LoadAsync);
 
     private async Task LoadAsync()
     {
@@ -124,7 +116,7 @@ public sealed partial class StoreSettingsPage : IDisposable
         var error = await SettingsService.UpdateStoreSettingsAsync(settings, String.IsNullOrEmpty(newPin) ? null : newPin, CancellationToken.None);
         if (error is not null)
         {
-            Snackbar.Add(ErrorMessage(error), Severity.Error);
+            Snackbar.Add(AdminNames.ErrorMessage(error), Severity.Error);
             return;
         }
 
@@ -134,13 +126,6 @@ public sealed partial class StoreSettingsPage : IDisposable
 
     private static List<T> Choose<T>(params (T Value, bool Selected)[] choices) =>
         choices.Where(static x => x.Selected).Select(static x => x.Value).ToList();
-
-    private static string ErrorMessage(ServiceError error) =>
-        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ?? error.ErrorCode switch
-        {
-            ErrorCodes.VersionMismatch => "ほかで替えられています (注文の一時停止なども含む)。読み直してください",
-            _ => error.ErrorCode
-        };
 
     // 呼び出しの用件を使うかどうか (画面で替える)
     private sealed class ReasonChoice

@@ -6,9 +6,22 @@ using TableOrder.Terminal.Components;
 // 端末の情報、端末の設定、専用端末の一時的な解除を置く (PIN は管理画面の店舗の設定で替える。来店はスタッフがホール端末や管理画面の案内で開く)
 public sealed partial class StaffViewModel : AppViewModelBase
 {
+    // 触らずにしばらくたったら、専用端末に戻してから閉じる (開いたまま離れると、お客様が端末の設定や Android の設定に触れる)
+    private static readonly TimeSpan IdleTimeout = TimeSpan.FromMinutes(5);
+
+    private static readonly TimeSpan IdleCheckInterval = TimeSpan.FromSeconds(5);
+
+    private readonly TimeProvider timeProvider;
+
     private readonly KioskManager kiosk;
 
     private readonly DeviceState deviceState;
+
+    // 画面を離れたら時間切れの見張りをやめる
+    private readonly CancellationTokenSource watching = new();
+
+    // 最後に操作した時刻
+    private DateTimeOffset touchedAt;
 
     private readonly VisitState visitState;
 
@@ -54,12 +67,14 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     public StaffViewModel(
         IAppInfo appInfo,
+        TimeProvider timeProvider,
         KioskManager kiosk,
         Settings settings,
         DeviceState deviceState,
         MenuState menuState,
         VisitState visitState)
     {
+        this.timeProvider = timeProvider;
         this.kiosk = kiosk;
         this.deviceState = deviceState;
         this.visitState = visitState;
@@ -74,8 +89,24 @@ public sealed partial class StaffViewModel : AppViewModelBase
         SetupCommand = MakeAsyncCommand(() => Navigator.ForwardAsync(ViewId.Setup));
         ReleaseCommand = MakeDelegateCommand(() => ChangeKiosk(kiosk.Release));
         RestoreCommand = MakeDelegateCommand(() => ChangeKiosk(kiosk.Restore));
-        SystemSettingsCommand = MakeDelegateCommand(kiosk.OpenSystemSettings);
+        SystemSettingsCommand = MakeDelegateCommand(() =>
+        {
+            Touch();
+            kiosk.OpenSystemSettings();
+        });
         CloseCommand = MakeAsyncCommand(CloseAsync);
+        Touch();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            watching.Cancel();
+            watching.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     //--------------------------------------------------------------------------------
@@ -85,6 +116,7 @@ public sealed partial class StaffViewModel : AppViewModelBase
     public override Task OnNavigatedToAsync(INavigationContext context)
     {
         Refresh();
+        _ = WatchIdleAsync(watching.Token);
         return Task.CompletedTask;
     }
 
@@ -94,6 +126,36 @@ public sealed partial class StaffViewModel : AppViewModelBase
     // お客様の画面に戻る (来店中なら注文の画面、そうでなければ待受)。品切れなどの表示を合わせるため作り直す
     private async Task CloseAsync() =>
         await Navigator.ForwardAsync(visitState.IsOpen ? ViewId.Menu : ViewId.Standby);
+
+    // 最後に操作してからしばらくたったら、専用端末を戻してお客様の画面に戻る (操作の途中は終わるのを待つ)
+    private async Task WatchIdleAsync(CancellationToken token)
+    {
+        while (true)
+        {
+            try
+            {
+                await Task.Delay(IdleCheckInterval, token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            if ((timeProvider.GetUtcNow() - touchedAt >= IdleTimeout) && !BusyState.IsBusy)
+            {
+                break;
+            }
+        }
+
+        if (kiosk.GetStatus().IsReleased)
+        {
+            kiosk.Restore();
+        }
+
+        await CloseAsync();
+    }
+
+    private void Touch() => touchedAt = timeProvider.GetUtcNow();
 
     //--------------------------------------------------------------------------------
     // Information
@@ -135,6 +197,7 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     private void ChangeKiosk(Action action)
     {
+        Touch();
         action();
         Refresh();
     }

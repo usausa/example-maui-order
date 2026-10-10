@@ -1,5 +1,6 @@
 namespace TableOrder.HallApp.Shell;
 
+using TableOrder.HallApp.Modules;
 using TableOrder.Terminal.Components;
 using TableOrder.Terminal.Shell;
 
@@ -58,8 +59,13 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
     {
         switch (e)
         {
-            case VisitOpenedEvent or VisitUpdatedEvent or OrderCreatedEvent:
+            case VisitOpenedEvent or VisitUpdatedEvent:
                 tablesChanged = true;
+                break;
+            case OrderCreatedEvent:
+                // 持ち場のない品 (スタッフが運ぶ品) は、注文を受けたときにできあがりになる (届く通知は order.created だけ)
+                tablesChanged = true;
+                servingChanged = true;
                 break;
             case VisitMovedEvent or VisitClosedEvent:
                 // 呼び出しと提供の一覧は来店の今のテーブルを出し、閉じた来店のものは外れるので、一緒に読み直す
@@ -84,6 +90,9 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
     }
 
     // 起動ですべて読み直すので、読み直す一覧の印は消す
+    // 起動と端末の設定の画面は、自分で確かめるので受けない
+    protected override bool AcceptsRestart => Navigator.CurrentViewId is not (ViewId.Startup or ViewId.Setup);
+
     protected override async Task NotifyRestartAsync()
     {
         tablesChanged = false;
@@ -99,6 +108,11 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         {
             case StoreUpdatedEvent updated:
                 storeState.UpdateStore(updated.Store);
+                if (storeState.IsSettingsChanged)
+                {
+                    log.InfoSettingsChanged(updated.Store.SettingsVersion);
+                }
+
                 await Navigator.NotifyAsync(ShellEvent.StoreChanged).ConfigureAwait(true);
                 break;
             case StockUpdatedEvent stock:

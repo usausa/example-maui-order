@@ -38,8 +38,8 @@ internal static partial class Log
 
     // Admin
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Initial operator created. email=[{email}]")]
-    public static partial void InfoInitialOperatorCreated(this ILogger logger, string email);
+    [LoggerMessage(Level = LogLevel.Information, Message = "Initial operator created. user=[{userId}]")]
+    public static partial void InfoInitialOperatorCreated(this ILogger logger, Guid userId);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "No operator exists. Set Admin:InitialOperatorEmail and Admin:InitialOperatorPassword to create the first operator.")]
     public static partial void WarnNoOperator(this ILogger logger);
@@ -60,6 +60,9 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Error, Message = "Event dispatch failed.")]
     public static partial void ErrorEventDispatch(this ILogger logger, Exception ex);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Event dispatch failed. tenant=[{tenantId}], store=[{storeId}]")]
+    public static partial void ErrorStoreEventDispatch(this ILogger logger, Exception ex, Guid tenantId, Guid storeId);
+
     // Cleanup
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Expired events deleted. count=[{count}]")]
@@ -79,8 +82,14 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Error, Message = "Simulation failed.")]
     public static partial void ErrorSimulation(this ILogger logger, Exception ex);
 
+    [LoggerMessage(Level = LogLevel.Error, Message = "Simulation failed. tenant=[{tenantId}], store=[{storeId}]")]
+    public static partial void ErrorStoreSimulation(this ILogger logger, Exception ex, Guid tenantId, Guid storeId);
+
     // Error
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception.")]
     public static partial void ErrorUnhandledException(this ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled component exception.")]
+    public static partial void ErrorComponentException(this ILogger logger, Exception ex);
 }

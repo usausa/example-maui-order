@@ -14,7 +14,6 @@
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.ImageCache))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.KioskManager))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.ManagedConfiguration))]
-[assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.StorageManager))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.ThemeManager))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Extender.FullscreenPopupPlugin))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Extender.PopupClosePlugin))]
@@ -29,4 +28,5 @@
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.State.LanguageState))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.State.Settings))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.State.StaffLock))]
+[assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.State.StartupState))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Usecase.DeviceUsecase))]

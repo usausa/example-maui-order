@@ -10,6 +10,8 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
 
     private readonly ManagedConfiguration managedConfiguration;
 
+    private readonly CallWatch callWatch;
+
     private readonly StartupState startup;
 
     private bool destroying;
@@ -26,11 +28,13 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
         INavigator navigator,
         KioskManager kiosk,
         ManagedConfiguration managedConfiguration,
+        CallWatch callWatch,
         StartupState startup)
     {
         Navigator = navigator;
         this.kiosk = kiosk;
         this.managedConfiguration = managedConfiguration;
+        this.callWatch = callWatch;
         this.startup = startup;
 
         // 遷移の間は Busy にして、画面の操作と戻るを受け付けない
@@ -48,6 +52,9 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
         // 専用端末にする (全画面。Device Owner なら端末の制限も掛ける)。ロックタスクには画面が前に出たときに入る
         kiosk.Initialize();
         kiosk.Resume();
+
+        // 画面が消えている間も呼び出しを知らせる (前景サービスは画面を出している間に始める)
+        callWatch.Start();
 
         await startup.Completed;
 
@@ -77,6 +84,7 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
     {
         kiosk.Resume();
         managedConfiguration.Refresh();
+        callWatch.Start();
     }
 
     public void OnDestroying()

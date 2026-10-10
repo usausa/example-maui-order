@@ -12,9 +12,6 @@ using TableOrder.Server.Web.Application.Context;
 // 仮のパスワードはこの画面で作ってハッシュにし、平文は出した直後に一度だけ見せる
 public sealed partial class OperatorsPage
 {
-    // 出した仮のパスワード (この画面を離れるまで見せる)
-    private sealed record IssuedPassword(string Email, string Password);
-
     private List<AdminUserSummaryEntity> operators = [];
 
     private string addEmail = string.Empty;
@@ -65,26 +62,27 @@ public sealed partial class OperatorsPage
     // Add
     //--------------------------------------------------------------------------------
 
-    private async Task AddAsync()
-    {
-        var password = TemporaryPassword.Create();
-        var result = await OperatorService.AddAsync(
-            addEmail,
-            UserManager.NormalizeName(addEmail.Trim()),
-            addName,
-            UserManager.PasswordHasher.HashPassword(new AdminUserEntity(), password),
-            CancellationToken.None);
-        if (!result.Succeeded)
+    private Task AddAsync() =>
+        RunOnceAsync(async () =>
         {
-            Snackbar.Add(AdminNames.ErrorMessage(result.Error), Severity.Error);
-            return;
-        }
+            var password = TemporaryPassword.Create();
+            var result = await OperatorService.AddAsync(
+                addEmail,
+                UserManager.NormalizeName(addEmail.Trim()),
+                addName,
+                UserManager.PasswordHasher.HashPassword(new AdminUserEntity(), password),
+                CancellationToken.None);
+            if (!result.Succeeded)
+            {
+                Snackbar.Add(AdminNames.ErrorMessage(result.Error), Severity.Error);
+                return;
+            }
 
-        issued = new IssuedPassword(result.Value.Email, password);
-        addEmail = string.Empty;
-        addName = string.Empty;
-        await LoadAsync();
-    }
+            issued = new IssuedPassword(result.Value.Email, password);
+            addEmail = string.Empty;
+            addName = string.Empty;
+            await LoadAsync();
+        });
 
     //--------------------------------------------------------------------------------
     // Edit
@@ -119,7 +117,7 @@ public sealed partial class OperatorsPage
     private async Task ResetPasswordAsync()
     {
         if (editing is not { } item ||
-            !await ConfirmAsync("仮のパスワードを出し直す", $"{item.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
+            !await DialogService.ConfirmAsync("仮のパスワードを出し直す", $"{item.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
         {
             return;
         }
@@ -139,7 +137,7 @@ public sealed partial class OperatorsPage
     private async Task ResetTwoFactorAsync()
     {
         if (editing is not { } item ||
-            !await ConfirmAsync("多要素を外す", $"{item.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、本人が登録し直します。", "外す"))
+            !await DialogService.ConfirmAsync("多要素を外す", $"{item.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、本人が登録し直します。", "外す"))
         {
             return;
         }
@@ -162,7 +160,7 @@ public sealed partial class OperatorsPage
             return;
         }
 
-        if (!isActive && !await ConfirmAsync("運営者を止める", $"{item.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
+        if (!isActive && !await DialogService.ConfirmAsync("運営者を止める", $"{item.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
         {
             return;
         }
@@ -178,16 +176,9 @@ public sealed partial class OperatorsPage
         await LoadAsync();
     }
 
-    private async Task<bool> ConfirmAsync(string title, string message, string yesText) =>
-        await DialogService.ShowMessageBoxAsync(title, message, yesText: yesText, cancelText: "やめる") == true;
-
     //--------------------------------------------------------------------------------
     // Display
     //--------------------------------------------------------------------------------
 
-    private string StatusText(AdminUserSummaryEntity user) =>
-        !user.IsActive ? "止めた" :
-        user.LockoutEnd > TimeProvider.GetUtcNow() ? "間違えたため止めている" :
-        user.MustChangePassword ? "仮のパスワード" :
-        "使える";
+    private string StatusText(AdminUserSummaryEntity user) => AdminNames.UserStatusName(user, TimeProvider.GetUtcNow());
 }

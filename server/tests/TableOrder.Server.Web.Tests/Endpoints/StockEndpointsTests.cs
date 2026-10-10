@@ -1,5 +1,6 @@
 namespace TableOrder.Server.Web.Endpoints;
 
+using TableOrder.Contract.Events;
 using TableOrder.Contract.Menu;
 
 public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
@@ -74,6 +75,33 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         using var available = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
         Assert.Equal(HttpStatusCode.NoContent, available.StatusCode);
         Assert.DoesNotContain((await kitchen.GetAsync<StockResponse>("/api/v1/stock")).Items, static x => x.TargetId == ParfaitId);
+    }
+
+    // 変わらない設定の送り直し (同じ売り切れ、行のない品を Available) は通知を書かない
+    [Fact]
+    public async Task UnchangedStockIsNotNotified()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var kitchen = new TestDevice(factory.CreateClient());
+        await kitchen.SignInAsync(store.KitchenCode);
+        using var soldOut = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        soldOut.EnsureSuccessStatusCode();
+
+        // Act
+        using var again = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var available = await kitchen.PutAsync($"/api/v1/stock/{BeerId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
+        using var limited = await kitchen.PutAsync($"/api/v1/stock/{BeerId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 2 });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, available.StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, limited.StatusCode);
+        var events = await kitchen.GetAsync<EventListResponse>("/api/v1/events?after=0");
+        var targets = events.Items
+            .Where(static x => x.Type == EventTypes.StockUpdated)
+            .Select(static x => Assert.Single(TestHubConnection.Read<StockUpdatedEventData>(x).Items).TargetId);
+        Assert.Equal([ParfaitId, BeerId], targets);
     }
 
     // メニューにない品と、種類の違う品は見つからない

@@ -6,6 +6,7 @@ using TableOrder.Terminal.Messaging;
 
 // 人数。大人と子ども (小学生以下) を増減のボタンで入れ (合わせて 1 人以上)、席を決めるで来店を開いて案内の画面に進む。合計の人数を出す
 // 人数の入る空席がなければ、案内の画面に満席を出す。受付を止めていたら (来店の開き方が替わった)、知らせてから起動からやり直す
+// ラストオーダーを過ぎたら (人数を入れている間に過ぎることもある)、送らずに知らせて待受に戻す (サーバも断る)
 // しばらく触らなければ待受に戻す (入口で入れかけて離れたお客様の人数を残さず、言語も店舗の初めの言語に戻す)。戻るまでの時間は画面に添える
 public sealed partial class GuestsViewModel : AppViewModelBase
 {
@@ -23,6 +24,8 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     private readonly TimeProvider timeProvider;
 
     private readonly LanguageState languageState;
+
+    private readonly StoreState storeState;
 
     private readonly ReceptionUsecase receptionUsecase;
 
@@ -75,6 +78,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         ImageCache imageCache,
         LanguageState languageState,
         ReceptionState receptionState,
+        StoreState storeState,
         ReceptionUsecase receptionUsecase)
     {
         this.log = log;
@@ -82,6 +86,7 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         this.messenger = messenger;
         this.timeProvider = timeProvider;
         this.languageState = languageState;
+        this.storeState = storeState;
         this.receptionUsecase = receptionUsecase;
 
         var language = languageState.Current;
@@ -177,6 +182,11 @@ public sealed partial class GuestsViewModel : AppViewModelBase
     private async Task DecideAsync()
     {
         touchedAt = timeProvider.GetUtcNow();
+        if (storeState.IsAfterLastOrder(timeProvider.GetUtcNow()))
+        {
+            await CloseForLastOrderAsync();
+            return;
+        }
 
         var result = await receptionUsecase.OpenVisitAsync(Adults, Children);
         if (result.Content is { } visit)
@@ -192,6 +202,12 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         }
 
         log.WarnApiFailed(nameof(IReceptionApi.OpenVisitAsync), result.Status, result.ErrorCode);
+        if (result.ErrorCode == ErrorCodes.LastOrderPassed)
+        {
+            await CloseForLastOrderAsync();
+            return;
+        }
+
         if (result.ErrorCode == ErrorCodes.VisitOpeningDisabled)
         {
             // 管理画面で来店の開き方を替えた。起動から店舗の設定を読み直す
@@ -205,5 +221,13 @@ public sealed partial class GuestsViewModel : AppViewModelBase
         {
             touchedAt = timeProvider.GetUtcNow();
         }
+    }
+
+    // 受付を終えたことを知らせて、言語を戻して待受に戻す (待受は受付の終わりを出す)
+    private async Task CloseForLastOrderAsync()
+    {
+        await popupNavigator.MessageAsync(AppResources.ErrorTitle, AppResources.StandbyClosed);
+        languageState.Reset();
+        await BackAsync();
     }
 }

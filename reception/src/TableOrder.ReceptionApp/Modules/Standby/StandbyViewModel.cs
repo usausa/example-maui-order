@@ -11,6 +11,9 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     // ラストオーダーの時刻を過ぎたかは時刻で変わるので、しばらくごとに見直す (読み直せなかった空席も読み直す)
     private static readonly TimeSpan CheckInterval = TimeSpan.FromSeconds(30);
 
+    // 言語を選んで受付せずに離れたら、店舗の初めの言語に戻すまでの時間 (次のお客様に前の言語の待受を出さない)
+    private static readonly TimeSpan LanguageIdleTimeout = TimeSpan.FromSeconds(60);
+
     private readonly ILogger<StandbyViewModel> log;
 
     private readonly IPopupNavigator popupNavigator;
@@ -28,6 +31,9 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     private readonly ReceptionState receptionState;
 
     private readonly ReceptionUsecase receptionUsecase;
+
+    // 待受を出した時刻 (言語を選ぶと待受を作り直すので、選んだ時刻にもなる)
+    private readonly DateTimeOffset shownAt;
 
     public BrandMark Brand { get; }
 
@@ -89,10 +95,11 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         HasLanguages = languageState.HasChoice;
         StoreText = receptionState.StoreName(language);
 
-        StartCommand = MakeAsyncCommand(() => Navigator.ForwardAsync(ViewId.Guests), () => CanStart);
+        StartCommand = MakeAsyncCommand(StartAsync, () => CanStart);
         LanguageCommand = MakeAsyncCommand(SelectLanguageAsync);
         StaffCommand = MakeAsyncCommand(OpenStaffAsync);
 
+        shownAt = timeProvider.GetUtcNow();
         Update();
 
         Disposables.Add(Observable.Interval(CheckInterval).ObserveOnCurrentContext().Subscribe(_ => Check()));
@@ -149,9 +156,27 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     // Reception
     //--------------------------------------------------------------------------------
 
-    // 時刻で替わる受付の可否を出し直し、読み直せなかった空席があれば読み直す
+    // 押したときにも時刻で確かめる (受付の可否を出し直すのは間隔ごとなので、ラストオーダーを過ぎたあとも少しの間は押せる)
+    private async Task StartAsync()
+    {
+        Update();
+        if (CanStart)
+        {
+            await Navigator.ForwardAsync(ViewId.Guests);
+        }
+    }
+
+    // 時刻で替わる受付の可否を出し直し、読み直せなかった空席があれば読み直す。初めの言語でないまま離れていたら言語を戻す
     private void Check()
     {
+        if ((languageState.Current != languageState.Available[0]) &&
+            (timeProvider.GetUtcNow() - shownAt >= LanguageIdleTimeout) &&
+            !BusyState.IsBusy)
+        {
+            _ = ResetLanguageAsync();
+            return;
+        }
+
         Update();
         if (receptionState.IsVacancyStale)
         {
@@ -179,7 +204,7 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         }
         else if (storeState.IsAfterLastOrder(timeProvider.GetUtcNow()))
         {
-            SetState(StandbyStatus.Closed);
+            SetState(storeState.IsBeforeOpen(timeProvider.GetUtcNow()) ? StandbyStatus.BeforeOpen : StandbyStatus.Closed);
         }
         else if (receptionState.VacantTables == 0)
         {
@@ -194,9 +219,18 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     private void SetState(StandbyStatus status)
     {
         StatusGlyph = ViewHelper.Glyph(status);
-        StatusText = ViewHelper.Name(status);
+        StatusText = status == StandbyStatus.BeforeOpen
+            ? ViewHelper.Format(AppResources.StandbyBeforeOpenFormat, storeState.OpenTimeText)
+            : ViewHelper.Name(status);
         CanStart = status == StandbyStatus.Available;
         IsFull = status == StandbyStatus.Full;
+    }
+
+    // 言語を戻し、文言を引き直すために画面を作り直す
+    private async Task ResetLanguageAsync()
+    {
+        languageState.Reset();
+        await Navigator.ForwardAsync(ViewId.Standby);
     }
 
     // 言語を選び、替えたら文言を引き直すために画面を作り直す

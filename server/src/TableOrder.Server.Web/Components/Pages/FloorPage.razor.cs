@@ -114,16 +114,11 @@ public sealed partial class FloorPage : IDisposable
 
     // 店舗を選び直したら、見る店舗を替えて読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
+        _ = ReloadAsync(() =>
         {
             selectedTableId = null;
             WatchStore();
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
+            return LoadAsync();
         });
 
     // 選んだ店舗の通知を見る
@@ -149,15 +144,7 @@ public sealed partial class FloorPage : IDisposable
         {
             await Task.Delay(ReloadDelay, disposing.Token);
             Volatile.Write(ref reloadScheduled, 0);
-            await InvokeAsync(async () =>
-            {
-                using (BeginServiceScope())
-                {
-                    await LoadAsync();
-                }
-
-                StateHasChanged();
-            });
+            await ReloadAsync(LoadAsync);
         }
         catch (Exception e) when (e is OperationCanceledException or ObjectDisposedException)
         {
@@ -376,14 +363,12 @@ public sealed partial class FloorPage : IDisposable
         StoreHours.LocalDateTime(value, timeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
 
     private static string ErrorMessage(ServiceError error) =>
-        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ?? error.ErrorCode switch
+        AdminNames.ErrorMessage(error, static code => code switch
         {
             ErrorCodes.TableOccupied => "このテーブルには来店があります。読み直してください",
             ErrorCodes.VisitHasOrders => "注文のある来店は取りやめられません。レジで払ったら閉じてください",
             ErrorCodes.CheckoutInProgress => "会計中の来店は取りやめられません",
             ErrorCodes.VisitNotOpen => "来店は終わっています。読み直してください",
-            ErrorCodes.VersionMismatch => "ほかで替えられています。読み直してください",
-            ErrorCodes.NotFound => "見つかりません。読み直してください",
-            _ => error.ErrorCode
-        };
+            _ => null
+        });
 }

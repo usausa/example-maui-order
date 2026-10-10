@@ -29,6 +29,10 @@ public static class StoreHours
     public static TimeSpan UntilLastOrder(TimeOnly now, TimeOnly open, TimeOnly lastOrder) =>
         (lastOrder - open) - (now - open);
 
+    // ラストオーダーを過ぎた (ラストオーダーのない店は過ぎない)。注文と受付機の来店の開始を断る
+    public static bool IsAfterLastOrder(DateTimeOffset now, string timeZone, TimeOnly open, TimeOnly? lastOrder) =>
+        (lastOrder is { } last) && (UntilLastOrder(LocalTime(now, timeZone), open, last) < TimeSpan.Zero);
+
     // 店舗の現地の日時 (タイムゾーンが見つからないときは動いている機器の時刻)
     public static DateTime LocalDateTime(DateTimeOffset now, string timeZone)
     {

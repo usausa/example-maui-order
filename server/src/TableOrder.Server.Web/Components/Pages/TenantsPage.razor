@@ -23,7 +23,7 @@
             <MudTextField T="string" @bind-Value="addBrandEn" Label="チェーンの名前 (英語)" MaxLength="@Length.BrandName" />
         </MudItem>
         <MudItem xs="12" sm="2" Class="d-flex align-center">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">登録する</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="AddAsync">登録する</MudButton>
         </MudItem>
     </MudGrid>
 </MudPaper>

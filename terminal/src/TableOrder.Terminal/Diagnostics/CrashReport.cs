@@ -19,19 +19,9 @@ public sealed record CrashInfo
     public required string Detail { get; init; }
 
     public bool Shown { get; init; }
-
-    public string ToReport()
-    {
-        var report = new StringBuilder();
-        report.AppendLine($"日時: {Time.LocalDateTime:yyyy/MM/dd HH:mm:ss}");
-        report.AppendLine($"バージョン: {Version}");
-        report.AppendLine($"機種: {Device}");
-        report.AppendLine("例外:");
-        report.AppendLine(Detail);
-        return report.ToString();
-    }
 }
 
+// 落ちたときの例外を記録し、次の起動でログに残す (お客様の画面には出さず、起動を待たせない)
 public static partial class CrashReport
 {
     private static Exception? lastException;
@@ -45,9 +35,24 @@ public static partial class CrashReport
                 LogException(ex);
             }
         };
-        TaskScheduler.UnobservedTaskException += static (_, args) => LogException(args.Exception);
 
         PlatformStart();
+    }
+
+    // 観測されなかったタスクの例外は、落ちていないのでログにだけ残す (前回の異常終了にしない)
+    public static void WatchUnobserved(ILogger log) =>
+        TaskScheduler.UnobservedTaskException += (_, args) => log.WarnUnobservedTaskException(args.Exception);
+
+    // 前回の異常終了をログに残し、残したものとして記録する
+    public static void LogPrevious(ILogger log)
+    {
+        if (Load() is not { Shown: false } info)
+        {
+            return;
+        }
+
+        log.WarnPreviousCrash(info.Time, info.Version, info.ExceptionType, info.Detail);
+        Save(info with { Shown = true });
     }
 
     private static partial void PlatformStart();
@@ -79,30 +84,10 @@ public static partial class CrashReport
         }
         catch
         {
-            // Ignore
+            // 記録できなくても、落ちる処理は止めない
         }
 #pragma warning restore CA1031
     }
-
-    public static async ValueTask ShowReport()
-    {
-        if (Load() is not { Shown: false } info)
-        {
-            return;
-        }
-
-        var page = Application.Current?.Windows[0].Page;
-        if (page is not null)
-        {
-            await page.DisplayAlertAsync("前回の異常終了", info.ToReport(), "閉じる");
-        }
-
-        Save(info with { Shown = true });
-    }
-
-    public static CrashInfo? GetLastReport() => Load();
-
-    public static void ClearReport() => File.Delete(ResolveCrashPath());
 
     private static CrashInfo? Load()
     {

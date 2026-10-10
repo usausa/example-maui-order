@@ -21,6 +21,7 @@ public static class ApiProblems
         [ErrorCodes.NoVacantTable] = (StatusCodes.Status409Conflict, "人数の入る空席がありません"),
         [ErrorCodes.EventsExpired] = (StatusCodes.Status410Gone, "通知を追いかけられません。今の状態を読み直してください"),
         [ErrorCodes.PairingCodeInvalid] = (StatusCodes.Status422UnprocessableEntity, "コードが正しくないか、期限が切れています"),
+        [ErrorCodes.DeviceKindMismatch] = (StatusCodes.Status422UnprocessableEntity, "この端末の種類のコードではありません"),
         [ErrorCodes.VisitNotOpen] = (StatusCodes.Status422UnprocessableEntity, "来店は終わっています"),
         [ErrorCodes.CheckoutInProgress] = (StatusCodes.Status422UnprocessableEntity, "会計中です"),
         [ErrorCodes.OrderingPaused] = (StatusCodes.Status422UnprocessableEntity, "注文を一時停止しています"),
@@ -50,8 +51,6 @@ public static class ApiProblems
     public static ProblemHttpResult DeviceRevoked() => Problem(ErrorCodes.DeviceRevoked);
 
     public static ProblemHttpResult TenantSuspended() => Problem(ErrorCodes.TenantSuspended);
-
-    public static ProblemHttpResult PairingCodeInvalid() => Problem(ErrorCodes.PairingCodeInvalid);
 
     // 業務の処理の失敗。明細ごとの理由 (品切れなど) は errors に明細の Id で入れる
     public static IResult From(ServiceError error) =>

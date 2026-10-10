@@ -58,18 +58,19 @@ public sealed partial class StockPage : IDisposable
     // Lifecycle
     //--------------------------------------------------------------------------------
 
+    // メニューの名前は、チケットと同じくサーバが返す日本語のまま出す (ブラウザの言語で選ぶと、チケットと違う名前になって探しにくい)
     protected override void OnInitialized()
     {
         var menu = StoreState.Menu;
-        items = menu.Items.Select(static x => new StockTarget(x.Id, StockTargetKind.Item, ViewHelper.Text(x.Name), string.Empty)).ToList();
+        items = menu.Items.Select(static x => new StockTarget(x.Id, StockTargetKind.Item, x.Name.Ja, string.Empty)).ToList();
         itemById = items.ToDictionary(static x => x.Id);
         options = menu.OptionGroups
-            .SelectMany(static g => g.Options.Select(o => new StockTarget(o.Id, StockTargetKind.Option, ViewHelper.Text(o.Name), ViewHelper.Text(g.Name))))
+            .SelectMany(static g => g.Options.Select(o => new StockTarget(o.Id, StockTargetKind.Option, o.Name.Ja, g.Name.Ja)))
             .ToList();
         categories =
         [
             new StockCategory(StockCategoryKind.Limited, AppResources.StockTabLimited, []),
-            .. menu.Categories.OrderBy(static x => x.SortOrder).Select(static x => new StockCategory(StockCategoryKind.Category, ViewHelper.Text(x.Name), x.ItemIds)),
+            .. menu.Categories.OrderBy(static x => x.SortOrder).Select(static x => new StockCategory(StockCategoryKind.Category, x.Name.Ja, x.ItemIds)),
             new StockCategory(StockCategoryKind.Options, AppResources.StockTabOptions, [])
         ];
         selected = categories[0];

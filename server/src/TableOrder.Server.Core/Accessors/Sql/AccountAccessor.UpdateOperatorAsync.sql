@@ -2,7 +2,6 @@ UPDATE
     AdminUsers
 SET
     Name = /*@ name */'',
-    SecurityStamp = /*@ securityStamp */'',
     UpdatedAt = /*@ now */'',
     Version = Version + 1
 WHERE

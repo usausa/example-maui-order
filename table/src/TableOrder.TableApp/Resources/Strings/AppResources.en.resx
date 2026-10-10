@@ -429,7 +429,7 @@
     <value>Server (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>Enter the order server URL (http or https)</value>
+    <value>Enter the order server URL (https)</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>Uses the server set by EMM (cannot be changed on this device)</value>
@@ -628,5 +628,8 @@
   </data>
   <data name="TotalCaption" xml:space="preserve">
     <value>Total (tax incl.)</value>
+  </data>
+  <data name="PaymentExpired" xml:space="preserve">
+    <value>The payment has expired. Please choose a method again.</value>
   </data>
 </root>

@@ -64,7 +64,6 @@ public static class ApplicationExtensions
 
     public static IHostApplicationBuilder ConfigureLogging(this IHostApplicationBuilder builder)
     {
-        var setting = builder.Configuration.GetSection("Log").Get<LogSetting>()!;
         var useOtlpExporter = builder.Configuration.IsOtelExporterEnabled();
 
         // アプリのログ。接続元と、要求のテナント・店舗・主体 (端末かクライアント) を全行に付ける (テナントごとに調べられるように)
@@ -72,33 +71,43 @@ public static class ApplicationExtensions
         builder.Services.AddSerilog(
             (provider, options) =>
             {
+                // 要求の外 (裏の処理、管理画面の回線) は、始めている業務の文脈からテナントと店舗を付ける
                 var accessor = provider.GetRequiredService<IHttpContextAccessor>();
+                var contexts = provider.GetRequiredService<ApplicationServiceContextProvider>();
                 options.ReadFrom.Configuration(builder.Configuration);
                 options.Enrich.With(new CallbackEnricher("RemoteIpAddress", () => accessor.HttpContext?.Connection.RemoteIpAddress?.ToString()));
-                options.Enrich.With(new CallbackEnricher("TenantId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.TenantId)));
-                options.Enrich.With(new CallbackEnricher("StoreId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.StoreId)));
+                options.Enrich.With(new CallbackEnricher("TenantId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.TenantId) ?? contexts.Peek()?.TenantId?.ToString()));
+                options.Enrich.With(new CallbackEnricher("StoreId", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.StoreId) ?? contexts.Peek()?.StoreId?.ToString()));
                 options.Enrich.With(new CallbackEnricher("Subject", () => accessor.HttpContext?.User.FindFirstValue(ClaimNames.Subject)));
             },
             writeToProviders: useOtlpExporter);
 
-        // HTTP log
-        builder.Services.AddHttpLogging(options =>
-        {
-            options.LoggingFields = HttpLoggingFields.RequestMethod |
-                                    HttpLoggingFields.RequestPath |
-                                    HttpLoggingFields.ResponseStatusCode |
-                                    HttpLoggingFields.Duration;
-            if (setting.HttpDump)
+        // HTTP log。本文を出すかは登録したあとの設定 (テストのサーバの設定も効く) で決める
+        builder.Services.AddHttpLogging(static _ => { });
+        builder.Services.AddOptions<HttpLoggingOptions>()
+            .Configure<LogSetting>(static (options, setting) =>
             {
-                options.LoggingFields |= HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody;
-                options.CombineLogs = true;
-                options.RequestBodyLogLimit = setting.HttpDumpLimit;
-                options.ResponseBodyLogLimit = setting.HttpDumpLimit;
-                options.MediaTypeOptions.Clear();
-                options.MediaTypeOptions.AddText("application/json");
-                options.MediaTypeOptions.AddText("application/*+json");
-            }
-        });
+                options.LoggingFields = HttpLoggingFields.RequestMethod |
+                                        HttpLoggingFields.RequestPath |
+                                        HttpLoggingFields.ResponseStatusCode |
+                                        HttpLoggingFields.Duration;
+                if (setting.HttpDump)
+                {
+                    options.LoggingFields |= HttpLoggingFields.RequestBody | HttpLoggingFields.ResponseBody;
+                    options.CombineLogs = true;
+                    options.RequestBodyLogLimit = setting.HttpDumpLimit;
+                    options.ResponseBodyLogLimit = setting.HttpDumpLimit;
+                    options.MediaTypeOptions.Clear();
+                    options.MediaTypeOptions.AddText("application/json");
+                    options.MediaTypeOptions.AddText("application/*+json");
+                }
+            });
+
+        // 秘密を運ぶ API (登録トークンとペアリングコード、署名した要求とアクセストークン、スタッフの PIN のハッシュ) の本文は出さない
+        builder.Services.AddSingleton<IHttpLoggingInterceptor>(new BodyExcludingHttpLoggingInterceptor(static path =>
+            path.StartsWithSegments(ApiRoutes.DevicePair, StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWithSegments(ApiRoutes.DeviceToken, StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWithSegments(ApiRoutes.DeviceConfig, StringComparison.OrdinalIgnoreCase)));
 
         return builder;
     }
@@ -185,6 +194,13 @@ public static class ApplicationExtensions
             options.CustomizeProblemDetails = static context =>
             {
                 context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
+
+                // 引数の結び付けと JSON の読み込みの失敗 (形の誤り、知らない項目) も入力の誤りとして errorCode を付ける (端末が扱いを決められるように)
+                if ((context.ProblemDetails.Status == StatusCodes.Status400BadRequest) &&
+                    context.HttpContext.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.ProblemDetails.Extensions.TryAdd("errorCode", ErrorCodes.ValidationError);
+                }
             };
         });
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -245,6 +261,9 @@ public static class ApplicationExtensions
             {
                 // クレームの名前を変えない (tenant_id などをトークンの名前のまま読む)
                 options.MapInboundClaims = false;
+
+                // 401 の WWW-Authenticate に失敗の理由 (期限切れ、署名の誤り) を付けない (理由で見分けさせない)
+                options.IncludeErrorDetails = false;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidIssuer = setting.Issuer,
@@ -299,6 +318,10 @@ public static class ApplicationExtensions
                 // 5 回続けて間違えたら 15 分止める
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+
+                // 利用者名はメールアドレスで、形は足すときに確かめる。Identity の文字の制限は外す
+                // (制限に合わないアドレスの利用者が、パスワードを替えられず、間違えた回数も書けなくならないように)
+                options.User.AllowedUserNameCharacters = string.Empty;
 
                 // 利用者の id は端末と同じクレームの名前にする (ログに主体として出す)
                 options.ClaimsIdentity.UserIdClaimType = ClaimNames.Subject;
@@ -370,6 +393,17 @@ public static class ApplicationExtensions
         builder.Services.AddRateLimiter(static options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+            // いつ送り直せばよいかを Retry-After (秒) で知らせる
+            options.OnRejected = static (context, _) =>
+            {
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                {
+                    context.HttpContext.Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
+                }
+
+                return ValueTask.CompletedTask;
+            };
         });
 
         // 匿名で受ける端末の登録は、接続元ごとに 1 分の回数を限る (推測できるコードを試させない)
@@ -377,13 +411,27 @@ public static class ApplicationExtensions
             .Configure<RateLimitSetting>(static (options, setting) =>
             {
                 options.AddPolicy(RateLimits.Pairing, context => RateLimitPartition.GetFixedWindowLimiter(
-                    context.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
+                    RateLimits.PartitionOf(context.Connection.RemoteIpAddress),
                     _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit = setting.PairingPerMinute,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0
                     }));
+
+                // 管理画面のサインインは、送信 (POST) だけを接続元ごとに 1 分の回数で限る (画面を開くのは限らない)
+                // 失敗を数えて止めるのは利用者ごとなので、まとめて送って試す数をここで抑える
+                // 区分の名前は送信と画面で分ける (同じ名前だと、先に作った区分の限り方を使い回す)
+                options.AddPolicy(RateLimits.SignIn, context => HttpMethods.IsPost(context.Request.Method)
+                    ? RateLimitPartition.GetFixedWindowLimiter(
+                        $"post:{RateLimits.PartitionOf(context.Connection.RemoteIpAddress)}",
+                        _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = setting.SignInPerMinute,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueLimit = 0
+                        })
+                    : RateLimitPartition.GetNoLimiter("page"));
             });
 
         return builder;
@@ -547,7 +595,6 @@ public static class ApplicationExtensions
                 .WithTracing(tracing =>
                 {
                     tracing
-                        .AddSource(builder.Environment.ApplicationName)
                         .AddAspNetCoreInstrumentation(static options =>
                         {
                             options.Filter = static context =>
@@ -563,7 +610,6 @@ public static class ApplicationExtensions
                             };
                         })
                         .AddHttpClientInstrumentation()
-                        .AddApplicationInstrumentation()
                         .AddOtlpExporter();
                 });
         }
@@ -589,8 +635,9 @@ public static class ApplicationExtensions
             var connectionString = p.GetRequiredService<IConfiguration>().GetConnectionString("Default");
             return new DelegateDbProvider(() => new SqliteConnection(connectionString));
         });
+        // 重なりは主キー (1555) と一意 (2067) の違反だけにする (外部キーや NOT NULL の違反は作りの誤りとして例外のままにする)
         builder.Services.AddSingleton<IDialect>(new DelegateDialect(
-            static ex => ex is SqliteException { SqliteErrorCode: 19 } or SqliteException { SqliteExtendedErrorCode: 1555 or 2067 },
+            static ex => ex is SqliteException { SqliteExtendedErrorCode: 1555 or 2067 },
             static x => Regex.Replace(x, @"[%_\\]", @"\$0")));
         builder.Services.AddDataAccessors(typeof(DataProfile).Assembly);
 
@@ -839,9 +886,9 @@ public static class ApplicationExtensions
         }
 
         var hash = userManager.PasswordHasher.HashPassword(operatorUser, setting.InitialOperatorPassword);
-        if (await account.CreateInitialOperatorAsync(setting.InitialOperatorEmail, userManager.NormalizeName(setting.InitialOperatorEmail), "運営者", hash, CancellationToken.None))
+        if (await account.CreateInitialOperatorAsync(setting.InitialOperatorEmail, userManager.NormalizeName(setting.InitialOperatorEmail), "運営者", hash, CancellationToken.None) is { } userId)
         {
-            app.Logger.InfoInitialOperatorCreated(setting.InitialOperatorEmail);
+            app.Logger.InfoInitialOperatorCreated(userId);
         }
     }
 

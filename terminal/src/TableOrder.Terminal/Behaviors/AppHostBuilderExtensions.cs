@@ -16,8 +16,6 @@ public static class AppHostBuilderExtensions
         Scroll.UseCustomMapper(options);
 
         LabelOption.UseCustomMapper(options);
-        ButtonOption.UseCustomMapper(options);
-        EntryOption.UseCustomMapper(options);
 
         return builder;
     }

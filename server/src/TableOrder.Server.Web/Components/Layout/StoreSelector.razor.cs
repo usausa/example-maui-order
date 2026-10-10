@@ -44,15 +44,10 @@ public sealed partial class StoreSelector : IDisposable
 
     // テナントや店舗を足したら一覧を読み直す (画面の操作の中から呼ばれるので、文脈を始め直す)
     private void OnChoicesChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
+        _ = ReloadAsync(async () =>
         {
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-                stores = Selection.TenantId is { } id ? await LoadStoresAsync(id) : [];
-            }
-
-            StateHasChanged();
+            await LoadAsync();
+            stores = Selection.TenantId is { } id ? await LoadStoresAsync(id) : [];
         });
 
     private async Task LoadAsync()

@@ -70,6 +70,50 @@ public sealed class AdminUserServiceTests : IClassFixture<ServerFactory>
         Assert.Contains("email", result.Error.Errors!.Keys);
     }
 
+    // メールアドレスの形でないもの (空白を含む、表示名つき) は足さない
+    [Theory]
+    [InlineData("not an email")]
+    [InlineData("名前 <named@users.example.com>")]
+    public async Task AddRejectsInvalidEmail(string email)
+    {
+        // Arrange
+        using var scope = factory.BeginTenant(SampleData.DemoTenantId);
+
+        // Act
+        var result = await Service.AddAsync(Input(email, AdminRole.TenantAdmin), TemporaryHash, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.False(result.Succeeded);
+        Assert.Contains("email", result.Error.Errors!.Keys);
+    }
+
+    // Identity の利用者名の既定の文字の外のアドレス (アポストロフィ) で足した利用者も、仮のパスワードを替えられる
+    [Fact]
+    public async Task UserWithApostropheEmailCanChangePassword()
+    {
+        // Arrange
+        var email = $"o'neil-{Guid.NewGuid():N}@users.example.com";
+        using (factory.BeginTenant(SampleData.DemoTenantId))
+        {
+            Assert.True((await Service.AddAsync(Input(email, AdminRole.TenantAdmin), TemporaryHash, TestContext.Current.CancellationToken)).Succeeded);
+        }
+
+        using var admin = new TestAdmin(factory);
+        using var signIn = await admin.SignInAsync(email, TemporaryPassword);
+
+        // Act
+        using var changed = await admin.PostFormAsync("/account/password", "password", new Dictionary<string, string>
+        {
+            ["Input.CurrentPassword"] = TemporaryPassword,
+            ["Input.NewPassword"] = "changed-password-1",
+            ["Input.ConfirmPassword"] = "changed-password-1"
+        });
+
+        // Assert
+        Assert.Equal("/account/password", TestAdmin.LocationOf(signIn));
+        Assert.Equal("/", TestAdmin.LocationOf(changed));
+    }
+
     // 店舗の担当は、テナントの店舗を 1 つ以上受け持つ
     [Fact]
     public async Task StoreStaffRequiresTenantStores()
@@ -111,6 +155,25 @@ public sealed class AdminUserServiceTests : IClassFixture<ServerFactory>
         // Act / Assert: 表示していた版が古ければ替えない
         var stale = await Service.UpdateAsync(added.Id, "古い", AdminRole.TenantAdmin, [], added.Version, Guid.Empty, TestContext.Current.CancellationToken);
         Assert.Equal(ErrorCodes.VersionMismatch, stale?.ErrorCode);
+    }
+
+    // 名前だけを替えても資格の印は替えない (開いている管理画面をやり直させない。役割と受け持つ店舗を替えたときだけ替える)
+    [Fact]
+    public async Task NameOnlyUpdateKeepsSecurityStamp()
+    {
+        // Arrange
+        using var scope = factory.BeginTenant(SampleData.DemoTenantId);
+        var added = (await Service.AddAsync(Input(NextEmail(), AdminRole.StoreStaff, SampleData.DemoStoreId), TemporaryHash, TestContext.Current.CancellationToken)).Value!;
+        var before = (await Account.FindAsync(added.Id, TestContext.Current.CancellationToken))!.SecurityStamp;
+
+        // Act
+        var error = await Service.UpdateAsync(added.Id, "名前を直す", AdminRole.StoreStaff, [SampleData.DemoStoreId], added.Version, Guid.Empty, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Null(error);
+        var renamed = (await Account.FindAsync(added.Id, TestContext.Current.CancellationToken))!;
+        Assert.Equal("名前を直す", renamed.Name);
+        Assert.Equal(before, renamed.SecurityStamp);
     }
 
     // 自分の役割は替えられず、自分は止められない

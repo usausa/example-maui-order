@@ -10,7 +10,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-// 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi、RestHallApi) と通知 (SignalROrderEvents) が使う
+// 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi、RestHallApi、RestReceptionApi、RestKitchenApi) と通知 (SignalROrderEvents) が使う
 // アクセストークンは中で持ち、期限の前と 401 を受けたときに取り直す (送り直しは 1 回だけ)。トークンの要求が断られたら (無効化、テナントの停止) Denied で知らせる
 // 結果は例外を投げずに ApiResult で返す。接続先と端末は要求のたびに IDeviceContext から読む (端末の設定で替えても、作り直さずに次の要求から使う)
 public sealed class RestConnection : IDisposable

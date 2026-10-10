@@ -31,6 +31,9 @@ public sealed class PopupClosePlugin : IPopupPlugin
 
     private sealed class PopupCloser
     {
+        // 上のポップアップが閉じるのを待って確かめ直す間隔
+        private static readonly TimeSpan RetryInterval = TimeSpan.FromMilliseconds(500);
+
         private readonly ILogger log;
 
         private readonly Popup popup;
@@ -42,6 +45,8 @@ public sealed class PopupClosePlugin : IPopupPlugin
         private bool requested;
 
         private bool closing;
+
+        private bool closed;
 
         private PopupCloser(ILogger log, Popup popup)
         {
@@ -79,7 +84,7 @@ public sealed class PopupClosePlugin : IPopupPlugin
         // そのポップアップの処理の途中は閉じない (処理が終わって Busy が外れたときにもう一度確かめる)
         private void TryClose()
         {
-            if (!requested || closing || (busyState?.IsBusy ?? false))
+            if (!requested || closing || closed || (busyState?.IsBusy ?? false))
             {
                 return;
             }
@@ -93,8 +98,11 @@ public sealed class PopupClosePlugin : IPopupPlugin
         }
 
         // 閉じる間は Busy にして、ポップアップのボタンを受け付けない
+        // 上に別のポップアップが残って閉じられないときは、間を置いて確かめ直す
+        // (その場で確かめ直すと、Busy の解除の知らせから同期で入り直し、上が残る限り繰り返す)
         private async Task CloseAsync()
         {
+            var blocked = false;
             using (busyState?.Begin())
             {
                 try
@@ -103,15 +111,24 @@ public sealed class PopupClosePlugin : IPopupPlugin
                 }
                 catch (InvalidPopupOperationException ex)
                 {
-                    // 上に別のポップアップが残っているときは、それが閉じて処理が進んだときにもう一度確かめる
                     log.WarnPopupCloseFailed(ex);
-                    closing = false;
+                    blocked = true;
                 }
+            }
+
+            if (blocked)
+            {
+                popup.Dispatcher.DispatchDelayed(RetryInterval, () =>
+                {
+                    closing = false;
+                    TryClose();
+                });
             }
         }
 
         private void HandleClosed(object? sender, EventArgs e)
         {
+            closed = true;
             popup.Closed -= HandleClosed;
             subscription?.Dispose();
             if (busyState is not null)

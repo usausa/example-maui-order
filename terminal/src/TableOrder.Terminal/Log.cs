@@ -89,6 +89,15 @@ internal static partial class Log
 
     // Popup
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Previous crash. time=[{time}], version=[{version}], type=[{type}], detail=[{detail}]")]
+    public static partial void WarnPreviousCrash(this ILogger logger, DateTimeOffset time, string version, string type, string detail);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Unobserved task exception.")]
+    public static partial void WarnUnobservedTaskException(this ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Api end point changed while registering. The registration is not saved.")]
+    public static partial void WarnEndPointChangedWhileRegistering(this ILogger logger);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Popup close failed.")]
     public static partial void WarnPopupCloseFailed(this ILogger logger, Exception exception);
 

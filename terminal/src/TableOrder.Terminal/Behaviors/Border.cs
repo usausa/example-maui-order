@@ -25,13 +25,6 @@ public static partial class Border
             typeof(Thickness),
             typeof(Border),
             default(Thickness));
-
-    public static readonly BindableProperty RadiusProperty =
-        BindableProperty.CreateAttached(
-            "Radius",
-            typeof(double?),
-            typeof(Border),
-            default(double?));
     // ReSharper restore InconsistentNaming
 
     public static void SetWidth(BindableObject bindable, double? value) => bindable.SetValue(WidthProperty, value);
@@ -45,8 +38,4 @@ public static partial class Border
     public static void SetPadding(BindableObject bindable, Thickness value) => bindable.SetValue(PaddingProperty, value);
 
     public static Thickness GetPadding(BindableObject bindable) => (Thickness)bindable.GetValue(PaddingProperty);
-
-    public static void SetRadius(BindableObject bindable, double? value) => bindable.SetValue(RadiusProperty, value);
-
-    public static double? GetRadius(BindableObject bindable) => (double?)bindable.GetValue(RadiusProperty);
 }

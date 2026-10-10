@@ -122,6 +122,7 @@ public sealed class SimulationService
             }
 
             // 明細がそろった (できあがりか提供か取消) チケットは下げる
+            // 下げる更新が 0 件 (下げてあった) でも、明細は進んだのでチケットを知らせる
             foreach (var ticketId in tickets)
             {
                 var lines = await kitchenAccessor.QueryTicketLineListAsync(tx, tenantId, ticketId, cancellationToken);

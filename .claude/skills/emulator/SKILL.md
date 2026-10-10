@@ -28,6 +28,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - スマートフォンの画面は 1080x2400 (縦向き)。座標は撮った画像の画素で読む
 - ホール端末で提供と呼び出しを操作して確かめるときは、開発のサーバの自動の進行が先に進めないように、提供と向かうまでの秒を長くして起動する (例: `--Simulation:ServedSeconds=3600 --Simulation:AcknowledgeSeconds=3600`)
 - 新しい呼び出しの音と振動はエミュレータでは聞こえないので、`adb -s <機器> shell dumpsys vibrator_manager` (振動の記録) と `dumpsys audio` (鳴らした音の区分) で確かめる
+- 画面が消えている間の知らせは、`adb -s <機器> shell input keyevent KEYCODE_SLEEP` で画面を消し、`dumpsys battery unplug` と `dumpsys deviceidle force-idle` で Doze に入れてから呼んで確かめる (終わったら `dumpsys deviceidle unforce` と `dumpsys battery reset` で戻す)。前景サービスとウェイクロックは `dumpsys activity services <パッケージ>` と `dumpsys power` で見る
 - 受付機は縦置きのタブレットの AVD に入れ、テーブル端末 (横置きのタブレット) と並べて確かめる。同じ AVD に両方を入れて切り替えると、裏に回したアプリは前に出すまで通知を扱わない (`emu.py --app <アプリ> launch` で前に出してから画面を見る)
 - 並べるために起動したエミュレータは、使い終わったら `emu.py --avd <名前> poweroff` で止める
 

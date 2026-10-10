@@ -50,6 +50,7 @@ C# のプロパティ名は PascalCase (`tableId` → `TableId`)。
 ### 1.4 エラー応答
 
 RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-エラーコード))。  
+要求の値を読めないとき (クエリの値の形、JSON の形の誤り、知らない項目) も `400` (`VALIDATION_ERROR`) にする。  
 注文の検証で明細ごとの違反があるときは、`errors` のキーを明細の `id` にする。
 
 ```jsonc
@@ -75,10 +76,12 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 端末は自分の鍵で署名して、短命のアクセストークン (JWT) を受け取る。
 
-1. **登録**: 端末は取り出せない鍵 (P-256。Android は Keystore、キッチン端末はブラウザの取り出せない鍵) を作り、`POST /devices/pair` でペアリングコードか登録トークンと公開鍵 (JWK) を送る ([§2.1](#-21-端末-devices))。  
-   サーバは端末 (テナント、店舗、種類、置き場所、公開鍵) を記録する
+1. **登録**: 端末は取り出せない鍵 (P-256。Android は Keystore、キッチン端末はブラウザの取り出せない鍵) を作り、`POST /devices/pair` でペアリングコードか登録トークン、アプリの端末の種類、公開鍵 (JWK) を送る ([§2.1](#-21-端末-devices))。  
+   サーバは端末 (テナント、店舗、種類、置き場所、公開鍵) を記録する。  
+   コードやトークンの種類とアプリの種類が違えば、コードを使わずに断る
 2. **トークン**: 端末は自分の鍵で署名した使い捨ての JWT (期限 5 分以内) を `POST /devices/token` に送り、アクセストークン (JWT、30 分) を受け取る。  
-   アクセストークンには端末、テナント、店舗、種類、置き場所 (テーブル、持ち場) を入れ、端末は期限の前に取り直す
+   アクセストークンには端末、テナント、店舗、種類、置き場所 (テーブル、持ち場) を入れ、端末は期限の前に取り直す。  
+   同じ鍵で登録し直した端末が新しい登録でトークンを受け取ると、前の登録を無効にする (鍵を持つことを確かめてから)
 3. **要求**: アクセストークンを `Authorization: Bearer` で送る。  
    サーバは署名と期限を確かめるだけで、要求ごとに端末を照会しない。  
    通知のハブ (`/hubs/store`) も同じトークンでつなぐ
@@ -188,8 +191,8 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| POST | `/devices/pair` | 全端末 (匿名) | 端末の登録 `DevicePairRequest { pairingCode か enrollmentToken, publicKey, deviceName, appVersion }` → `201` `DevicePairResponse { deviceId, kind, storeId }`。コードの不一致・期限切れ・使用済みは `422` (`PAIRING_CODE_INVALID`)。接続元ごとに 1 分 10 回まで |
-| POST | `/devices/token` | 全端末 (端末の鍵の署名) | アクセストークンの取得 `DeviceTokenRequest { assertion }` (端末の鍵で署名した JWT) → `200` `DeviceTokenResponse { accessToken, expiresIn }`。無効にした端末は `403` (`DEVICE_REVOKED`) |
+| POST | `/devices/pair` | 全端末 (匿名) | 端末の登録 `DevicePairRequest { pairingCode か enrollmentToken, kind, publicKey, deviceName, appVersion }` (`kind` は登録するアプリの端末の種類) → `201` `DevicePairResponse { deviceId, kind, storeId }`。コードの不一致・期限切れ・使用済みは `422` (`PAIRING_CODE_INVALID`)、コードやトークンと端末の種類が違えば `422` (`DEVICE_KIND_MISMATCH`。コードは使わない)。使わなくしたテーブルのコードは、置き場所なしで登録する。接続元ごとに 1 分 10 回まで |
+| POST | `/devices/token` | 全端末 (端末の鍵の署名) | アクセストークンの取得 `DeviceTokenRequest { assertion }` (端末の鍵で署名した JWT) → `200` `DeviceTokenResponse { accessToken, expiresIn }`。無効にした端末は `403` (`DEVICE_REVOKED`)。同じ鍵の前の登録 (登録し直す前の端末) は無効にする |
 | POST | `/devices/me/heartbeat` | 全端末 | 端末の状態 `DeviceHeartbeatRequest { appVersion, batteryLevel, isCharging }` → `204`。1 分ごと |
 | GET | `/devices/me/config` | 全端末 | 端末の設定 (`DeviceConfigResponse`)。起動のときに読み、設定の版 (`settingsVersion`) が替わったら起動からやり直して読み直す |
 
@@ -216,7 +219,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `brand` | object | チェーンの設定 `{ name (LocalizedText), logoImageName (string?), theme }`。ロゴは正方形の画像 (地の色を含む。[§2.3](#-23-メニュー-menu) の画像) で、なければ端末は印に名前の頭の文字を出す |
 | `brand.theme` | object[] | 替える色 `[{ role, color }]` (例: `{ "role": "PrimaryColor", "color": "#1E5FA8" }`)。役割は Brand・Neutral・Status の色 (`ThemeRoles`) で、色は `#RRGGBB` か `#AARRGGBB`。ない役割は端末の既定のまま |
 | `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening, kitchenAlertMinutes }` (下の表)。ない項目は既定の値 |
-| `staffPin` | object | スタッフの PIN のハッシュ `{ iterations, salt, hash }` (PBKDF2-HMAC-SHA256。`salt` と `hash` は Base64)。端末は入れた PIN を同じ計算で確かめ、平文を持たない |
+| `staffPin` | object? | スタッフの PIN のハッシュ `{ iterations, salt, hash }` (PBKDF2-HMAC-SHA256。`salt` と `hash` は Base64)。端末は入れた PIN を同じ計算で確かめ、平文を持たない。PIN を使う端末 (テーブル端末、ホール端末、受付機) だけに返し、キッチン端末は null |
 | `settingsVersion` | int | チェーンと店舗の設定の版 (`store.updated` の店舗の `settingsVersion` と比べる) |
 
 機能の有無 (`features`):
@@ -239,7 +242,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
 | `id` | guid | |
-| `code` | string(10) | 店舗コード (POS と合わせる) |
+| `code` | string(16) | 店舗コード (POS と合わせる) |
 | `name` | LocalizedText | |
 | `timeZone` | string(50) | `Asia/Tokyo` |
 | `businessDate` | date | 今の営業日 |
@@ -255,7 +258,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
 | `id` | guid | |
-| `name` | string(10) | 例: `12` |
+| `name` | string(20) | 例: `12` |
 | `area` | string(20)? | 例: `窓側`、`2F` |
 | `capacity` | int | 席の数 |
 | `sortOrder` | int | |
@@ -413,7 +416,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
 | GET | `/stock` | テーブル / ホール / キッチン | `Available` でないものの一覧 (`StockResponse`) |
-| PUT | `/stock/{targetId}` | ホール / キッチン | 品切れ・残りの数の設定 `StockUpdateRequest { targetKind, status, remaining? }` → `204`。`Limited` の残りの数は `0` から `9999` で、`0` は `SoldOut` にする。今のメニューにない品は `404`。通知 `stock.updated` |
+| PUT | `/stock/{targetId}` | ホール / キッチン | 品切れ・残りの数の設定 `StockUpdateRequest { targetKind, status, remaining? }` → `204`。`Limited` の残りの数は `0` から `9999` で、`0` は `SoldOut` にする。今のメニューにない品は `404`。通知 `stock.updated` (同じ設定の送り直しでは送らない) |
 | POST | `/stock/reset` | ホール | すべて `Available` に戻す (営業日の始めなど) → `204`。通知 `stock.updated` (戻した品) |
 
 - `Limited` の残りの数は、注文を受けるたびにサーバが減らし、`0` になったら `SoldOut` にする
@@ -437,14 +440,14 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| POST | `/visits` | ホール / 受付 / テーブル | 来店の開始 `VisitCreateRequest { id, tableId?, adults, children }` → `201`。ホール端末はいつでも開け、受付機とテーブル端末は来店の開き方 (`features.visitOpening`) で許したときだけ開ける (ほかは `403` `VISIT_OPENING_DISABLED`)。ホール端末は `tableId` を送る。受付機は `tableId` を送らず (送ると `400`)、サーバが人数の入る空席のうち定員の小さいテーブル (同じなら並びの順) を選ぶ (空席がなければ `409` `NO_VACANT_TABLE`)。テーブル端末は自分のテーブル (トークンで決まる) に開く (ほかのテーブルを送ると `403` `DEVICE_SCOPE`)。テーブルに `Open` / `Paying` の来店があれば `409` (`TABLE_OCCUPIED`)。同じ `id` の送り直しは、同じテーブル (受付機は同じ端末) なら開いた来店を返す。通知 `visit.opened` (テーブル端末は待受から注文の画面になる) |
+| POST | `/visits` | ホール / 受付 / テーブル | 来店の開始 `VisitCreateRequest { id, tableId?, adults, children }` → `201`。ホール端末はいつでも開け、受付機とテーブル端末は来店の開き方 (`features.visitOpening`) で許したときだけ開ける (ほかは `403` `VISIT_OPENING_DISABLED`)。ホール端末は `tableId` を送る。受付機は `tableId` を送らず (送ると `400`)、サーバが人数の入る空席のうち定員の小さいテーブル (同じなら並びの順) を選ぶ (空席がなければ `409` `NO_VACANT_TABLE`、ラストオーダーを過ぎていれば `422` `LAST_ORDER_PASSED`)。テーブル端末は自分のテーブル (トークンで決まる) に開く (ほかのテーブルを送ると `403` `DEVICE_SCOPE`)。テーブルに `Open` / `Paying` の来店があれば `409` (`TABLE_OCCUPIED`)。同じ `id` の送り直しは、同じテーブル (受付機は同じ端末) なら開いた来店を返す。通知 `visit.opened` (テーブル端末は待受から注文の画面になる) |
 | GET | `/visits/{id}` | テーブル (自分の来店) / ホール / 外部 (POS) | 来店。テーブル端末からほかのテーブルの来店は `403` (`DEVICE_SCOPE`) |
 | GET | `/devices/me/visit` | テーブル | 自分のテーブルの今の来店。なければ `204` (待受にする) |
 | PATCH | `/visits/{id}` | ホール | 人数の変更 `VisitUpdateRequest { adults, children, version }` (会計中も直せる)。通知 `visit.updated` |
-| POST | `/visits/{id}/move` | ホール | テーブルの移動 `{ toTableId, version }`。移動先に来店があれば `409` (`TABLE_OCCUPIED`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。通知 `visit.moved` (元のテーブル端末は待受に、移動先は注文の画面になる) |
+| POST | `/visits/{id}/move` | ホール | テーブルの移動 `{ toTableId, version }`。移動先に来店があれば `409` (`TABLE_OCCUPIED`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。通知 `visit.moved` (元のテーブル端末は待受に、移動先は注文の画面になる) と、開いているチケットの `ticket.updated` (キッチン端末は今のテーブルを出す) |
 | POST | `/visits/{id}/confirmations` | テーブル / ホール | 確認のルールに答えた記録 `VisitConfirmationRequest { ruleId }` → `200` (来店)。ホール端末は、代わりの注文でスタッフがお客様に確かめたときに記録する。来店で 1 回だけ記録し、確認のルールでない `ruleId` は `400`。新しく記録したら通知 `visit.updated` (ほかの端末が同じ来店で聞き直さないように) |
-| POST | `/visits/{id}/close` | ホール / 外部 (POS) | レジで払ったなど、テーブルの外で会計した来店を終える `{ closedBy, version, staffId? }`。`closedBy` は `Register` / `Hall` (`TablePayment` はテーブルで払い終えたときにサーバが付ける)。通知 `visit.closed` |
-| POST | `/visits/{id}/cancel` | ホール | 注文のないまま帰った来店の取りやめ `{ version }`。取消を除いた明細があれば `422` (`VISIT_HAS_ORDERS`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。通知 `visit.closed` (`status` は `Cancelled`) |
+| POST | `/visits/{id}/close` | ホール / 外部 (POS) | レジで払ったなど、テーブルの外で会計した来店を終える `{ closedBy, version, staffId? }`。`closedBy` は `Register` / `Hall` (`TablePayment` はテーブルで払い終えたときにサーバが付ける)。会計中の来店の待っている支払はやめ (あとで届いた結果で払い終えない)、終わっていない呼び出しは終える。通知 `visit.closed`、`payment.updated`、`call.updated` |
+| POST | `/visits/{id}/cancel` | ホール | 注文のないまま帰った来店の取りやめ `{ version }`。取消を除いた明細があれば `422` (`VISIT_HAS_ORDERS`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。終わっていない呼び出しは終える。通知 `visit.closed` (`status` は `Cancelled`)、`call.updated` |
 
 ### 🧾 2.6 注文 (Orders)
 
@@ -616,11 +619,11 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | POST | `/payments/callbacks/{provider}` | 外部 (決済サービス) | 決済の結果の通知 (`QrCode`)。署名を確かめる。今は仮の決済サービス (`fake`。`PaymentCallbackRequest { providerReference, status }`) だけで、開発の環境だけで受ける |
 | GET | `/payments/{id}` | テーブル | 支払の状態 (通知を受け損ねたとき) |
 | POST | `/payments/{id}/cancel` | テーブル | 待っている支払をやめる (`Pending` だけ。ほかは変えずに返す) |
-| GET | `/visits/{visitId}/receipt` | テーブル | 領収の内容と電子レシートの URL (`ReceiptResponse`。画面に QR で出す)。電子レシートを出す店で来店を閉じたあと。URL は要求を受けた接続先の `/receipts/{token}` (電子レシートの画面はまだない) |
+| GET | `/visits/{visitId}/receipt` | テーブル | 領収の内容と電子レシートの URL (`ReceiptResponse`。画面に QR で出す)。電子レシートを出す店で、テーブルで払い終えて来店を閉じたあと (ほかは `404`)。URL は要求を受けた接続先の `/receipts/{token}` (電子レシートの画面はまだない) |
 
 - 支払は残り (`balance` から、期限内の待っている支払も引いた額) を超えない (`422` `PAYMENT_AMOUNT_INVALID`)。  
   割り勘は、目安の額で支払を何回かに分けて行う
-- 支払が揃う (`balance` = 0) と、来店を `Closed` (`closedBy` = `TablePayment`) にして `visit.closed` を送る。  
+- 支払が揃う (`balance` = 0) と、来店を `Closed` (`closedBy` = `TablePayment`) にして `visit.closed` を送る (終わっていない呼び出しも終える)。  
   テーブル端末はお礼と電子レシートの QR を出し、待受に戻る
 - 現金はテーブルで扱わない。  
   テーブル端末は「レジでお支払いください」と出し、レジ (POS) かホール端末が `POST /visits/{id}/close` で来店を終える
@@ -827,10 +830,11 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 409 | `NO_VACANT_TABLE` | 受付機の来店の開始で、人数の入る空席がない |
 | 410 | `EVENTS_EXPIRED` | 通知の追いつきの範囲の外 (残していない、通し番号が先、多すぎる) |
 | 422 | `PAIRING_CODE_INVALID` | ペアリングコードの不一致・期限切れ・使用済み |
+| 422 | `DEVICE_KIND_MISMATCH` | 登録するアプリの端末の種類が、ペアリングコードや登録トークンの種類と違う (コードは使わない) |
 | 422 | `VISIT_NOT_OPEN` | 終わった・取りやめた来店への注文・呼び出し・会計、会計を始める前の支払 |
 | 422 | `CHECKOUT_IN_PROGRESS` | 会計中の来店への注文・移動・取りやめ |
 | 422 | `ORDERING_PAUSED` | 店舗が注文を一時停止している |
-| 422 | `LAST_ORDER_PASSED` | ラストオーダーの後の注文 |
+| 422 | `LAST_ORDER_PASSED` | ラストオーダーの後の注文と、受付機の来店の開始 |
 | 422 | `MENU_CHANGED` | 表示していたメニューと価格・内容が違う |
 | 422 | `ITEM_SOLD_OUT` / `STOCK_INSUFFICIENT` | 品切れ / 残りの数を超える (`errors` に明細の `id`) |
 | 422 | `ITEM_UNAVAILABLE` | 時間帯の外の商品 |

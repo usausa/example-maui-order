@@ -135,7 +135,7 @@ public sealed class OrderService
                 return new(new ServiceError(ErrorCodes.OrderingPaused));
             }
 
-            if (IsLastOrderPassed(store, now))
+            if (IsAfterLastOrder(store, now))
             {
                 return new(new ServiceError(ErrorCodes.LastOrderPassed));
             }
@@ -154,7 +154,7 @@ public sealed class OrderService
                             catalog,
                             visit,
                             await orderAccessor.QueryLineListAsync(tx, tenantId, visitId, cancellationToken),
-                            await visitAccessor.QueryConfirmationListAsync(tenantId, visitId, cancellationToken));
+                            await visitAccessor.QueryConfirmationListAsync(tx, tenantId, visitId, cancellationToken));
             if (error is not null)
             {
                 return new(error);
@@ -169,7 +169,7 @@ public sealed class OrderService
             try
             {
                 var orderNo = (int)await orderAccessor.QueryNextOrderNoAsync(tx, tenantId, visitId, cancellationToken);
-                await orderAccessor.InsertAsync(tx, tenantId, request.Id, storeId, visitId, orderNo, source, context.DeviceId, null, catalog.Menu.MenuVersion, hash, now, cancellationToken);
+                await orderAccessor.InsertAsync(tx, tenantId, request.Id, storeId, visitId, orderNo, source, context.DeviceId, catalog.Menu.MenuVersion, hash, now, cancellationToken);
                 foreach (var (stationId, ticketId) in tickets)
                 {
                     await kitchenAccessor.InsertTicketAsync(tx, tenantId, ticketId, storeId, stationId, request.Id, visitId, now, cancellationToken);
@@ -309,7 +309,7 @@ public sealed class OrderService
                     ticketId = id;
                 }
 
-                await orderAccessor.UpdateLineReleasedAsync(
+                var released = await orderAccessor.UpdateLineReleasedAsync(
                     tx,
                     tenantId,
                     line.Id,
@@ -319,6 +319,10 @@ public sealed class OrderService
                     status == OrderLineStatus.Served ? now : null,
                     now,
                     cancellationToken);
+                if (released == 0)
+                {
+                    return new(new ServiceError(ErrorCodes.LineStatusInvalid));
+                }
             }
 
             var orders = await OrderResponses.LoadAsync(orderAccessor, tx, tenantId, visitId, cancellationToken);
@@ -387,9 +391,10 @@ public sealed class OrderService
                 return new(ServiceError.Validation("quantity", $"取り消す数量を明細の数量 ({line.Quantity}) までで送ってください"));
             }
 
+            int changed;
             if (request.Quantity == line.Quantity)
             {
-                await orderAccessor.UpdateLineCancelledAsync(tx, tenantId, lineId, request.Reason, request.StaffId, now, cancellationToken);
+                changed = await orderAccessor.UpdateLineCancelledAsync(tx, tenantId, lineId, request.Reason, request.StaffId, now, cancellationToken);
             }
             else
             {
@@ -397,7 +402,12 @@ public sealed class OrderService
                 var lineNo = (int)await orderAccessor.QueryNextLineNoAsync(tx, tenantId, orderId, cancellationToken);
                 await orderAccessor.InsertLineSplitAsync(tx, tenantId, splitId, lineId, lineNo, request.Quantity, request.Reason, request.StaffId, now, cancellationToken);
                 await orderAccessor.InsertLineOptionSplitAsync(tx, tenantId, splitId, lineId, cancellationToken);
-                await orderAccessor.AddLineQuantityAsync(tx, tenantId, lineId, -request.Quantity, cancellationToken);
+                changed = await orderAccessor.AddLineQuantityAsync(tx, tenantId, lineId, -request.Quantity, cancellationToken);
+            }
+
+            if (changed == 0)
+            {
+                return new(new ServiceError(ErrorCodes.LineStatusInvalid));
             }
 
             var order = (await OrderResponses.LoadAsync(orderAccessor, tx, tenantId, line.VisitId, cancellationToken)).First(x => x.Id == orderId);
@@ -442,10 +452,15 @@ public sealed class OrderService
             errors["menuVersion"] = ["表示していたメニューの版を送ってください"];
         }
 
+        // 一覧の要素の null は JSON の読み込みを通るので、ほかの確かめの前に断る
         var lines = RequestValues.ListOf(request.Lines);
         if (lines.Count == 0)
         {
             errors["lines"] = ["明細を 1 つ以上送ってください"];
+        }
+        else if (RequestValues.HasNull(lines))
+        {
+            errors["lines"] = ["明細に null を送らないでください"];
         }
         else
         {
@@ -654,9 +669,8 @@ public sealed class OrderService
     // Helper
     //--------------------------------------------------------------------------------
 
-    private static bool IsLastOrderPassed(StoreEntity store, DateTimeOffset now) =>
-        (store.LastOrderTime is { } last) &&
-        (StoreHours.UntilLastOrder(StoreHours.LocalTime(now, store.TimeZone), StoreHours.Parse(store.OpenTime), StoreHours.Parse(last)) < TimeSpan.Zero);
+    internal static bool IsAfterLastOrder(StoreEntity store, DateTimeOffset now) =>
+        StoreHours.IsAfterLastOrder(now, store.TimeZone, StoreHours.Parse(store.OpenTime), store.LastOrderTime is { } last ? StoreHours.Parse(last) : null);
 
     // 受けたときの状態。食後の品は止め、お客様がとる品は提供済み、作らない品はできあがりにする
     private static OrderLineStatus StatusOnOrder(OrderTiming timing, ServedBy servedBy, Guid? stationId) =>

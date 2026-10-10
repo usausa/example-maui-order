@@ -16,7 +16,7 @@
         <RowTemplate>
             <MudTd>@context.Code</MudTd>
             <MudTd>@context.Name</MudTd>
-            <MudTd>@context.Status</MudTd>
+            <MudTd>@AdminNames.TenantStatusName(context.Status)</MudTd>
         </RowTemplate>
     </MudTable>
 }

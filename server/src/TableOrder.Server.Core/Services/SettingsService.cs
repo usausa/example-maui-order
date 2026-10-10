@@ -18,6 +18,9 @@ public sealed record StoreSettings(
 
 public sealed record CallReasonSetting(string Code, LocalizedText Name, bool IsActive);
 
+// チェーンの設定の保存の結果。知らせられなかった店舗 (設定の版を上げられなかった店舗) は、もう一度保存すると上げ直す
+public sealed record BrandUpdateResult(IReadOnlyList<LocalizedText> UnnotifiedStores);
+
 // チェーンと店舗の設定 (管理画面)。替えたら設定の版を上げて store.updated を送り、テーブル端末は待受のときに起動からやり直して反映する
 public sealed class SettingsService
 {
@@ -61,23 +64,24 @@ public sealed class SettingsService
     }
 
     // チェーンの設定はテナントのすべての店舗に効くので、店舗ごとに設定の版を上げて知らせる
-    public async ValueTask<ServiceError?> UpdateBrandAsync(BrandSettings settings, CancellationToken cancellationToken)
+    // 店舗ごとの書き込みが 1 つ失敗してもほかの店舗は続け、知らせられなかった店舗を返す (チェーンの設定は保存してある)
+    public async ValueTask<ServiceResult<BrandUpdateResult>> UpdateBrandAsync(BrandSettings settings, CancellationToken cancellationToken)
     {
         if (ValidateName(settings.Name) is { } invalidName)
         {
-            return invalidName;
+            return new(invalidName);
         }
 
         if (settings.Theme.FirstOrDefault(static x => !ThemeRoles.IsRole(x.Key) || !ThemeRoles.IsColor(x.Value)) is { Key: not null } invalidColor)
         {
-            return ServiceError.Validation("theme", $"{invalidColor.Key} の色は #RRGGBB か #AARRGGBB で入れてください");
+            return new(ServiceError.Validation("theme", $"{invalidColor.Key} の色は #RRGGBB か #AARRGGBB で入れてください"));
         }
 
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         if ((settings.LogoImageName is { } logo) && (!ImageNames.IsValid(logo) || !await imageStore.ExistsAsync(tenantId, logo, cancellationToken)))
         {
-            return ServiceError.Validation("logoImageName", "ロゴは置いてある画像から選んでください");
+            return new(ServiceError.Validation("logoImageName", "ロゴは置いてある画像から選んでください"));
         }
 
         var theme = settings.Theme.Count > 0
@@ -85,22 +89,30 @@ public sealed class SettingsService
             : null;
         if (await settingsAccessor.UpdateBrandAsync(tenantId, settings.Name, settings.LogoImageName, theme, settings.Version, context.Now, cancellationToken) == 0)
         {
-            return new ServiceError(ErrorCodes.VersionMismatch);
+            return new(new ServiceError(ErrorCodes.VersionMismatch));
         }
 
+        var unnotified = new List<LocalizedText>();
         foreach (var store in await storeAccessor.QueryAllAsync(tenantId, cancellationToken))
         {
-            await eventService.WriteAsync(tenantId, store.Id, async transaction =>
+            try
             {
-                await settingsAccessor.UpdateSettingsVersionAsync(transaction.Tx, tenantId, store.Id, context.Now, cancellationToken);
-                var updated = await storeAccessor.QueryAsync(transaction.Tx, tenantId, store.Id, cancellationToken);
-                await transaction.AppendEventAsync(EventTypes.StoreUpdated, StoreService.ToResponse(updated!, context.Now), null, null, context.Now, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                return true;
-            }, cancellationToken);
+                await eventService.WriteAsync(tenantId, store.Id, async transaction =>
+                {
+                    await settingsAccessor.UpdateSettingsVersionAsync(transaction.Tx, tenantId, store.Id, context.Now, cancellationToken);
+                    var updated = await storeAccessor.QueryAsync(transaction.Tx, tenantId, store.Id, cancellationToken);
+                    await transaction.AppendEventAsync(EventTypes.StoreUpdated, StoreService.ToResponse(updated!, context.Now), null, null, context.Now, cancellationToken);
+                    await transaction.CommitAsync(cancellationToken);
+                    return true;
+                }, cancellationToken);
+            }
+            catch (DbException)
+            {
+                unnotified.Add(store.Name);
+            }
         }
 
-        return null;
+        return new(new BrandUpdateResult(unnotified));
     }
 
     //--------------------------------------------------------------------------------

@@ -3,8 +3,7 @@ UPDATE
 SET
     OrderingPaused = /*@ paused */0,
     PausedMessage = /*@ message */NULL,
-    UpdatedAt = /*@ now */'',
-    Version = Version + 1
+    UpdatedAt = /*@ now */''
 WHERE
     TenantId = /*@ tenantId */''
     AND Id = /*@ id */''

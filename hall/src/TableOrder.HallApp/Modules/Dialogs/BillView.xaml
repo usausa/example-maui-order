@@ -11,7 +11,7 @@
            s:BindingContextResolver.Type="{x:Type module:BillViewModel}"
            WidthRequest="{x:Static styles:TerminalSizes.Dialog}">
 
-    <!-- 会計の手伝い: 明細、内税、合計 (払った額と残り)、まだ出していない品の注意。会計を始めるか取りやめるかは状態に合わせてどちらかだけ出す -->
+    <!-- 会計の手伝い: 明細、内税、合計 (払った額と残り)、まだ出していない品の注意。会計を始めるか取りやめるかは状態に合わせてどちらかだけ出す (払い終えた支払のある会計は、取りやめずに理由を出す) -->
     <VerticalStackLayout Style="{StaticResource DialogStack}">
         <Label Style="{StaticResource DialogTitleLabel}"
                Text="{Binding Title}" />
@@ -95,12 +95,16 @@
             <Label Style="{StaticResource BillUnservedLabel}"
                    IsVisible="{Binding HasUnserved}"
                    Text="{x:Static strings:AppResources.BillUnserved}" />
+            <Label Style="{StaticResource BillUnservedLabel}"
+                   IsVisible="{Binding IsCancelBlocked}"
+                   Text="{x:Static strings:AppResources.BillCancelUnavailable}" />
         </VerticalStackLayout>
 
         <BoxView Style="{StaticResource HorizontalRule}" />
         <Grid Style="{StaticResource DialogActionGrid}"
               ColumnDefinitions="*,*">
             <Button Grid.Column="0"
+                    Grid.ColumnSpan="{Binding BackColumnSpan}"
                     Style="{StaticResource SecondaryActionButton}"
                     Command="{Binding CloseCommand}"
                     Text="{x:Static strings:AppResources.CommonBack}" />
@@ -112,7 +116,7 @@
             <Button Grid.Column="1"
                     Style="{StaticResource BillActionButton}"
                     Command="{Binding CancelCheckoutCommand}"
-                    IsVisible="{Binding IsPaying}"
+                    IsVisible="{Binding CanCancelCheckout}"
                     Text="{x:Static strings:AppResources.BillCancel}" />
         </Grid>
     </VerticalStackLayout>

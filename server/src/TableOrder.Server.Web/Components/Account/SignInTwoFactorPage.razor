@@ -1,6 +1,8 @@
 @page "/account/sign-in-2fa"
+@using Microsoft.AspNetCore.RateLimiting
 @attribute [AllowAnonymous]
 @attribute [ExcludeFromInteractiveRouting]
+@attribute [EnableRateLimiting(RateLimits.SignIn)]
 @layout AccountLayout
 
 <PageTitle>認証アプリのコード</PageTitle>

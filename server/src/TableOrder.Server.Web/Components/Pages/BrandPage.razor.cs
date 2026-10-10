@@ -60,15 +60,7 @@ public sealed partial class BrandPage : IDisposable
 
     // テナントを選び直したら読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
-        {
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
-        });
+        _ = ReloadAsync(LoadAsync);
 
     private async Task LoadAsync()
     {
@@ -121,14 +113,23 @@ public sealed partial class BrandPage : IDisposable
             .Where(static x => !String.IsNullOrWhiteSpace(x.Value))
             .ToDictionary(static x => x.Key, static x => x.Value!.Trim());
         var name = new LocalizedText { Ja = nameJa.Trim(), En = String.IsNullOrWhiteSpace(nameEn) ? null : nameEn.Trim() };
-        var error = await SettingsService.UpdateBrandAsync(new BrandSettings(name, logo, theme, current), CancellationToken.None);
-        if (error is not null)
+        var result = await SettingsService.UpdateBrandAsync(new BrandSettings(name, logo, theme, current), CancellationToken.None);
+        if (!result.Succeeded)
         {
-            Snackbar.Add(ErrorMessage(error), Severity.Error);
+            Snackbar.Add(AdminNames.ErrorMessage(result.Error), Severity.Error);
             return;
         }
 
-        Snackbar.Add("チェーンの設定を保存しました。テーブル端末は待受のときに読み直します", Severity.Success);
+        // 知らせられなかった店舗は、読み直した版でもう一度保存すると知らせ直す
+        if (result.Value.UnnotifiedStores.Count > 0)
+        {
+            Snackbar.Add($"チェーンの設定を保存しましたが、{String.Join("、", result.Value.UnnotifiedStores.Select(static x => x.Ja))} の端末に知らせられませんでした。もう一度保存してください", Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("チェーンの設定を保存しました。テーブル端末は待受のときに読み直します", Severity.Success);
+        }
+
         await LoadAsync();
     }
 
@@ -143,11 +144,4 @@ public sealed partial class BrandPage : IDisposable
     // #AARRGGBB は CSS では #RRGGBBAA にする
     private static string ToCss(string color) =>
         color.Length == 9 ? "#" + color[3..] + color[1..3] : color;
-
-    private static string ErrorMessage(ServiceError error) =>
-        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ?? error.ErrorCode switch
-        {
-            ErrorCodes.VersionMismatch => "ほかで替えられています。読み直してください",
-            _ => error.ErrorCode
-        };
 }

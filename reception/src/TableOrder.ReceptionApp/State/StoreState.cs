@@ -22,5 +22,11 @@ public sealed class StoreState
 
     // ラストオーダーの時刻を過ぎた (ラストオーダーのない店は過ぎない)。過ぎたら来店を開いても注文できないので受け付けない
     public bool IsAfterLastOrder(DateTimeOffset now) =>
-        LastOrderTime is { } last && (StoreHours.UntilLastOrder(StoreHours.LocalTime(now, timeZone), openTime, last) < TimeSpan.Zero);
+        StoreHours.IsAfterLastOrder(now, timeZone, openTime, LastOrderTime);
+
+    // ラストオーダーの後のうち、その日の開店より前 (開店前のお客様には、終わりではなく始まる時刻を出す)
+    public bool IsBeforeOpen(DateTimeOffset now) =>
+        IsAfterLastOrder(now) && (StoreHours.LocalTime(now, timeZone) < openTime);
+
+    public string OpenTimeText => StoreHours.Format(openTime);
 }

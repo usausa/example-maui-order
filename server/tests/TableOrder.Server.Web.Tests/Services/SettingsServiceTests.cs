@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using TableOrder.Client;
 using TableOrder.Contract.Devices;
+using TableOrder.Contract.Stores;
 using TableOrder.Server.Core.Services;
 
 // 管理画面のチェーンと店舗の設定 (サーバの中の SettingsService を、管理画面と同じく選んだ店舗の文脈で呼ぶ)
@@ -31,15 +32,16 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.True((await terminal.Events.ConnectAsync(cancel)).IsSuccess);
 
         // Act
-        ServiceError? error;
+        ServiceResult<BrandUpdateResult> result;
         using (factory.BeginStore(store))
         {
             var brand = (await Settings.GetBrandAsync(cancel))!;
-            error = await Settings.UpdateBrandAsync(brand with { Name = new LocalizedText { Ja = "新しいチェーン", En = "New chain" }, Theme = new Dictionary<string, string> { ["PrimaryColor"] = "#1E5FA8" } }, cancel);
+            result = await Settings.UpdateBrandAsync(brand with { Name = new LocalizedText { Ja = "新しいチェーン", En = "New chain" }, Theme = new Dictionary<string, string> { ["PrimaryColor"] = "#1E5FA8" } }, cancel);
         }
 
         // Assert
-        Assert.Null(error);
+        Assert.True(result.Succeeded);
+        Assert.Empty(result.Value.UnnotifiedStores);
         var updated = Assert.IsType<StoreUpdatedEvent>(await terminal.NextAsync());
         Assert.Equal(before.SettingsVersion + 1, updated.Store.SettingsVersion);
         var after = (await terminal.Device.GetConfigAsync(cancel)).Content!;
@@ -65,10 +67,10 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         var stale = await Settings.UpdateBrandAsync(brand with { Version = brand.Version - 1 }, cancel);
 
         // Assert
-        Assert.Equal(ErrorCodes.ValidationError, unknownRole!.ErrorCode);
-        Assert.Equal(ErrorCodes.ValidationError, badColor!.ErrorCode);
-        Assert.Equal(ErrorCodes.ValidationError, missingLogo!.ErrorCode);
-        Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, unknownRole.Error?.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, badColor.Error?.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, missingLogo.Error?.ErrorCode);
+        Assert.Equal(ErrorCodes.VersionMismatch, stale.Error?.ErrorCode);
     }
 
     // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・言語・支払方法・呼び出しの用件・PIN になる
@@ -109,7 +111,36 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(["ja", "en"], config.Languages);
         Assert.Equal([PaymentMethod.QrCode], config.PaymentMethods);
         Assert.Equal("Water", Assert.Single(config.CallReasons).Code);
-        Assert.True(StaffPins.Verify("9876", config.StaffPin.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
+        Assert.True(StaffPins.Verify("9876", config.StaffPin!.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
+    }
+
+    // 店舗の設定を読んだあとにホールが注文を止めても、読んだ版のまま保存できる (一時停止は店舗の編集の版を上げない)
+    [Fact]
+    public async Task StoreSettingsSaveAfterOrderingPause()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        var cancel = TestContext.Current.CancellationToken;
+        using var hall = new TestDevice(factory.CreateClient());
+        await hall.SignInAsync(store.HallCode);
+        StoreSettings settings;
+        using (factory.BeginStore(store))
+        {
+            settings = (await Settings.GetStoreSettingsAsync(cancel))!;
+        }
+
+        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        paused.EnsureSuccessStatusCode();
+
+        // Act
+        ServiceError? error;
+        using (factory.BeginStore(store))
+        {
+            error = await Settings.UpdateStoreSettingsAsync(settings with { Languages = ["ja"] }, null, cancel);
+        }
+
+        // Assert
+        Assert.Null(error);
     }
 
     // PIN を送らなければ替えない。払う手段がなくなる設定、形の違う PIN と言語、ない来店の開き方、範囲の外のキッチンの遅れの時間、古い版は受けない
@@ -136,7 +167,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         // Assert
         Assert.Null(kept);
         var config = (await terminal.Device.GetConfigAsync(cancel)).Content!;
-        Assert.True(StaffPins.Verify(ServerFactory.StaffPin, config.StaffPin.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
+        Assert.True(StaffPins.Verify(ServerFactory.StaffPin, config.StaffPin!.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
         Assert.Equal(ErrorCodes.ValidationError, noWayToPay!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, badPin!.ErrorCode);
         Assert.Equal(ErrorCodes.ValidationError, noLanguage!.ErrorCode);

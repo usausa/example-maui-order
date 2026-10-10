@@ -47,10 +47,17 @@ public sealed partial class PasswordPage
     //--------------------------------------------------------------------------------
 
     // 仮のパスワードの印は、新しいパスワードと一緒に書く (替えられなければ戻す)
+    // 今と同じパスワードには替えない (仮のパスワードのままだと、出した管理者が知ったままになる)
     private async Task ChangeAsync()
     {
         if (user is null)
         {
+            return;
+        }
+
+        if (Input!.NewPassword == Input.CurrentPassword)
+        {
+            errors = ["新しいパスワードは、今のパスワードと違うものにしてください。"];
             return;
         }
 

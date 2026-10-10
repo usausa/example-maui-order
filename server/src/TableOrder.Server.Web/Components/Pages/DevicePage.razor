@@ -46,7 +46,7 @@ else
                 </MudItem>
             }
             <MudItem xs="12" sm="2" Class="d-flex align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IssueAsync">コードを出す</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueAsync">コードを出す</MudButton>
             </MudItem>
         </MudGrid>
         @if (issued is not null)
@@ -76,7 +76,7 @@ else
                 <MudNumericField T="int" @bind-Value="tokenDays" Label="期限 (日)" Min="1" Max="@DeviceEnrollmentService.MaxTokenDays" />
             </MudItem>
             <MudItem xs="12" sm="2" Class="d-flex align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="IssueTokenAsync">トークンを出す</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueTokenAsync">トークンを出す</MudButton>
             </MudItem>
         </MudGrid>
         @if (issuedToken is not null)

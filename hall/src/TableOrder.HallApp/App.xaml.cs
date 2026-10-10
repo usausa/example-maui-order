@@ -7,10 +7,13 @@ using TableOrder.Terminal.Diagnostics;
 #pragma warning disable CA1724
 public sealed partial class App
 {
+    private readonly ILogger<App> log;
+
     private readonly IServiceProvider serviceProvider;
 
-    public App(IServiceProvider serviceProvider, ILogger<App> log)
+    public App(ILogger<App> log, IServiceProvider serviceProvider)
     {
+        this.log = log;
         this.serviceProvider = serviceProvider;
 
         // Light theme based application
@@ -19,6 +22,7 @@ public sealed partial class App
         InitializeComponent();
 
         // Start
+        CrashReport.WatchUnobserved(log);
         log.InfoApplicationStart(typeof(App).Assembly.GetName().Version, Environment.Version);
     }
 
@@ -27,13 +31,10 @@ public sealed partial class App
         return new Window(serviceProvider.GetRequiredService<MainPage>());
     }
 
-    // ReSharper disable once AsyncVoidMethod
-    protected override async void OnStart()
+    // 前回の異常終了はログに残し (お客様の画面には出さない)、待たずに起動の画面に進める
+    protected override void OnStart()
     {
-        // Report previous exception
-        await CrashReport.ShowReport();
-
-        // Completed
+        CrashReport.LogPrevious(log);
         serviceProvider.GetRequiredService<StartupState>().NotifyCompleted();
     }
 }

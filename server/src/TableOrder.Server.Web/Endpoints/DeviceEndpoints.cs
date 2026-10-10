@@ -55,44 +55,14 @@ public static class DeviceEndpoints
     //--------------------------------------------------------------------------------
 
     // 端末の登録。テナントと店舗はコードかトークンで決まり、要求に入れさせない
+    // 公開鍵は読んだ座標から JWK に書き直して渡す (同じ鍵を同じ文字列で引く。読めなければ Service が入力の誤りにする)
     private static async ValueTask<IResult> HandlePairAsync(
         DeviceService deviceService,
         DevicePairRequest request,
         CancellationToken cancellationToken)
     {
-        var errors = new Dictionary<string, string[]>();
-        if (String.IsNullOrEmpty(request.PairingCode) == String.IsNullOrEmpty(request.EnrollmentToken))
-        {
-            errors["pairingCode"] = ["ペアリングコードか登録トークンのどちらかを送ってください"];
-        }
-
-        if (String.IsNullOrWhiteSpace(request.DeviceName) || (request.DeviceName.Length > Length.DeviceName))
-        {
-            errors["deviceName"] = [$"端末の名前を {Length.DeviceName} 文字までで送ってください"];
-        }
-
-        if (request.AppVersion?.Length > Length.AppVersion)
-        {
-            errors["appVersion"] = [$"アプリの版を {Length.AppVersion} 文字までで送ってください"];
-        }
-
-        if (!DevicePublicKeys.TryCreateJwk(request.PublicKey, out var publicKey))
-        {
-            errors["publicKey"] = ["P-256 の公開鍵 (JWK) を送ってください"];
-        }
-
-        if (errors.Count > 0)
-        {
-            return ApiProblems.Validation(errors);
-        }
-
-        var result = await deviceService.PairAsync(request, publicKey!, cancellationToken);
-        return result.Status switch
-        {
-            DevicePairStatus.Success => TypedResults.Created($"{ApiRoutes.Devices}/{result.Device!.DeviceId}", result.Device),
-            DevicePairStatus.TenantSuspended => ApiProblems.TenantSuspended(),
-            _ => ApiProblems.PairingCodeInvalid()
-        };
+        var publicKey = DevicePublicKeys.TryCreateJwk(request.PublicKey, out var jwk) ? jwk : null;
+        return ApiResults.Created(await deviceService.PairAsync(request, publicKey, cancellationToken), static x => $"{ApiRoutes.Devices}/{x.DeviceId}");
     }
 
     //--------------------------------------------------------------------------------
@@ -139,21 +109,8 @@ public static class DeviceEndpoints
     private static async ValueTask<IResult> HandleHeartbeatAsync(
         DeviceService deviceService,
         DeviceHeartbeatRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (request.BatteryLevel is < 0m or > 1m)
-        {
-            return ApiProblems.Validation(new Dictionary<string, string[]> { ["batteryLevel"] = ["電池の残りは 0 から 1 で送ってください"] });
-        }
-
-        if (request.AppVersion?.Length > Length.AppVersion)
-        {
-            return ApiProblems.Validation(new Dictionary<string, string[]> { ["appVersion"] = [$"アプリの版を {Length.AppVersion} 文字までで送ってください"] });
-        }
-
-        await deviceService.ReportStatusAsync(request, cancellationToken);
-        return TypedResults.NoContent();
-    }
+        CancellationToken cancellationToken) =>
+        ApiResults.NoContent(await deviceService.ReportStatusAsync(request, cancellationToken));
 
     // テーブル端末のテーブルの今の来店。なければ 204 (端末は待受にする)
     private static async ValueTask<IResult> HandleVisitAsync(

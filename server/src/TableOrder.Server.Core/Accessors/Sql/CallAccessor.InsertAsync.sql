@@ -1,4 +1,4 @@
 INSERT INTO
-    Calls (TenantId, Id, StoreId, VisitId, ReasonCode, Status, DeviceId, CreatedAt, AcknowledgedAt, DoneAt, StaffId)
+    Calls (TenantId, Id, StoreId, VisitId, ReasonCode, Status, DeviceId, CreatedAt, AcknowledgedAt, DoneAt)
 VALUES
-    (/*@ tenantId */'', /*@ id */'', /*@ storeId */'', /*@ visitId */'', /*@ reasonCode */'', 'Open', /*@ deviceId */NULL, /*@ now */'', NULL, NULL, NULL)
+    (/*@ tenantId */'', /*@ id */'', /*@ storeId */'', /*@ visitId */'', /*@ reasonCode */'', 'Open', /*@ deviceId */NULL, /*@ now */'', NULL, NULL)

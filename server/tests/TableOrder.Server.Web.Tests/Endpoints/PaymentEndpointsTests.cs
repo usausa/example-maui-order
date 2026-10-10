@@ -95,6 +95,27 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{second.Id}")).Status);
     }
 
+    // 会計中の来店をレジで閉じると待っている支払をやめ、あとで届いた結果では払い終えない (二重に払わせない)
+    [Fact]
+    public async Task RegisterCloseCancelsPendingPayment()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        using var hall = await SignInAsync(store.HallCode);
+        var (visit, bill) = await CheckoutAsync(store, table);
+        var pending = await CreateQrAsync(table, visit, bill.Total);
+
+        // Act
+        using var closed = await hall.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version });
+        using var anonymous = factory.CreateClient();
+        using var callback = await anonymous.PostAsJsonAsync("/api/v1/payments/callbacks/fake", new PaymentCallbackRequest { ProviderReference = pending.Id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(VisitClosedBy.Register, (await TestDevice.ReadAsync<VisitResponse>(closed)).ClosedBy);
+        Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{pending.Id}")).Status);
+    }
+
     // 会計を始める前は払えない
     [Fact]
     public async Task PaymentRequiresCheckout()

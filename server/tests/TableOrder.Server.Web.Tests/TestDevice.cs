@@ -54,16 +54,18 @@ public sealed class TestDevice : IDisposable
         }
     }
 
-    public Task<HttpResponseMessage> PairAsync(string code) => PairAsync(code, null);
+    // 種類を省いたら、コードの種類で登録する
+    public Task<HttpResponseMessage> PairAsync(string code, DeviceKind? kind = null) => PairAsync(code, null, kind ?? TestCodes.KindOf(code));
 
     // 登録トークンで登録する (EMM で配った端末)
-    public Task<HttpResponseMessage> PairByTokenAsync(string enrollmentToken) => PairAsync(null, enrollmentToken);
+    public Task<HttpResponseMessage> PairByTokenAsync(string enrollmentToken, DeviceKind kind) => PairAsync(null, enrollmentToken, kind);
 
-    private Task<HttpResponseMessage> PairAsync(string? code, string? enrollmentToken) =>
+    private Task<HttpResponseMessage> PairAsync(string? code, string? enrollmentToken, DeviceKind kind) =>
         Client.PostAsJsonAsync("/api/v1/devices/pair", new DevicePairRequest
         {
             PairingCode = code,
             EnrollmentToken = enrollmentToken,
+            Kind = kind,
             PublicKey = PublicKey,
             DeviceName = "test",
             AppVersion = "1.0.0"
@@ -95,7 +97,7 @@ public sealed class TestDevice : IDisposable
     // 登録してトークンを受け取り、以後の要求にトークンを付ける
     public Task<DevicePairResponse> SignInAsync(string code) => SignInAsync(PairAsync(code));
 
-    public Task<DevicePairResponse> SignInByTokenAsync(string enrollmentToken) => SignInAsync(PairByTokenAsync(enrollmentToken));
+    public Task<DevicePairResponse> SignInByTokenAsync(string enrollmentToken, DeviceKind kind) => SignInAsync(PairByTokenAsync(enrollmentToken, kind));
 
     private async Task<DevicePairResponse> SignInAsync(Task<HttpResponseMessage> pairing)
     {

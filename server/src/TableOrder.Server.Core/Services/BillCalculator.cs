@@ -12,9 +12,9 @@ internal static class BillCalculator
         var active = lines.Where(static x => x.Status != OrderLineStatus.Cancelled).ToList();
         var optionsByLine = options.ToLookup(static x => x.LineId);
 
-        // 同じ商品・オプション・単価の明細はまとめる (オプションは選んだ順)
+        // 同じ商品・オプション・単価・税率の明細はまとめる (オプションは選んだ順。税率を直したメニューの前後の明細は分ける)
         var billLines = active
-            .GroupBy(x => (x.ItemId, Options: String.Join(',', optionsByLine[x.Id].Select(static o => o.OptionId)), x.UnitPrice))
+            .GroupBy(x => (x.ItemId, Options: String.Join(',', optionsByLine[x.Id].Select(static o => o.OptionId)), x.UnitPrice, x.TaxRate))
             .Select(g =>
             {
                 var first = g.First();

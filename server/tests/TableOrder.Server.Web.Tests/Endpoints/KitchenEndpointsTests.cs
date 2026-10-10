@@ -1,5 +1,6 @@
 namespace TableOrder.Server.Web.Endpoints;
 
+using TableOrder.Contract.Events;
 using TableOrder.Contract.Kitchen;
 using TableOrder.Contract.Orders;
 using TableOrder.Contract.Visits;
@@ -76,6 +77,66 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         Assert.All(history.Items[0].Lines, static x => Assert.Equal(OrderLineStatus.Cooking, x.Status));
     }
 
+    // 下げたチケットは、持ち場ごとの直近のものを下げた新しい順に、明細とオプションを付けて返す
+    [Fact]
+    public async Task DoneTicketsAreListedPerStation()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        using var kitchen = await SignInAsync(store.KitchenCode);
+        var menu = await TestMenu.LoadAsync(hall);
+        var visit = await OpenAsync(hall, store.TableIds[0]);
+        await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Parfait)));
+        var parfait = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?stationId={TestMenu.DessertStation}")).Items);
+        await BumpAsync(kitchen, parfait.Id);
+        for (var i = 0; i < 21; i++)
+        {
+            await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.Demiglace)));
+            var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?stationId={TestMenu.KitchenStation}")).Items);
+            await BumpAsync(kitchen, ticket.Id);
+        }
+
+        // Act
+        var all = await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets?status=Done");
+        var dessert = await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?status=Done&stationId={TestMenu.DessertStation}");
+
+        // Assert
+        Assert.Equal(20, all.Items.Count);
+        Assert.All(all.Items, static x => Assert.Equal(TestMenu.KitchenStation, x.StationId));
+        Assert.Equal(all.Items.OrderByDescending(static x => x.DoneAt).Select(static x => x.Id), all.Items.Select(static x => x.Id));
+        Assert.All(all.Items, static x => Assert.Single(Assert.Single(x.Lines).Options));
+        var done = Assert.Single(dessert.Items);
+        Assert.Equal(parfait.Id, done.Id);
+        Assert.Single(done.Lines);
+    }
+
+    // 来店がテーブルを移ると、開いているチケットを持ち場に知らせる (キッチン端末はチケットの通知で読み直し、来店の今のテーブルを出す)
+    [Fact]
+    public async Task MoveNotifiesOpenTickets()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        using var kitchen = await SignInAsync(store.KitchenCode);
+        var menu = await TestMenu.LoadAsync(hall);
+        var visit = await OpenAsync(hall, store.TableIds[0]);
+        await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Salad)));
+        var current = await hall.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
+        var before = await kitchen.GetAsync<EventListResponse>("/api/v1/events?after=0");
+
+        // Act
+        using var moved = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[2], Version = current.Version });
+        moved.EnsureSuccessStatusCode();
+        var events = await kitchen.GetAsync<EventListResponse>($"/api/v1/events?after={before.LastSeq}");
+
+        // Assert
+        var item = Assert.Single(events.Items);
+        Assert.Equal(EventTypes.TicketUpdated, item.Type);
+        Assert.Equal("3", TestHubConnection.Read<KitchenTicketListResponseItem>(item).TableName);
+        Assert.Equal("3", Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items).TableName);
+    }
+
     // できあがった明細は作り始めに戻せない
     [Fact]
     public async Task StartAfterReadyIsInvalid()
@@ -135,6 +196,12 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
     private static async Task OrderAsync(TestDevice device, VisitResponse visit, OrderCreateRequest request)
     {
         using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        response.EnsureSuccessStatusCode();
+    }
+
+    private static async Task BumpAsync(TestDevice device, Guid ticketId)
+    {
+        using var response = await device.PostAsync($"/api/v1/kitchen/tickets/{ticketId}/bump", new { });
         response.EnsureSuccessStatusCode();
     }
 }

@@ -52,7 +52,7 @@
                         Text="{x:Static strings:AppResources.StartupSetup}" />
             </VerticalStackLayout>
             <Label Style="{StaticResource StartupHintLabel}"
-                   IsVisible="{Binding IsFailed}"
+                   IsVisible="{Binding IsAutoRetry}"
                    Text="{Binding RetryHintText}" />
         </VerticalStackLayout>
 

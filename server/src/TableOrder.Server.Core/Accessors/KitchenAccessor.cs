@@ -10,18 +10,25 @@ public sealed partial class KitchenAccessor
 
     // 店舗のチケット (テーブルの名前と注文の通し番号を足す)
     [QueryFirst]
-    public partial ValueTask<KitchenTicketEntity?> QueryTicketAsync(Guid tenantId, Guid storeId, Guid id, CancellationToken cancellationToken);
-
-    [QueryFirst]
     public partial ValueTask<KitchenTicketEntity?> QueryTicketAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid id, CancellationToken cancellationToken);
+
+    // 来店の開いているチケット (古い順)
+    [Query]
+    public partial ValueTask<List<KitchenTicketEntity>> QueryOpenTicketListByVisitAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
 
     // 開いているチケット (古い順)
     [Query]
     public partial ValueTask<List<KitchenTicketEntity>> QueryOpenTicketListAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
 
-    // 下げたチケット (下げた新しい順に limit 件)
+    // 持ち場の下げたチケット (下げた新しい順に limit 件) と、その明細とオプション (チケットの一覧を持ち場ごとに 1 回で作る)
     [Query]
-    public partial ValueTask<List<KitchenTicketEntity>> QueryDoneTicketListAsync(Guid tenantId, Guid storeId, int limit, CancellationToken cancellationToken);
+    public partial ValueTask<List<KitchenTicketEntity>> QueryDoneTicketListByStationAsync(Guid tenantId, Guid storeId, Guid stationId, int limit, CancellationToken cancellationToken);
+
+    [Query]
+    public partial ValueTask<List<OrderLineEntity>> QueryDoneTicketLineListByStationAsync(Guid tenantId, Guid storeId, Guid stationId, int limit, CancellationToken cancellationToken);
+
+    [Query]
+    public partial ValueTask<List<OrderLineOptionEntity>> QueryDoneTicketLineOptionListByStationAsync(Guid tenantId, Guid storeId, Guid stationId, int limit, CancellationToken cancellationToken);
 
     // 下げる (Open から)
     [Execute]
@@ -33,13 +40,7 @@ public sealed partial class KitchenAccessor
 
     // チケットの明細 (明細の番号の順) とオプション
     [Query]
-    public partial ValueTask<List<OrderLineEntity>> QueryTicketLineListAsync(Guid tenantId, Guid ticketId, CancellationToken cancellationToken);
-
-    [Query]
     public partial ValueTask<List<OrderLineEntity>> QueryTicketLineListAsync(DbTransaction tx, Guid tenantId, Guid ticketId, CancellationToken cancellationToken);
-
-    [Query]
-    public partial ValueTask<List<OrderLineOptionEntity>> QueryTicketLineOptionListAsync(Guid tenantId, Guid ticketId, CancellationToken cancellationToken);
 
     [Query]
     public partial ValueTask<List<OrderLineOptionEntity>> QueryTicketLineOptionListAsync(DbTransaction tx, Guid tenantId, Guid ticketId, CancellationToken cancellationToken);

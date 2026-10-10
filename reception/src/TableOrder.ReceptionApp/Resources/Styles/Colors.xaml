@@ -49,7 +49,7 @@
     <Color x:Key="DisabledColor">#E4E0D8</Color>
     <Color x:Key="OnDisabledColor">#A29C90</Color>
 
-    <!-- 幕 (ポップアップの後ろ) と、幕の上の文字 -->
+    <!-- 幕と、幕の上の文字 (受付機では使わない。役割の名前を ThemeRoles と揃えるために持つ) -->
     <Color x:Key="ScrimColor">#99000000</Color>
     <Color x:Key="OnScrimColor">#FFFFFF</Color>
 

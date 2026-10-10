@@ -61,24 +61,26 @@ public sealed class TestTerminal : IAsyncDisposable
         connection.Dispose();
     }
 
-    // 端末のアプリと同じく、鍵の公開鍵とペアリングコードで登録して、端末の id を設定に入れる
-    public Task<DevicePairResponse> PairAsync(string code) => PairAsync(code, null);
+    // 端末のアプリと同じく、鍵の公開鍵とペアリングコードで登録して、端末の id を設定に入れる (種類を省いたら、コードの種類で登録する)
+    public Task<DevicePairResponse> PairAsync(string code, DeviceKind? kind = null) => PairAsync(code, null, kind ?? TestCodes.KindOf(code));
 
     // EMM で配った登録トークンで登録する
-    public Task<DevicePairResponse> PairByTokenAsync(string enrollmentToken) => PairAsync(null, enrollmentToken);
+    public Task<DevicePairResponse> PairByTokenAsync(string enrollmentToken, DeviceKind kind) => PairAsync(null, enrollmentToken, kind);
 
-    private async Task<DevicePairResponse> PairAsync(string? code, string? enrollmentToken)
+    // この端末の鍵で送る登録の要求 (断られる登録を確かめる)
+    public async Task<DevicePairRequest> CreatePairRequestAsync(string? code, string? enrollmentToken, DeviceKind kind) =>
+        new()
+        {
+            PairingCode = code,
+            EnrollmentToken = enrollmentToken,
+            Kind = kind,
+            PublicKey = DeviceCredentials.CreatePublicKey(await Context.Key.GetPublicKeyAsync()),
+            DeviceName = "test"
+        };
+
+    private async Task<DevicePairResponse> PairAsync(string? code, string? enrollmentToken, DeviceKind kind)
     {
-        var publicKey = await Context.Key.GetPublicKeyAsync();
-        var result = await Device.PairAsync(
-            new DevicePairRequest
-            {
-                PairingCode = code,
-                EnrollmentToken = enrollmentToken,
-                PublicKey = DeviceCredentials.CreatePublicKey(publicKey),
-                DeviceName = "test"
-            },
-            TestContext.Current.CancellationToken);
+        var result = await Device.PairAsync(await CreatePairRequestAsync(code, enrollmentToken, kind), TestContext.Current.CancellationToken);
         Context.DeviceId = result.Content!.DeviceId;
         return result.Content;
     }

@@ -52,6 +52,9 @@ public sealed class Settings : IDeviceContext
 
     public bool IsRegistered => DeviceId is not null;
 
+    // 管理画面で無効にされた (EMM の登録トークンが残っていても自分では登録し直さず、端末の設定で登録し直す)
+    public bool IsRevoked => preferences.Get(nameof(IsRevoked), false);
+
     // トークンの要求に署名する鍵
     public IDeviceKey Key { get; }
 
@@ -61,18 +64,21 @@ public sealed class Settings : IDeviceContext
     // 登録した接続先
     private string? RegisteredEndPoint => preferences.Get<string?>(nameof(RegisteredEndPoint), null);
 
-    // 今の接続先で登録した端末として覚える
-    public void Register(Guid deviceId)
+    // 登録を送った接続先で登録した端末として覚える
+    public void Register(Guid deviceId, string endPoint)
     {
         preferences.Set(nameof(DeviceId), deviceId.ToString("D"));
-        preferences.Set(nameof(RegisteredEndPoint), ApiEndPoint);
+        preferences.Set(nameof(RegisteredEndPoint), endPoint);
+        preferences.Remove(nameof(IsRevoked));
     }
 
-    // 登録と鍵と、登録と一緒に持つ PIN のハッシュを消す (次の登録で鍵を作り直す)
+    // 無効にされた端末の登録と鍵と、登録と一緒に持つ PIN のハッシュを消す (次の登録で鍵を作り直す)
+    // 無効にされたことを覚え、EMM の登録トークンで自分では登録し直さない (無効にした端末が別の id で戻らないように)
     public void Unregister()
     {
         preferences.Remove(nameof(DeviceId));
         preferences.Remove(nameof(RegisteredEndPoint));
+        preferences.Set(nameof(IsRevoked), true);
         StaffPin = null;
         Key.Delete();
     }

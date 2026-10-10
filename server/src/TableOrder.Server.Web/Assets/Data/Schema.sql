@@ -139,6 +139,8 @@ CREATE TABLE IF NOT EXISTS Devices (
 );
 -- トークンの要求で、テナントのわからないまま端末を引く
 CREATE UNIQUE INDEX IF NOT EXISTS UX_Devices_Id ON Devices (Id);
+-- 登録で、テナントのわからないまま同じ鍵の端末を引く (登録し直した端末の前の登録を無効にする)
+CREATE INDEX IF NOT EXISTS IX_Devices_PublicKey ON Devices (PublicKey);
 CREATE INDEX IF NOT EXISTS IX_Devices_StoreId ON Devices (TenantId, StoreId);
 -- すぐに拒む一覧で、テナントをまたいで近ごろ無効にした端末を引く
 CREATE INDEX IF NOT EXISTS IX_Devices_RevokedAt ON Devices (RevokedAt) WHERE RevokedAt IS NOT NULL;
@@ -309,7 +311,6 @@ CREATE TABLE IF NOT EXISTS Orders (
     OrderNo      INTEGER  NOT NULL,
     Source       TEXT     NOT NULL,
     DeviceId     TEXT,
-    StaffId      TEXT,
     MenuVersion  TEXT     NOT NULL,
     RequestHash  BLOB     NOT NULL,
     OrderedAt    TEXT     NOT NULL,
@@ -397,7 +398,6 @@ CREATE TABLE IF NOT EXISTS Calls (
     CreatedAt       TEXT  NOT NULL,
     AcknowledgedAt  TEXT,
     DoneAt          TEXT,
-    StaffId         TEXT,
     PRIMARY KEY (TenantId, Id),
     FOREIGN KEY (TenantId, VisitId) REFERENCES Visits (TenantId, Id)
 );

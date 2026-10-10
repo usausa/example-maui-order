@@ -18,23 +18,33 @@ public sealed partial class CallAlert
         var context = Application.Context;
         try
         {
+            // 通知の音量で鳴らす (既定は着信の音量)
+            using var builder = new AudioAttributes.Builder();
+            using var attributes = builder.SetUsage(AudioUsageKind.Notification)!.SetContentType(AudioContentType.Sonification)!.Build()!;
+
             ringtone?.Stop();
             using var uri = RingtoneManager.GetDefaultUri(RingtoneType.Notification);
             ringtone = RingtoneManager.GetRingtone(context, uri);
             if (ringtone is not null)
             {
-                // 通知の音量で鳴らす (既定は着信の音量)
-                using var builder = new AudioAttributes.Builder();
-                using var attributes = builder.SetUsage(AudioUsageKind.Notification)!.SetContentType(AudioContentType.Sonification)!.Build();
                 ringtone.AudioAttributes = attributes;
                 ringtone.Play();
             }
 
             // 振動はクラスで引く (名前で引く定数は Android 12 で廃止)
+            // 通知の用途を付ける (端末の通知の振動の設定に従う。用途のない振動は、裏にいる間は捨てられることがある)
             if (context.GetSystemService(Java.Lang.Class.FromType(typeof(Vibrator))) is Vibrator { HasVibrator: true } vibrator)
             {
-                using var effect = VibrationEffect.CreateWaveform(VibrationPattern, -1);
-                vibrator.Vibrate(effect);
+                using var effect = VibrationEffect.CreateWaveform(VibrationPattern, -1)!;
+                if (OperatingSystem.IsAndroidVersionAtLeast(33))
+                {
+                    using var usage = VibrationAttributes.CreateForUsage((int)VibrationAttributesUsageType.Notification);
+                    vibrator.Vibrate(effect, usage);
+                }
+                else
+                {
+                    vibrator.Vibrate(effect, attributes);
+                }
             }
         }
         catch (Java.Lang.Exception ex)

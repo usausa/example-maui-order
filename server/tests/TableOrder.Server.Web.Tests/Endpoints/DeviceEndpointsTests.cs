@@ -1,5 +1,6 @@
 namespace TableOrder.Server.Web.Endpoints;
 
+using System.Net.Http.Headers;
 using System.Security.Cryptography;
 
 using TableOrder.Client;
@@ -50,6 +51,59 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("PAIRING_CODE_INVALID", await TestDevice.ReadErrorCodeAsync(response));
     }
 
+    // 登録の回数を超えた接続元は 429 にし、送り直せる時刻を Retry-After で知らせる
+    [Fact]
+    public async Task PairIsRateLimitedWithRetryAfter()
+    {
+        // Arrange: 登録の回数を 1 分に 2 回にしたサーバ
+        await using var server = new ServerFactory();
+        server.Settings["RateLimit:PairingPerMinute"] = "2";
+        using var device = new TestDevice(server.CreateClient());
+
+        // Act
+        for (var i = 0; i < 2; i++)
+        {
+            using var attempt = await device.PairAsync("999999");
+        }
+
+        using var limited = await device.PairAsync("999999");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.NotNull(limited.Headers.RetryAfter);
+    }
+
+    // 種類の違うアプリの登録は 422 (コードは使わない)
+    [Fact]
+    public async Task PairRejectsOtherKind()
+    {
+        // Arrange
+        using var device = new TestDevice(factory.CreateClient());
+
+        // Act
+        using var response = await device.PairAsync(SampleData.DemoTableCode, DeviceKind.Hall);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.Equal("DEVICE_KIND_MISMATCH", await TestDevice.ReadErrorCodeAsync(response));
+    }
+
+    // 登録するアプリの端末の種類のない要求は受けない
+    [Fact]
+    public async Task PairRequiresKind()
+    {
+        // Arrange
+        using var device = new TestDevice(factory.CreateClient());
+        var request = new DevicePairRequest { PairingCode = SampleData.DemoTableCode, PublicKey = device.PublicKey, DeviceName = "test" };
+
+        // Act
+        using var response = await device.PostAsync("/api/v1/devices/pair", request);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(response));
+    }
+
     // 曲線の上の点でない公開鍵は受けない
     [Fact]
     public async Task PairRejectsInvalidPublicKey()
@@ -59,6 +113,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         var request = new DevicePairRequest
         {
             PairingCode = SampleData.DemoTableCode,
+            Kind = DeviceKind.Table,
             PublicKey = new DevicePublicKey { Kty = "EC", Crv = "P-256", X = new string('A', 43), Y = new string('A', 43) },
             DeviceName = "test"
         };
@@ -103,6 +158,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         var request = new DevicePairRequest
         {
             PairingCode = SampleData.DemoTableCode,
+            Kind = DeviceKind.Table,
             PublicKey = DeviceCredentials.CreatePublicKey(await key.GetPublicKeyAsync()),
             DeviceName = "test"
         };
@@ -237,7 +293,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal((30, 30), (demoConfig.Features.LastOrderNoticeMinutes, demoConfig.Features.FinishSeconds));
         Assert.Equal(VisitOpening.Hall, demoConfig.Features.VisitOpening);
         Assert.Equal(15, demoConfig.Features.KitchenAlertMinutes);
-        Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
+        Assert.True(StaffPins.Verify("1234", demoConfig.StaffPin!.Iterations, demoConfig.StaffPin.Salt, demoConfig.StaffPin.Hash));
 
         Assert.Equal("あおぞら食堂", testConfig.Brand.Name.Ja);
         Assert.Contains(testConfig.Brand.Theme, static x => (x.Role == "PrimaryColor") && (x.Color == "#1E5FA8"));
@@ -247,11 +303,11 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.False(testConfig.Features.SplitPayment);
         Assert.Equal((15, 20), (testConfig.Features.LastOrderNoticeMinutes, testConfig.Features.FinishSeconds));
         Assert.Equal(VisitOpening.Table, testConfig.Features.VisitOpening);
-        Assert.True(StaffPins.Verify("5678", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
+        Assert.True(StaffPins.Verify("5678", testConfig.StaffPin!.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
         Assert.False(StaffPins.Verify("1234", testConfig.StaffPin.Iterations, testConfig.StaffPin.Salt, testConfig.StaffPin.Hash));
     }
 
-    // キッチン端末は、登録したときの持ち場を受け持つ
+    // キッチン端末は、登録したときの持ち場を受け持つ。スタッフの PIN を使わないので、PIN のハッシュを受け取らない
     [Fact]
     public async Task ConfigReturnsKitchenStations()
     {
@@ -265,6 +321,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         // Assert
         Assert.Equal(DeviceKind.Kitchen, config.Device!.Kind);
         Assert.Equal(3, config.Device.StationIds.Count);
+        Assert.Null(config.StaffPin);
     }
 
     // 状態の報告を受ける
@@ -284,6 +341,42 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    // 範囲の外の電池の残りは受けない
+    [Fact]
+    public async Task HeartbeatRejectsInvalidBatteryLevel()
+    {
+        // Arrange
+        using var device = new TestDevice(factory.CreateClient());
+        await device.SignInAsync(SampleData.DemoTableCode);
+
+        // Act
+        using var response = await device.PostAsync("/api/v1/devices/me/heartbeat", new DeviceHeartbeatRequest { AppVersion = "1.0.1", BatteryLevel = 1.5m });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(response));
+    }
+
+    // 確かめられないトークン (署名の誤り) の 401 には、理由を付けない
+    [Fact]
+    public async Task InvalidTokenIsUnauthorizedWithoutReason()
+    {
+        // Arrange
+        using var device = new TestDevice(factory.CreateClient());
+        await device.SignInAsync(SampleData.DemoTableCode);
+        var parts = device.Client.DefaultRequestHeaders.Authorization!.Parameter!.Split('.');
+        var signature = parts[2].ToCharArray();
+        signature[0] = signature[0] == 'A' ? 'B' : 'A';
+        device.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", String.Join('.', parts[0], parts[1], new string(signature)));
+
+        // Act
+        using var response = await device.Client.GetAsync(new Uri("/api/v1/devices/me/config", UriKind.Relative), TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.DoesNotContain("error", response.Headers.WwwAuthenticate.ToString(), StringComparison.Ordinal);
     }
 
     // トークンのない要求は 401

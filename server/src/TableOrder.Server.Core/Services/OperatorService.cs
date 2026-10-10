@@ -3,7 +3,7 @@ namespace TableOrder.Server.Core.Services;
 using TableOrder.Server.Core.Accessors;
 
 // 運営者 (テナントに属さない利用者) の管理 (運営者の管理画面から呼ぶ)
-// パスワードは管理画面がハッシュにして渡す。名前・パスワード・多要素・止めることを替えたら資格の印を替え、開いている管理画面をやり直させる
+// パスワードは管理画面がハッシュにして渡す。パスワード・多要素・止めることを替えたら資格の印を替え、開いている管理画面をやり直させる (名前だけなら替えない)
 public sealed class OperatorService
 {
     private readonly ServiceContextProvider contextProvider;
@@ -42,6 +42,11 @@ public sealed class OperatorService
             return new(ServiceError.Validation("email", "メールアドレスを入れてください"));
         }
 
+        if (!AdminUserService.IsEmail(trimmedEmail))
+        {
+            return new(ServiceError.Validation("email", "メールアドレスの形で入れてください"));
+        }
+
         var trimmedName = name.Trim();
         if ((trimmedName.Length == 0) || (trimmedName.Length > AdminUserService.MaxNameLength))
         {
@@ -70,7 +75,7 @@ public sealed class OperatorService
             return ServiceError.Validation("name", $"名前は {AdminUserService.MaxNameLength} 文字までで入れてください");
         }
 
-        if (await accountAccessor.UpdateOperatorAsync(userId, trimmed, NewStamp(), contextProvider.Current.Now, version, cancellationToken) == 0)
+        if (await accountAccessor.UpdateOperatorAsync(userId, trimmed, contextProvider.Current.Now, version, cancellationToken) == 0)
         {
             return await NotFoundOrVersionMismatchAsync(userId, cancellationToken);
         }

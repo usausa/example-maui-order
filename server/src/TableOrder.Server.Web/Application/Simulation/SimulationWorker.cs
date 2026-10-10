@@ -50,23 +50,39 @@ public sealed class SimulationWorker : BackgroundService
         using var timer = new PeriodicTimer(TimeSpan.FromSeconds(setting.IntervalSeconds), timeProvider);
         while (await timer.WaitForNextTickAsync(stoppingToken))
         {
+            List<StoreKeyEntity> stores;
             try
             {
-                foreach (var store in await simulationService.GetStoreAllAsync(stoppingToken))
-                {
-                    using var scope = contextProvider.Begin(() => new ServiceContext(timeProvider.GetUtcNow())
-                    {
-                        TenantId = store.TenantId,
-                        StoreId = store.StoreId
-                    });
-                    await simulationService.AdvanceAsync(timing, stoppingToken);
-                }
+                stores = await simulationService.GetStoreAllAsync(stoppingToken);
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
-                // 進められなかったものは次の間隔で進める
                 log.ErrorSimulation(ex);
+                continue;
             }
+
+            foreach (var store in stores)
+            {
+                await AdvanceAsync(store, stoppingToken);
+            }
+        }
+    }
+
+    // 1 つの店舗で失敗しても、ほかの店舗は進める (進められなかったものは次の間隔で進める)
+    private async ValueTask AdvanceAsync(StoreKeyEntity store, CancellationToken stoppingToken)
+    {
+        try
+        {
+            using var scope = contextProvider.Begin(() => new ServiceContext(timeProvider.GetUtcNow())
+            {
+                TenantId = store.TenantId,
+                StoreId = store.StoreId
+            });
+            await simulationService.AdvanceAsync(timing, stoppingToken);
+        }
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
+        {
+            log.ErrorStoreSimulation(ex, store.TenantId, store.StoreId);
         }
     }
 }

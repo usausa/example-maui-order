@@ -1,7 +1,5 @@
 namespace TableOrder.Terminal.Components;
 
-using System.Diagnostics;
-
 public sealed record BatteryStatus(
     double Level,
     BatteryState State,
@@ -10,10 +8,6 @@ public sealed record BatteryStatus(
 public sealed record NetworkStatus(
     NetworkAccess Access,
     IReadOnlyList<ConnectionProfile> Profiles);
-
-public sealed record WiFiStatus(
-    int SignalStrength,
-    int LinkSpeed);
 
 public sealed partial class DeviceInformation : IDisposable
 {
@@ -63,11 +57,7 @@ public sealed partial class DeviceInformation : IDisposable
 
     public event EventHandler? NetworkChanged;
 
-    public event EventHandler? WiFiChanged;
-
     public NetworkStatus? Network { get; private set; }
-
-    public WiFiStatus? WiFi { get; private set; }
 
     private void UpdateNetwork(NetworkStatus status)
     {
@@ -75,23 +65,7 @@ public sealed partial class DeviceInformation : IDisposable
         NetworkChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private void UpdateWiFi(WiFiStatus? status)
-    {
-        WiFi = status;
-        WiFiChanged?.Invoke(this, EventArgs.Empty);
-    }
-
     private partial void StartNetwork();
 
     private partial void StopNetwork();
-
-    public DateTime StartTime { get; } = ReadStartTime();
-
-    public static long ReadHeapSize() => GC.GetGCMemoryInfo().HeapSizeBytes;
-
-    private static DateTime ReadStartTime()
-    {
-        using var process = Process.GetCurrentProcess();
-        return process.StartTime;
-    }
 }

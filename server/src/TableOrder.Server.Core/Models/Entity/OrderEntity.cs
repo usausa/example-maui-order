@@ -18,8 +18,6 @@ public sealed class OrderEntity
 
     public Guid? DeviceId { get; set; }
 
-    public string? StaffId { get; set; }
-
     public string MenuVersion { get; set; } = default!;
 
     public DateTimeOffset OrderedAt { get; set; }

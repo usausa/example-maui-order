@@ -99,6 +99,58 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         Assert.Contains("しばらくサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
     }
 
+    // 同時に間違えたサインインも 1 回ずつ数え、5 回で止める (資格情報の版の違いで数え漏らさない)
+    [Fact]
+    public async Task ConcurrentWrongPasswordsLockOut()
+    {
+        // Arrange
+        var email = await factory.CreateAdminUserAsync(AdminRole.Operator, null);
+        var admins = Enumerable.Range(0, 5).Select(_ => new TestAdmin(factory)).ToList();
+
+        // Act
+        try
+        {
+            foreach (var attempt in await Task.WhenAll(admins.Select((x, i) => x.SignInAsync(email, $"wrong-password-{i}"))))
+            {
+                attempt.Dispose();
+            }
+        }
+        finally
+        {
+            admins.ForEach(static x => x.Dispose());
+        }
+
+        using var admin = new TestAdmin(factory);
+        using var locked = await admin.SignInAsync(email, ServerFactory.AdminPassword);
+
+        // Assert
+        Assert.Contains("しばらくサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
+    }
+
+    // サインインの送信は、接続元ごとに 1 分の回数を超えると断る (画面を開くのは限らない)
+    [Fact]
+    public async Task SignInPostsAreRateLimited()
+    {
+        // Arrange: サインインの回数を 1 分に 3 回にしたサーバ
+        await using var server = new ServerFactory();
+        server.Settings["RateLimit:SignInPerMinute"] = "3";
+        using var admin = new TestAdmin(server);
+
+        // Act
+        for (var i = 0; i < 3; i++)
+        {
+            using var attempt = await admin.SignInAsync("nobody@example.com", $"wrong-password-{i}");
+        }
+
+        using var limited = await admin.SignInAsync("nobody@example.com", "wrong-password-3");
+        using var page = await admin.GetAsync("/account/sign-in");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.NotNull(limited.Headers.RetryAfter);
+        Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+    }
+
     // 店舗の担当は、テナントの管理者の画面 (チェーン) を開けない
     [Fact]
     public async Task StoreStaffCannotOpenTenantAdminPages()
@@ -116,7 +168,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         Assert.Equal("/account/access-denied?ReturnUrl=%2Fbrand", TestAdmin.LocationOf(response));
     }
 
-    // 仮のパスワードの利用者は、パスワードを替えてから管理画面に進む
+    // 仮のパスワードの利用者は、パスワードを替えてから管理画面に進む (アカウントと多要素の画面も開かず、仮のパスワードのままには替えられない)
     [Fact]
     public async Task TemporaryPasswordMustBeChanged()
     {
@@ -128,6 +180,29 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         using (var signIn = await admin.SignInAsync(email, ServerFactory.AdminPassword))
         {
             Assert.Equal("/account/password", TestAdmin.LocationOf(signIn));
+        }
+
+        // Act / Assert: アカウントと多要素の画面からもパスワードの画面に移る
+        using (var account = await admin.GetAsync("/account"))
+        {
+            Assert.Equal("/account/password", TestAdmin.LocationOf(account));
+        }
+
+        using (var twoFactor = await admin.GetAsync("/account/two-factor"))
+        {
+            Assert.Equal("/account/password", TestAdmin.LocationOf(twoFactor));
+        }
+
+        // Act / Assert: 仮のパスワードのままには替えない
+        using (var same = await admin.PostFormAsync("/account/password", "password", new Dictionary<string, string>
+        {
+            ["Input.CurrentPassword"] = ServerFactory.AdminPassword,
+            ["Input.NewPassword"] = ServerFactory.AdminPassword,
+            ["Input.ConfirmPassword"] = ServerFactory.AdminPassword
+        }))
+        {
+            Assert.Equal(HttpStatusCode.OK, same.StatusCode);
+            Assert.Null(TestAdmin.LocationOf(same));
         }
 
         // Act / Assert: 替えると管理画面に移る
@@ -174,6 +249,43 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         Assert.Equal("/", TestAdmin.LocationOf(verified));
         using var page = await admin.GetAsync("/");
         Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+    }
+
+    // 回復用のコードは 1 回だけ使え、DB にはコードのまま持たない
+    [Fact]
+    public async Task RecoveryCodeSignsInOnce()
+    {
+        // Arrange
+        var email = await factory.CreateAdminUserAsync(AdminRole.TenantAdmin, SampleData.DemoTenantId);
+        await EnableTwoFactorAsync(email);
+        string code;
+        string? stored;
+        await using (var scope = factory.Services.CreateAsyncScope())
+        {
+            var users = scope.ServiceProvider.GetRequiredService<UserManager<AdminUserEntity>>();
+            var user = (await users.FindByNameAsync(email))!;
+            code = (await users.GenerateNewTwoFactorRecoveryCodesAsync(user, 3))!.First();
+            stored = (await users.FindByNameAsync(email))!.RecoveryCodes;
+        }
+
+        // Act / Assert: 回復用のコードでサインインする
+        using (var admin = new TestAdmin(factory))
+        {
+            using var signIn = await admin.SignInAsync(email, ServerFactory.AdminPassword);
+            using var recovered = await admin.PostFormAsync("/account/sign-in-2fa?returnUrl=%2F", "recovery", new Dictionary<string, string> { ["Recovery.Code"] = code });
+            Assert.Equal("/", TestAdmin.LocationOf(recovered));
+        }
+
+        // Act / Assert: 使ったコードは 2 回目には使えない
+        using (var again = new TestAdmin(factory))
+        {
+            using var signIn = await again.SignInAsync(email, ServerFactory.AdminPassword);
+            using var reused = await again.PostFormAsync("/account/sign-in-2fa?returnUrl=%2F", "recovery", new Dictionary<string, string> { ["Recovery.Code"] = code });
+            Assert.Null(TestAdmin.LocationOf(reused));
+        }
+
+        Assert.NotNull(stored);
+        Assert.DoesNotContain(code, stored, StringComparison.Ordinal);
     }
 
     // 止めた利用者と、止めたテナントの利用者はサインインできない (理由は分けない)

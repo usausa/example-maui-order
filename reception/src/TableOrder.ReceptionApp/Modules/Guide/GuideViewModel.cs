@@ -4,6 +4,7 @@ using TableOrder.Terminal.Components;
 
 // 案内。決まったテーブルを大きく出し、人数とお席へお進みくださいを添える。満席のときは、スタッフが案内することを出す
 // 閉じるか、しばらくたつと待受に戻る (次のお客様が受付できるように、言語も店舗の初めの言語に戻す)。戻るまでの残りの秒を出す
+// 起動からやり直す知らせ (端末を替えた、長く切れていた) は、案内を消さないように印だけ付けて、閉じたときに待受ではなく起動に移る
 public sealed partial class GuideViewModel : AppViewModelBase
 {
     // 案内を出しておく秒
@@ -15,6 +16,9 @@ public sealed partial class GuideViewModel : AppViewModelBase
 
     // 画面を離れたら待受に戻すのをやめる
     private readonly CancellationTokenSource closing = new();
+
+    // 起動からやり直す知らせを受けた (閉じたら起動に移る)
+    private bool restartRequested;
 
     public BrandMark Brand { get; }
 
@@ -95,14 +99,20 @@ public sealed partial class GuideViewModel : AppViewModelBase
     // 戻るは閉じると同じにする (アプリの外へ出さない)
     protected override Task OnNotifyBackAsync() => CloseAsync();
 
-    // 受付を終えて待受に戻る
+    protected override Task OnRestartAsync()
+    {
+        restartRequested = true;
+        return Task.CompletedTask;
+    }
+
+    // 受付を終えて待受に戻る (起動からやり直す知らせを受けていたら起動に移る)
     private async Task CloseAsync()
     {
         languageState.Reset();
-        await Navigator.ForwardAsync(ViewId.Standby);
+        await Navigator.ForwardAsync(restartRequested ? ViewId.Startup : ViewId.Standby);
     }
 
-    // 残りの秒を数えて出し、なくなったら待受に戻す。操作の途中 (スタッフメニューの PIN など) なら、終わってから戻す
+    // 残りの秒を数えて出し、なくなったら待受に戻す。閉じるを押している途中 (遷移の間) なら、終わってから戻す
     private async Task CloseLaterAsync(CancellationToken token)
     {
         var remaining = ShowSeconds;

@@ -1,4 +1,4 @@
-namespace TableOrder.HallApp.Shell;
+namespace TableOrder.Terminal.Shell;
 
 using Microsoft.Maui.Controls.Shapes;
 

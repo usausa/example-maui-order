@@ -7,6 +7,7 @@ using TableOrder.Terminal.Components;
 // チェーンと店舗の設定 (色、PIN、言語) はここで入れ、替わったら待受からここに戻って入れ直す
 // 接続先がなければ端末の設定へ進む。登録していなければ EMM の登録トークンで登録し、なければ端末の設定へ進む。用意ができたら待受へ進む
 // 失敗したとき (通信できない、受付機でない、テナントの停止) は、しばらくごとにやり直す
+// 登録トークンを断られたとき (種類の違い、期限切れや取り消し) は、配り直すまで通らないので自動ではやり直さない
 public sealed partial class StartupViewModel : AppViewModelBase
 {
     // 段階の間を少し空け、進み具合が読めるようにする
@@ -60,6 +61,9 @@ public sealed partial class StartupViewModel : AppViewModelBase
 
     [ObservableProperty]
     public partial bool IsFailed { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsAutoRetry { get; set; }
 
     public IObserveCommand RetryCommand { get; }
 
@@ -139,6 +143,7 @@ public sealed partial class StartupViewModel : AppViewModelBase
     {
         StopRetry();
         IsFailed = false;
+        IsAutoRetry = false;
 
         // 接続先がなければ (EMM も配っていなければ)、端末の設定で入れる
         await ReportAsync(0.1, AppResources.StartupStepSettings);
@@ -149,9 +154,10 @@ public sealed partial class StartupViewModel : AppViewModelBase
         }
 
         // 登録していなければ、EMM が配った登録トークンで登録する (なければ端末の設定で登録する)
+        // 無効にされた端末は、登録トークンが残っていても自分では登録し直さない (端末の設定で登録し直す)
         if (!settings.IsRegistered)
         {
-            if (settings.EnrollmentToken is not { } token)
+            if (settings.IsRevoked || (settings.EnrollmentToken is not { } token))
             {
                 await Navigator.ForwardAsync(ViewId.Setup);
                 return;
@@ -161,7 +167,8 @@ public sealed partial class StartupViewModel : AppViewModelBase
             var enrolled = await deviceUsecase.EnrollAsync(token);
             if (!enrolled.IsSuccess)
             {
-                Fail(enrolled);
+                // 断られたトークンを送り続けない (登録の流量を使い、ほかの端末の登録を待たせる)
+                Fail(enrolled, enrolled.ErrorCode is not (ErrorCodes.DeviceKindMismatch or ErrorCodes.PairingCodeInvalid));
                 return;
             }
         }
@@ -190,7 +197,7 @@ public sealed partial class StartupViewModel : AppViewModelBase
         }
 
         // PIN はサーバにつながらないときにも確かめられるように、登録と一緒に保存する
-        settings.StaffPin = new StaffPinHash(configContent.StaffPin.Iterations, configContent.StaffPin.Salt, configContent.StaffPin.Hash);
+        settings.StaffPin = configContent.StaffPin is { } pin ? new StaffPinHash(pin.Iterations, pin.Salt, pin.Hash) : null;
         themeManager.Apply(configContent.Brand.Theme);
 
         // 受付機として登録していなければ進まない
@@ -257,16 +264,21 @@ public sealed partial class StartupViewModel : AppViewModelBase
         return Task.Delay(StepInterval);
     }
 
-    private void Fail<T>(ApiResult<T> result)
+    private void Fail<T>(ApiResult<T> result, bool retry = true)
     {
         log.WarnStartupFailed(result.Status, result.ErrorCode);
-        Fail(ViewHelper.ErrorMessage(result));
+        Fail(ViewHelper.ErrorMessage(result), retry);
     }
 
-    private void Fail(string message)
+    private void Fail(string message, bool retry = true)
     {
         IsFailed = true;
+        IsAutoRetry = retry;
         StepText = message;
+        if (!retry)
+        {
+            return;
+        }
 
         retrying = new CancellationTokenSource();
         _ = RetryLaterAsync(retrying.Token);

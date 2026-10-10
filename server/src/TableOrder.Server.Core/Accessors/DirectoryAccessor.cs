@@ -9,6 +9,10 @@ public sealed partial class DirectoryAccessor
     [QueryFirst]
     public partial ValueTask<DeviceEntity?> QueryDeviceAsync(Guid id, CancellationToken cancellationToken);
 
+    // 登録で、同じ鍵の有効な端末を引く (登録し直した端末の前の登録を無効にする。店舗やテナントをまたいで登録し直すこともある)
+    [Query]
+    public partial ValueTask<List<DeviceEntity>> QueryActiveDeviceListByPublicKeyAsync(string publicKey, CancellationToken cancellationToken);
+
     [QueryFirst]
     public partial ValueTask<DeviceEnrollmentEntity?> QueryEnrollmentByPairingCodeAsync(string pairingCode, CancellationToken cancellationToken);
 

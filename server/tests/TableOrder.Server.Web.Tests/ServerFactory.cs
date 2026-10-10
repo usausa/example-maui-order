@@ -32,7 +32,8 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
     private static readonly string StaffPinHash = CreateStaffPinHash();
 
     // サンプルのデータのコード (1xxxxx、2xxxxx) と重ならないペアリングコード
-    private int lastCode = 300_000;
+    // コードの端末の種類を TestCodes で引くので、テストのサーバをまたいで重ならないように数える
+    private static int lastCode = 300_000;
 
     private readonly string databasePath = Path.Combine(Path.GetTempPath(), $"tableorder-test-{Guid.NewGuid():N}.db");
 
@@ -55,6 +56,7 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
                 ["Database:SampleData"] = "true",
                 ["Image:Directory"] = imagePath,
                 ["RateLimit:PairingPerMinute"] = "10000",
+                ["RateLimit:SignInPerMinute"] = "10000",
                 ["Log:HttpLog"] = "false",
                 ["Simulation:Enabled"] = "false",
                 ["Serilog:MinimumLevel:Default"] = "Warning"
@@ -94,6 +96,48 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
     // Arrange (管理画面の操作の結果を、版と文脈なしで DB に直接書く)
     //--------------------------------------------------------------------------------
 
+    // 店舗のラストオーダーの時刻 (開店と同じ時刻にすると、いつでも過ぎている)
+    public async ValueTask SetLastOrderTimeAsync(TestStore store, string? lastOrderTime)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "UPDATE Stores SET LastOrderTime = @lastOrderTime WHERE TenantId = @tenantId AND Id = @storeId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        command.Parameters.AddWithValue("@lastOrderTime", (object?)lastOrderTime ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // 明細の税率 (税率を直したメニューの前に受けた明細の代わり)
+    public async ValueTask SetLineTaxRateAsync(TestStore store, Guid lineId, decimal taxRate)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "UPDATE OrderLines SET TaxRate = @taxRate WHERE TenantId = @tenantId AND Id = @lineId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@lineId", lineId.ToString("D"));
+        command.Parameters.AddWithValue("@taxRate", taxRate);
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // ほかのサーバが書いた通知 (このサーバの送り手に知らせずに、DB にだけ書く)。中身は空で、店舗のすべての端末に送る
+    public async ValueTask WriteEventElsewhereAsync(TestStore store, string type)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = """
+            INSERT INTO EventSequences (TenantId, StoreId, LastSeq) VALUES (@tenantId, @storeId, 0) ON CONFLICT (TenantId, StoreId) DO NOTHING;
+            UPDATE EventSequences SET LastSeq = LastSeq + 1 WHERE TenantId = @tenantId AND StoreId = @storeId;
+            INSERT INTO Events (TenantId, StoreId, Seq, Type, OccurredAt, Data, TableIds, StationId)
+                SELECT TenantId, StoreId, LastSeq, @type, @now, '{}', NULL, NULL FROM EventSequences WHERE TenantId = @tenantId AND StoreId = @storeId;
+            """;
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        command.Parameters.AddWithValue("@type", type);
+        command.Parameters.AddWithValue("@now", DateTimeOffsetTextConverter.ToDb(DateTimeOffset.UtcNow));
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
     // 端末を無効にし、管理画面の操作と同じく、すぐに拒む一覧を読み直す (refresh を外すと、ほかのサーバで無効にしたときのように読み直さない)
     public async ValueTask RevokeDeviceAsync(Guid deviceId, bool refresh = true)
     {
@@ -130,7 +174,7 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
     public async ValueTask<(Guid TenantId, string PairingCode)> CreateTenantAsync()
     {
         var tenantId = Guid.CreateVersion7();
-        var code = NextCode();
+        var code = NextCode(DeviceKind.Hall);
 
         await using var con = await OpenAsync();
         await using var command = con.CreateCommand();
@@ -161,10 +205,10 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         var storeId = Guid.CreateVersion7();
         var publicationId = Guid.CreateVersion7();
         var tableIds = new[] { Guid.CreateVersion7(), Guid.CreateVersion7(), Guid.CreateVersion7() };
-        var tableCodes = tableIds.Select(_ => NextCode()).ToArray();
-        var hallCode = NextCode();
-        var kitchenCode = NextCode();
-        var receptionCode = NextCode();
+        var tableCodes = tableIds.Select(static _ => NextCode(DeviceKind.Table)).ToArray();
+        var hallCode = NextCode(DeviceKind.Hall);
+        var kitchenCode = NextCode(DeviceKind.Kitchen);
+        var receptionCode = NextCode(DeviceKind.Reception);
 
         await using var con = await OpenAsync();
         await using var command = con.CreateCommand();
@@ -282,7 +326,12 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 
-    private string NextCode() => Interlocked.Increment(ref lastCode).ToString(CultureInfo.InvariantCulture);
+    private static string NextCode(DeviceKind kind)
+    {
+        var code = Interlocked.Increment(ref lastCode).ToString(CultureInfo.InvariantCulture);
+        TestCodes.Add(code, kind);
+        return code;
+    }
 
     private static string CreateStaffPinHash()
     {

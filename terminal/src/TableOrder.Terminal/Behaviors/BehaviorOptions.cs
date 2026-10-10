@@ -10,17 +10,5 @@ public sealed class BehaviorOptions
 
     // Label
 
-    public bool AutoSize { get; set; } = true;
-
     public bool FixedLineHeight { get; set; } = true;
-
-    // Button
-
-    public bool RippleEffect { get; set; } = true;
-
-    // Entry
-
-    public bool SelectAllOnFocus { get; set; } = true;
-
-    public bool InputFilter { get; set; } = true;
 }

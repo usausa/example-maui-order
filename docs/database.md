@@ -2,7 +2,7 @@
 
 注文サーバ (`TableOrder.Server.Core`) が持つデータの設計。  
 スキーマ (`server/src/TableOrder.Server.Web/Assets/Data/Schema.sql`) はこの文書のすべての表を作り、サーバの起動のたびに実行する。  
-読み書きを作ったのはテナント・店舗・端末・メニュー・品切れの表で、来店から会計と通知の表は、業務の処理を作るときに使い始める。  
+外部の連携の表 (`ApiClients`、`WebhookEndpoints`、`WebhookDeliveries`) は作ってあり、読み書きは外部の連携を作るときに足す ([backlog.md](backlog.md))。  
 業務の前提は [business.md](business.md)、API は [api-design.md](api-design.md)、本番のデータベースへの移し方は [plan.md](plan.md#-本番の環境) を参照。
 
 - [1. 前提](#-1-前提)
@@ -186,11 +186,11 @@ erDiagram
 | `ElectronicReceipt` | bool | 電子レシートを出すか |
 | `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30, "visitOpening": "Hall", "kitchenAlertMinutes": 15 }`)。増えていくので列にせず、ない項目は既定の値にする |
 | `StaffPinHash` | json | スタッフの PIN のハッシュ (`{ "iterations": 100000, "salt": "...", "hash": "..." }`。PBKDF2-HMAC-SHA256)。平文は持たない |
-| `SettingsVersion` | int | チェーンと店舗の設定の版。設定を替えるたびに上げる (`Version` は一時停止でも上がるので分ける) |
+| `SettingsVersion` | int | チェーンと店舗の設定の版。設定 (チェーン、店舗、テーブル) を替えるたびに上げる (端末が読み直すかを決める。店舗の行の編集の `Version` と分ける) |
 | `MenuPublicationId` | guid? | 今のメニュー |
 | `IsActive` | bool | |
 | `CreatedAt` / `UpdatedAt` | datetime | |
-| `Version` | int | 管理画面の編集の楽観ロック |
+| `Version` | int | 管理画面の編集の楽観ロック (注文の一時停止では上げない) |
 
 - 一意: `Code`
 - `GET /store` と `GET /devices/me/config` は、この行と `CallReasons` (と、端末の設定はテナントのチェーンの設定) から作る。  
@@ -276,7 +276,7 @@ erDiagram
 | `Kind` | enum | `Table` / `Hall` / `Kitchen` / `Reception` |
 | `Name` | string | `T12`、`ハンディ 1`、`キッチン 1` |
 | `TableId` | guid? | テーブル端末の置き場所 |
-| `PublicKey` | string | 端末の公開鍵 (JWK)。トークンの要求の署名を確かめる |
+| `PublicKey` | string | 端末の公開鍵 (JWK。座標は読み直した値で書き、同じ鍵は同じ文字列にする)。トークンの要求の署名を確かめる |
 | `IsActive` | bool | 無効にすると次のトークンを出さず、出したトークンもすぐに拒む |
 | `RegisteredAt` | datetime | |
 | `RevokedAt` | datetime? | 無効にした時刻 (トークンの期限を過ぎるまで、すぐに拒む一覧に入れる) |
@@ -284,7 +284,8 @@ erDiagram
 | `Version` | int | |
 
 - すべてのテナントで一意: `Id` (トークンの要求で、テナントのわからないまま端末を引く)
-- 索引: `StoreId`、`RevokedAt` (無効にした行だけ。すぐに拒む一覧で、テナントをまたいで近ごろ無効にした端末を引く)
+- 索引: `StoreId`、`RevokedAt` (無効にした行だけ。すぐに拒む一覧で、テナントをまたいで近ごろ無効にした端末を引く)、`PublicKey` (登録し直した端末の前の登録を、テナントのわからないまま引く)
+- 同じ鍵で登録し直した端末が新しい登録でトークンを受け取ると、前の登録 (同じ `PublicKey` の有効な行) を無効にする
 - 名前は端末が送った名前 (機種の名前と端末ごとの値の末尾) で、重なってよい (管理画面で付け替える)
 - 置き場所 (テーブル、持ち場) を替えても登録し直さない (次のトークンと端末の設定に出る)
 
@@ -412,9 +413,9 @@ erDiagram
 | `OpenedAt` | datetime | |
 | `ClosedBy` | enum? | `TablePayment` / `Register` / `Hall` |
 | `ClosedAt` | datetime? | 閉じたか取りやめた時刻 |
-| `ClosedStaffId` | string? | 閉じたか取りやめたスタッフ (任意) |
+| `ClosedStaffId` | string? | 閉じたスタッフ (任意。取りやめでは書かない) |
 | `CreatedAt` / `UpdatedAt` | datetime | |
-| `Version` | int | 来店の変更 (人数、移動、会計、確認の記録) の楽観ロック |
+| `Version` | int | 来店の変更 (人数、移動、会計、閉じる、取りやめ) の楽観ロック (確認の記録では上げない) |
 
 - 一意: `TableId` (`Status` が `Open` か `Paying` の行だけの部分索引)。  
   1 つのテーブルに開いている来店を 2 つ作らない (`TABLE_OCCUPIED`)
@@ -444,13 +445,12 @@ erDiagram
 | `OrderNo` | int | 来店の中の通し番号 |
 | `Source` | enum | `Table` / `Hall` |
 | `DeviceId` | guid? | 送った端末 |
-| `StaffId` | string? | 代わりに入れたスタッフ (任意) |
 | `MenuVersion` | string | 表示していたメニュー |
 | `RequestHash` | bytes | 要求の中身のハッシュ (同じ `id` で中身の違う送り直しを見つける) |
 | `OrderedAt` | datetime | |
 
 - 一意: `VisitId`、`OrderNo`
-- `OrderNo` は 1 文の `INSERT ... SELECT COALESCE(MAX(OrderNo), 0) + 1` で採番する
+- `OrderNo` は、店舗の書き込みのロックの中で来店の最大の番号に 1 を足して採番する (店舗の書き込みは 1 つずつなので重ならない)
 - 注文の合計 (`amount`) は列に持たず、明細 (取消を除く) から求める
 
 ### OrderLines (明細)
@@ -538,7 +538,6 @@ erDiagram
 | `DeviceId` | guid? | 呼んだ端末 |
 | `CreatedAt` | datetime | |
 | `AcknowledgedAt` / `DoneAt` | datetime? | |
-| `StaffId` | string? | 対応したスタッフ (任意) |
 
 - 一意: `VisitId`、`ReasonCode` (`Status` が `Done` でない行だけの部分索引)。  
   同じ用件の終わっていない呼び出しを増やさない
@@ -668,7 +667,7 @@ erDiagram
   送り手は、書いたサーバが知らせた店舗のほか、一定の間隔ですべての店舗の `LastSeq` を見て、ほかのサーバが書いた通知も送る
 - 端末が採番する `id` (来店、注文、明細、呼び出し、支払) は主キーで重複を防ぐ。  
   同じ `id` の送り直しは書いた行を返し、主な項目が違えば `409` (`DUPLICATE_ID_MISMATCH`。注文は `RequestHash` で比べる)
-- 楽観ロックの `Version` は、管理画面で編集する表 (`Stores`、`DiningTables`、`Devices`、`WebhookEndpoints`) と来店 (`Visits`) に持つ。  
+- 楽観ロックの `Version` は、管理画面で編集する表 (`Tenants`、`Stores`、`DiningTables`、`AdminUsers`、`Devices`、`WebhookEndpoints`) と来店 (`Visits`) に持つ。  
   `AND Version = ...` を条件に更新し、`Version = Version + 1` にする
 - 状態の変更は遷移元の状態を条件にして更新し (`AND Status = 'Ready'` など)、更新した行がなければ今の状態を読んで `422` か `409` を返す
 - 名前・価格・タグは注文したときのものを明細に写し、注文履歴・チケット・会計はメニューを引かずに作る
@@ -680,11 +679,7 @@ erDiagram
 
 | データ | 残す期間 | 消すとき |
 | --- | --- | --- |
-| `Events` | 24 時間 (つなぎ直しの追いつきの範囲。過ぎた要求は `EVENTS_EXPIRED`) | 1 時間ごと |
-| `DeviceEnrollments` | 期限を過ぎるか使い切ってから 1 日 | 毎日 |
-| `WebhookDeliveries` | 送れたものと諦めたものは 7 日 | 毎日 |
-| 閉じた来店 (`Visits` と、その確認の記録・注文・明細・チケット・呼び出し・支払・電子レシート) | サーバの設定の日数 (既定 90 日) | 毎日 |
-| `MenuPublications` | 今のメニューと直近の 10 件 | 公開のとき |
-| 解約したテナント (`Tenants` の `Status` が `Closed`) のすべての行 | 解約からサーバの設定の日数 | 毎日 |
+| `Events` | 24 時間 (つなぎ直しの追いつきの範囲。過ぎた要求は `EVENTS_EXPIRED`) | 古いデータを消す間隔 (`Event:CleanupMinutes`、既定 1 時間) ごと |
+| `DeviceEnrollments` | ペアリングコードは期限まで、登録トークンは期限を過ぎるか取り消してから 1 日 | 古いデータを消す間隔ごと |
 
-- 売上の正は POS なので、閉じた来店は Webhook (`visit.closed`) で渡したあと、問い合わせと集計に使う間だけ残す
+- ほかの表 (閉じた来店、メニューの公開、Webhook の送り状況、解約したテナント) を消す処理は作っていない ([backlog.md](backlog.md))

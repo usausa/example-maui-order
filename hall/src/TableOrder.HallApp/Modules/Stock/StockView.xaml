@@ -13,7 +13,7 @@
 
     <!-- 品切れのタブ: カテゴリの帯で選んだ品を並べ、品を押すと状態を選ぶ。下の帯に注文の一時停止と再開 (どちらかだけ)、すべて戻すを置く -->
     <Grid Style="{StaticResource ScreenGrid}"
-          RowDefinitions="Auto,56,1,*,Auto,Auto">
+          RowDefinitions="Auto,64,1,*,Auto,Auto">
         <controls:TabHeader Grid.Row="0" />
 
         <!-- category (横にスクロールする。帯が続いている向きの端に送りのボタンを重ねる) -->

@@ -62,7 +62,7 @@ public sealed partial class ManagedConfiguration : IDisposable
         }
 
         current = values;
-        ApiEndPoint = Accept(ApiEndPointKey, values.ApiEndPoint, IsValidEndPoint);
+        ApiEndPoint = Accept(ApiEndPointKey, values.ApiEndPoint, ApiEndPoints.IsValid);
         EnrollmentToken = Accept(EnrollmentTokenKey, values.EnrollmentToken, IsValidToken);
         log.InfoManagedConfiguration(ApiEndPoint ?? string.Empty, EnrollmentToken is not null);
 
@@ -86,9 +86,6 @@ public sealed partial class ManagedConfiguration : IDisposable
         log.WarnManagedConfigurationInvalid(key);
         return null;
     }
-
-    private static bool IsValidEndPoint(string value) =>
-        Uri.TryCreate(value, UriKind.Absolute, out var uri) && ((uri.Scheme == Uri.UriSchemeHttp) || (uri.Scheme == Uri.UriSchemeHttps));
 
     private static bool IsValidToken(string value) =>
         (value.Length <= MaxEnrollmentTokenLength) && !value.Any(Char.IsWhiteSpace);

@@ -158,6 +158,23 @@ public sealed class CallService
     public ValueTask<ServiceResult<CallListResponseItem>> DoneAsync(Guid id, CancellationToken cancellationToken) =>
         ChangeAsync(id, CallStatus.Done, cancellationToken);
 
+    // 来店を終えたら (閉じた、取りやめた、テーブルで払い終えた)、その来店の終わっていない呼び出しを終える
+    // 残すと、次のお客様が座ったテーブルにスタッフが向かう。来店を終える書き込みと同じトランザクションで書く
+    internal async ValueTask FinishVisitCallsAsync(StoreTransaction transaction, Guid visitId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var tx = transaction.Tx;
+        foreach (var call in await callAccessor.QueryOpenListByVisitAsync(tx, transaction.TenantId, visitId, cancellationToken))
+        {
+            if (await callAccessor.UpdateDoneAsync(tx, transaction.TenantId, call.Id, now, cancellationToken) == 0)
+            {
+                continue;
+            }
+
+            var item = ToItem((await callAccessor.QueryAsync(tx, transaction.TenantId, transaction.StoreId, call.Id, cancellationToken))!);
+            await transaction.AppendEventAsync(EventTypes.CallUpdated, item, [call.TableId], null, now, cancellationToken);
+        }
+    }
+
     // すでに進んでいる呼び出しは変えずに返す (ホール端末どうしで同時に押しても失敗にしない)
     private ValueTask<ServiceResult<CallListResponseItem>> ChangeAsync(Guid id, CallStatus status, CancellationToken cancellationToken)
     {

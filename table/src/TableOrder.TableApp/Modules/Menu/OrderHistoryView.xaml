@@ -120,26 +120,30 @@
         <BoxView Grid.Row="3"
                  Style="{StaticResource HorizontalRule}" />
 
-        <!-- held / total -->
-        <Grid Grid.Row="4"
-              Style="{StaticResource DialogTotalGrid}"
-              ColumnDefinitions="Auto,Auto,*,Auto,Auto">
-            <Label Grid.Column="0"
-                   Style="{StaticResource HistoryHeldLabel}"
-                   IsVisible="{Binding HasHeld}"
-                   Text="{Binding HeldText}" />
-            <Button Grid.Column="1"
-                    Style="{StaticResource InlineActionButton}"
-                    Command="{Binding ReleaseCommand}"
-                    IsVisible="{Binding HasHeld}"
-                    Text="{x:Static strings:AppResources.HistoryRelease}" />
-            <Label Grid.Column="3"
-                   Style="{StaticResource TotalCaptionLabel}"
-                   Text="{x:Static strings:AppResources.HistoryTotal}" />
-            <Label Grid.Column="4"
-                   Style="{StaticResource TotalLabel}"
-                   Text="{Binding TotalText}" />
-        </Grid>
+        <!-- held / total (食後の品のお願いが通らなければ、その下に知らせる) -->
+        <VerticalStackLayout Grid.Row="4">
+            <Grid Style="{StaticResource DialogTotalGrid}"
+                  ColumnDefinitions="Auto,Auto,*,Auto,Auto">
+                <Label Grid.Column="0"
+                       Style="{StaticResource HistoryHeldLabel}"
+                       IsVisible="{Binding HasHeld}"
+                       Text="{Binding HeldText}" />
+                <Button Grid.Column="1"
+                        Style="{StaticResource InlineActionButton}"
+                        Command="{Binding ReleaseCommand}"
+                        IsVisible="{Binding HasHeld}"
+                        Text="{x:Static strings:AppResources.HistoryRelease}" />
+                <Label Grid.Column="3"
+                       Style="{StaticResource TotalCaptionLabel}"
+                       Text="{x:Static strings:AppResources.HistoryTotal}" />
+                <Label Grid.Column="4"
+                       Style="{StaticResource TotalLabel}"
+                       Text="{Binding TotalText}" />
+            </Grid>
+            <Label Style="{StaticResource DialogErrorLabel}"
+                   IsVisible="{Binding IsFailed}"
+                   Text="{Binding ErrorText}" />
+        </VerticalStackLayout>
 
         <!-- action -->
         <BoxView Grid.Row="5"

@@ -53,6 +53,19 @@ public sealed class StoreHoursTests
         Assert.Equal(TimeSpan.FromMinutes(expectedMinutes), remaining);
     }
 
+    // ラストオーダーを過ぎたかは店舗の現地時刻で見る (UTC の 12:31 は東京の 21:31)。ちょうどは過ぎていない。ラストオーダーのない店は過ぎない
+    [Theory]
+    [InlineData("2026-01-01T12:29:00Z", "21:30", false)]
+    [InlineData("2026-01-01T12:30:00Z", "21:30", false)]
+    [InlineData("2026-01-01T12:31:00Z", "21:30", true)]
+    [InlineData("2026-01-01T12:31:00Z", null, false)]
+    public void IsAfterLastOrder(string now, string? lastOrder, bool expected)
+    {
+        var after = StoreHours.IsAfterLastOrder(DateTimeOffset.Parse(now, CultureInfo.InvariantCulture), "Asia/Tokyo", StoreHours.Parse("11:00"), lastOrder is null ? null : StoreHours.Parse(lastOrder));
+
+        Assert.Equal(expected, after);
+    }
+
     //--------------------------------------------------------------------------------
     // LocalTime
     //--------------------------------------------------------------------------------

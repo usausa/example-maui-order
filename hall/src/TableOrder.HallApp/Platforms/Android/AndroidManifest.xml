@@ -6,9 +6,17 @@
 	<application android:allowBackup="false" android:dataExtractionRules="@xml/data_extraction_rules" android:icon="@mipmap/appicon" android:roundIcon="@mipmap/appicon_round" android:supportsRtl="true" android:label="TableOrder Hall" android:testOnly="${testOnly}" android:usesCleartextTraffic="${cleartext}">
 		<!-- 管理対象の構成 (外部の EMM が配る端末の設定) の定義。EMM の管理画面はこれを読んで入力の欄を出す -->
 		<meta-data android:name="android.content.APP_RESTRICTIONS" android:resource="@xml/app_restrictions" />
+		<!-- 画面が消えている間も新しい呼び出しを知らせる前景サービス (ほかの種類の用途に当たらないので specialUse にし、用途を書く) -->
+		<service android:name="tableorder.terminal.hall.CallWatchService" android:exported="false" android:foregroundServiceType="specialUse">
+			<property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE" android:value="Keeps the realtime connection to the in-store order server and alerts staff to new table calls while the screen is off." />
+		</service>
 	</application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
 	<!-- 新しい呼び出しを振動で知らせる -->
 	<uses-permission android:name="android.permission.VIBRATE" />
+	<!-- 画面が消えている間も呼び出しを知らせる前景サービスと、CPU を止めない部分ウェイクロック -->
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+	<uses-permission android:name="android.permission.WAKE_LOCK" />
 </manifest>

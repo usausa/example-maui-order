@@ -9,6 +9,10 @@ public sealed class ApplicationServiceContextProvider : ServiceContextProvider
     public override ServiceContext Current =>
         (local.Value ?? throw new InvalidOperationException("Service context scope is not started.")).Value;
 
+    // ログに付ける今の文脈 (始めていないか、まだ読まれていなければ null。ログのためには作らない)
+    public ServiceContext? Peek() =>
+        local.Value is { IsValueCreated: true } lazy ? lazy.Value : null;
+
     // 値は最初に読まれたときに 1 回だけ作る (読まない操作では作らない。同じスコープ内は同じ値)
     public IDisposable Begin(Func<ServiceContext> factory)
     {

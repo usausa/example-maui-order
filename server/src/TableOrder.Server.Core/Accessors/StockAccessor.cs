@@ -8,7 +8,7 @@ public sealed partial class StockAccessor
     [Query]
     public partial ValueTask<List<StockEntity>> QueryListAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
 
-    // 書き込みの中で読む (すべて戻すときに、戻した品を通知に入れる)
+    // 書き込みの中で読む (すべて戻すときに戻した品を通知に入れる。設定が変わらないかを比べる)
     [Query]
     public partial ValueTask<List<StockEntity>> QueryListAsync(DbTransaction tx, Guid tenantId, Guid storeId, CancellationToken cancellationToken);
 

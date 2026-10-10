@@ -168,20 +168,6 @@ public static partial class MauiProgram
         fonts.AddFont("MaterialIcons-Regular.ttf", MaterialIcons.FontFamily);
     }
 
-    private static void ConfigureDialogDesign(DialogConfig config)
-    {
-        var resources = Application.Current!.Resources;
-        config.IndicatorColor = resources.FindResource<Color>("PrimaryColor");
-        config.LoadingMessageFontSize = 28;
-        config.ProgressCircleColor1 = resources.FindResource<Color>("PrimaryColor");
-        config.ProgressCircleColor2 = resources.FindResource<Color>("OutlineColor");
-
-        // Avoiding conflicts with progress
-        config.LockBackgroundColor = Colors.Transparent;
-        config.LoadingBackgroundColor = Colors.Transparent;
-        config.ProgressBackgroundColor = Colors.Transparent;
-    }
-
     // ------------------------------------------------------------
     // Components
     // ------------------------------------------------------------
@@ -203,12 +189,6 @@ public static partial class MauiProgram
         services.AddViewModels();
 
         // MauiComponents
-        services.AddComponentsDialog(static c =>
-        {
-            ConfigureDialogDesign(c);
-            c.EnablePromptEnterAction = true;
-            c.EnablePromptSelectAll = true;
-        });
         services.AddComponentsPopup(static c =>
         {
             c.AutoRegister(DialogSource());
@@ -217,9 +197,6 @@ public static partial class MauiProgram
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
         services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
         services.AddComponentsScreen();
-        services.AddComponentsLocation();
-        services.AddComponentsSpeech();
-        services.AddCommunication();
 
         // Messenger
         services.AddSingleton<IReactiveMessenger>(ReactiveMessenger.Default);
@@ -243,7 +220,6 @@ public static partial class MauiProgram
 
         // State
         services.AddSingleton(BusyState.Default);
-        services.AddSingleton<StartupState>();
         services.AddSingleton<MenuState>();
         services.AddSingleton<VisitState>();
         services.AddSingleton<CartState>();

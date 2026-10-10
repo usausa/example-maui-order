@@ -158,10 +158,10 @@ public static partial class MauiProgram
 
         // Component
         services.AddSingleton<CallAlert>();
+        services.AddSingleton<CallWatch>();
 
         // State
         services.AddSingleton(BusyState.Default);
-        services.AddSingleton<StartupState>();
         services.AddSingleton<StoreState>();
         services.AddSingleton<MenuState>();
         services.AddSingleton<TableState>();

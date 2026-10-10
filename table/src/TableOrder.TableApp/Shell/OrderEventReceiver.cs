@@ -59,6 +59,9 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
         }
     }
 
+    // 起動と端末の設定の画面は、自分で確かめるので受けない
+    protected override bool AcceptsRestart => Navigator.CurrentViewId is not (ViewId.Startup or ViewId.Setup);
+
     protected override async Task NotifyRestartAsync() =>
         await Navigator.NotifyAsync(ShellEvent.Restart).ConfigureAwait(true);
 

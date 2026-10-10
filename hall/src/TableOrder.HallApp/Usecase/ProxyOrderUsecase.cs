@@ -8,8 +8,8 @@ public sealed class ProxyOrderUsecase
 
     private readonly IHallApi hallApi;
 
-    // 送れたかわからなかった注文 (同じ来店の次の送信で、同じ注文の id を送り直す)
-    private (Guid VisitId, Guid OrderId)? pendingOrder;
+    // 送れたかわからなかった注文 (同じ来店で同じカートを送るときだけ、同じ注文の id で送り直す。カートを替えたら新しい注文にする)
+    private (Guid VisitId, OrderCreateRequest Request)? pendingOrder;
 
     public ProxyOrderUsecase(
         MenuState menuState,
@@ -74,26 +74,37 @@ public sealed class ProxyOrderUsecase
     // カートを注文として送る (サーバは同じ id の送り直しに、受けた注文を返す)
     public async ValueTask<ApiResult<OrderListResponseItem>> SubmitAsync(VisitResponse visit, IEnumerable<CartLine> cart)
     {
-        var id = (pendingOrder is { } pending) && (pending.VisitId == visit.Id) ? pending.OrderId : Guid.CreateVersion7();
+        var lines = cart
+            .Select(static x => new OrderCreateRequestLine
+            {
+                Id = x.Id,
+                ItemId = x.ItemId,
+                OptionIds = x.OptionIds,
+                Quantity = x.Quantity,
+                UnitPrice = x.UnitPrice,
+                Timing = x.Timing
+            })
+            .ToList();
+        var resend = (pendingOrder is { } pending) && (pending.VisitId == visit.Id) && IsSameLines(pending.Request.Lines, lines);
         var request = new OrderCreateRequest
         {
-            Id = id,
+            Id = resend ? pendingOrder!.Value.Request.Id : Guid.CreateVersion7(),
             MenuVersion = menuState.Menu.MenuVersion,
-            Lines = cart
-                .Select(static x => new OrderCreateRequestLine
-                {
-                    Id = x.Id,
-                    ItemId = x.ItemId,
-                    OptionIds = x.OptionIds,
-                    Quantity = x.Quantity,
-                    UnitPrice = x.UnitPrice,
-                    Timing = x.Timing
-                })
-                .ToList()
+            Lines = lines
         };
 
         var result = await hallApi.CreateOrderAsync(visit.Id, request);
-        pendingOrder = result.Status == ApiStatus.Unavailable ? (visit.Id, id) : null;
+        pendingOrder = result.Status == ApiStatus.Unavailable ? (visit.Id, request) : null;
         return result;
     }
+
+    private static bool IsSameLines(IReadOnlyList<OrderCreateRequestLine> previous, List<OrderCreateRequestLine> lines) =>
+        (previous.Count == lines.Count) &&
+        previous.Zip(lines).All(static x =>
+            (x.First.Id == x.Second.Id) &&
+            (x.First.ItemId == x.Second.ItemId) &&
+            (x.First.Quantity == x.Second.Quantity) &&
+            (x.First.UnitPrice == x.Second.UnitPrice) &&
+            (x.First.Timing == x.Second.Timing) &&
+            x.First.OptionIds.SequenceEqual(x.Second.OptionIds));
 }

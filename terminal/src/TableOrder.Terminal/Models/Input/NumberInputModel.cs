@@ -1,13 +1,12 @@
 namespace TableOrder.Terminal.Models.Input;
 
 #pragma warning disable IDE0032
+// 電卓の入力 (数と番号。小数は入れない)
 public sealed class NumberInputModel : NotificationObject
 {
     private string text = "0";
 
     public int MaxLength { get; set; }
-
-    public int Scale { get; set; }
 
     public bool AllowEmpty { get; set; }
 
@@ -16,8 +15,6 @@ public sealed class NumberInputModel : NotificationObject
 
     // PIN は入力した桁数だけを見せる
     public bool Masked { get; set; }
-
-    private int IntegerLength => Scale > 0 ? MaxLength - Scale - 1 : MaxLength;
 
     public string Text
     {
@@ -32,8 +29,6 @@ public sealed class NumberInputModel : NotificationObject
     }
 
     public string DisplayText => Masked ? new string('●', text.Length) : text;
-
-    public string NormalizeText => text.EndsWith('.') ? text[..^1] : text;
 
     public void Clear()
     {
@@ -52,39 +47,7 @@ public sealed class NumberInputModel : NotificationObject
             return;
         }
 
-        if (key == ".")
-        {
-            if (String.IsNullOrEmpty(text) || (text == "0"))
-            {
-                Text = "0.";
-            }
-            else if (text.IndexOf('.', StringComparison.Ordinal) < 0)
-            {
-                Text = text + ".";
-            }
-        }
-        else
-        {
-            var index = text.IndexOf('.', StringComparison.Ordinal);
-            if (index >= 0)
-            {
-                if (text.Length - index <= Scale)
-                {
-                    Text = text + key;
-                }
-            }
-            else
-            {
-                if ((text == "0") && !KeepLeadingZeros)
-                {
-                    Text = key;
-                }
-                else if (text.Length + key.Length <= IntegerLength)
-                {
-                    Text = text + key;
-                }
-            }
-        }
+        Text = (text == "0") && !KeepLeadingZeros ? key : text + key;
     }
 }
 #pragma warning restore IDE0032

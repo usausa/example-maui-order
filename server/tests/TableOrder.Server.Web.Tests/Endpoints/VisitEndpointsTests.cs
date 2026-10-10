@@ -186,6 +186,34 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(chosen));
     }
 
+    // 受付機は、ラストオーダーを過ぎたら来店を開かない (開いても注文できない)。送り直しは開いた来店を返し、ホール端末は開ける
+    [Fact]
+    public async Task ReceptionRejectsAfterLastOrder()
+    {
+        // Arrange: 受け付けたあとに、ラストオーダーを過ぎた店舗にする
+        var store = await factory.CreateStoreAsync(VisitOpening.Reception);
+        using var reception = await SignInAsync(store.ReceptionCode);
+        using var hall = await SignInAsync(store.HallCode);
+        var opened = new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 };
+        using (var first = await reception.PostAsync("/api/v1/visits", opened))
+        {
+            first.EnsureSuccessStatusCode();
+        }
+
+        await factory.SetLastOrderTimeAsync(store, "05:00");
+
+        // Act
+        using var late = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
+        using var resent = await reception.PostAsync("/api/v1/visits", opened);
+        using var staff = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[1], Adults = 2 });
+
+        // Assert
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, late.StatusCode);
+        Assert.Equal("LAST_ORDER_PASSED", await TestDevice.ReadErrorCodeAsync(late));
+        Assert.Equal(HttpStatusCode.OK, resent.StatusCode);
+        Assert.Equal(HttpStatusCode.Created, staff.StatusCode);
+    }
+
     // キッチン端末は来店を開けない
     [Fact]
     public async Task KitchenCannotOpenVisit()

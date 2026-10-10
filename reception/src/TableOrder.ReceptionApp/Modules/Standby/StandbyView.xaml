@@ -5,6 +5,7 @@
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:markup="clr-namespace:TableOrder.ReceptionApp.Markup"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Standby"
              x:Class="TableOrder.ReceptionApp.Modules.Standby.StandbyView"
@@ -28,7 +29,7 @@
                 <Border.Behaviors>
                     <mct:TouchBehavior BindingContext="{Binding Source={x:Reference BrandMark}, Path=BindingContext, x:DataType={x:Type Border}}"
                                        LongPressCommand="{Binding StaffCommand}"
-                                       LongPressDuration="{x:Static markup:AppGestures.StaffLongPress}" />
+                                       LongPressDuration="{x:Static terminal:AppGestures.StaffLongPress}" />
                 </Border.Behaviors>
                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                 <!-- ロゴがなければ名前の頭の文字 -->

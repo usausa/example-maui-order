@@ -134,7 +134,11 @@ public sealed class ServingService
                     visits[line.VisitId] = visit;
                 }
 
-                await orderAccessor.UpdateLineServedAsync(tx, tenantId, lineId, request.StaffId, now, cancellationToken);
+                if (await orderAccessor.UpdateLineServedAsync(tx, tenantId, lineId, request.StaffId, now, cancellationToken) == 0)
+                {
+                    return new ServiceError(ErrorCodes.LineStatusInvalid);
+                }
+
                 orders.Add(line.OrderId);
                 if (line.TicketId is { } ticketId)
                 {

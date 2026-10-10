@@ -429,7 +429,7 @@
     <value>接続先 (API)</value>
   </data>
   <data name="SetupEndpointHint" xml:space="preserve">
-    <value>注文サーバの URL (http か https) を入れます</value>
+    <value>注文サーバの URL (https) を入れます</value>
   </data>
   <data name="SetupEndpointManaged" xml:space="preserve">
     <value>EMM で配られた接続先を使います (この端末では変えられません)</value>
@@ -628,5 +628,8 @@
   </data>
   <data name="TotalCaption" xml:space="preserve">
     <value>合計 (税込)</value>
+  </data>
+  <data name="PaymentExpired" xml:space="preserve">
+    <value>お支払いの期限が過ぎました。もう一度お選びください</value>
   </data>
 </root>

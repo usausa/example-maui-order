@@ -32,7 +32,7 @@ public static class ViewHelper
             {
                 ErrorCodes.PairingCodeInvalid => AppResources.ErrorPairingCodeInvalid,
                 ErrorCodes.TenantSuspended => AppResources.ErrorTenantSuspended,
-                KitchenUsecase.KindMismatch => AppResources.ErrorDeviceKind,
+                ErrorCodes.DeviceKindMismatch => AppResources.ErrorDeviceKind,
                 KitchenUsecase.KeyUnavailable => AppResources.ErrorDeviceKey,
                 _ => result.Detail ?? AppResources.ErrorGeneric
             },

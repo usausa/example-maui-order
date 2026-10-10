@@ -28,6 +28,8 @@ public sealed class PaymentService
 
     private readonly VisitService visitService;
 
+    private readonly CallService callService;
+
     private readonly EventService eventService;
 
     public PaymentService(
@@ -39,6 +41,7 @@ public sealed class PaymentService
         OrderAccessor orderAccessor,
         PaymentAccessor paymentAccessor,
         VisitService visitService,
+        CallService callService,
         EventService eventService)
     {
         this.contextProvider = contextProvider;
@@ -49,6 +52,7 @@ public sealed class PaymentService
         this.orderAccessor = orderAccessor;
         this.paymentAccessor = paymentAccessor;
         this.visitService = visitService;
+        this.callService = callService;
         this.eventService = eventService;
     }
 
@@ -273,7 +277,7 @@ public sealed class PaymentService
     // Receipt
     //--------------------------------------------------------------------------------
 
-    // 電子レシート (支払が揃って来店を閉じたときに作る。電子レシートを出さない店はない)
+    // 電子レシート (電子レシートを出す店で、テーブルで払い終えて来店を閉じたときに作る)。出さない店と、テーブルで払い終えていない来店は NOT_FOUND
     public async ValueTask<ServiceResult<ReceiptResult>> GetReceiptAsync(Guid visitId, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
@@ -310,13 +314,12 @@ public sealed class PaymentService
         var tx = transaction.Tx;
         var tenantId = transaction.TenantId;
         var storeId = transaction.StoreId;
-        if (status == PaymentStatus.Completed)
+        var changed = status == PaymentStatus.Completed
+            ? await paymentAccessor.UpdateCompletedAsync(tx, tenantId, payment.Id, provider, reference, now, cancellationToken)
+            : await paymentAccessor.UpdateFailedAsync(tx, tenantId, payment.Id, provider, reference, reason, now, cancellationToken);
+        if (changed == 0)
         {
-            await paymentAccessor.UpdateCompletedAsync(tx, tenantId, payment.Id, provider, reference, now, cancellationToken);
-        }
-        else
-        {
-            await paymentAccessor.UpdateFailedAsync(tx, tenantId, payment.Id, provider, reference, reason, now, cancellationToken);
+            return payment;
         }
 
         var updated = (await paymentAccessor.QueryAsync(tx, tenantId, storeId, payment.Id, cancellationToken))!;
@@ -336,14 +339,19 @@ public sealed class PaymentService
             return updated;
         }
 
-        await visitAccessor.UpdateClosedAsync(tx, tenantId, visit.Id, VisitClosedBy.TablePayment, null, visit.Version, now, cancellationToken);
+        if (await visitAccessor.UpdateClosedAsync(tx, tenantId, visit.Id, VisitClosedBy.TablePayment, null, visit.Version, now, cancellationToken) == 0)
+        {
+            return updated;
+        }
+
         if (store.ElectronicReceipt)
         {
             await paymentAccessor.InsertReceiptAsync(tx, tenantId, visit.Id, Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16)), now, cancellationToken);
         }
 
-        var closed = await visitService.ToResponseAsync((await visitAccessor.QueryAsync(tx, tenantId, storeId, visit.Id, cancellationToken))!, cancellationToken);
+        var closed = await visitService.LoadResponseAsync(tx, tenantId, storeId, visit.Id, cancellationToken);
         await transaction.AppendEventAsync(EventTypes.VisitClosed, closed, [visit.TableId], null, now, cancellationToken);
+        await callService.FinishVisitCallsAsync(transaction, visit.Id, now, cancellationToken);
         return updated;
     }
 
@@ -360,6 +368,23 @@ public sealed class PaymentService
         }
 
         return null;
+    }
+
+    // 来店の待っている支払をやめる (会計をやめるとき、会計中の来店をレジで閉じるとき)。やめた支払は payment.updated で知らせる
+    // 残すと、あとで届いた結果で払い終えたことになる (レジで払ったあとに QR でも払う)
+    internal static async ValueTask CancelPendingAsync(PaymentAccessor paymentAccessor, StoreTransaction transaction, IEnumerable<PaymentEntity> payments, Guid tableId, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var tx = transaction.Tx;
+        foreach (var payment in payments.Where(static x => x.Status == PaymentStatus.Pending))
+        {
+            if (await paymentAccessor.UpdateCancelledAsync(tx, transaction.TenantId, payment.Id, now, cancellationToken) == 0)
+            {
+                continue;
+            }
+
+            var cancelled = ToResponse((await paymentAccessor.QueryAsync(tx, transaction.TenantId, transaction.StoreId, payment.Id, cancellationToken))!);
+            await transaction.AppendEventAsync(EventTypes.PaymentUpdated, cancelled, [tableId], null, now, cancellationToken);
+        }
     }
 
     internal static PaymentResponse ToResponse(PaymentEntity payment) =>

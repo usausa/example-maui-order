@@ -29,14 +29,23 @@ public static class AdminNames
             _ => "切り上げ"
         };
 
-    // 業務の処理の失敗を画面の文言にする (入力の誤りは項目の理由をそのまま出す)
-    public static string ErrorMessage(ServiceError error) =>
-        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ?? error.ErrorCode switch
+    // 業務の処理の失敗を画面の文言にする (入力の誤りは項目の理由をそのまま出す)。画面ごとの文言 (specific が null 以外を返す errorCode) を先に使う
+    public static string ErrorMessage(ServiceError error, Func<string, string?>? specific = null) =>
+        error.Errors?.Values.SelectMany(static x => x).FirstOrDefault() ??
+        specific?.Invoke(error.ErrorCode) ??
+        error.ErrorCode switch
         {
             ErrorCodes.NotFound => "見つかりません。読み直してください",
             ErrorCodes.VersionMismatch => "ほかで替えられています。読み直してください",
             _ => error.ErrorCode
         };
+
+    // 利用者 (運営者も) の状態
+    public static string UserStatusName(AdminUserSummaryEntity user, DateTimeOffset now) =>
+        !user.IsActive ? "止めた" :
+        user.LockoutEnd > now ? "間違えたため止めている" :
+        user.MustChangePassword ? "仮のパスワード" :
+        "使える";
 
     // ASP.NET Core Identity の失敗 (英語) を画面の文言にする
     public static string IdentityError(IdentityError error) =>

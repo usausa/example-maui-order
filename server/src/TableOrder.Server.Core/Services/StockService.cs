@@ -42,7 +42,7 @@ public sealed class StockService
     }
 
     // 品切れと残りの数の設定。残りの数を 0 にしたら SoldOut、Available に戻したら行を消す
-    // 品は今のメニューの商品かオプション (ないものは NOT_FOUND)
+    // 品は今のメニューの商品かオプション (ないものは NOT_FOUND)。変わらなければ (同じ設定の送り直し) 通知を書かない
     public async ValueTask<ServiceError?> UpdateAsync(Guid targetId, StockUpdateRequest request, CancellationToken cancellationToken)
     {
         if (!Enum.IsDefined(request.TargetKind))
@@ -79,10 +79,19 @@ public sealed class StockService
         {
             if (status == StockStatus.Available)
             {
-                await stockAccessor.DeleteAsync(transaction.Tx, tenantId, storeId, targetId, cancellationToken);
+                if (await stockAccessor.DeleteAsync(transaction.Tx, tenantId, storeId, targetId, cancellationToken) == 0)
+                {
+                    return null;
+                }
             }
             else
             {
+                var current = (await stockAccessor.QueryListAsync(transaction.Tx, tenantId, storeId, cancellationToken)).Find(x => x.TargetId == targetId);
+                if ((current is not null) && (current.TargetKind == request.TargetKind) && (current.Status == status) && (current.Remaining == remaining))
+                {
+                    return null;
+                }
+
                 await stockAccessor.UpsertAsync(transaction.Tx, tenantId, storeId, targetId, request.TargetKind, status, remaining, context.Now, cancellationToken);
             }
 

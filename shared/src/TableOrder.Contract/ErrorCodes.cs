@@ -33,6 +33,9 @@ public static class ErrorCodes
     // 422
     public const string PairingCodeInvalid = "PAIRING_CODE_INVALID";
 
+    // 登録するアプリの端末の種類が、コードやトークンの種類と違う
+    public const string DeviceKindMismatch = "DEVICE_KIND_MISMATCH";
+
     public const string VisitNotOpen = "VISIT_NOT_OPEN";
 
     public const string CheckoutInProgress = "CHECKOUT_IN_PROGRESS";

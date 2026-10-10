@@ -13,11 +13,11 @@
 
     <!-- 電卓は罫線で区切った四角いキーにする (キーの間隔から背景の罫線の色を見せる)。スタッフと端末の設定で使うのでシステムの色にする -->
     <VerticalStackLayout Style="{StaticResource KeypadStack}">
-        <!-- title -->
-        <Label Style="{StaticResource DialogTitleLabel}"
+        <!-- title (チェーンの色の役割を使わない) -->
+        <Label Style="{StaticResource KeypadTitleLabel}"
                Text="{Binding Title}" />
 
-        <BoxView Style="{StaticResource HorizontalRule}" />
+        <BoxView Style="{StaticResource SystemRule}" />
 
         <!-- display -->
         <Label Style="{StaticResource InputDisplayLabel}"

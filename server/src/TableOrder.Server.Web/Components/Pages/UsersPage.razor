@@ -42,7 +42,7 @@ else
                 </MudItem>
             }
             <MudItem xs="12" sm="1" Class="d-flex align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddAsync">足す</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="AddAsync">足す</MudButton>
             </MudItem>
         </MudGrid>
         @if (issued is not null)
@@ -66,7 +66,7 @@ else
                 <MudTh>役割</MudTh>
                 <MudTh>受け持つ店舗</MudTh>
                 <MudTh>多要素</MudTh>
-                <MudTh>最後のサインイン</MudTh>
+                <MudTh>最後のサインイン (@TimeZoneName)</MudTh>
                 <MudTh>状態</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>

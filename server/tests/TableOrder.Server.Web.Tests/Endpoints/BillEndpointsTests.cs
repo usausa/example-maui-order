@@ -48,6 +48,31 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         Assert.True(bill.HasUnservedLines);
     }
 
+    // 税率だけが違う明細 (税率を直したメニューの前後に頼んだ同じ品) はまとめず、税率ごとに内税を出す
+    [Fact]
+    public async Task LinesWithDifferentTaxRatesAreNotGrouped()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        var visit = await factory.OpenVisitAsync(store, 0);
+        var menu = await TestMenu.LoadAsync(table);
+        var before = menu.Line(TestMenu.Salad);
+        var after = menu.Line(TestMenu.Salad);
+        await OrderAsync(table, visit, menu.Order(before));
+        await OrderAsync(table, visit, menu.Order(after));
+        await factory.SetLineTaxRateAsync(store, before.Id, 0.08m);
+
+        // Act
+        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+
+        // Assert
+        Assert.Equal(2, bill.Lines.Count);
+        Assert.Equal([0.08m, 0.10m], bill.Lines.Select(static x => x.TaxRate).Order());
+        Assert.Equal(2, bill.Taxes.Count);
+        Assert.All(bill.Taxes, x => Assert.Equal(Pricing.IncludedTax(before.UnitPrice, x.Rate, TaxRounding.Floor), x.TaxAmount));
+    }
+
     // 会計を始めると注文を止め、やめると注文できる状態に戻す。明細が変わっていれば始めない
     [Fact]
     public async Task CheckoutStopsOrdering()

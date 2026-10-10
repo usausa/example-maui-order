@@ -20,6 +20,10 @@ public sealed partial class CallAccessor
     [Query]
     public partial ValueTask<List<CallEntity>> QueryListAsync(Guid tenantId, Guid visitId, CancellationToken cancellationToken);
 
+    // 来店の終わっていない呼び出し (古い順)
+    [Query]
+    public partial ValueTask<List<CallEntity>> QueryOpenListByVisitAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
+
     // 店舗の終わっていない呼び出し (古い順)
     [Query]
     public partial ValueTask<List<CallEntity>> QueryOpenListAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);

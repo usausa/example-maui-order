@@ -46,16 +46,12 @@ public sealed partial class StoresPage : IDisposable
 
     public void Dispose() => Selection.Changed -= OnSelectionChanged;
 
-    // テナントを選び直したら読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
+    // テナントを選び直したら、前のテナントの店舗を指す入力 (写す店舗) を消して読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
+        _ = ReloadAsync(() =>
         {
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
+            addForm.SourceStoreId = null;
+            return LoadAsync();
         });
 
     private async Task LoadAsync()

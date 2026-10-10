@@ -4,13 +4,13 @@
              xmlns:s="http://smart/maui"
              xmlns:navigation="http://smart/navigation"
              xmlns:local="clr-namespace:TableOrder.TableApp"
-             xmlns:shell="clr-namespace:TableOrder.TableApp.Shell"
+             xmlns:shell="clr-namespace:TableOrder.Terminal.Shell;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.MainPage"
              x:DataType="{x:Type local:MainPageViewModel}"
              s:BindingContextResolver.Type="{x:Type local:MainPageViewModel}"
              SafeAreaEdges="Default">
 
-    <!-- 仮の全画面の間はシステムバーを出さないので、ステータスバーの色を付けない (色の帯が画面の上に残るため) -->
+    <!-- 全画面の間はシステムバーを出さないので、ステータスバーの色を付けない (色の帯が画面の上に残るため) -->
     <ContentPage.Behaviors>
         <s:AppLifecycleBehavior />
     </ContentPage.Behaviors>

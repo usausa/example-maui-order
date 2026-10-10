@@ -52,15 +52,7 @@ public sealed partial class TablesPage : IDisposable
 
     // 店舗を選び直したら読み直す (店舗の選択の操作の中から呼ばれるので、文脈を始め直す)
     private void OnSelectionChanged(object? sender, EventArgs e) =>
-        _ = InvokeAsync(async () =>
-        {
-            using (BeginServiceScope())
-            {
-                await LoadAsync();
-            }
-
-            StateHasChanged();
-        });
+        _ = ReloadAsync(LoadAsync);
 
     private async Task LoadAsync()
     {

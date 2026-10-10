@@ -1220,5 +1220,11 @@ namespace TableOrder.TableApp.Resources.Strings {
                 return ResourceManager.GetString("TotalCaption", resourceCulture);
             }
         }
+
+        internal static string PaymentExpired {
+            get {
+                return ResourceManager.GetString("PaymentExpired", resourceCulture);
+            }
+        }
     }
 }

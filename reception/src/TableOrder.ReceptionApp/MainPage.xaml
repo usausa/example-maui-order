@@ -4,7 +4,7 @@
              xmlns:s="http://smart/maui"
              xmlns:navigation="http://smart/navigation"
              xmlns:local="clr-namespace:TableOrder.ReceptionApp"
-             xmlns:shell="clr-namespace:TableOrder.ReceptionApp.Shell"
+             xmlns:shell="clr-namespace:TableOrder.Terminal.Shell;assembly=TableOrder.Terminal"
              x:Class="TableOrder.ReceptionApp.MainPage"
              x:DataType="{x:Type local:MainPageViewModel}"
              s:BindingContextResolver.Type="{x:Type local:MainPageViewModel}"

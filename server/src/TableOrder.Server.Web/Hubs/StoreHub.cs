@@ -47,17 +47,26 @@ public sealed class StoreHub : Hub
             return;
         }
 
-        foreach (var group in StoreHubGroups.Of(context))
+        // つなぐ途中で失敗すると (切れた、DB の失敗)、SignalR は切れた知らせ (OnDisconnectedAsync) を呼ばないので、覚えた接続をここで外す
+        try
         {
-            await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            foreach (var group in StoreHubGroups.Of(context))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, group);
+            }
+
+            await base.OnConnectedAsync();
+
+            // グループに入れ終えたあとの番号にする (これより後の通知は、すべてグループに届く)
+            using var scope = contextProvider.Begin(() => context);
+            var lastSeq = await eventService.GetLastSeqAsync(Context.ConnectionAborted);
+            await Clients.Caller.SendAsync(HubMethods.Ready, lastSeq, Context.ConnectionAborted);
         }
-
-        await base.OnConnectedAsync();
-
-        // グループに入れ終えたあとの番号にする (これより後の通知は、すべてグループに届く)
-        using var scope = contextProvider.Begin(() => context);
-        var lastSeq = await eventService.GetLastSeqAsync(Context.ConnectionAborted);
-        await Clients.Caller.SendAsync(HubMethods.Ready, lastSeq, Context.ConnectionAborted);
+        catch
+        {
+            connections.Remove(Context.ConnectionId);
+            throw;
+        }
     }
 
     public override Task OnDisconnectedAsync(Exception? exception)

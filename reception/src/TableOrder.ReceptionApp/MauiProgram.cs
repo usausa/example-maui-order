@@ -161,7 +161,6 @@ public static partial class MauiProgram
 
         // State
         services.AddSingleton(BusyState.Default);
-        services.AddSingleton<StartupState>();
         services.AddSingleton<StoreState>();
         services.AddSingleton<ReceptionState>();
 

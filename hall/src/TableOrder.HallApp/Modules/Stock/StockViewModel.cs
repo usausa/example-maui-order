@@ -6,9 +6,6 @@ using TableOrder.HallApp.Modules.Dialogs;
 // 下の帯に、注文の一時停止と再開 (どちらかだけ)、すべて戻すを置く。品は品切れの通知 (StockChanged) で出し直す
 public sealed partial class StockViewModel : TabViewModelBase
 {
-    // 残りの数の桁 (Length.MaxStockRemaining まで)
-    private const int RemainingDigits = 4;
-
     private readonly IPopupNavigator popupNavigator;
 
     private readonly MenuState menuState;
@@ -149,7 +146,7 @@ public sealed partial class StockViewModel : TabViewModelBase
         int? remaining = null;
         if (status == StockStatus.Limited)
         {
-            var text = await popupNavigator.InputNumberAsync(AppResources.StockRemainingTitle, row.Remaining?.ToString(CultureInfo.InvariantCulture) ?? string.Empty, RemainingDigits);
+            var text = await popupNavigator.InputRemainingAsync(row.Remaining?.ToString(CultureInfo.InvariantCulture) ?? string.Empty);
             if (!Int32.TryParse(text, NumberStyles.None, CultureInfo.InvariantCulture, out var value))
             {
                 return;

@@ -12,6 +12,9 @@ internal static partial class Log
 
     // Event
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Settings changed. version=[{version}]")]
+    public static partial void InfoSettingsChanged(this ILogger logger, int version);
+
     [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]
     public static partial void WarnApiFailed(this ILogger logger, string operation, ApiStatus status, string? errorCode);
 
@@ -19,6 +22,9 @@ internal static partial class Log
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Call alert failed.")]
     public static partial void WarnCallAlertFailed(this ILogger logger, Exception exception);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Call watch start failed.")]
+    public static partial void WarnCallWatchFailed(this ILogger logger, Exception exception);
 
     // Navigation
 
