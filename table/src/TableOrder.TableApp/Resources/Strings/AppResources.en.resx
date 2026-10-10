@@ -554,6 +554,9 @@
   <data name="StartupAutoRetryFormat" xml:space="preserve">
     <value>Retrying automatically every {0} seconds</value>
   </data>
+  <data name="StartupAutoRetryMinutesFormat" xml:space="preserve">
+    <value>Retrying automatically every {0} minutes</value>
+  </data>
   <data name="StartupNotTable" xml:space="preserve">
     <value>This tablet is not registered as a table tablet. Register it again from the device settings</value>
   </data>

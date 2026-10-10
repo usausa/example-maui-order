@@ -181,6 +181,20 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         await Services.GetRequiredService<RevocationList>().RefreshAsync(TestContext.Current.CancellationToken);
     }
 
+    // 止めたテナントを戻し、管理画面の操作と同じく、すぐに拒む一覧を読み直す
+    public async ValueTask ResumeTenantAsync(Guid tenantId)
+    {
+        await using (var con = await OpenAsync())
+        {
+            await using var command = con.CreateCommand();
+            command.CommandText = "UPDATE Tenants SET Status = 'Active' WHERE Id = @id";
+            command.Parameters.AddWithValue("@id", tenantId.ToString("D"));
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        await Services.GetRequiredService<RevocationList>().RefreshAsync(TestContext.Current.CancellationToken);
+    }
+
     // ほかのテストに関わらないテナント (店舗と、ホール端末のペアリングコード) を作る
     public async ValueTask<(Guid TenantId, string PairingCode)> CreateTenantAsync()
     {

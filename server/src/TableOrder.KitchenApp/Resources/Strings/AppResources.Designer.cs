@@ -141,6 +141,12 @@ namespace TableOrder.KitchenApp.Resources.Strings {
             }
         }
 
+        internal static string StartupAutoRetryMinutesFormat {
+            get {
+                return ResourceManager.GetString("StartupAutoRetryMinutesFormat", resourceCulture);
+            }
+        }
+
         internal static string SetupTitle {
             get {
                 return ResourceManager.GetString("SetupTitle", resourceCulture);

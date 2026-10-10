@@ -554,6 +554,9 @@
   <data name="StartupAutoRetryFormat" xml:space="preserve">
     <value>{0} 秒ごとに自動でもう一度試します</value>
   </data>
+  <data name="StartupAutoRetryMinutesFormat" xml:space="preserve">
+    <value>{0} 分ごとに自動でもう一度試します</value>
+  </data>
   <data name="StartupNotTable" xml:space="preserve">
     <value>この端末はテーブル端末として登録されていません。端末の設定から登録し直してください</value>
   </data>

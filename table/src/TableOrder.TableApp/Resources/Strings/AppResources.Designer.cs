@@ -1071,6 +1071,12 @@ namespace TableOrder.TableApp.Resources.Strings {
             }
         }
 
+        internal static string StartupAutoRetryMinutesFormat {
+            get {
+                return ResourceManager.GetString("StartupAutoRetryMinutesFormat", resourceCulture);
+            }
+        }
+
         internal static string StartupNotTable {
             get {
                 return ResourceManager.GetString("StartupNotTable", resourceCulture);

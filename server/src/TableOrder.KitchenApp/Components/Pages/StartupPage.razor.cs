@@ -12,6 +12,9 @@ public sealed partial class StartupPage : IDisposable
     // 失敗したときにやり直すまでの時間
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
 
+    // テナントの停止で断られたときにやり直すまでの時間 (再開まで長く続くので、止めている間に要求を送り続けない)
+    private static readonly TimeSpan SuspendedRetryInterval = TimeSpan.FromMinutes(5);
+
     private CancellationTokenSource? retrying;
 
     private double progress;
@@ -21,6 +24,9 @@ public sealed partial class StartupPage : IDisposable
     private bool isFailed;
 
     private bool isRunning;
+
+    // 自動でやり直す間隔の案内 (テナントの停止は間を延ばす)
+    private string retryHintText = string.Empty;
 
     //--------------------------------------------------------------------------------
     // Property
@@ -66,8 +72,6 @@ public sealed partial class StartupPage : IDisposable
     public required StatusReporter StatusReporter { get; set; }
 
     private string ProgressWidth => FormattableString.Invariant($"{progress * 100:0}%");
-
-    private static string RetryHintText => ViewHelper.Format(AppResources.StartupAutoRetryFormat, (int)RetryInterval.TotalSeconds);
 
     //--------------------------------------------------------------------------------
     // Lifecycle
@@ -217,28 +221,36 @@ public sealed partial class StartupPage : IDisposable
     private void Fail<T>(ApiResult<T> result)
     {
         Log.WarnStartupFailed(result.Status, result.ErrorCode);
-        Fail(ViewHelper.ErrorMessage(result));
+        Fail(ViewHelper.ErrorMessage(result), result.ErrorCode == ErrorCodes.TenantSuspended ? SuspendedRetryInterval : RetryInterval);
     }
 
-    private void Fail(string message)
+    private void Fail(string message, TimeSpan? interval = null)
     {
         isFailed = true;
         stepText = message;
 
+        var wait = interval ?? RetryInterval;
+        retryHintText = RetryHint(wait);
         retrying = new CancellationTokenSource();
-        _ = RetryLaterAsync(retrying.Token);
+        _ = RetryLaterAsync(wait, retrying.Token);
     }
+
+    // 自動でやり直す間隔の案内 (1 分からは分で出す)
+    private static string RetryHint(TimeSpan interval) =>
+        interval >= TimeSpan.FromMinutes(1)
+            ? ViewHelper.Format(AppResources.StartupAutoRetryMinutesFormat, (int)interval.TotalMinutes)
+            : ViewHelper.Format(AppResources.StartupAutoRetryFormat, (int)interval.TotalSeconds);
 
     //--------------------------------------------------------------------------------
     // Retry
     //--------------------------------------------------------------------------------
 
     // しばらくしたらやり直す (店の端末は人が触らずに戻れるように)
-    private async Task RetryLaterAsync(CancellationToken token)
+    private async Task RetryLaterAsync(TimeSpan interval, CancellationToken token)
     {
         try
         {
-            await Task.Delay(RetryInterval, token);
+            await Task.Delay(interval, token);
         }
         catch (OperationCanceledException)
         {

@@ -89,6 +89,9 @@
   <data name="StartupAutoRetryFormat" xml:space="preserve">
     <value>Retrying automatically every {0} seconds</value>
   </data>
+  <data name="StartupAutoRetryMinutesFormat" xml:space="preserve">
+    <value>Retrying automatically every {0} minutes</value>
+  </data>
   <data name="SetupTitle" xml:space="preserve">
     <value>Device settings</value>
   </data>

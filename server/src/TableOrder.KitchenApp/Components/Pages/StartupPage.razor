@@ -12,7 +12,7 @@
             <button class="button button-primary" disabled="@isRunning" @onclick="InitializeAsync">@AppResources.StartupRetry</button>
             <button class="button" disabled="@isRunning" @onclick="OpenSetup">@AppResources.StartupSetup</button>
         </div>
-        <div class="startup-hint">@RetryHintText</div>
+        <div class="startup-hint">@retryHintText</div>
     }
     <div class="startup-version">@AppInfo.Version</div>
 </div>

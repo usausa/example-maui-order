@@ -12,6 +12,8 @@ using System.Text.Json.Serialization.Metadata;
 
 // 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi、RestHallApi、RestReceptionApi、RestKitchenApi) と通知 (SignalROrderEvents) が使う
 // アクセストークンは中で持ち、期限の前と 401 を受けたときに取り直す (送り直しは 1 回だけ)。トークンの要求が断られたら (無効化、テナントの停止) Denied で知らせる
+// テナントの停止で断られたら、起動の取り直し (AuthenticateAsync) がトークンを受け取るまで、ほかの要求はトークンを求めずに同じ断りを返す
+// (止めている間、通知のつなぎ直しと状態の報告が要求を送り続けないように。再開を確かめるのは起動の画面だけにする)
 // 結果は例外を投げずに ApiResult で返す。接続先と端末は要求のたびに IDeviceContext から読む (端末の設定で替えても、作り直さずに次の要求から使う)
 public sealed class RestConnection : IDisposable
 {
@@ -34,6 +36,9 @@ public sealed class RestConnection : IDisposable
     // 今のアクセストークン (接続先と端末の組で持ち、どちらかが替わったら取り直す)
     private volatile AccessToken? currentToken;
 
+    // テナントの停止で断られた接続先と端末 (起動の取り直しでトークンを受け取るまで、ほかの要求はトークンを求めない)
+    private volatile Suspension? suspension;
+
     public event EventHandler<DeviceDeniedEventArgs>? Denied;
 
     public RestConnection(IDeviceContext context, OrderServerOptions options, TimeProvider timeProvider)
@@ -55,6 +60,7 @@ public sealed class RestConnection : IDisposable
     //--------------------------------------------------------------------------------
 
     // アクセストークン (通知のハブにつなぐときにも使う)。期限が近いか、使えなかったトークン (rejected) か、force なら取り直す
+    // テナントの停止で断られたあとは、force (起動の取り直し) のほかはトークンを求めずに同じ断りを返す
     internal async ValueTask<ApiResult<string>> GetAccessTokenAsync(string? rejected, bool force, CancellationToken cancel)
     {
         if (context.DeviceId is not { } deviceId)
@@ -66,6 +72,11 @@ public sealed class RestConnection : IDisposable
         if (!force && (Usable(endPoint, deviceId, rejected) is { } current))
         {
             return ApiResult.Success(current.Value);
+        }
+
+        if (!force && IsSuspended(endPoint, deviceId))
+        {
+            return Suspended();
         }
 
         try
@@ -81,10 +92,15 @@ public sealed class RestConnection : IDisposable
         DeviceDeniedEventArgs? denied = null;
         try
         {
-            // 待つ間にほかの要求が取り直していれば、それを使う (取り直しをまとめる)
+            // 待つ間にほかの要求が取り直していれば、それを使う (取り直しをまとめる)。断られていれば、続けて求めない
             if (!force && (Usable(endPoint, deviceId, rejected) is { } renewed))
             {
                 return ApiResult.Success(renewed.Value);
+            }
+
+            if (!force && IsSuspended(endPoint, deviceId))
+            {
+                return Suspended();
             }
 
             result = await RequestTokenAsync(endPoint, deviceId, cancel);
@@ -124,10 +140,16 @@ public sealed class RestConnection : IDisposable
         if (result.Content is { } response)
         {
             currentToken = new AccessToken(endPoint, deviceId, response.AccessToken, now + TimeSpan.FromSeconds(response.ExpiresIn));
+            suspension = null;
             return ApiResult.Success(response.AccessToken);
         }
 
         currentToken = null;
+        if (result.ErrorCode == ErrorCodes.TenantSuspended)
+        {
+            suspension = new Suspension(endPoint, deviceId);
+        }
+
         return result.ErrorCode is ErrorCodes.DeviceRevoked or ErrorCodes.TenantSuspended
             ? ApiResult.Failure<string>(ApiStatus.Unauthorized, result.ErrorCode, result.Detail)
             : Failure<DeviceTokenResponse, string>(result);
@@ -138,6 +160,13 @@ public sealed class RestConnection : IDisposable
         (timeProvider.GetUtcNow() < current.ExpiresAt - RenewBefore)
             ? current
             : null;
+
+    private bool IsSuspended(string endPoint, Guid deviceId) =>
+        (suspension is { } suspended) && (suspended.EndPoint == endPoint) && (suspended.DeviceId == deviceId);
+
+    // テナントの停止で断られたときと同じ結果 (要求は送らず、Denied も出さない)
+    private static ApiResult<string> Suspended() =>
+        ApiResult.Failure<string>(ApiStatus.Unauthorized, ErrorCodes.TenantSuspended);
 
     //--------------------------------------------------------------------------------
     // Send
@@ -318,4 +347,6 @@ public sealed class RestConnection : IDisposable
     }
 
     private sealed record AccessToken(string EndPoint, Guid DeviceId, string Value, DateTimeOffset ExpiresAt);
+
+    private sealed record Suspension(string EndPoint, Guid DeviceId);
 }

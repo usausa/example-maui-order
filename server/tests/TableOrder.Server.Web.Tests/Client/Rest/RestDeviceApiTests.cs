@@ -76,6 +76,34 @@ public sealed class RestDeviceApiTests : IClassFixture<ServerFactory>
         Assert.Equal(DeviceDenial.Revoked, denied.Reason);
     }
 
+    // テナントの停止で断られたあとは、起動の取り直し (AuthenticateAsync) のほかはトークンを求めずに断りを返し (止めている間に要求を送り続けない)、取り直せたら戻る
+    [Fact]
+    public async Task SuspendedTenantStopsTokenRequestsUntilAuthenticated()
+    {
+        // Arrange
+        var (tenantId, code) = await factory.CreateTenantAsync();
+        await using var terminal = TestTerminal.Create(factory);
+        await terminal.PairAsync(code);
+        var cancel = TestContext.Current.CancellationToken;
+        var heartbeat = new DeviceHeartbeatRequest { AppVersion = "1.0.0" };
+        await factory.SuspendTenantAsync(tenantId);
+
+        // Act / Assert: 止められていると断られ、Denied で知らせる
+        var suspended = await terminal.Device.AuthenticateAsync(cancel);
+        Assert.Equal("TENANT_SUSPENDED", suspended.ErrorCode);
+        Assert.Equal(DeviceDenial.TenantSuspended, (await terminal.NextDeniedAsync()).Reason);
+
+        // Act / Assert: テナントを戻しても、起動で取り直すまではトークンを求めずに止まっているとして返す
+        await factory.ResumeTenantAsync(tenantId);
+        var blocked = await terminal.Device.ReportStatusAsync(heartbeat, cancel);
+        Assert.Equal(ApiStatus.Unauthorized, blocked.Status);
+        Assert.Equal("TENANT_SUSPENDED", blocked.ErrorCode);
+
+        // Act / Assert: 起動で取り直すと戻る
+        Assert.True((await terminal.Device.AuthenticateAsync(cancel)).IsSuccess);
+        Assert.True((await terminal.Device.ReportStatusAsync(heartbeat, cancel)).IsSuccess);
+    }
+
     // 登録していない端末と、URL でない接続先は通信しない
     [Fact]
     public async Task UnregisteredOrInvalidEndPointDoesNotSend()

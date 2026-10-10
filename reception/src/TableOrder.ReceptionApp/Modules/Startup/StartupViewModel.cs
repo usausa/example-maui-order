@@ -16,6 +16,9 @@ public sealed partial class StartupViewModel : AppViewModelBase
     // 失敗したときにやり直すまでの時間
     private static readonly TimeSpan RetryInterval = TimeSpan.FromSeconds(30);
 
+    // テナントの停止で断られたときにやり直すまでの時間 (再開まで長く続くので、止めている間に要求を送り続けない)
+    private static readonly TimeSpan SuspendedRetryInterval = TimeSpan.FromMinutes(5);
+
     // チェーンのロゴを受け取るのを待つ時間 (過ぎたら名前の頭の文字で始め、待受に戻ったときに取り直す)
     private static readonly TimeSpan ImageTimeout = TimeSpan.FromSeconds(30);
 
@@ -51,8 +54,6 @@ public sealed partial class StartupViewModel : AppViewModelBase
 
     public string VersionText { get; }
 
-    public string RetryHintText { get; }
-
     [ObservableProperty]
     public partial double Progress { get; set; }
 
@@ -64,6 +65,10 @@ public sealed partial class StartupViewModel : AppViewModelBase
 
     [ObservableProperty]
     public partial bool IsAutoRetry { get; set; }
+
+    // 自動でやり直す間隔の案内 (テナントの停止は間を延ばす)
+    [ObservableProperty]
+    public partial string RetryHintText { get; set; } = string.Empty;
 
     public IObserveCommand RetryCommand { get; }
 
@@ -106,7 +111,6 @@ public sealed partial class StartupViewModel : AppViewModelBase
         this.receptionUsecase = receptionUsecase;
 
         VersionText = ViewHelper.Version(appInfo);
-        RetryHintText = ViewHelper.Format(AppResources.StartupAutoRetryFormat, (int)RetryInterval.TotalSeconds);
 
         RetryCommand = MakeAsyncCommand(InitializeAsync);
         SetupCommand = MakeAsyncCommand(OpenSetupAsync);
@@ -267,10 +271,10 @@ public sealed partial class StartupViewModel : AppViewModelBase
     private void Fail<T>(ApiResult<T> result, bool retry = true)
     {
         log.WarnStartupFailed(result.Status, result.ErrorCode);
-        Fail(ViewHelper.ErrorMessage(result), retry);
+        Fail(ViewHelper.ErrorMessage(result), retry, result.ErrorCode == ErrorCodes.TenantSuspended ? SuspendedRetryInterval : RetryInterval);
     }
 
-    private void Fail(string message, bool retry = true)
+    private void Fail(string message, bool retry = true, TimeSpan? interval = null)
     {
         IsFailed = true;
         IsAutoRetry = retry;
@@ -280,22 +284,30 @@ public sealed partial class StartupViewModel : AppViewModelBase
             return;
         }
 
+        var wait = interval ?? RetryInterval;
+        RetryHintText = RetryHint(wait);
         retrying = new CancellationTokenSource();
-        _ = RetryLaterAsync(retrying.Token);
+        _ = RetryLaterAsync(wait, retrying.Token);
     }
+
+    // 自動でやり直す間隔の案内 (1 分からは分で出す)
+    private static string RetryHint(TimeSpan interval) =>
+        interval >= TimeSpan.FromMinutes(1)
+            ? ViewHelper.Format(AppResources.StartupAutoRetryMinutesFormat, (int)interval.TotalMinutes)
+            : ViewHelper.Format(AppResources.StartupAutoRetryFormat, (int)interval.TotalSeconds);
 
     //--------------------------------------------------------------------------------
     // Retry
     //--------------------------------------------------------------------------------
 
     // しばらくしたらやり直す。操作の途中 (もう一度試す、端末の設定) なら、その次の機会にやり直す
-    private async Task RetryLaterAsync(CancellationToken token)
+    private async Task RetryLaterAsync(TimeSpan interval, CancellationToken token)
     {
         while (true)
         {
             try
             {
-                await Task.Delay(RetryInterval, token);
+                await Task.Delay(interval, token);
             }
             catch (OperationCanceledException)
             {

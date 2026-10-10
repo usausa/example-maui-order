@@ -20,6 +20,7 @@ using TableOrder.Contract.Events;
 // つなぎ直しの間 (切れてから抜けた通知を読み終えるまで) に届いた通知はためておき、抜けた通知と合わせて seq の順に渡す (EventSequencer)
 // 追いかけられないときは Expired で知らせる。ConnectAsync で作り直したら、前の接続の通知と読み込みは渡さない
 // 切れたら間をおいてつなぎ直し続ける (アクセストークンと抜けた通知は REST の送り方で受け取り、つなぎ直しが 401 で断られたらトークンを取り直す)
+// トークンが取れない間 (テナントの停止で断られたあと) は、つなぐ前の問い合わせも送らずに次の間隔を待つ
 public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
 {
     private const string HubPath = "hubs/store";
@@ -178,6 +179,11 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
             if (connection != hub)
             {
                 return;
+            }
+
+            if (!(await rest.GetAccessTokenAsync(rejectedToken, false, CancellationToken.None)).IsSuccess)
+            {
+                continue;
             }
 
             try
