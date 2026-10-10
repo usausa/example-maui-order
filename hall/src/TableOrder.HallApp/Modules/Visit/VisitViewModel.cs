@@ -380,10 +380,16 @@ public sealed partial class VisitViewModel : AppViewModelBase
         await LoadAsync();
     }
 
+    // レジで払ったお客様は帰っていることもあるので、お願いしていない食後の品は自動ではお願いせず、閉じる前に知らせる
     private async Task CloseAsync()
     {
-        if ((visit is null) ||
-            !await popupNavigator.ConfirmAsync(AppResources.CloseTitle, ViewHelper.Format(AppResources.CloseMessageFormat, visit.TableName), AppResources.CloseOk, AppResources.CommonBack))
+        if (visit is null)
+        {
+            return;
+        }
+
+        var message = ViewHelper.Format(HasHeld ? AppResources.CloseHeldMessageFormat : AppResources.CloseMessageFormat, visit.TableName);
+        if (!await popupNavigator.ConfirmAsync(AppResources.CloseTitle, message, AppResources.CloseOk, AppResources.CommonBack))
         {
             return;
         }

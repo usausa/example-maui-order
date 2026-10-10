@@ -4,6 +4,7 @@ using TableOrder.Terminal.Components;
 
 // 待受。お客様が受付するを押すと人数の画面に進む。受付の流れと空席の状態 (すぐに案内できる) を出す
 // 受け付けないとき (来店の開き方が受付機でない店、ラストオーダーの後) と、空席がひとつもないときは、その状態を出して受付するを出さない
+// 注文の一時停止の間も受け付け (入口でお客様を止めない)、席で注文を待つことを受付の前に知らせる
 // 空席は来店の通知で、ラストオーダーの後かは時刻で出し直す。チェーンと店舗の設定が替わったら (設定の版)、ここで起動からやり直して反映する
 // 通知のあとに空席を読み直せなかったときは、入ったときとしばらくごとに読み直す (次の来店の通知まで満席のままにしない)
 public sealed partial class StandbyViewModel : AppViewModelBase
@@ -57,6 +58,13 @@ public sealed partial class StandbyViewModel : AppViewModelBase
     // 満席 (状態の記号を注意の色にする)
     [ObservableProperty]
     public partial bool IsFull { get; set; }
+
+    // 受け付けられるが、注文を一時停止している (店舗の文言を出す)
+    [ObservableProperty]
+    public partial bool IsPaused { get; set; }
+
+    [ObservableProperty]
+    public partial string PausedText { get; set; } = string.Empty;
 
     public IObserveCommand StartCommand { get; }
 
@@ -131,7 +139,7 @@ public sealed partial class StandbyViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
-    // 管理画面でチェーンや店舗の設定を替えたら、起動からやり直して読み直す。ほかの変化 (ラストオーダーの時刻) は出し直す
+    // 管理画面でチェーンや店舗の設定を替えたら、起動からやり直して読み直す。ほかの変化 (ラストオーダーの時刻、注文の一時停止) は出し直す
     protected override Task OnStoreUpdatedAsync()
     {
         if (IsSettingsChanged())
@@ -224,6 +232,8 @@ public sealed partial class StandbyViewModel : AppViewModelBase
             : ViewHelper.Name(status);
         CanStart = status == StandbyStatus.Available;
         IsFull = status == StandbyStatus.Full;
+        IsPaused = CanStart && storeState.OrderingPaused;
+        PausedText = storeState.PausedMessage.Get(languageState.Current, AppResources.OrderingPausedNotice)!;
     }
 
     // 言語を戻し、文言を引き直すために画面を作り直す

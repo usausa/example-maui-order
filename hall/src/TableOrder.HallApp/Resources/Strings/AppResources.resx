@@ -329,6 +329,9 @@
   <data name="CloseMessageFormat" xml:space="preserve">
     <value>テーブル {0} の来店を、レジで払ったとして閉じます</value>
   </data>
+  <data name="CloseHeldMessageFormat" xml:space="preserve">
+    <value>テーブル {0} の来店を、レジで払ったとして閉じます。お願いしていない食後の品は、閉じると作りません</value>
+  </data>
   <data name="CloseOk" xml:space="preserve">
     <value>閉じる</value>
   </data>
@@ -511,6 +514,9 @@
   </data>
   <data name="ServingEmpty" xml:space="preserve">
     <value>提供を待つ品はありません</value>
+  </data>
+  <data name="ServingPaid" xml:space="preserve">
+    <value>会計済み</value>
   </data>
   <data name="StockTabLimited" xml:space="preserve">
     <value>品切れ・残り</value>

@@ -8,7 +8,7 @@ WHERE
     P.TenantId = /*@ tenantId */''
     AND L.StoreId = /*@ storeId */''
     AND L.Status = /*@ status */'Ready'
-    AND V.Status IN ('Open', 'Paying')
+    AND (V.Status IN ('Open', 'Paying') OR (V.Status = 'Closed' AND V.BusinessDate = /*@ businessDate */''))
 ORDER BY
     P.LineId,
     P.SortOrder

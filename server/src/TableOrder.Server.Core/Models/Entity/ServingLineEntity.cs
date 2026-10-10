@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Models.Entity;
 
-// 提供を待つ明細と、そのテーブル (ホールの提供の一覧)
+// 提供を待つ明細と、そのテーブルと来店の状態 (ホールの提供の一覧)
 public sealed class ServingLineEntity
 {
     public Guid Id { get; set; }
@@ -14,6 +14,8 @@ public sealed class ServingLineEntity
     public Guid TableId { get; set; }
 
     public string TableName { get; set; } = default!;
+
+    public VisitStatus VisitStatus { get; set; }
 
     public LocalizedText Name { get; set; } = default!;
 

@@ -1,6 +1,6 @@
 namespace TableOrder.ReceptionApp.State;
 
-// 店舗の今の状態 (ラストオーダー、設定の版)。起動のときに読み、通知 (store.updated) で替える
+// 店舗の今の状態 (ラストオーダー、注文の一時停止、設定の版)。起動のときに読み、通知 (store.updated) で替える
 public sealed class StoreState
 {
     private string timeZone = string.Empty;
@@ -8,6 +8,11 @@ public sealed class StoreState
     private TimeOnly openTime;
 
     public TimeOnly? LastOrderTime { get; private set; }
+
+    // 注文の一時停止 (受付は止めずに、待受と案内で知らせる) と、テーブル端末にも出す店舗の文言
+    public bool OrderingPaused { get; private set; }
+
+    public LocalizedText? PausedMessage { get; private set; }
 
     // チェーンと店舗の設定の版 (端末の設定の版と違えば、待受のときに起動からやり直して読み直す)
     public int SettingsVersion { get; private set; }
@@ -17,6 +22,8 @@ public sealed class StoreState
         timeZone = store.TimeZone;
         openTime = StoreHours.Parse(store.OpenTime);
         LastOrderTime = store.LastOrderTime is { } last ? StoreHours.Parse(last) : null;
+        OrderingPaused = store.OrderingPaused;
+        PausedMessage = store.PausedMessage;
         SettingsVersion = store.SettingsVersion;
     }
 

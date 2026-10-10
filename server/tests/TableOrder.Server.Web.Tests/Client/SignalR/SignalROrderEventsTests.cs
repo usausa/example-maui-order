@@ -127,6 +127,41 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         Assert.Equal(VisitStatus.Cancelled, e.Visit.Status);
     }
 
+    // 受け手が例外を投げても配り続け、渡しそこねた通知の代わりに追いかけられなくなった知らせ (今の状態を読み直させる) を出す
+    [Fact]
+    public async Task ThrowingReceiverDoesNotStopDispatch()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        await using var terminal = TestTerminal.Create(factory);
+        await terminal.PairAsync(store.TableCodes[0]);
+        using var hall = new TestDevice(factory.CreateClient());
+        await hall.SignInAsync(store.HallCode);
+        var expired = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var thrown = 0;
+        terminal.Events.Expired += (_, _) => expired.TrySetResult();
+        terminal.Events.Received += (_, e) =>
+        {
+            // 初めの通知 (来店を開いた) でだけ失敗する
+            if ((e.Event is VisitOpenedEvent) && (Interlocked.Exchange(ref thrown, 1) == 0))
+            {
+                throw new InvalidOperationException("Receiver failed.");
+            }
+        };
+        Assert.True((await terminal.Events.ConnectAsync(TestContext.Current.CancellationToken)).IsSuccess);
+
+        // Act / Assert: 受け手が失敗した通知のあとに、追いかけられなくなった知らせが届く
+        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
+        Assert.IsType<VisitOpenedEvent>(await terminal.NextAsync());
+        await expired.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
+
+        // Act / Assert: 続く通知も届く
+        using var updated = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 0, Version = visit.Version });
+        updated.EnsureSuccessStatusCode();
+        Assert.Equal(3, Assert.IsType<VisitUpdatedEvent>(await terminal.NextAsync()).Visit.Adults);
+    }
+
     // 登録していない端末はつながない
     [Fact]
     public async Task UnregisteredDeviceDoesNotConnect()

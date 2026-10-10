@@ -13,7 +13,7 @@ public sealed partial class SettingsAccessor
 
     // 店舗の設定 (版で確かめ、設定の版を上げる)。PIN のハッシュは替えるときだけ渡す
     [Execute]
-    public partial ValueTask<int> UpdateStoreAsync(DbTransaction tx, Guid tenantId, Guid storeId, string languages, string paymentMethods, string features, string? staffPinHash, int version, DateTimeOffset now, CancellationToken cancellationToken);
+    public partial ValueTask<int> UpdateStoreAsync(DbTransaction tx, Guid tenantId, Guid storeId, string languages, string paymentMethods, bool electronicReceipt, string features, string? staffPinHash, int version, DateTimeOffset now, CancellationToken cancellationToken);
 
     // チェーンの設定を替えたときに、店舗の設定の版を上げる
     [Execute]

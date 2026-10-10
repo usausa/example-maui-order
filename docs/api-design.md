@@ -488,6 +488,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 ```
 Held (食後まで止めている) --お願いする--> Ordered --作り始め--> Cooking --できあがり--> Ready --提供--> Served
 お客様がとる品 (ドリンクバー) は注文を受けたときに Served、作らない品 (持ち場なし) でスタッフが運ぶものは Ready にする
+Held は、お客様かホールがお願いするほか、会計を始めたときに残りをすべてお願いする
 Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 ```
 
@@ -508,7 +509,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | --- | --- | --- | --- |
 | POST | `/visits/{visitId}/orders` | テーブル / ホール | 注文の送信 `OrderCreateRequest` → `201` (`OrderListResponseItem`)。同じ `id` の再送は `200` (内容が違えば `409` `DUPLICATE_ID_MISMATCH`)。通知 `order.created`、`ticket.created`、`stock.updated` (残りの数を減らした品) |
 | GET | `/visits/{visitId}/orders` | テーブル / ホール | 来店の注文 (`OrderListResponse`)。注文履歴と明細の状態 |
-| POST | `/visits/{visitId}/orders/release` | テーブル / ホール | 食後の品をお願いする `OrderReleaseRequest { lineIds }` (空ならすべて) → `200` (`OrderListResponse`)。`Held` を `Ordered` にする。通知 `order.lines.updated`、`ticket.created` |
+| POST | `/visits/{visitId}/orders/release` | テーブル / ホール | 食後の品をお願いする `OrderReleaseRequest { lineIds }` (空ならすべて) → `200` (`OrderListResponse`)。`Held` を `Ordered` にする (会計を始めたときも、残りをすべてお願いする)。通知 `order.lines.updated`、`ticket.created` |
 | POST | `/orders/{orderId}/lines/{lineId}/cancel` | ホール | 取消 `OrderLineCancelRequest { quantity, reason?, staffId? }` → `200` (`OrderListResponseItem`)。数量の一部の取消は明細を分けて取り消す。`Served` の明細は `422` (`LINE_STATUS_INVALID`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。取消で残りの数は戻さない。通知 `order.lines.updated`、`ticket.updated` |
 
 注文を受けるときにサーバが確かめること:
@@ -553,8 +554,8 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/serving?status` | ホール | 提供を待つ明細をテーブルごとに、できあがりの古い順 (`ServingListResponse`。`status` は `Ordered` / `Cooking` / `Ready` で既定は `Ready`) |
-| POST | `/serving/serve` | ホール | 提供した `ServeRequest { lineIds, staffId? }` → `204` (`Served`)。できあがりの前の品も出せ、食後まで止めている品と取消は `422` (`LINE_STATUS_INVALID`)。通知 `order.lines.updated`、`ticket.updated` |
+| GET | `/serving?status` | ホール | 提供を待つ明細をテーブルごとに、できあがりの古い順 (`ServingListResponse`。`status` は `Ordered` / `Cooking` / `Ready` で既定は `Ready`)。払い終えて閉じた来店の品も、その営業日のうちは出す (`visitStatus` が `Closed`。ホール端末は会計済みの印を出す) |
+| POST | `/serving/serve` | ホール | 提供した `ServeRequest { lineIds, staffId? }` → `204` (`Served`)。できあがりの前の品と、払い終えて閉じた来店の品も出せ、食後まで止めている品と取消は `422` (`LINE_STATUS_INVALID`)。通知 `order.lines.updated`、`ticket.updated` |
 
 ### 🙋 2.9 呼び出し (Calls)
 
@@ -595,7 +596,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `paidAmount` / `balance` | money | 払った額 / 残り |
 | `guests` | int | 大人 + 子ども |
 | `splitAmounts` | money[] | 人数で割った目安 ([金額と税](business.md#-5-金額と税)) |
-| `hasUnservedLines` | bool | まだ出していない品がある (会計の前に確かめてもらう) |
+| `hasUnservedLines` | bool | まだ出していない品がある (お支払いのあともお持ちすることを出す) |
 
 支払 (`PaymentResponse`):
 
@@ -612,7 +613,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
 | GET | `/visits/{visitId}/bill` | テーブル / ホール / 外部 (POS) | 会計の明細と合計 (`BillResponse`) |
-| POST | `/visits/{visitId}/checkout` | テーブル / ホール | 会計を始める `CheckoutRequest { billVersion, version }` → `200` (来店)。来店を `Paying` にする (会計中なら変えずに返す)。`billVersion` が違えば `422` (`BILL_CHANGED`)。通知 `visit.updated` (ホールの席の一覧に「会計中」) |
+| POST | `/visits/{visitId}/checkout` | テーブル / ホール | 会計を始める `CheckoutRequest { billVersion, version }` → `200` (来店)。来店を `Paying` にし、お願いしていない食後の品をお願いする (会計中なら変えずに返す)。`billVersion` が違えば `422` (`BILL_CHANGED`)。通知 `visit.updated` (ホールの席の一覧に「会計中」)、食後の品をお願いしたら `order.lines.updated`、`ticket.created` |
 | POST | `/visits/{visitId}/checkout/cancel` | テーブル / ホール | 会計をやめる (本文なし) → `200` (来店)。待っている支払をやめて `Open` に戻す (払い終えた支払があれば会計中のまま返す)。通知 `visit.updated`、`payment.updated` |
 | POST | `/visits/{visitId}/payments` | テーブル | 支払を始める `PaymentCreateRequest { id, method, amount }` → `201` (`PaymentResponse`)。`QrCode` は `qrCode` を返し、`CreditCard` はテーブルの決済端末で払う。会計を始める前は `422` (`VISIT_NOT_OPEN`)。通知 `payment.updated` |
 | POST | `/payments/{id}/result` | テーブル | 決済端末で払った結果 `PaymentResultRequest { status, provider, providerReference, failureReason? }` (`CreditCard`) → `200` (`PaymentResponse`) |

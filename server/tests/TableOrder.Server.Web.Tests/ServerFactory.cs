@@ -120,6 +120,17 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
+    // 来店の営業日を前の日にする (前の営業日の来店の代わり)
+    public async ValueTask MoveVisitToPreviousDayAsync(TestStore store, Guid visitId)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "UPDATE Visits SET BusinessDate = date(BusinessDate, '-1 day') WHERE TenantId = @tenantId AND Id = @visitId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@visitId", visitId.ToString("D"));
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
     // ほかのサーバが書いた通知 (このサーバの送り手に知らせずに、DB にだけ書く)。中身は空で、店舗のすべての端末に送る
     public async ValueTask WriteEventElsewhereAsync(TestStore store, string type)
     {

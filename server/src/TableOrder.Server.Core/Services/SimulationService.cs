@@ -70,6 +70,7 @@ public sealed class SimulationService
     //--------------------------------------------------------------------------------
 
     // スタッフが運ぶ品を、作り始め・できあがり・提供と進め、明細がそろったチケットを下げる
+    // 払い終えて閉じた来店の品も進める (キッチンは作り続け、ホールはお席に運ぶ)
     private async ValueTask AdvanceLinesAsync(SimulationTiming timing, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;

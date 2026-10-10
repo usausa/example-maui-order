@@ -123,7 +123,7 @@
     <value>ご注文リストに、まだ注文していない商品があります。注文せずにお会計に進みますか？</value>
   </data>
   <data name="CheckoutUnserved" xml:space="preserve">
-    <value>まだお届けしていない商品があります</value>
+    <value>まだお届けしていない商品は、お支払いのあともお席にお持ちします</value>
   </data>
   <data name="CommonBack" xml:space="preserve">
     <value>戻る</value>

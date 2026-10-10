@@ -10,6 +10,7 @@
              s:BindingContextResolver.Type="{x:Type module:ServingViewModel}">
 
     <!-- 提供のタブ: できあがった明細をテーブルごとのカードに並べる (できあがりの古い順)。明細ごとに提供したを、明細が 2 つ以上のテーブルにはすべて提供したを置く -->
+    <!-- 払い終えて閉じた来店のカードには会計済みを出す -->
     <Grid Style="{StaticResource ScreenGrid}"
           RowDefinitions="Auto,*,Auto">
         <controls:TabHeader Grid.Row="0" />
@@ -33,14 +34,26 @@
                 <DataTemplate x:DataType="{x:Type module:ServingGroup}">
                     <Border Style="{StaticResource CardBorder}">
                         <VerticalStackLayout>
-                            <!-- table / serve all -->
+                            <!-- table / paid / serve all -->
                             <Grid Style="{StaticResource ServingTitleGrid}"
-                                  ColumnDefinitions="*,Auto">
+                                  ColumnDefinitions="*,Auto,Auto">
                                 <Label Grid.Column="0"
                                        Style="{StaticResource ServingTableLabel}"
                                        Text="{Binding TableText}" />
+                                <Label Grid.Column="1"
+                                       Style="{StaticResource ServingPaidLabel}"
+                                       IsVisible="{Binding IsPaid}"
+                                       Text="{x:Static strings:AppResources.ServingPaid}">
+                                    <Label.Triggers>
+                                        <DataTrigger TargetType="Label"
+                                                     Binding="{Binding HasMany}"
+                                                     Value="True">
+                                            <Setter Property="Margin" Value="8,0,0,0" />
+                                        </DataTrigger>
+                                    </Label.Triggers>
+                                </Label>
                                 <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                <Button Grid.Column="1"
+                                <Button Grid.Column="2"
                                         Style="{StaticResource ServingAllButton}"
                                         Command="{Binding Source={RelativeSource AncestorType={x:Type module:ServingViewModel}}, Path=ServeGroupCommand, x:DataType={x:Type module:ServingViewModel}}"
                                         CommandParameter="{Binding .}"

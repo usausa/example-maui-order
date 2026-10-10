@@ -11,6 +11,7 @@
 
     <!-- 案内: 受付の段階 (2 ご案内) を示し、決まったテーブルを主色の札にして離れても読める大きさで出す -->
     <!-- 満席のときはスタッフが案内することを出す。下に閉じると、待受に戻るまでの残りを減っていく帯と文字で出す -->
+    <!-- 注文を一時停止している間は、人数の下に一時停止の文言を注意の色で添える -->
     <Grid Style="{StaticResource KioskGrid}"
           RowDefinitions="Auto,Auto,1,*">
         <!-- header -->
@@ -85,6 +86,9 @@
                 </Border>
                 <Label Style="{StaticResource GuideGuestsLabel}"
                        Text="{Binding GuestsText}" />
+                <Label Style="{StaticResource GuidePausedLabel}"
+                       IsVisible="{Binding IsPaused}"
+                       Text="{Binding PausedText}" />
             </VerticalStackLayout>
 
             <!-- full -->

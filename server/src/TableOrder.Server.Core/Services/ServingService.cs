@@ -11,6 +11,8 @@ public sealed class ServingService
 
     private readonly ServiceContextProvider contextProvider;
 
+    private readonly StoreAccessor storeAccessor;
+
     private readonly VisitAccessor visitAccessor;
 
     private readonly OrderAccessor orderAccessor;
@@ -21,12 +23,14 @@ public sealed class ServingService
 
     public ServingService(
         ServiceContextProvider contextProvider,
+        StoreAccessor storeAccessor,
         VisitAccessor visitAccessor,
         OrderAccessor orderAccessor,
         KitchenAccessor kitchenAccessor,
         EventService eventService)
     {
         this.contextProvider = contextProvider;
+        this.storeAccessor = storeAccessor;
         this.visitAccessor = visitAccessor;
         this.orderAccessor = orderAccessor;
         this.kitchenAccessor = kitchenAccessor;
@@ -38,6 +42,7 @@ public sealed class ServingService
     //--------------------------------------------------------------------------------
 
     // 提供を待つ明細をテーブルごとに (できあがりの古い順)。状態の既定は Ready
+    // 払い終えて閉じた来店の品も、その営業日のうちは出す (作っている途中やお会計のあとにできあがった品を届ける)
     public async ValueTask<ServiceResult<ServingListResponse>> GetListAsync(string? status, CancellationToken cancellationToken)
     {
         var filter = OrderLineStatus.Ready;
@@ -50,8 +55,15 @@ public sealed class ServingService
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
-        var lines = await orderAccessor.QueryServingLineListAsync(tenantId, storeId, filter, cancellationToken);
-        var options = (await orderAccessor.QueryServingLineOptionListAsync(tenantId, storeId, filter, cancellationToken)).ToLookup(static x => x.LineId);
+        var store = await storeAccessor.QueryAsync(tenantId, storeId, cancellationToken);
+        if (store is null)
+        {
+            return new(ServiceError.NotFound);
+        }
+
+        var businessDate = StoreHours.BusinessDate(context.Now, store.TimeZone, StoreHours.Parse(store.OpenTime));
+        var lines = await orderAccessor.QueryServingLineListAsync(tenantId, storeId, filter, businessDate, cancellationToken);
+        var options = (await orderAccessor.QueryServingLineOptionListAsync(tenantId, storeId, filter, businessDate, cancellationToken)).ToLookup(static x => x.LineId);
         return new(new ServingListResponse
         {
             Items = lines
@@ -61,6 +73,7 @@ public sealed class ServingService
                     VisitId = g.Key,
                     TableId = g.First().TableId,
                     TableName = g.First().TableName,
+                    VisitStatus = g.First().VisitStatus,
                     Lines = g.Select(x => new ServingListResponseLine
                     {
                         LineId = x.Id,
@@ -82,6 +95,7 @@ public sealed class ServingService
     //--------------------------------------------------------------------------------
 
     // 提供した (できあがりの前の品も出せる)。出した明細は送り直しても変えない
+    // 払い終えて閉じた来店の品も出せる (取りやめた来店には明細がない)
     public async ValueTask<ServiceError?> ServeAsync(ServeRequest request, CancellationToken cancellationToken)
     {
         var lineIds = RequestValues.ListOf(request.LineIds).Distinct().ToList();
@@ -123,15 +137,9 @@ public sealed class ServingService
                     return new ServiceError(ErrorCodes.LineStatusInvalid);
                 }
 
-                if (!visits.TryGetValue(line.VisitId, out var visit))
+                if (!visits.ContainsKey(line.VisitId))
                 {
-                    visit = (await visitAccessor.QueryAsync(tx, tenantId, storeId, line.VisitId, cancellationToken))!;
-                    if (visit.Status is not (VisitStatus.Open or VisitStatus.Paying))
-                    {
-                        return new ServiceError(ErrorCodes.VisitNotOpen);
-                    }
-
-                    visits[line.VisitId] = visit;
+                    visits[line.VisitId] = (await visitAccessor.QueryAsync(tx, tenantId, storeId, line.VisitId, cancellationToken))!;
                 }
 
                 if (await orderAccessor.UpdateLineServedAsync(tx, tenantId, lineId, request.StaffId, now, cancellationToken) == 0)

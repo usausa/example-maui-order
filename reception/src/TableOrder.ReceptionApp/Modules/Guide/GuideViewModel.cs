@@ -3,6 +3,7 @@ namespace TableOrder.ReceptionApp.Modules.Guide;
 using TableOrder.Terminal.Components;
 
 // 案内。決まったテーブルを大きく出し、人数とお席へお進みくださいを添える。満席のときは、スタッフが案内することを出す
+// 注文を一時停止している間は、席で注文を待つことを添える (店舗の通知で出し直す)
 // 閉じるか、しばらくたつと待受に戻る (次のお客様が受付できるように、言語も店舗の初めの言語に戻す)。戻るまでの残りの秒を出す
 // 起動からやり直す知らせ (端末を替えた、長く切れていた) は、案内を消さないように印だけ付けて、閉じたときに待受ではなく起動に移る
 public sealed partial class GuideViewModel : AppViewModelBase
@@ -13,6 +14,8 @@ public sealed partial class GuideViewModel : AppViewModelBase
     private static readonly TimeSpan TickInterval = TimeSpan.FromSeconds(1);
 
     private readonly LanguageState languageState;
+
+    private readonly StoreState storeState;
 
     // 画面を離れたら待受に戻すのをやめる
     private readonly CancellationTokenSource closing = new();
@@ -35,6 +38,13 @@ public sealed partial class GuideViewModel : AppViewModelBase
     [ObservableProperty]
     public partial string GuestsText { get; set; } = string.Empty;
 
+    // 注文を一時停止している (店舗の文言を出す)
+    [ObservableProperty]
+    public partial bool IsPaused { get; set; }
+
+    [ObservableProperty]
+    public partial string PausedText { get; set; } = string.Empty;
+
     // 待受に戻るまでの残り (帯の長さの割合と文言)
     [ObservableProperty]
     public partial double RemainingRatio { get; set; } = 1;
@@ -51,13 +61,16 @@ public sealed partial class GuideViewModel : AppViewModelBase
     public GuideViewModel(
         ImageCache imageCache,
         LanguageState languageState,
-        ReceptionState receptionState)
+        ReceptionState receptionState,
+        StoreState storeState)
     {
         this.languageState = languageState;
+        this.storeState = storeState;
 
         var language = languageState.Current;
         Brand = ViewHelper.Brand(receptionState, imageCache, language);
         StoreText = receptionState.StoreName(language);
+        UpdatePaused();
         UpdateRemaining(ShowSeconds);
 
         CloseCommand = MakeAsyncCommand(CloseAsync);
@@ -105,6 +118,13 @@ public sealed partial class GuideViewModel : AppViewModelBase
         return Task.CompletedTask;
     }
 
+    // 案内を出している間に、注文の一時停止を始めた・やめた
+    protected override Task OnStoreUpdatedAsync()
+    {
+        UpdatePaused();
+        return Task.CompletedTask;
+    }
+
     // 受付を終えて待受に戻る (起動からやり直す知らせを受けていたら起動に移る)
     private async Task CloseAsync()
     {
@@ -132,6 +152,12 @@ public sealed partial class GuideViewModel : AppViewModelBase
         }
 
         await CloseAsync();
+    }
+
+    private void UpdatePaused()
+    {
+        IsPaused = storeState.OrderingPaused;
+        PausedText = storeState.PausedMessage.Get(languageState.Current, AppResources.OrderingPausedNotice)!;
     }
 
     private void UpdateRemaining(int seconds)

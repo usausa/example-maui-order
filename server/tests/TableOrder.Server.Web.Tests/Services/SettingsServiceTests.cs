@@ -73,7 +73,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.VersionMismatch, stale.Error?.ErrorCode);
     }
 
-    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・言語・支払方法・呼び出しの用件・PIN になる
+    // 店舗の設定を替えると端末に知らせ、端末の設定は新しい機能・来店の開き方・言語・支払方法・電子レシート・呼び出しの用件・PIN になる
     [Fact]
     public async Task StoreSettingsUpdateChangesConfig()
     {
@@ -95,6 +95,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
                     Features = new DeviceConfigResponseFeatures { RegisterCheckout = false, SplitPayment = false, LastOrderNoticeMinutes = 0, FinishSeconds = 10, VisitOpening = VisitOpening.Reception, KitchenAlertMinutes = 0 },
                     Languages = ["ja", "en"],
                     PaymentMethods = [PaymentMethod.QrCode],
+                    ElectronicReceipt = false,
                     CallReasons = settings.CallReasons.Select(static x => x with { IsActive = x.Code == "Water" }).ToList()
                 },
                 "9876",
@@ -110,6 +111,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(0, config.Features.KitchenAlertMinutes);
         Assert.Equal(["ja", "en"], config.Languages);
         Assert.Equal([PaymentMethod.QrCode], config.PaymentMethods);
+        Assert.False(config.ElectronicReceipt);
         Assert.Equal("Water", Assert.Single(config.CallReasons).Code);
         Assert.True(StaffPins.Verify("9876", config.StaffPin!.Iterations, config.StaffPin.Salt, config.StaffPin.Hash));
     }

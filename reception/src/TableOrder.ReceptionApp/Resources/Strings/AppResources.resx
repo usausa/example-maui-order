@@ -236,6 +236,9 @@
   <data name="StandbyClosed" xml:space="preserve">
     <value>本日の受付は終了しました</value>
   </data>
+  <data name="OrderingPausedNotice" xml:space="preserve">
+    <value>ただいまご注文を一時停止しています</value>
+  </data>
   <data name="GuestsTitle" xml:space="preserve">
     <value>人数を入れてください</value>
   </data>

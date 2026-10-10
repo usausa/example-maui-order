@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Web.Endpoints;
 
 using TableOrder.Contract.Bills;
+using TableOrder.Contract.Kitchen;
 using TableOrder.Contract.Orders;
 using TableOrder.Contract.Visits;
 
@@ -103,6 +104,31 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(VisitStatus.Open, (await TestDevice.ReadAsync<VisitResponse>(cancel)).Status);
         using var reopened = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         Assert.Equal(HttpStatusCode.Created, reopened.StatusCode);
+    }
+
+    // 会計を始めると、お願いしていない食後の品をキッチンにお願いする (払い終えると来店は閉じ、あとからお願いできない)
+    [Fact]
+    public async Task CheckoutReleasesHeldLines()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        using var kitchen = await SignInAsync(store.KitchenCode);
+        var visit = await factory.OpenVisitAsync(store, 0);
+        var menu = await TestMenu.LoadAsync(table);
+        var parfait = menu.Line(TestMenu.Parfait, 1, OrderTiming.AfterMeal);
+        await OrderAsync(table, visit, menu.Order(parfait));
+        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+
+        // Act
+        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+
+        // Assert
+        Assert.Equal(VisitStatus.Paying, (await TestDevice.ReadAsync<VisitResponse>(checkout)).Status);
+        var orders = await table.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        Assert.Equal(OrderLineStatus.Ordered, Assert.Single(orders.Items[0].Lines).Status);
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
+        Assert.Equal(parfait.Id, Assert.Single(ticket.Lines).LineId);
     }
 
     private async Task<TestDevice> SignInAsync(string code)

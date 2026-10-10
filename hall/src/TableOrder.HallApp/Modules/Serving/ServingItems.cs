@@ -1,12 +1,15 @@
 namespace TableOrder.HallApp.Modules.Serving;
 
-// テーブルごとの提供を待つ明細 (できあがりの古い順)
+// テーブルごとの提供を待つ明細 (できあがりの古い順)。払い終えて閉じた来店は会計済みの印を出す (同じテーブルの次のお客様の品と見分ける)
 public sealed partial class ServingGroup : ObservableObject
 {
     public Guid VisitId { get; }
 
     [ObservableProperty]
     public partial string TableText { get; set; } = string.Empty;
+
+    [ObservableProperty]
+    public partial bool IsPaid { get; set; }
 
     [ObservableProperty]
     public partial IReadOnlyList<ServingLine> Lines { get; set; } = [];
@@ -25,6 +28,7 @@ public sealed partial class ServingGroup : ObservableObject
     public void Update(ServingListResponseItem item, DateTimeOffset now)
     {
         TableText = ViewHelper.Table(item.TableName);
+        IsPaid = item.VisitStatus == VisitStatus.Closed;
         if (Lines.Select(static x => x.LineId).SequenceEqual(item.Lines.Select(static x => x.LineId)))
         {
             for (var i = 0; i < Lines.Count; i++)

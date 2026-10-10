@@ -68,7 +68,7 @@ public sealed class OrderEventReceiver : OrderEventReceiverBase
                 servingChanged = true;
                 break;
             case VisitMovedEvent or VisitClosedEvent:
-                // 呼び出しと提供の一覧は来店の今のテーブルを出し、閉じた来店のものは外れるので、一緒に読み直す
+                // 呼び出しと提供の一覧は来店の今のテーブルを出し、閉じた来店の呼び出しは外れ、提供は会計済みになるので、一緒に読み直す
                 tablesChanged = true;
                 callsChanged = true;
                 servingChanged = true;

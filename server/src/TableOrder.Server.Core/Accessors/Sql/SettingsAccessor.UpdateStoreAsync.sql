@@ -3,6 +3,7 @@ UPDATE
 SET
     Languages = /*@ languages */'',
     PaymentMethods = /*@ paymentMethods */'',
+    ElectronicReceipt = /*@ electronicReceipt */0,
     Features = /*@ features */'',
     StaffPinHash = COALESCE(/*@ staffPinHash */NULL, StaffPinHash),
     SettingsVersion = SettingsVersion + 1,

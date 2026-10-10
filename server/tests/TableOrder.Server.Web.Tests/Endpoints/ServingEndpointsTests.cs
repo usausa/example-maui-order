@@ -67,6 +67,44 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("LINE_STATUS_INVALID", await TestDevice.ReadErrorCodeAsync(held));
     }
 
+    // 払い終えて閉じた来店の品も、その営業日のうちは会計済みとして提供の一覧に出て提供でき、前の営業日の来店の品は出ない
+    [Fact]
+    public async Task ClosedVisitLinesRemainForBusinessDay()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var hall = await SignInAsync(store.HallCode);
+        using var kitchen = await SignInAsync(store.KitchenCode);
+        var menu = await TestMenu.LoadAsync(hall);
+        var visit = await OpenAsync(hall, store.TableIds[0]);
+        var previous = await OpenAsync(hall, store.TableIds[1]);
+        var salad = menu.Line(TestMenu.Salad);
+        await OrderAsync(hall, visit, menu.Order(salad));
+        await OrderAsync(hall, previous, menu.Order(menu.Line(TestMenu.Salad)));
+        await CloseAsync(hall, visit);
+        await CloseAsync(hall, previous);
+        await factory.MoveVisitToPreviousDayAsync(store, previous.Id);
+
+        // できあがるのは払い終えたあと (キッチンのチケットは来店を閉じても残る)
+        foreach (var ticket in (await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items)
+        {
+            using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{Assert.Single(ticket.Lines).LineId}/ready", new { });
+            ready.EnsureSuccessStatusCode();
+        }
+
+        // Act / Assert: 提供の一覧
+        var serving = await hall.GetAsync<ServingListResponse>("/api/v1/serving");
+        var table = Assert.Single(serving.Items);
+        Assert.Equal(visit.Id, table.VisitId);
+        Assert.Equal(VisitStatus.Closed, table.VisitStatus);
+        Assert.Equal(salad.Id, Assert.Single(table.Lines).LineId);
+
+        // Act / Assert: 提供する
+        using var served = await hall.PostAsync("/api/v1/serving/serve", new ServeRequest { LineIds = [salad.Id] });
+        Assert.Equal(HttpStatusCode.NoContent, served.StatusCode);
+        Assert.Empty((await hall.GetAsync<ServingListResponse>("/api/v1/serving")).Items);
+    }
+
     private async Task<TestDevice> SignInAsync(string code)
     {
         var device = new TestDevice(factory.CreateClient());
@@ -78,6 +116,14 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
     {
         using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
+    }
+
+    // レジで払ったとして閉じる
+    private static async Task CloseAsync(TestDevice device, VisitResponse visit)
+    {
+        var current = await device.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
+        using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = current.Version });
+        response.EnsureSuccessStatusCode();
     }
 
     private static async Task OrderAsync(TestDevice device, VisitResponse visit, OrderCreateRequest request)

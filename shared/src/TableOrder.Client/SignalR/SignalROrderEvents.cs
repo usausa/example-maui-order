@@ -257,6 +257,7 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
     }
 
     // 作り直す前の接続の通知と知らせは渡さない (つなぎ直しで数え直した受け手に、前の接続 (ほかの店舗のこともある) の通知を渡さない)
+    // 受け手が例外を投げても配り続け (止まると、以後の通知がどの画面にも届かない)、渡しそこねた通知の代わりに追いかけられなくなった知らせで今の状態を読み直させる
     private async Task DispatchAsync()
     {
         await foreach (var item in dispatching.Reader.ReadAllAsync())
@@ -266,6 +267,19 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
                 continue;
             }
 
+            if (!Deliver(item) && (item.Event is not null))
+            {
+                Deliver(item with { Event = null });
+            }
+        }
+    }
+
+    // 受け手に渡す。受け手の不具合で配る流れを止めないように、受け手の例外はすべて捕まえて失敗として返す
+    private bool Deliver(Dispatch item)
+    {
+#pragma warning disable CA1031
+        try
+        {
             if (item.Event is null)
             {
                 Expired?.Invoke(this, EventArgs.Empty);
@@ -274,7 +288,14 @@ public sealed class SignalROrderEvents : IOrderEvents, IAsyncDisposable
             {
                 Received?.Invoke(this, new OrderEventArgs(item.Event, item.Connection));
             }
+
+            return true;
         }
+        catch
+        {
+            return false;
+        }
+#pragma warning restore CA1031
     }
 
     //--------------------------------------------------------------------------------

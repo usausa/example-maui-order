@@ -621,6 +621,12 @@ namespace TableOrder.HallApp.Resources.Strings {
             }
         }
 
+        internal static string CloseHeldMessageFormat {
+            get {
+                return ResourceManager.GetString("CloseHeldMessageFormat", resourceCulture);
+            }
+        }
+
         internal static string CloseOk {
             get {
                 return ResourceManager.GetString("CloseOk", resourceCulture);
@@ -984,6 +990,12 @@ namespace TableOrder.HallApp.Resources.Strings {
         internal static string ServingEmpty {
             get {
                 return ResourceManager.GetString("ServingEmpty", resourceCulture);
+            }
+        }
+
+        internal static string ServingPaid {
+            get {
+                return ResourceManager.GetString("ServingPaid", resourceCulture);
             }
         }
 

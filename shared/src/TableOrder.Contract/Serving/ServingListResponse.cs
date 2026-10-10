@@ -1,6 +1,7 @@
 namespace TableOrder.Contract.Serving;
 
 // 提供を待つ明細 (ホール端末)。テーブルごとに、できあがりの古い順
+// 払い終えて閉じた来店の品も、その営業日のうちは出す (VisitStatus が Closed。同じテーブルの次のお客様の品と見分ける)
 public sealed class ServingListResponse
 {
     public IReadOnlyList<ServingListResponseItem> Items { get; set; } = default!;
@@ -13,6 +14,8 @@ public sealed class ServingListResponseItem
     public Guid TableId { get; set; }
 
     public string TableName { get; set; } = default!;
+
+    public VisitStatus VisitStatus { get; set; }
 
     public IReadOnlyList<ServingListResponseLine> Lines { get; set; } = default!;
 }

@@ -435,6 +435,12 @@ namespace TableOrder.ReceptionApp.Resources.Strings {
             }
         }
 
+        internal static string OrderingPausedNotice {
+            get {
+                return ResourceManager.GetString("OrderingPausedNotice", resourceCulture);
+            }
+        }
+
         internal static string GuestsTitle {
             get {
                 return ResourceManager.GetString("GuestsTitle", resourceCulture);

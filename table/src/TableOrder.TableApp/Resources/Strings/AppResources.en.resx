@@ -123,7 +123,7 @@
     <value>Some items in your list have not been ordered. Go to checkout without ordering them?</value>
   </data>
   <data name="CheckoutUnserved" xml:space="preserve">
-    <value>Some items have not been served yet</value>
+    <value>Items not yet served will be brought to your table after payment.</value>
   </data>
   <data name="CommonBack" xml:space="preserve">
     <value>Back</value>

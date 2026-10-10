@@ -19,6 +19,8 @@ public sealed class BillService
 
     private readonly VisitService visitService;
 
+    private readonly OrderService orderService;
+
     private readonly EventService eventService;
 
     public BillService(
@@ -28,6 +30,7 @@ public sealed class BillService
         OrderAccessor orderAccessor,
         PaymentAccessor paymentAccessor,
         VisitService visitService,
+        OrderService orderService,
         EventService eventService)
     {
         this.contextProvider = contextProvider;
@@ -36,6 +39,7 @@ public sealed class BillService
         this.orderAccessor = orderAccessor;
         this.paymentAccessor = paymentAccessor;
         this.visitService = visitService;
+        this.orderService = orderService;
         this.eventService = eventService;
     }
 
@@ -72,6 +76,7 @@ public sealed class BillService
     //--------------------------------------------------------------------------------
 
     // 会計を始める (来店を Paying にして注文を止める)。表示していた明細と版で確かめ、会計中なら変えずに返す
+    // お願いしていない食後の品は、ここでキッチンにお願いする (払い終えると来店は閉じ、あとからお願いできない。払った品は作る)
     public async ValueTask<ServiceResult<VisitResponse>> StartCheckoutAsync(Guid visitId, CheckoutRequest request, CancellationToken cancellationToken)
     {
         if (String.IsNullOrEmpty(request.BillVersion))
@@ -123,6 +128,11 @@ public sealed class BillService
             if (await visitAccessor.UpdatePayingAsync(tx, tenantId, visitId, request.Version, context.Now, cancellationToken) == 0)
             {
                 return new(new ServiceError(ErrorCodes.VersionMismatch));
+            }
+
+            if (await orderService.ReleaseHeldAsync(transaction, visit, [], context.Now, cancellationToken) is { } error)
+            {
+                return new(error);
             }
 
             var response = await visitService.LoadResponseAsync(tx, tenantId, storeId, visitId, cancellationToken);

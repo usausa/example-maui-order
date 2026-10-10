@@ -113,8 +113,8 @@ public sealed partial class OrderAccessor
 
     // 店舗の開いている来店の、その状態の明細とテーブル (できあがりの古い順)
     [Query]
-    public partial ValueTask<List<ServingLineEntity>> QueryServingLineListAsync(Guid tenantId, Guid storeId, OrderLineStatus status, CancellationToken cancellationToken);
+    public partial ValueTask<List<ServingLineEntity>> QueryServingLineListAsync(Guid tenantId, Guid storeId, OrderLineStatus status, DateOnly businessDate, CancellationToken cancellationToken);
 
     [Query]
-    public partial ValueTask<List<OrderLineOptionEntity>> QueryServingLineOptionListAsync(Guid tenantId, Guid storeId, OrderLineStatus status, CancellationToken cancellationToken);
+    public partial ValueTask<List<OrderLineOptionEntity>> QueryServingLineOptionListAsync(Guid tenantId, Guid storeId, OrderLineStatus status, DateOnly businessDate, CancellationToken cancellationToken);
 }

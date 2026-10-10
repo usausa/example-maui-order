@@ -238,9 +238,16 @@ public sealed partial class FloorPage : IDisposable
     //--------------------------------------------------------------------------------
 
     // レジで払った来店を終える (会計中も閉じられる)
+    // レジで払ったお客様は帰っていることもあるので、お願いしていない食後の品は自動ではお願いせず、閉じる前に知らせる
     private async Task CloseAsync(TableListResponseItem table)
     {
-        if ((table.Visit is not { } visit) || !await ConfirmAsync("来店を閉じる", $"テーブル {table.Name} の来店を、レジで払ったとして閉じます。テーブル端末は待受に戻ります。", "閉じる"))
+        if (table.Visit is not { } visit)
+        {
+            return;
+        }
+
+        var held = orders.SelectMany(static x => x.Lines).Any(static x => x.Status == OrderLineStatus.Held) ? "お願いしていない食後の品は、閉じると作りません。" : string.Empty;
+        if (!await ConfirmAsync("来店を閉じる", $"テーブル {table.Name} の来店を、レジで払ったとして閉じます。テーブル端末は待受に戻ります。{held}", "閉じる"))
         {
             return;
         }

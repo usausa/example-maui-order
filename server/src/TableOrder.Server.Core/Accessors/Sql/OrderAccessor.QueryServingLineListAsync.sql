@@ -5,6 +5,7 @@ SELECT
     O.OrderNo,
     V.TableId,
     T.Name AS TableName,
+    V.Status AS VisitStatus,
     L.Name,
     L.Quantity,
     L.Status,
@@ -19,7 +20,7 @@ WHERE
     L.TenantId = /*@ tenantId */''
     AND L.StoreId = /*@ storeId */''
     AND L.Status = /*@ status */'Ready'
-    AND V.Status IN ('Open', 'Paying')
+    AND (V.Status IN ('Open', 'Paying') OR (V.Status = 'Closed' AND V.BusinessDate = /*@ businessDate */''))
 ORDER BY
     COALESCE(L.ReadyAt, L.ReleasedAt),
     O.OrderNo,

@@ -1,8 +1,11 @@
 namespace TableOrder.Server.Web.Endpoints;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using TableOrder.Contract.Bills;
 using TableOrder.Contract.Payments;
 using TableOrder.Contract.Visits;
+using TableOrder.Server.Core.Services;
 
 public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
 {
@@ -114,6 +117,32 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         // Assert
         Assert.Equal(VisitClosedBy.Register, (await TestDevice.ReadAsync<VisitResponse>(closed)).ClosedBy);
         Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{pending.Id}")).Status);
+    }
+
+    // 店舗の設定で電子レシートを外した店は、テーブルで払い終えても電子レシートを作らない
+    [Fact]
+    public async Task NoReceiptWhenStoreTurnsItOff()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        using var table = await SignInAsync(store.TableCodes[0]);
+        using (factory.BeginStore(store))
+        {
+            var service = factory.Services.GetRequiredService<SettingsService>();
+            var settings = (await service.GetStoreSettingsAsync(TestContext.Current.CancellationToken))!;
+            Assert.True(settings.ElectronicReceipt);
+            Assert.Null(await service.UpdateStoreSettingsAsync(settings with { ElectronicReceipt = false }, null, TestContext.Current.CancellationToken));
+        }
+
+        var (visit, bill) = await CheckoutAsync(store, table);
+
+        // Act
+        var paid = await PayByCardAsync(table, visit, bill.Total);
+
+        // Assert
+        Assert.Equal(PaymentStatus.Completed, paid.Status);
+        using var receipt = await table.Client.GetAsync(new Uri($"/api/v1/visits/{visit.Id}/receipt", UriKind.Relative), TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.NotFound, receipt.StatusCode);
     }
 
     // 会計を始める前は払えない

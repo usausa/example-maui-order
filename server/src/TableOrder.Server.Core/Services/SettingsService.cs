@@ -8,11 +8,12 @@ using TableOrder.Server.Core.Infrastructure.Json;
 // チェーンの設定 (名前・ロゴ・替える色。色は役割の名前と色)
 public sealed record BrandSettings(LocalizedText Name, string? LogoImageName, IReadOnlyDictionary<string, string> Theme, int Version);
 
-// 店舗の設定。呼び出しの用件は使うかどうかだけを替える
+// 店舗の設定。呼び出しの用件は使うかどうかだけを替える。電子レシートは、テーブルで払い終えた来店に作るか
 public sealed record StoreSettings(
     DeviceConfigResponseFeatures Features,
     IReadOnlyList<string> Languages,
     IReadOnlyList<PaymentMethod> PaymentMethods,
+    bool ElectronicReceipt,
     IReadOnlyList<CallReasonSetting> CallReasons,
     int Version);
 
@@ -135,6 +136,7 @@ public sealed class SettingsService
             ReadFeatures(store.Features),
             ReadList<string>(store.Languages),
             ReadList<PaymentMethod>(store.PaymentMethods),
+            store.ElectronicReceipt,
             reasons.Select(static x => new CallReasonSetting(x.Code, x.Name, x.IsActive)).ToList(),
             store.Version);
     }
@@ -162,7 +164,7 @@ public sealed class SettingsService
         var storeId = context.RequireStoreId();
         return await eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
         {
-            if (await settingsAccessor.UpdateStoreAsync(transaction.Tx, tenantId, storeId, languages, paymentMethods, features, staffPinHash, settings.Version, context.Now, cancellationToken) == 0)
+            if (await settingsAccessor.UpdateStoreAsync(transaction.Tx, tenantId, storeId, languages, paymentMethods, settings.ElectronicReceipt, features, staffPinHash, settings.Version, context.Now, cancellationToken) == 0)
             {
                 return new ServiceError(ErrorCodes.VersionMismatch);
             }

@@ -329,6 +329,9 @@
   <data name="CloseMessageFormat" xml:space="preserve">
     <value>Close the visit at table {0} as paid at the register.</value>
   </data>
+  <data name="CloseHeldMessageFormat" xml:space="preserve">
+    <value>Close the visit at table {0} as paid at the register. After-meal items not yet requested will not be made.</value>
+  </data>
   <data name="CloseOk" xml:space="preserve">
     <value>Close</value>
   </data>
@@ -511,6 +514,9 @@
   </data>
   <data name="ServingEmpty" xml:space="preserve">
     <value>Nothing to serve.</value>
+  </data>
+  <data name="ServingPaid" xml:space="preserve">
+    <value>Paid</value>
   </data>
   <data name="StockTabLimited" xml:space="preserve">
     <value>Out &amp; low</value>

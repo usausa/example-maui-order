@@ -236,6 +236,9 @@
   <data name="StandbyClosed" xml:space="preserve">
     <value>Check-in has closed for today</value>
   </data>
+  <data name="OrderingPausedNotice" xml:space="preserve">
+    <value>Ordering is paused for now</value>
+  </data>
   <data name="GuestsTitle" xml:space="preserve">
     <value>How many in your party?</value>
   </data>

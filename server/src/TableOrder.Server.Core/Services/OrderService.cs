@@ -261,7 +261,6 @@ public sealed class OrderService
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
-        var now = context.Now;
         var lineIds = RequestValues.ListOf(request.LineIds);
         return eventService.WriteAsync<ServiceResult<OrderListResponse>>(tenantId, storeId, async transaction =>
         {
@@ -282,61 +281,77 @@ public sealed class OrderService
                 return new(new ServiceError(ErrorCodes.VisitNotOpen));
             }
 
-            var held = (await orderAccessor.QueryLineListAsync(tx, tenantId, visitId, cancellationToken))
-                .Where(x => (x.Status == OrderLineStatus.Held) && ((lineIds.Count == 0) || lineIds.Contains(x.Id)))
-                .ToList();
-            if (held.Count == 0)
+            if (await ReleaseHeldAsync(transaction, visit, lineIds, context.Now, cancellationToken) is { } error)
             {
-                return new(new OrderListResponse { Items = await OrderResponses.LoadAsync(orderAccessor, tx, tenantId, visitId, cancellationToken) });
-            }
-
-            // チケットは注文と持ち場ごと
-            var tickets = new Dictionary<(Guid OrderId, Guid StationId), Guid>();
-            foreach (var line in held)
-            {
-                var status = StatusOnRelease(line.ServedBy, line.StationId);
-                Guid? ticketId = null;
-                if (status == OrderLineStatus.Ordered)
-                {
-                    var key = (line.OrderId, StationId: line.StationId!.Value);
-                    if (!tickets.TryGetValue(key, out var id))
-                    {
-                        id = Guid.CreateVersion7(now);
-                        tickets[key] = id;
-                        await kitchenAccessor.InsertTicketAsync(tx, tenantId, id, storeId, key.StationId, key.OrderId, visitId, now, cancellationToken);
-                    }
-
-                    ticketId = id;
-                }
-
-                var released = await orderAccessor.UpdateLineReleasedAsync(
-                    tx,
-                    tenantId,
-                    line.Id,
-                    status,
-                    ticketId,
-                    status == OrderLineStatus.Ready ? now : null,
-                    status == OrderLineStatus.Served ? now : null,
-                    now,
-                    cancellationToken);
-                if (released == 0)
-                {
-                    return new(new ServiceError(ErrorCodes.LineStatusInvalid));
-                }
+                return new(error);
             }
 
             var orders = await OrderResponses.LoadAsync(orderAccessor, tx, tenantId, visitId, cancellationToken);
-            var changedOrders = held.Select(static x => x.OrderId).ToHashSet();
-            await transaction.AppendEventAsync(EventTypes.OrderLinesUpdated, LinesUpdated(visitId, orders.Where(x => changedOrders.Contains(x.Id))), [visit.TableId], null, now, cancellationToken);
-            foreach (var ((_, stationId), ticketId) in tickets)
-            {
-                var ticket = await OrderResponses.LoadTicketAsync(kitchenAccessor, tx, tenantId, storeId, ticketId, cancellationToken);
-                await transaction.AppendEventAsync(EventTypes.TicketCreated, ticket, null, stationId, now, cancellationToken);
-            }
-
             await transaction.CommitAsync(cancellationToken);
             return new(new OrderListResponse { Items = orders });
         }, cancellationToken);
+    }
+
+    // 止めている食後の品を出す (lineIds が空なら来店のすべて)。会計を始めたときにも、払った品を作るために残りをすべて出す
+    // 出す品がなければ何も書かない。来店の状態は呼ぶ側で確かめる
+    internal async ValueTask<ServiceError?> ReleaseHeldAsync(StoreTransaction transaction, VisitEntity visit, IReadOnlyList<Guid> lineIds, DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var tx = transaction.Tx;
+        var tenantId = transaction.TenantId;
+        var storeId = transaction.StoreId;
+        var held = (await orderAccessor.QueryLineListAsync(tx, tenantId, visit.Id, cancellationToken))
+            .Where(x => (x.Status == OrderLineStatus.Held) && ((lineIds.Count == 0) || lineIds.Contains(x.Id)))
+            .ToList();
+        if (held.Count == 0)
+        {
+            return null;
+        }
+
+        // チケットは注文と持ち場ごと
+        var tickets = new Dictionary<(Guid OrderId, Guid StationId), Guid>();
+        foreach (var line in held)
+        {
+            var status = StatusOnRelease(line.ServedBy, line.StationId);
+            Guid? ticketId = null;
+            if (status == OrderLineStatus.Ordered)
+            {
+                var key = (line.OrderId, StationId: line.StationId!.Value);
+                if (!tickets.TryGetValue(key, out var id))
+                {
+                    id = Guid.CreateVersion7(now);
+                    tickets[key] = id;
+                    await kitchenAccessor.InsertTicketAsync(tx, tenantId, id, storeId, key.StationId, key.OrderId, visit.Id, now, cancellationToken);
+                }
+
+                ticketId = id;
+            }
+
+            var released = await orderAccessor.UpdateLineReleasedAsync(
+                tx,
+                tenantId,
+                line.Id,
+                status,
+                ticketId,
+                status == OrderLineStatus.Ready ? now : null,
+                status == OrderLineStatus.Served ? now : null,
+                now,
+                cancellationToken);
+            if (released == 0)
+            {
+                return new ServiceError(ErrorCodes.LineStatusInvalid);
+            }
+        }
+
+        var orders = await OrderResponses.LoadAsync(orderAccessor, tx, tenantId, visit.Id, cancellationToken);
+        var changedOrders = held.Select(static x => x.OrderId).ToHashSet();
+        await transaction.AppendEventAsync(EventTypes.OrderLinesUpdated, LinesUpdated(visit.Id, orders.Where(x => changedOrders.Contains(x.Id))), [visit.TableId], null, now, cancellationToken);
+        foreach (var ((_, stationId), ticketId) in tickets)
+        {
+            var ticket = await OrderResponses.LoadTicketAsync(kitchenAccessor, tx, tenantId, storeId, ticketId, cancellationToken);
+            await transaction.AppendEventAsync(EventTypes.TicketCreated, ticket, null, stationId, now, cancellationToken);
+        }
+
+        return null;
     }
 
     //--------------------------------------------------------------------------------

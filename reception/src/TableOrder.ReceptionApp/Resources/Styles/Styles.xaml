@@ -387,6 +387,25 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
+    <Style x:Key="StandbyStatusStack"
+           TargetType="VerticalStackLayout">
+        <Setter Property="Spacing" Value="20" />
+    </Style>
+
+    <!-- 注文の一時停止は、受け付けられる状態に添えて注意の色で出す -->
+    <Style x:Key="StandbyPausedGlyphLabel"
+           TargetType="Label"
+           BasedOn="{StaticResource StandbyStatusGlyphLabel}">
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
+    <Style x:Key="StandbyPausedLabel"
+           TargetType="Label">
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="24" />
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+    </Style>
+
     <!-- 受付するは、立ったまま押せるように画面の下に大きく置く -->
     <Style x:Key="StandbyStartButton"
            TargetType="Button"
@@ -553,6 +572,14 @@
         <Setter Property="HorizontalTextAlignment" Value="Center" />
         <Setter Property="FontSize" Value="30" />
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+    </Style>
+
+    <Style x:Key="GuidePausedLabel"
+           TargetType="Label">
+        <Setter Property="HorizontalTextAlignment" Value="Center" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
     </Style>
 
     <!-- 待受に戻るまでの残りは、減っていく帯で示す (帯の左を起点に縮める) -->

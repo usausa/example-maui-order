@@ -679,6 +679,16 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
     </Style>
 
+    <!-- 右の端に置くときは枠の内側の余白を空ける (すべて提供したを出すときは、ボタンの Margin で空ける) -->
+    <Style x:Key="ServingPaidLabel"
+           TargetType="Label">
+        <Setter Property="Margin" Value="8,0,12,0" />
+        <Setter Property="VerticalOptions" Value="Center" />
+        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+    </Style>
+
     <Style x:Key="ServingAllButton"
            TargetType="Button"
            BasedOn="{StaticResource CardPrimaryButton}">
