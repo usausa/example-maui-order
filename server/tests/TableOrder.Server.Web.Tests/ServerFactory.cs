@@ -122,8 +122,8 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
-    // サンプルのメニューを直して店舗に公開する (時間帯や出せる条件のルールを持つメニューの代わり。版は新しくする)
-    public async ValueTask PublishMenuAsync(TestStore store, Action<MenuResponse> edit)
+    // サンプルのメニューを直して店舗に公開し、公開の Id を返す (時間帯や出せる条件のルールを持つメニューの代わり。版は新しくし、公開の時刻は今にする)
+    public async ValueTask<Guid> PublishMenuAsync(TestStore store, Action<MenuResponse> edit)
     {
         await using var con = await OpenAsync();
         MenuResponse menu;
@@ -148,8 +148,39 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         command.Parameters.AddWithValue("@publicationId", publicationId.ToString("D"));
         command.Parameters.AddWithValue("@menuVersion", menu.MenuVersion);
         command.Parameters.AddWithValue("@content", JsonSerializer.Serialize(menu, JsonDefaults.Options));
-        command.Parameters.AddWithValue("@now", Now);
+        command.Parameters.AddWithValue("@now", DateTimeOffsetTextConverter.ToDb(DateTimeOffset.UtcNow));
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        return publicationId;
+    }
+
+    // 店舗の今のメニューを、前に公開したものに替える
+    public async ValueTask UseMenuPublicationAsync(TestStore store, Guid publicationId)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "UPDATE Stores SET MenuPublicationId = @publicationId WHERE TenantId = @tenantId AND Id = @storeId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        command.Parameters.AddWithValue("@publicationId", publicationId.ToString("D"));
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // 店舗のメニューの公開の Id
+    public async ValueTask<List<Guid>> QueryMenuPublicationIdsAsync(TestStore store)
+    {
+        var ids = new List<Guid>();
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = "SELECT Id FROM MenuPublications WHERE TenantId = @tenantId AND StoreId = @storeId";
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@storeId", store.StoreId.ToString("D"));
+        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+        {
+            ids.Add(Guid.Parse(reader.GetString(0)));
+        }
+
+        return ids;
     }
 
     // 明細の税率 (税率を直したメニューの前に受けた明細の代わり)
@@ -164,15 +195,44 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
     }
 
-    // 来店の営業日を前の日にする (前の営業日の来店の代わり)
-    public async ValueTask MoveVisitToPreviousDayAsync(TestStore store, Guid visitId)
+    // 来店の営業日を days 日前にする (前の営業日の来店や、残す期間を過ぎた来店の代わり)
+    public async ValueTask MoveVisitToPreviousDayAsync(TestStore store, Guid visitId, int days = 1)
     {
         await using var con = await OpenAsync();
         await using var command = con.CreateCommand();
-        command.CommandText = "UPDATE Visits SET BusinessDate = date(BusinessDate, '-1 day') WHERE TenantId = @tenantId AND Id = @visitId";
+        command.CommandText = "UPDATE Visits SET BusinessDate = date(BusinessDate, @modifier) WHERE TenantId = @tenantId AND Id = @visitId";
         command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
         command.Parameters.AddWithValue("@visitId", visitId.ToString("D"));
+        command.Parameters.AddWithValue("@modifier", $"-{days} days");
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+    }
+
+    // 来店とその子の表の行の数 (表ごと。古いデータの片付けで消えたかを数える)
+    public async ValueTask<Dictionary<string, long>> CountVisitRowsAsync(TestStore store, Guid visitId)
+    {
+        await using var con = await OpenAsync();
+        await using var command = con.CreateCommand();
+        command.CommandText = """
+            SELECT 'Visits', COUNT(*) FROM Visits WHERE TenantId = @tenantId AND Id = @visitId
+            UNION ALL SELECT 'VisitConfirmations', COUNT(*) FROM VisitConfirmations WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'Orders', COUNT(*) FROM Orders WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'OrderLines', COUNT(*) FROM OrderLines WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'OrderLineOptions', COUNT(*) FROM OrderLineOptions WHERE TenantId = @tenantId AND LineId IN (SELECT Id FROM OrderLines WHERE TenantId = @tenantId AND VisitId = @visitId)
+            UNION ALL SELECT 'KitchenTickets', COUNT(*) FROM KitchenTickets WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'Calls', COUNT(*) FROM Calls WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'Payments', COUNT(*) FROM Payments WHERE TenantId = @tenantId AND VisitId = @visitId
+            UNION ALL SELECT 'Receipts', COUNT(*) FROM Receipts WHERE TenantId = @tenantId AND VisitId = @visitId
+            """;
+        command.Parameters.AddWithValue("@tenantId", store.TenantId.ToString("D"));
+        command.Parameters.AddWithValue("@visitId", visitId.ToString("D"));
+        var counts = new Dictionary<string, long>(StringComparer.Ordinal);
+        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+        {
+            counts[reader.GetString(0)] = reader.GetInt64(1);
+        }
+
+        return counts;
     }
 
     // ほかのサーバが書いた通知 (このサーバの送り手に知らせずに、DB にだけ書く)。中身は空で、店舗のすべての端末に送る

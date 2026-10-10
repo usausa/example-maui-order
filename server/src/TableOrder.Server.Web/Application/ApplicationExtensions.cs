@@ -689,6 +689,7 @@ public static class ApplicationExtensions
         builder.Services.AddSetting<ImageSetting>("Image");
         builder.Services.AddSetting<RateLimitSetting>("RateLimit");
         builder.Services.AddSetting<EventSetting>("Event");
+        builder.Services.AddSetting<CleanupSetting>("Cleanup");
         builder.Services.AddSetting<SimulationSetting>("Simulation");
         builder.Services.AddSetting<CompressionSetting>("Compression");
         builder.Services.AddSetting<CspSetting>("Csp");

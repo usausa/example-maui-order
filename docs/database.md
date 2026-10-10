@@ -679,7 +679,11 @@ erDiagram
 
 | データ | 残す期間 | 消すとき |
 | --- | --- | --- |
-| `Events` | 24 時間 (つなぎ直しの追いつきの範囲。過ぎた要求は `EVENTS_EXPIRED`) | 古いデータを消す間隔 (`Event:CleanupMinutes`、既定 1 時間) ごと |
+| `Events` | 24 時間 (つなぎ直しの追いつきの範囲。過ぎた要求は `EVENTS_EXPIRED`) | 古いデータを消す間隔 (`Cleanup:IntervalMinutes`、既定 1 時間) ごと |
 | `DeviceEnrollments` | ペアリングコードは期限まで、登録トークンは期限を過ぎるか取り消してから 1 日 | 古いデータを消す間隔ごと |
+| `Visits` と子の表 (`VisitConfirmations`、`Orders`、`OrderLines`、`OrderLineOptions`、`KitchenTickets`、`Calls`、`Payments`、`Receipts`) | 閉じた来店 (`Closed`、`Cancelled`) は、来店の営業日から 90 日 (`Cleanup:VisitRetentionDays`)。開いている来店 (`Open`、`Paying`) は消さない | 古いデータを消す間隔ごとに、店舗ごとに営業日の古い順に 200 件 (`Cleanup:VisitBatchSize`) ずつのトランザクションで、子の表から消す |
+| `MenuPublications` | 店舗の今のメニュー (`Stores.MenuPublicationId`) と、公開の新しい順に 10 件 (`Cleanup:MenuPublicationsKept`) | 古いデータを消す間隔ごとに、店舗ごとに消す |
 
-- ほかの表 (閉じた来店、メニューの公開、Webhook の送り状況、解約したテナント) を消す処理は作っていない ([backlog.md](backlog.md))
+- 来店は営業日で数え、同じ営業日の来店をまとめて消す (集計と問い合わせの単位とそろえる)
+- 店舗のデータの片付けは今の状態を変えないので、通知を書かない
+- Webhook の送り状況と、解約したテナントの行を消す処理は作っていない (Webhook は外部の連携で、解約したテナントはテナントの解約と一緒に作る。[backlog.md](backlog.md))

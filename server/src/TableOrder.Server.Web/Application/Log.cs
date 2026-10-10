@@ -71,8 +71,17 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Information, Message = "Expired pairing codes and enrollment tokens deleted. count=[{count}]")]
     public static partial void InfoEnrollmentCleanup(this ILogger logger, int count);
 
+    [LoggerMessage(Level = LogLevel.Information, Message = "Closed visits deleted. count=[{count}]")]
+    public static partial void InfoVisitCleanup(this ILogger logger, int count);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Old menu publications deleted. count=[{count}]")]
+    public static partial void InfoMenuPublicationCleanup(this ILogger logger, int count);
+
     [LoggerMessage(Level = LogLevel.Error, Message = "Cleanup failed.")]
     public static partial void ErrorCleanup(this ILogger logger, Exception ex);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Cleanup failed. tenant=[{tenantId}], store=[{storeId}]")]
+    public static partial void ErrorStoreCleanup(this ILogger logger, Exception ex, Guid tenantId, Guid storeId);
 
     // Simulation
 

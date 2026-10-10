@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Accessors;
 
-// 裏の処理 (通知の配信、古い通知の削除、すぐに拒む一覧、開発の環境の自動の進行) がテナントをまたいで読み書きするもの
+// 裏の処理 (通知の配信、古い通知の削除、すぐに拒む一覧、開発の環境の自動の進行、片付ける店舗の一覧) がテナントをまたいで読み書きするもの
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class BackgroundAccessor
@@ -12,6 +12,10 @@ public sealed partial class BackgroundAccessor
     // 進めるもの (提供の前の明細、終わっていない呼び出し、待っている支払) のある店舗 (開発の環境で時間で進める)
     [Query]
     public partial ValueTask<List<StoreKeyEntity>> QuerySimulationStoreAllAsync(CancellationToken cancellationToken);
+
+    // すべての店舗 (使わなくした店舗も。古いデータを店舗ごとに片付ける)
+    [Query]
+    public partial ValueTask<List<StoreKeyEntity>> QueryStoreAllAsync(CancellationToken cancellationToken);
 
     // since より後に無効にした端末 (すぐに拒む一覧)
     [Query]

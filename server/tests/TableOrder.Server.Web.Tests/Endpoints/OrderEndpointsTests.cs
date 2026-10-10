@@ -415,7 +415,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
 
     // 品ごとに、今の分からずらした分の時間帯 (店舗の現地時刻。終わりは含まない) をタグと出せる条件のルールで付けたメニューを公開する
     // ずらす分のない品は、メニューにない時間帯を指す。終わりを今の分にした時間帯は、注文が届いたときには終わっている (1 分より前ではない)
-    private ValueTask PublishDaypartsAsync(TestStore store, params (Guid ItemId, int? From, int? To)[] parts) =>
+    private ValueTask<Guid> PublishDaypartsAsync(TestStore store, params (Guid ItemId, int? From, int? To)[] parts) =>
         factory.PublishMenuAsync(store, menu =>
         {
             var now = StoreHours.LocalTime(DateTimeOffset.UtcNow, "Asia/Tokyo");
