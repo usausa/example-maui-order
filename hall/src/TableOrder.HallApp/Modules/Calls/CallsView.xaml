@@ -19,7 +19,7 @@
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical"
-                                 HorizontalItemSpacing="8" Span="1" VerticalItemSpacing="8" />
+                                 Span="1" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
             </CollectionView.ItemsLayout>
             <CollectionView.Header>
                 <BoxView Style="{StaticResource TileGapBoxView}" />

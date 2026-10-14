@@ -154,7 +154,7 @@
                                 ItemsSource="{Binding Cards}">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical"
-                                         HorizontalItemSpacing="8" Span="4" VerticalItemSpacing="8" />
+                                         Span="4" HorizontalItemSpacing="8" VerticalItemSpacing="8" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.Header>
                         <BoxView Style="{StaticResource MenuGapBoxView}" />
