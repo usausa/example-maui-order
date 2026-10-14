@@ -8,7 +8,7 @@
     <MudSpacer />
     @if (loadedAt is { } loaded)
     {
-        <MudText Typo="Typo.body2" Class="mr-2">@FormatTime(loaded) に読み直しました</MudText>
+        <MudText Typo="Typo.body2" Class="mr-2">@FormatTime(loaded) に読み直しました (時刻は @timeZone)</MudText>
     }
     <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
 </div>

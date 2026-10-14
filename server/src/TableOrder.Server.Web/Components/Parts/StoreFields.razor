@@ -43,7 +43,7 @@
             <MudSelect T="Guid?" @bind-Value="Form.SourceStoreId" Label="設定を写す店舗" Clearable="true">
                 @foreach (var store in Stores)
                 {
-                    <MudSelectItem T="Guid?" Value="@store.Id">@store.Name.Ja (@store.Code)</MudSelectItem>
+                    <MudSelectItem T="Guid?" Value="@store.Id">@AdminNames.StoreName(store)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>

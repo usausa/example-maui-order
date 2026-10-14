@@ -22,7 +22,7 @@
             <MudSelect T="Guid?" Value="Selection.StoreId" ValueChanged="SelectStore" Label="店舗" Dense="true" Disabled="Selection.TenantId is null">
                 @foreach (var store in stores)
                 {
-                    <MudSelectItem T="Guid?" Value="@store.Id">@StoreName(store)</MudSelectItem>
+                    <MudSelectItem T="Guid?" Value="@store.Id">@AdminNames.StoreName(store)</MudSelectItem>
                 }
             </MudSelect>
         </MudItem>

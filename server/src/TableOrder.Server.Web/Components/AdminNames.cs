@@ -5,6 +5,9 @@ using Microsoft.AspNetCore.Identity;
 // 管理画面に出す名前と文言
 public static class AdminNames
 {
+    // 時刻のタイムゾーンをそろえられない (店舗がない、店舗によって違う) ときに使うもの
+    public const string Utc = "UTC";
+
     public static string RoleName(AdminRole role) =>
         role switch
         {
@@ -39,6 +42,24 @@ public static class AdminNames
             ErrorCodes.VersionMismatch => "ほかで替えられています。読み直してください",
             _ => error.ErrorCode
         };
+
+    // 店舗は名前とコードで出す (使わなくした店舗は、そうとわかるように)
+    public static string StoreName(StoreEntity store) =>
+        store.IsActive ? $"{store.Name.Ja} ({store.Code})" : $"{store.Name.Ja} ({store.Code}。使っていない)";
+
+    // 時刻は 1 つに決めたタイムゾーン (店舗の、そろえられなければ UTC) で出し、タイムゾーンは見出しに書く
+    // 今日の動き (店内の今) は時刻だけ、近い日時 (期限、出した日時) は月日から、何年も前のことがある日時 (最後のサインイン、最後の通信) は年から出す
+    public static string FormatTime(DateTimeOffset value, string timeZone) =>
+        LocalDateTime(value, timeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
+
+    public static string FormatDateTime(DateTimeOffset value, string timeZone) =>
+        LocalDateTime(value, timeZone).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
+
+    public static string FormatFullDateTime(DateTimeOffset value, string timeZone) =>
+        LocalDateTime(value, timeZone).ToString("yyyy/M/d HH:mm", CultureInfo.InvariantCulture);
+
+    private static DateTime LocalDateTime(DateTimeOffset value, string timeZone) =>
+        timeZone == Utc ? value.UtcDateTime : StoreHours.LocalDateTime(value, timeZone);
 
     // 利用者 (運営者も) の状態
     public static string UserStatusName(AdminUserSummaryEntity user, DateTimeOffset now) =>

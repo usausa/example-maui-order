@@ -300,9 +300,10 @@ public sealed partial class DevicePage : IDisposable
             ? $"{Math.Round(level * 100, MidpointRounding.AwayFromZero)}%{(device.IsCharging == true ? " (充電中)" : string.Empty)}"
             : "--";
 
-    // 店舗の現地の時刻で出す
-    private string FormatTime(DateTimeOffset value) =>
-        StoreHours.LocalDateTime(value, timeZone).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
+    // 店舗の現地の時刻で出す。最後の通信は、何年も前のことがあるので年から出す
+    private string FormatTime(DateTimeOffset value) => AdminNames.FormatDateTime(value, timeZone);
+
+    private string FormatLastSeen(DateTimeOffset value) => AdminNames.FormatFullDateTime(value, timeZone);
 
     private static string ErrorMessage(ServiceError error) =>
         AdminNames.ErrorMessage(error, static code => code == ErrorCodes.VersionMismatch ? "ほかで替えられたか、無効にされています。読み直してください" : null);

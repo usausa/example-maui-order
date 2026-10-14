@@ -47,7 +47,7 @@
             <MudTd>@context.Name</MudTd>
             <MudTd>@context.Email</MudTd>
             <MudTd>@(context.TwoFactorEnabled ? "使う" : "--")</MudTd>
-            <MudTd>@(context.LastSignInAt is { } signedIn ? signedIn.UtcDateTime.ToString("M/d HH:mm", CultureInfo.InvariantCulture) : "--")</MudTd>
+            <MudTd>@(context.LastSignInAt is { } signedIn ? AdminNames.FormatFullDateTime(signedIn, AdminNames.Utc) : "--")</MudTd>
             <MudTd>@StatusText(context)</MudTd>
             <MudTd>
                 <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>

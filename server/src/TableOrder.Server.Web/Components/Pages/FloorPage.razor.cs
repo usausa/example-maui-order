@@ -365,9 +365,8 @@ public sealed partial class FloorPage : IDisposable
             _ => type
         };
 
-    // 店舗の現地の時刻で出す
-    private string FormatTime(DateTimeOffset value) =>
-        StoreHours.LocalDateTime(value, timeZone).ToString("HH:mm", CultureInfo.InvariantCulture);
+    // 店舗の現地の時刻で出す (今日の動きなので時刻だけ)
+    private string FormatTime(DateTimeOffset value) => AdminNames.FormatTime(value, timeZone);
 
     private static string ErrorMessage(ServiceError error) =>
         AdminNames.ErrorMessage(error, static code => code switch

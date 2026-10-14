@@ -74,8 +74,4 @@ public sealed partial class StoreSelector : IDisposable
         (await TenantService.GetStoreAllAsync(tenantId, CancellationToken.None))
             .Where(x => Scope.CanUseStore(tenantId, x.Id))
             .ToList();
-
-    // 使わなくした店舗は、そうとわかるように出す
-    private static string StoreName(StoreEntity store) =>
-        store.IsActive ? $"{store.Name.Ja} ({store.Code})" : $"{store.Name.Ja} ({store.Code}。使っていない)";
 }

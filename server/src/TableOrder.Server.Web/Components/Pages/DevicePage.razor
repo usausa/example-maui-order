@@ -99,8 +99,8 @@ else
             <HeaderContent>
                 <MudTh>種類</MudTh>
                 <MudTh>登録した台数</MudTh>
-                <MudTh>期限</MudTh>
-                <MudTh>出した日時</MudTh>
+                <MudTh>期限 (@timeZone)</MudTh>
+                <MudTh>出した日時 (@timeZone)</MudTh>
                 <MudTh>状態</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
@@ -134,7 +134,7 @@ else
                 <MudTh>名前</MudTh>
                 <MudTh>種類</MudTh>
                 <MudTh>置き場所</MudTh>
-                <MudTh>最後の通信</MudTh>
+                <MudTh>最後の通信 (@timeZone)</MudTh>
                 <MudTh>電池</MudTh>
                 <MudTh>アプリの版</MudTh>
                 <MudTh>状態</MudTh>
@@ -153,7 +153,7 @@ else
                         @PlacementText(context)
                     }
                 </MudTd>
-                <MudTd>@(context.Device.LastSeenAt is { } seen ? FormatTime(seen) : "--")</MudTd>
+                <MudTd>@(context.Device.LastSeenAt is { } seen ? FormatLastSeen(seen) : "--")</MudTd>
                 <MudTd>@BatteryText(context.Device)</MudTd>
                 <MudTd>@(context.Device.AppVersion ?? "--")</MudTd>
                 <MudTd>@(context.Device.IsActive ? "有効" : "無効")</MudTd>

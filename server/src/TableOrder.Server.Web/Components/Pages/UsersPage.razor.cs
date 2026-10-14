@@ -12,8 +12,6 @@ using TableOrder.Server.Web.Application.Context;
 // 仮のパスワードはこの画面で作ってハッシュにし、平文は出した直後に一度だけ見せる
 public sealed partial class UsersPage : IDisposable
 {
-    private const string UtcName = "UTC";
-
     private static readonly AdminRole[] Roles = [AdminRole.TenantAdmin, AdminRole.StoreStaff];
 
     private List<AdminUserListItem> users = [];
@@ -227,7 +225,7 @@ public sealed partial class UsersPage : IDisposable
     //--------------------------------------------------------------------------------
 
     private string StoreName(Guid id) =>
-        stores.FirstOrDefault(x => x.Id == id) is { } store ? $"{store.Name.Ja} ({store.Code})" : id.ToString("D");
+        stores.FirstOrDefault(x => x.Id == id) is { } store ? AdminNames.StoreName(store) : id.ToString("D");
 
     private string StoresText(AdminUserListItem item) =>
         item.User.Role == AdminRole.StoreStaff ? String.Join("、", item.StoreIds.Select(StoreName)) : "すべて";
@@ -236,8 +234,8 @@ public sealed partial class UsersPage : IDisposable
 
     // 時刻を出すタイムゾーン。テナントの店舗が 1 つのタイムゾーンにそろっていればそれ、そろっていない (店舗がない) なら UTC にし、見出しに出す
     private string TimeZoneName =>
-        stores.Select(static x => x.TimeZone).Distinct().ToList() is [var single] ? single : UtcName;
+        stores.Select(static x => x.TimeZone).Distinct().ToList() is [var single] ? single : AdminNames.Utc;
 
-    private string FormatTime(DateTimeOffset value) =>
-        (TimeZoneName == UtcName ? value.UtcDateTime : StoreHours.LocalDateTime(value, TimeZoneName)).ToString("M/d HH:mm", CultureInfo.InvariantCulture);
+    // 最後のサインインは、何年も前のことがあるので年から出す
+    private string FormatTime(DateTimeOffset value) => AdminNames.FormatFullDateTime(value, TimeZoneName);
 }
