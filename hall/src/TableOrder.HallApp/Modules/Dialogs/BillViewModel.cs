@@ -70,12 +70,12 @@ public sealed partial class BillViewModel : AppDialogViewModelBase, IPopupInitia
 
     public IObserveCommand CloseCommand { get; }
 
-    public BillViewModel(IPopupNavigator popupNavigator)
+    public BillViewModel()
     {
         // 結果は開く側と同じ型 (BillAction?) で返す。明細のない来店は会計を始めない
-        StartCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<BillAction?>(BillAction.StartCheckout), () => !IsEmpty);
-        CancelCheckoutCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<BillAction?>(BillAction.CancelCheckout));
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<BillAction?>(null));
+        StartCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(BillAction.StartCheckout), () => !IsEmpty);
+        CancelCheckoutCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(BillAction.CancelCheckout));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(null));
     }
 
     public void Initialize(BillParameter parameter)

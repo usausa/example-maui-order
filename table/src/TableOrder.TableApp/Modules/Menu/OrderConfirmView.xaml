@@ -9,8 +9,7 @@
            x:Class="TableOrder.TableApp.Modules.Menu.OrderConfirmView"
            x:DataType="{x:Type module:OrderConfirmViewModel}"
            s:BindingContextResolver.Type="{x:Type module:OrderConfirmViewModel}"
-           WidthRequest="880"
-           HeightRequest="760">
+           WidthRequest="880" HeightRequest="760">
 
     <!-- 明細と合計、提案 (1 枠)、戻る / 注文する。送れたら同じ枠に受け付けの知らせを出す -->
     <Grid Style="{StaticResource DialogGrid}"

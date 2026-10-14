@@ -22,6 +22,14 @@ public sealed class FullscreenPopupPlugin : IPopupPlugin
         }
     }
 
+    public void OnOpening(ContentView view)
+    {
+    }
+
+    public void OnClosed(ContentView view)
+    {
+    }
+
     private static void OnLoaded(object? sender, EventArgs e)
     {
         if (sender is not ContentView view)

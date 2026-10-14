@@ -9,8 +9,7 @@
            x:Class="TableOrder.TableApp.Modules.Menu.OrderHistoryView"
            x:DataType="{x:Type module:OrderHistoryViewModel}"
            s:BindingContextResolver.Type="{x:Type module:OrderHistoryViewModel}"
-           WidthRequest="960"
-           HeightRequest="760">
+           WidthRequest="960" HeightRequest="760">
 
     <!-- 送った注文と明細の状態 (調理中、まもなくお持ちします、お届け済み)、食後の品のお願い、これまでの合計 -->
     <Grid Style="{StaticResource DialogGrid}"

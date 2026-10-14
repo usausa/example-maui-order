@@ -42,7 +42,6 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
 
     public StaffCallViewModel(
         ILogger<StaffCallViewModel> log,
-        IPopupNavigator popupNavigator,
         ITableApi tableApi,
         MenuState menuState,
         VisitState visitState,
@@ -61,7 +60,7 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
         reasonNames = reasons.ToDictionary(static x => x.Code, static x => x.Name, StringComparer.Ordinal);
 
         SelectCommand = MakeAsyncCommand<CallReasonItem>(CallAsync);
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync());
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
 
         _ = RefreshLoopAsync(cancel.Token);
     }

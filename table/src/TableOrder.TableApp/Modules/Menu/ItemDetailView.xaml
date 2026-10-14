@@ -9,8 +9,7 @@
            x:Class="TableOrder.TableApp.Modules.Menu.ItemDetailView"
            x:DataType="{x:Type module:ItemDetailViewModel}"
            s:BindingContextResolver.Type="{x:Type module:ItemDetailViewModel}"
-           WidthRequest="1120"
-           HeightRequest="760">
+           WidthRequest="1120" HeightRequest="760">
 
     <!-- 左に大きな写真と説明、右にオプション・出す時機・数量。下の帯で閉じる / 入れる -->
     <Grid Style="{StaticResource DialogGrid}"
@@ -27,8 +26,8 @@
                                IsVisible="{Binding ShowsGlyph}"
                                Text="{x:Static fonts:MaterialIcons.Restaurant}" />
                         <Image Style="{StaticResource DetailPlaceholderImage}"
-                               IsVisible="{Binding ShowsLogo}"
-                               Source="{Binding LogoPath}" />
+                               Source="{Binding LogoPath}"
+                               IsVisible="{Binding ShowsLogo}" />
                         <Image Style="{StaticResource DetailImage}"
                                Source="{Binding ImagePath}" />
                         <Border Style="{StaticResource MenuBadgeBorder}"

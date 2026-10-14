@@ -46,9 +46,7 @@ public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupI
 
     public IObserveCommand CommitCommand { get; }
 
-    public OrderItemViewModel(
-        IPopupNavigator popupNavigator,
-        MenuState menuState)
+    public OrderItemViewModel(MenuState menuState)
     {
         this.menuState = menuState;
 
@@ -58,8 +56,8 @@ public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupI
         IncreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity + 1), () => Quantity < maxQuantity);
 
         // 結果は開く側と同じ型 (ItemSelection?) で返す
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<ItemSelection?>(null));
-        CommitCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(null));
+        CommitCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
     }
 
     public void Initialize(OrderItemParameter parameter)

@@ -2,8 +2,8 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
-             xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Calls"
              x:Class="TableOrder.HallApp.Modules.Calls.CallsView"
              x:DataType="{x:Type module:CallsViewModel}"
@@ -19,9 +19,7 @@
                         ItemsSource="{Binding Items}">
             <CollectionView.ItemsLayout>
                 <GridItemsLayout Orientation="Vertical"
-                                 Span="1"
-                                 HorizontalItemSpacing="8"
-                                 VerticalItemSpacing="8" />
+                                 HorizontalItemSpacing="8" Span="1" VerticalItemSpacing="8" />
             </CollectionView.ItemsLayout>
             <CollectionView.Header>
                 <BoxView Style="{StaticResource TileGapBoxView}" />

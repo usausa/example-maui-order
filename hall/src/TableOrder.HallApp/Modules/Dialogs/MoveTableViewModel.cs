@@ -20,11 +20,11 @@ public sealed partial class MoveTableViewModel : AppDialogViewModelBase, IPopupI
 
     public IObserveCommand CloseCommand { get; }
 
-    public MoveTableViewModel(IPopupNavigator popupNavigator)
+    public MoveTableViewModel()
     {
         // 結果は開く側と同じ型 (Guid?) で返す
-        SelectCommand = MakeAsyncCommand<TableChoice>(async x => await popupNavigator.CloseAsync<Guid?>(x.Id));
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<Guid?>(null));
+        SelectCommand = MakeAsyncCommand<TableChoice>(async x => await CloseAsync<Guid?>(x.Id));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<Guid?>(null));
     }
 
     public void Initialize(MoveTableParameter parameter)

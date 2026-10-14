@@ -35,7 +35,7 @@ public sealed partial class GuestCountViewModel : AppDialogViewModelBase, IPopup
 
     public IObserveCommand CommitCommand { get; }
 
-    public GuestCountViewModel(IPopupNavigator popupNavigator)
+    public GuestCountViewModel()
     {
         DecreaseAdultsCommand = MakeDelegateCommand(() => Adults--, () => Adults > 0);
         IncreaseAdultsCommand = MakeDelegateCommand(() => Adults++, () => Adults < Length.MaxGuests);
@@ -43,9 +43,9 @@ public sealed partial class GuestCountViewModel : AppDialogViewModelBase, IPopup
         IncreaseChildrenCommand = MakeDelegateCommand(() => Children++, () => Children < Length.MaxGuests);
 
         // 結果は開く側と同じ型 (GuestCountResult?) で返す
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<GuestCountResult?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<GuestCountResult?>(null));
         CommitCommand = MakeAsyncCommand(
-            async () => await popupNavigator.CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
+            async () => await CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
             () => Adults + Children > 0);
     }
 

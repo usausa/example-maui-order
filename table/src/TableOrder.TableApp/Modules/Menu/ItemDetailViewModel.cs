@@ -102,7 +102,6 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
     //--------------------------------------------------------------------------------
 
     public ItemDetailViewModel(
-        IPopupNavigator popupNavigator,
         ImageCache imageCache,
         MenuState menuState,
         LanguageState languageState)
@@ -115,8 +114,8 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
         SelectTimingCommand = MakeDelegateCommand<TimingChoice>(SelectTiming);
         DecreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity - 1), () => Quantity > 1);
         IncreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity + 1), () => Quantity < maxQuantity);
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<ItemSelection?>(null));
-        CommitCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(null));
+        CommitCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
     }
 
     //--------------------------------------------------------------------------------

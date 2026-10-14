@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
-             xmlns:terminalStrings="clr-namespace:TableOrder.Terminal.Resources.Strings;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Setup"
+             xmlns:terminalStrings="clr-namespace:TableOrder.Terminal.Resources.Strings;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.Modules.Setup.SetupView"
              x:DataType="{x:Type module:SetupViewModel}"
              s:BindingContextResolver.Type="{x:Type module:SetupViewModel}">
@@ -36,9 +36,9 @@
                            Text="{x:Static strings:AppResources.SetupEndpoint}" />
                     <Entry Style="{StaticResource SetupEntry}"
                            IsVisible="{Binding IsEndPointManaged, Converter={StaticResource ReverseConverter}}"
-                           Keyboard="Url"
+                           Text="{Binding ApiEndPoint}"
                            Placeholder="https://"
-                           Text="{Binding ApiEndPoint}" />
+                           Keyboard="Url" />
                     <Border Style="{StaticResource SetupManagedBorder}"
                             IsVisible="{Binding IsEndPointManaged}">
                         <Label Style="{StaticResource SetupManagedLabel}"

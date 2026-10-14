@@ -29,6 +29,14 @@ public sealed class PopupClosePlugin : IPopupPlugin
         }
     }
 
+    public void OnOpening(ContentView view)
+    {
+    }
+
+    public void OnClosed(ContentView view)
+    {
+    }
+
     private sealed class PopupCloser
     {
         // 上のポップアップが閉じるのを待って確かめ直す間隔

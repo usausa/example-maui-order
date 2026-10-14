@@ -13,9 +13,9 @@ public sealed partial class MessageViewModel : AppDialogViewModelBase, IPopupIni
 
     public IObserveCommand CloseCommand { get; }
 
-    public MessageViewModel(IPopupNavigator popupNavigator)
+    public MessageViewModel()
     {
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync());
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
     }
 
     public void Initialize(MessageParameter parameter)

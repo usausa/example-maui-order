@@ -54,7 +54,6 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
 
     public OrderHistoryViewModel(
         ILogger<OrderHistoryViewModel> log,
-        IPopupNavigator popupNavigator,
         VisitState visitState,
         LanguageState languageState,
         StoreState storeState,
@@ -67,7 +66,7 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
         this.tableApi = tableApi;
 
         ReleaseCommand = MakeAsyncCommand(ReleaseAsync, () => HasHeld);
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync());
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
 
         _ = RefreshLoopAsync(cancel.Token);
     }

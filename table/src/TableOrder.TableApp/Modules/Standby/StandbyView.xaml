@@ -3,10 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
-             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Standby"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.Modules.Standby.StandbyView"
              x:DataType="{x:Type module:StandbyViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StandbyViewModel}">
@@ -36,8 +36,8 @@
                                IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                                Text="{Binding Brand.Initial}" />
                         <Image Style="{StaticResource BrandLogoImage}"
-                               IsVisible="{Binding Brand.HasLogo}"
-                               Source="{Binding Brand.LogoPath}" />
+                               Source="{Binding Brand.LogoPath}"
+                               IsVisible="{Binding Brand.HasLogo}" />
                     </Grid>
                 </Border>
                 <Label Style="{StaticResource StandbyBrandLabel}"
@@ -47,9 +47,9 @@
                     Style="{StaticResource StandbyLanguageButton}"
                     Command="{Binding LanguageCommand}"
                     IsVisible="{Binding HasLanguages}"
-                    ContentLayout="Left,12"
+                    Text="{Binding LanguageText}"
                     ImageSource="{x:Static markup:AppIcons.StandbyLanguage}"
-                    Text="{Binding LanguageText}" />
+                    ContentLayout="Left,12" />
         </Grid>
 
         <!-- message -->
@@ -62,9 +62,9 @@
             <Button Style="{StaticResource StandbyStartButton}"
                     Command="{Binding StartCommand}"
                     IsVisible="{Binding CanStart}"
-                    ContentLayout="Left,16"
+                    Text="{x:Static strings:AppResources.StandbyStart}"
                     ImageSource="{x:Static markup:AppIcons.StandbyStart}"
-                    Text="{x:Static strings:AppResources.StandbyStart}" />
+                    ContentLayout="Left,16" />
         </VerticalStackLayout>
 
         <!-- table -->

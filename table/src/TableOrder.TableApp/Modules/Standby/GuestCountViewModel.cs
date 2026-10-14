@@ -23,16 +23,16 @@ public sealed partial class GuestCountViewModel : AppDialogViewModelBase
 
     public IObserveCommand CommitCommand { get; }
 
-    public GuestCountViewModel(IPopupNavigator popupNavigator)
+    public GuestCountViewModel()
     {
         DecreaseAdultsCommand = MakeDelegateCommand(() => Adults--, () => Adults > 0);
         IncreaseAdultsCommand = MakeDelegateCommand(() => Adults++, () => Adults < Length.MaxGuests);
         DecreaseChildrenCommand = MakeDelegateCommand(() => Children--, () => Children > 0);
         IncreaseChildrenCommand = MakeDelegateCommand(() => Children++, () => Children < Length.MaxGuests);
 
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<GuestCountResult?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<GuestCountResult?>(null));
         CommitCommand = MakeAsyncCommand(
-            async () => await popupNavigator.CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
+            async () => await CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
             () => Adults + Children > 0);
     }
 }

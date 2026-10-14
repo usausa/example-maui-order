@@ -24,8 +24,8 @@
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
-                           IsVisible="{Binding Brand.HasLogo}"
-                           Source="{Binding Brand.LogoPath}" />
+                           Source="{Binding Brand.LogoPath}"
+                           IsVisible="{Binding Brand.HasLogo}" />
                 </Grid>
             </Border>
             <VerticalStackLayout Grid.Column="1"

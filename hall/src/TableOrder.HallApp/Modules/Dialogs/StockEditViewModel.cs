@@ -29,11 +29,11 @@ public sealed partial class StockEditViewModel : AppDialogViewModelBase, IPopupI
 
     public IObserveCommand CloseCommand { get; }
 
-    public StockEditViewModel(IPopupNavigator popupNavigator)
+    public StockEditViewModel()
     {
         // 結果は開く側と同じ型 (StockStatus?) で返す
-        SelectCommand = MakeAsyncCommand<StockStatus>(async x => await popupNavigator.CloseAsync<StockStatus?>(x));
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<StockStatus?>(null));
+        SelectCommand = MakeAsyncCommand<StockStatus>(async x => await CloseAsync<StockStatus?>(x));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<StockStatus?>(null));
     }
 
     public void Initialize(StockEditParameter parameter)

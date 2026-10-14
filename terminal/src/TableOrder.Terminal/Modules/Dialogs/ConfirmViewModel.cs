@@ -21,10 +21,10 @@ public sealed partial class ConfirmViewModel : AppDialogViewModelBase, IPopupIni
 
     public IObserveCommand CancelCommand { get; }
 
-    public ConfirmViewModel(IPopupNavigator popupNavigator)
+    public ConfirmViewModel()
     {
-        OkCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync(true));
-        CancelCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync(false));
+        OkCommand = MakeAsyncCommand(async () => await CloseAsync(true));
+        CancelCommand = MakeAsyncCommand(async () => await CloseAsync(false));
     }
 
     public void Initialize(ConfirmParameter parameter)

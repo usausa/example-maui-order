@@ -58,8 +58,8 @@
 
         <!-- calls -->
         <VerticalStackLayout Style="{StaticResource CallStatusStack}"
-                             IsVisible="{Binding HasCalls}"
-                             BindableLayout.ItemsSource="{Binding Calls}">
+                             BindableLayout.ItemsSource="{Binding Calls}"
+                             IsVisible="{Binding HasCalls}">
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type module:CallStatusItem}">
                     <Grid Style="{StaticResource CallStatusGrid}"

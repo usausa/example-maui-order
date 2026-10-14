@@ -135,6 +135,7 @@ public static partial class MauiProgram
             c.AutoRegister(DialogSource());
             c.AutoRegister(TerminalModules.DialogSource());
         });
+        services.AddSingleton<IPopupPlugin, PopupActivationPlugin>();
         services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
         services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
         services.AddComponentsScreen();
@@ -145,7 +146,7 @@ public static partial class MauiProgram
         // Navigator
         services.AddNavigator(static (_, config) =>
         {
-            config.UseMauiNavigationProvider();
+            config.UseMauiNavigationProvider(static options => options.RestoreFocus = false);
             config.AddPlugin<NavigationFeedbackPlugin>();
 #if DEBUG
             config.AddPlugin<LeakDetectionPlugin>();

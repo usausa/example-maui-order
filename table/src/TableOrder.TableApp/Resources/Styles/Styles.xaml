@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+                    xmlns:fonts="clr-namespace:Fonts"
                     xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
-                    xmlns:controls="clr-namespace:TableOrder.TableApp.Controls"
-                    xmlns:fonts="clr-namespace:Fonts">
+                    xmlns:controls="clr-namespace:TableOrder.TableApp.Controls">
 
     <!-- 形は角丸・影・グラデーションを使わず、四角い面と罫線と色の面で組む。色は Colors.xaml の役割の名前だけを使う -->
     <!-- チェーンの設定で替える色 (Brand・Neutral・Status) は DynamicResource で引く (スタイルはアプリの起動で作り、色は起動の画面で店舗の設定を読んでから替える) -->

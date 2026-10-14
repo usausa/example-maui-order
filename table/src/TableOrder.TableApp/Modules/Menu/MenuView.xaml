@@ -2,13 +2,13 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
-             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
-             xmlns:fonts="clr-namespace:Fonts"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
-             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
+             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
+             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Menu"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.Modules.Menu.MenuView"
              x:DataType="{x:Type module:MenuViewModel}"
              s:BindingContextResolver.Type="{x:Type module:MenuViewModel}">
@@ -38,8 +38,8 @@
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
-                           IsVisible="{Binding Brand.HasLogo}"
-                           Source="{Binding Brand.LogoPath}" />
+                           Source="{Binding Brand.LogoPath}"
+                           IsVisible="{Binding Brand.HasLogo}" />
                 </Grid>
             </Border>
             <Label Grid.Column="1"
@@ -68,9 +68,9 @@
                     Style="{StaticResource HeaderButton}"
                     Command="{Binding LanguageCommand}"
                     IsVisible="{Binding HasLanguages}"
-                    ContentLayout="Left,10"
+                    Text="{Binding LanguageText}"
                     ImageSource="{x:Static markup:AppIcons.Language}"
-                    Text="{Binding LanguageText}" />
+                    ContentLayout="Left,10" />
         </Grid>
         <BoxView Grid.Row="1"
                  Style="{StaticResource HorizontalRule}" />
@@ -154,9 +154,7 @@
                                 ItemsSource="{Binding Cards}">
                     <CollectionView.ItemsLayout>
                         <GridItemsLayout Orientation="Vertical"
-                                         Span="4"
-                                         HorizontalItemSpacing="8"
-                                         VerticalItemSpacing="8" />
+                                         HorizontalItemSpacing="8" Span="4" VerticalItemSpacing="8" />
                     </CollectionView.ItemsLayout>
                     <CollectionView.Header>
                         <BoxView Style="{StaticResource MenuGapBoxView}" />
@@ -188,8 +186,8 @@
                                                IsVisible="{Binding ShowsGlyph}"
                                                Text="{x:Static fonts:MaterialIcons.Restaurant}" />
                                         <Image Style="{StaticResource PhotoPlaceholderImage}"
-                                               IsVisible="{Binding ShowsLogo}"
-                                               Source="{Binding LogoPath}" />
+                                               Source="{Binding LogoPath}"
+                                               IsVisible="{Binding ShowsLogo}" />
                                         <Image Style="{StaticResource MenuCardImage}"
                                                Source="{Binding ImagePath}" />
                                         <Border Style="{StaticResource MenuBadgeBorder}"
@@ -250,22 +248,22 @@
                             Grid.ColumnSpan="{Binding HistorySpan}"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding HistoryCommand}"
-                            ContentLayout="Left,12"
+                            Text="{x:Static strings:AppResources.MenuHistory}"
                             ImageSource="{x:Static markup:AppIcons.History}"
-                            Text="{x:Static strings:AppResources.MenuHistory}" />
+                            ContentLayout="Left,12" />
                     <Button Grid.Column="1"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding CallCommand}"
                             IsVisible="{Binding CanCall}"
-                            ContentLayout="Left,12"
+                            Text="{x:Static strings:AppResources.MenuCall}"
                             ImageSource="{x:Static markup:AppIcons.Call}"
-                            Text="{x:Static strings:AppResources.MenuCall}" />
+                            ContentLayout="Left,12" />
                     <Button Grid.Column="2"
                             Style="{StaticResource ActionBarStrongButton}"
                             Command="{Binding CheckoutCommand}"
-                            ContentLayout="Left,12"
+                            Text="{x:Static strings:AppResources.MenuCheckout}"
                             ImageSource="{x:Static markup:AppIcons.Checkout}"
-                            Text="{x:Static strings:AppResources.MenuCheckout}" />
+                            ContentLayout="Left,12" />
                 </Grid>
             </Grid>
 
@@ -322,8 +320,8 @@
                                       Style="{StaticResource CartLineGrid}"
                                       RowDefinitions="64,Auto"
                                       ColumnDefinitions="*,Auto"
-                                      CascadeInputTransparent="False"
-                                      InputTransparent="True">
+                                      InputTransparent="True"
+                                      CascadeInputTransparent="False">
                                     <!-- name / quantity -->
                                     <Label Grid.Row="0" Grid.Column="0"
                                            Style="{StaticResource CartLineNameLabel}"

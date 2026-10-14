@@ -2,13 +2,13 @@
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
-             xmlns:fonts="clr-namespace:Fonts"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
-             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
-             xmlns:controls="clr-namespace:TableOrder.TableApp.Controls"
+             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:controls="clr-namespace:TableOrder.TableApp.Controls"
+             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Checkout"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.Modules.Checkout.CheckoutView"
              x:DataType="{x:Type module:CheckoutViewModel}"
              s:BindingContextResolver.Type="{x:Type module:CheckoutViewModel}">
@@ -38,8 +38,8 @@
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
-                           IsVisible="{Binding Brand.HasLogo}"
-                           Source="{Binding Brand.LogoPath}" />
+                           Source="{Binding Brand.LogoPath}"
+                           IsVisible="{Binding Brand.HasLogo}" />
                 </Grid>
             </Border>
             <Label Grid.Column="1"
@@ -150,10 +150,10 @@
                       Style="{StaticResource PanelActionGrid}">
                     <Button Style="{StaticResource ActionBarButton}"
                             Command="{Binding BackCommand}"
-                            ContentLayout="Left,12"
-                            ImageSource="{x:Static markup:AppIcons.Back}"
                             IsVisible="{Binding CanBack}"
-                            Text="{x:Static strings:AppResources.CheckoutBackToMenu}" />
+                            Text="{x:Static strings:AppResources.CheckoutBackToMenu}"
+                            ImageSource="{x:Static markup:AppIcons.Back}"
+                            ContentLayout="Left,12" />
                 </Grid>
             </Grid>
 

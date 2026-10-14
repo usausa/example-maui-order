@@ -29,14 +29,14 @@ public sealed partial class LineCancelViewModel : AppDialogViewModelBase, IPopup
 
     public IObserveCommand CommitCommand { get; }
 
-    public LineCancelViewModel(IPopupNavigator popupNavigator)
+    public LineCancelViewModel()
     {
         DecreaseCommand = MakeDelegateCommand(() => Quantity--, () => Quantity > 1);
         IncreaseCommand = MakeDelegateCommand(() => Quantity++, () => Quantity < maxQuantity);
 
         // 結果は開く側と同じ型 (int?) で返す
-        CloseCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<int?>(null));
-        CommitCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync<int?>(Quantity));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<int?>(null));
+        CommitCommand = MakeAsyncCommand(async () => await CloseAsync<int?>(Quantity));
     }
 
     // はじめは明細の数量をすべて取り消す

@@ -14,6 +14,7 @@
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.KioskManager))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Components.ManagedConfiguration))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Extender.FullscreenPopupPlugin))]
+[assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Extender.PopupActivationPlugin))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Extender.PopupClosePlugin))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Modules.Dialogs.ConfirmView))]
 [assembly: global::BunnyTail.DependencyInjection.GenerateComponentFactory(typeof(global::TableOrder.Terminal.Modules.Dialogs.ConfirmViewModel))]

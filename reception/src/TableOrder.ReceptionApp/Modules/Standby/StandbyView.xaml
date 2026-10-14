@@ -4,10 +4,10 @@
              xmlns:s="http://smart/maui"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:fonts="clr-namespace:Fonts"
-             xmlns:markup="clr-namespace:TableOrder.ReceptionApp.Markup"
-             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
+             xmlns:markup="clr-namespace:TableOrder.ReceptionApp.Markup"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Standby"
+             xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              x:Class="TableOrder.ReceptionApp.Modules.Standby.StandbyView"
              x:DataType="{x:Type module:StandbyViewModel}"
              s:BindingContextResolver.Type="{x:Type module:StandbyViewModel}">
@@ -39,8 +39,8 @@
                            IsVisible="{Binding Brand.HasLogo, Converter={StaticResource ReverseConverter}}"
                            Text="{Binding Brand.Initial}" />
                     <Image Style="{StaticResource BrandLogoImage}"
-                           IsVisible="{Binding Brand.HasLogo}"
-                           Source="{Binding Brand.LogoPath}" />
+                           Source="{Binding Brand.LogoPath}"
+                           IsVisible="{Binding Brand.HasLogo}" />
                 </Grid>
             </Border>
             <VerticalStackLayout Grid.Column="1"
@@ -54,9 +54,9 @@
                     Style="{StaticResource KioskLanguageButton}"
                     Command="{Binding LanguageCommand}"
                     IsVisible="{Binding HasLanguages}"
-                    ContentLayout="Left,12"
+                    Text="{Binding LanguageText}"
                     ImageSource="{x:Static markup:AppIcons.Language}"
-                    Text="{Binding LanguageText}" />
+                    ContentLayout="Left,12" />
         </Grid>
 
         <!-- body -->
@@ -155,9 +155,9 @@
                     Style="{StaticResource StandbyStartButton}"
                     Command="{Binding StartCommand}"
                     IsVisible="{Binding CanStart}"
-                    ContentLayout="Left,20"
+                    Text="{x:Static strings:AppResources.StandbyStart}"
                     ImageSource="{x:Static markup:AppIcons.Start}"
-                    Text="{x:Static strings:AppResources.StandbyStart}" />
+                    ContentLayout="Left,20" />
         </Grid>
     </Grid>
 

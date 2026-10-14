@@ -8,8 +8,6 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 
     private readonly ILogger<OrderConfirmViewModel> log;
 
-    private readonly IPopupNavigator popupNavigator;
-
     private readonly MenuState menuState;
 
     private readonly CartState cartState;
@@ -61,21 +59,19 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 
     public OrderConfirmViewModel(
         ILogger<OrderConfirmViewModel> log,
-        IPopupNavigator popupNavigator,
         MenuState menuState,
         CartState cartState,
         LanguageState languageState,
         OrderUsecase orderUsecase)
     {
         this.log = log;
-        this.popupNavigator = popupNavigator;
         this.menuState = menuState;
         this.cartState = cartState;
         this.languageState = languageState;
         this.orderUsecase = orderUsecase;
 
         AddSuggestionCommand = MakeDelegateCommand<SuggestItem>(AddSuggestion);
-        BackCommand = MakeAsyncCommand(async () => await popupNavigator.CloseAsync(false));
+        BackCommand = MakeAsyncCommand(async () => await CloseAsync(false));
         SubmitCommand = MakeAsyncCommand(SubmitAsync);
 
         if (cartState.HasPendingOrder)
@@ -160,6 +156,6 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 
         IsCompleted = true;
         await Task.Delay(CompletedDisplay);
-        await popupNavigator.CloseAsync(true);
+        await CloseAsync(true);
     }
 }
