@@ -12,6 +12,12 @@ public sealed class RestDeviceApi : IDeviceApi
         remove => connection.Denied -= value;
     }
 
+    public event EventHandler<DeviceAuthorizedEventArgs>? Authorized
+    {
+        add => connection.Authorized += value;
+        remove => connection.Authorized -= value;
+    }
+
     public RestDeviceApi(RestConnection connection)
     {
         this.connection = connection;

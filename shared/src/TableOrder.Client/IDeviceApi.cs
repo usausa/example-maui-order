@@ -7,6 +7,9 @@ public interface IDeviceApi
     // トークンの要求が断られた (端末の無効化、テナントの停止)。どのスレッドで出すかは実装による
     event EventHandler<DeviceDeniedEventArgs>? Denied;
 
+    // トークンを受け取れた (断られていたなら、回復した)。どのスレッドで出すかは実装による
+    event EventHandler<DeviceAuthorizedEventArgs>? Authorized;
+
     // POST /devices/pair (トークンを使わずに呼ぶ)
     ValueTask<ApiResult<DevicePairResponse>> PairAsync(DevicePairRequest request, CancellationToken cancel = default);
 

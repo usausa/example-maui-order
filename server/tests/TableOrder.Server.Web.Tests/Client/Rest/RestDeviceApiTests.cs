@@ -77,13 +77,14 @@ public sealed class RestDeviceApiTests : IClassFixture<ServerFactory>
     }
 
     // テナントの停止で断られたあとは、起動の取り直し (AuthenticateAsync) のほかはトークンを求めずに断りを返し (止めている間に要求を送り続けない)、取り直せたら戻る
+    // 取り直せたら Authorized で知らせる (端末は、断りによる起動からのやり直しをやめる)
     [Fact]
     public async Task SuspendedTenantStopsTokenRequestsUntilAuthenticated()
     {
         // Arrange
         var (tenantId, code) = await factory.CreateTenantAsync();
         await using var terminal = TestTerminal.Create(factory);
-        await terminal.PairAsync(code);
+        var paired = await terminal.PairAsync(code);
         var cancel = TestContext.Current.CancellationToken;
         var heartbeat = new DeviceHeartbeatRequest { AppVersion = "1.0.0" };
         await factory.SuspendTenantAsync(tenantId);
@@ -99,8 +100,9 @@ public sealed class RestDeviceApiTests : IClassFixture<ServerFactory>
         Assert.Equal(ApiStatus.Unauthorized, blocked.Status);
         Assert.Equal("TENANT_SUSPENDED", blocked.ErrorCode);
 
-        // Act / Assert: 起動で取り直すと戻る
+        // Act / Assert: 起動で取り直すと戻り、Authorized で知らせる
         Assert.True((await terminal.Device.AuthenticateAsync(cancel)).IsSuccess);
+        Assert.Equal(paired.DeviceId, (await terminal.NextAuthorizedAsync()).DeviceId);
         Assert.True((await terminal.Device.ReportStatusAsync(heartbeat, cancel)).IsSuccess);
     }
 

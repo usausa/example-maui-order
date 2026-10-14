@@ -32,6 +32,9 @@ public abstract class OrderEventReceiverBase
     // 起動からやり直すように知らせる (待っている通知より先に渡す)
     private bool restartRequested;
 
+    // 断られた (無効化、テナントの停止) ので起動からやり直す。そのあとにトークンを受け取れたら (起動の画面で回復したら) やり直さない
+    private bool restartDenied;
+
     // 扱った通知のあと、待っている通知がなくなったことをまだ知らせていない
     private bool drainPending;
 
@@ -71,6 +74,7 @@ public abstract class OrderEventReceiverBase
         events.Received += HandleReceived;
         events.Expired += HandleExpired;
         deviceApi.Denied += HandleDenied;
+        deviceApi.Authorized += HandleAuthorized;
         managedConfiguration.Changed += HandleManagedChanged;
         busyState.PropertyChanged += (_, _) => Deliver();
         Navigator.ExecutingChanged += (_, _) => Deliver();
@@ -166,7 +170,19 @@ public abstract class OrderEventReceiverBase
                 deviceUsecase.Unregister();
             }
 
-            RequestRestart();
+            restartDenied = true;
+            PrepareRestart();
+        });
+
+    // トークンを受け取れたら、それより前の断りでは起動からやり直さない
+    // (起動の画面は自分の取り直しの断りを自分で扱うので、回復して受ける画面に移ったときに、もう一度起動からやり直さないように)
+    private void HandleAuthorized(object? sender, DeviceAuthorizedEventArgs args) =>
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            if (args.DeviceId == settings.DeviceId)
+            {
+                restartDenied = false;
+            }
         });
 
     // 抜けた通知を追いかけられなくなったら (長く切れていた)、起動からやり直して今の状態を読み直す
@@ -191,12 +207,18 @@ public abstract class OrderEventReceiverBase
             RequestRestart();
         });
 
-    // 開いているポップアップを閉じてから知らせる
-    // スタッフメニューのポップアップも閉じる (端末が使えなくなったので、操作を続けさせない)
-    // 知らせを受けない画面 (起動、端末の設定) では閉じない (止めたテナントの知らせが繰り返し届いても、PIN や登録の入力を閉じない)
+    // 起動からやり直す知らせを残す (断りと違い、あとでトークンを受け取れても下ろさない)
     private void RequestRestart()
     {
         restartRequested = true;
+        PrepareRestart();
+    }
+
+    // 開いているポップアップを閉じてから知らせる
+    // スタッフメニューのポップアップも閉じる (端末が使えなくなったので、操作を続けさせない)
+    // 知らせを受けない画面 (起動、端末の設定) では閉じない (止めたテナントの知らせが繰り返し届いても、PIN や登録の入力を閉じない)
+    private void PrepareRestart()
+    {
         if (AcceptsRestart)
         {
             ClosePopups();
@@ -234,7 +256,7 @@ public abstract class OrderEventReceiverBase
                 // 起動で読み直すので、待っている通知は捨てる
                 // 表示中の画面が受けない (起動の途中、端末の設定) ときは印を残して待ち、受ける画面に移ってから知らせる
                 // (起動の途中に届いた端末の変更を捨てると、前に読んだ設定とトークンのまま進む)
-                if (restartRequested)
+                if (restartRequested || restartDenied)
                 {
                     if (!AcceptsRestart)
                     {
@@ -242,6 +264,7 @@ public abstract class OrderEventReceiverBase
                     }
 
                     restartRequested = false;
+                    restartDenied = false;
                     drainPending = false;
                     pending.Clear();
                     await NotifyRestartAsync().ConfigureAwait(true);

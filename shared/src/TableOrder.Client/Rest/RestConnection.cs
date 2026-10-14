@@ -11,7 +11,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
 // 注文サーバへの REST の要求の送り方。端末の種類ごとの窓口 (RestDeviceApi、RestTableApi、RestHallApi、RestReceptionApi、RestKitchenApi) と通知 (SignalROrderEvents) が使う
-// アクセストークンは中で持ち、期限の前と 401 を受けたときに取り直す (送り直しは 1 回だけ)。トークンの要求が断られたら (無効化、テナントの停止) Denied で知らせる
+// アクセストークンは中で持ち、期限の前と 401 を受けたときに取り直す (送り直しは 1 回だけ)。トークンの要求が断られたら (無効化、テナントの停止) Denied で、受け取れたら Authorized で知らせる
 // テナントの停止で断られたら、起動の取り直し (AuthenticateAsync) がトークンを受け取るまで、ほかの要求はトークンを求めずに同じ断りを返す
 // (止めている間、通知のつなぎ直しと状態の報告が要求を送り続けないように。再開を確かめるのは起動の画面だけにする)
 // 結果は例外を投げずに ApiResult で返す。接続先と端末は要求のたびに IDeviceContext から読む (端末の設定で替えても、作り直さずに次の要求から使う)
@@ -40,6 +40,8 @@ public sealed class RestConnection : IDisposable
     private volatile Suspension? suspension;
 
     public event EventHandler<DeviceDeniedEventArgs>? Denied;
+
+    public event EventHandler<DeviceAuthorizedEventArgs>? Authorized;
 
     public RestConnection(IDeviceContext context, OrderServerOptions options, TimeProvider timeProvider)
     {
@@ -90,6 +92,7 @@ public sealed class RestConnection : IDisposable
 
         ApiResult<string> result;
         DeviceDeniedEventArgs? denied = null;
+        DeviceAuthorizedEventArgs? authorized = null;
         try
         {
             // 待つ間にほかの要求が取り直していれば、それを使う (取り直しをまとめる)。断られていれば、続けて求めない
@@ -104,7 +107,11 @@ public sealed class RestConnection : IDisposable
             }
 
             result = await RequestTokenAsync(endPoint, deviceId, cancel);
-            if ((result.Status == ApiStatus.Unauthorized) && (result.ErrorCode is ErrorCodes.DeviceRevoked or ErrorCodes.TenantSuspended))
+            if (result.IsSuccess)
+            {
+                authorized = new DeviceAuthorizedEventArgs(deviceId);
+            }
+            else if ((result.Status == ApiStatus.Unauthorized) && (result.ErrorCode is ErrorCodes.DeviceRevoked or ErrorCodes.TenantSuspended))
             {
                 denied = new DeviceDeniedEventArgs(deviceId, result.ErrorCode == ErrorCodes.DeviceRevoked ? DeviceDenial.Revoked : DeviceDenial.TenantSuspended);
             }
@@ -117,6 +124,11 @@ public sealed class RestConnection : IDisposable
         if (denied is not null)
         {
             Denied?.Invoke(this, denied);
+        }
+
+        if (authorized is not null)
+        {
+            Authorized?.Invoke(this, authorized);
         }
 
         return result;

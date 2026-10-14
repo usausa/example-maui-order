@@ -18,6 +18,8 @@ public sealed class TestTerminal : IAsyncDisposable
 
     private readonly Channel<DeviceDeniedEventArgs> denied = Channel.CreateUnbounded<DeviceDeniedEventArgs>();
 
+    private readonly Channel<DeviceAuthorizedEventArgs> authorized = Channel.CreateUnbounded<DeviceAuthorizedEventArgs>();
+
     private readonly RestConnection connection;
 
     public TestDeviceContext Context { get; }
@@ -50,6 +52,7 @@ public sealed class TestTerminal : IAsyncDisposable
         Kitchen = new RestKitchenApi(Context, connection);
         Events = new SignalROrderEvents(Context, options, connection);
         Device.Denied += (_, e) => denied.Writer.TryWrite(e);
+        Device.Authorized += (_, e) => authorized.Writer.TryWrite(e);
         Events.Received += (_, e) => received.Writer.TryWrite(e.Event);
     }
 
@@ -90,6 +93,9 @@ public sealed class TestTerminal : IAsyncDisposable
 
     // 次に届く、端末が使えなくなった知らせ
     public Task<DeviceDeniedEventArgs> NextDeniedAsync() => ReadAsync(denied.Reader);
+
+    // 次に届く、トークンを受け取れた知らせ
+    public Task<DeviceAuthorizedEventArgs> NextAuthorizedAsync() => ReadAsync(authorized.Reader);
 
     private static async Task<T> ReadAsync<T>(ChannelReader<T> reader)
     {

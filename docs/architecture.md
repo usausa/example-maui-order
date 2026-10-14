@@ -116,7 +116,7 @@ View (XAML) ──> ViewModel ──> Usecase ──> IDeviceApi / ITableApi (Cl
                     │            │
                     └────────────┴──> State (Settings / MenuState / VisitState / CartState / LanguageState / StoreState / StaffLock)
 
-IOrderEvents / IDeviceApi.Denied (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
+IOrderEvents / IDeviceApi.Denied・Authorized (Client) ──> OrderEventReceiver (Shell) ──> State、表示中の画面への知らせ (ShellEvent)
 StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1 分ごとの状態の報告)
 ```
 
@@ -137,7 +137,8 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
   来店を終えたら続けて次の来店を開き、待受に戻さずに注文の画面にする (お礼の間に受付機やスタッフが次のお客様を案内したとき)
 - 端末が使えなくなったとき (無効化、テナントの停止)、管理画面で端末を替えたとき (`device.updated`)、EMM が接続先を替えたとき、通知を追いかけられなくなったときは、`OrderEventReceiver` が開いているポップアップを閉じて `ShellEvent.Restart` を出し、表示中の画面が起動からやり直す。  
   起動と端末の設定の画面は自分で確かめるので受けず、ポップアップ (PIN や登録の入力) も閉じない。  
-  受けない画面の間に届いた知らせは残し、受ける画面に移ってから起動からやり直す (起動の途中に届いた端末の変更を捨てない)
+  受けない画面の間に届いた知らせは残し、受ける画面に移ってから起動からやり直す (起動の途中に届いた端末の変更を捨てない)。  
+  ただし断られた知らせ (無効化、テナントの停止) は、そのあとにトークンを受け取れたら (起動の画面で回復したら) やり直さない (回復したあとに、もう一度起動しない)
 - 管理画面でチェーンや店舗の設定を替えると、設定の版 (`settingsVersion`) が上がって `store.updated` が届く。  
   待受は版が起動のときに読んだ端末の設定と違えば起動からやり直して読み直し (来店の途中の画面では替えない)、待受に入ったときにも版を確かめる
 
@@ -246,7 +247,7 @@ StatusReporter (Terminal) ──> DeviceUsecase (Terminal) ──> IDeviceApi (1
 - `IReceptionApi` は受付機が使う要求 (店舗、空席、来店の開始) を 1 つずつメソッドにしたもの
 - `IKitchenApi` はキッチン端末が使う要求 (店舗、メニュー、品切れ、チケットの一覧と作り始め・できあがり・下げる・戻す) を 1 つずつメソッドにしたもの
 - `IDeviceApi` は全端末に共通の要求 (登録、トークン、状態の報告、端末の設定) の窓口。  
-  アクセストークンは窓口の中で持って画面に渡さず、トークンの要求が断られたとき (無効化、テナントの停止) は `Denied` で端末の id と理由を知らせる
+  アクセストークンは窓口の中で持って画面に渡さず、トークンの要求が断られたとき (無効化、テナントの停止) は `Denied` で端末の id と理由を、受け取れたときは `Authorized` で端末の id を知らせる
 - API の実装が読む端末の側の値 (接続先、登録した端末の id、端末の鍵) は `IDeviceContext` で受ける (テーブル端末は `Settings` が持つ)
 - `IOrderEvents` はサーバの通知 (来店の開始・変更・移動・終了、店舗の変更、品切れ、注文と明細の変化) を受ける窓口。  
   起動で今の状態を読む前につなぎ (`ConnectAsync`)、通知は `seq` の順に届く。  
