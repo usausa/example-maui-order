@@ -2,8 +2,7 @@
 <?xaml-comp compile="true" ?>
 <ResourceDictionary xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-                    xmlns:fonts="clr-namespace:Fonts"
-                    xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal">
+                    xmlns:fonts="clr-namespace:Fonts">
 
     <!-- ホール端末の画面のスタイル (どの端末でも同じスタイルは TableOrder.Terminal の TerminalStyles) -->
     <!-- 形は角丸・影・グラデーションを使わず、四角い面と罫線と色の面で組む。色は Colors.xaml の役割の名前だけを使う -->
@@ -180,7 +179,6 @@
            TargetType="CollectionView">
         <Setter Property="Margin" Value="4,0" />
         <Setter Property="SelectionMode" Value="None" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="TileGapBoxView"
@@ -764,7 +762,6 @@
     <Style x:Key="CategoryBarScroll"
            TargetType="ScrollView">
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="CategoryBarStack"
@@ -816,7 +813,6 @@
            TargetType="CollectionView">
         <Setter Property="SelectionMode" Value="None" />
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="ListRowGrid"
@@ -977,7 +973,6 @@
     <Style x:Key="ChoiceListScroll"
            TargetType="ScrollView">
         <Setter Property="MaximumHeightRequest" Value="440" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="ChoiceListStack"
@@ -1034,7 +1029,6 @@
     <Style x:Key="BillLineScroll"
            TargetType="ScrollView">
         <Setter Property="MaximumHeightRequest" Value="320" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="BillLineStack"
@@ -1114,7 +1108,6 @@
     <Style x:Key="OrderItemScroll"
            TargetType="ScrollView">
         <Setter Property="MaximumHeightRequest" Value="440" />
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
     </Style>
 
     <Style x:Key="OrderItemBodyStack"

@@ -28,8 +28,7 @@
                  Style="{StaticResource SystemRule}" />
 
         <!-- body -->
-        <ScrollView Grid.Row="2"
-                    Style="{StaticResource PanelScroll}">
+        <ScrollView Grid.Row="2">
             <VerticalStackLayout Style="{StaticResource DevicePanelStack}">
                 <!-- information -->
                 <Label Style="{StaticResource StaffSectionLabel}"

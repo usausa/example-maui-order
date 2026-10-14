@@ -27,8 +27,7 @@
                  Style="{StaticResource SystemRule}" />
 
         <!-- form -->
-        <ScrollView Grid.Row="2"
-                    Style="{StaticResource PanelScroll}">
+        <ScrollView Grid.Row="2">
             <VerticalStackLayout Style="{StaticResource SetupFormStack}">
                 <!-- endpoint (EMM が配っているときは入力の代わりに値を出す) -->
                 <VerticalStackLayout Style="{StaticResource SetupFieldStack}">

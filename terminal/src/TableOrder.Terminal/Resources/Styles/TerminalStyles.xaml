@@ -84,12 +84,6 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <!-- 縦にスクロールする面 (商品の詳細、端末の設定、スタッフメニュー)。端まで来ても伸びる効果を出さない -->
-    <Style x:Key="PanelScroll"
-           TargetType="ScrollView">
-        <Setter Property="behaviors:Scroll.DisableOverScroll" Value="True" />
-    </Style>
-
     <!-- 面の区切りは 1 本の罫線にする -->
 
     <Style x:Key="HorizontalRule"

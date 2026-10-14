@@ -30,8 +30,7 @@
         <Grid Grid.Row="2"
               ColumnDefinitions="480,1,*">
             <!-- information -->
-            <ScrollView Grid.Column="0"
-                        Style="{StaticResource PanelScroll}">
+            <ScrollView Grid.Column="0">
                 <VerticalStackLayout Style="{StaticResource StaffPanelStack}">
                     <Label Style="{StaticResource StaffSectionLabel}"
                            Text="{x:Static strings:AppResources.StaffInfo}" />
@@ -100,8 +99,7 @@
                      Style="{StaticResource SystemVerticalRule}" />
 
             <!-- operation -->
-            <ScrollView Grid.Column="2"
-                        Style="{StaticResource PanelScroll}">
+            <ScrollView Grid.Column="2">
                 <VerticalStackLayout Style="{StaticResource StaffPanelStack}">
                     <!-- device -->
                     <Label Style="{StaticResource StaffSectionLabel}"

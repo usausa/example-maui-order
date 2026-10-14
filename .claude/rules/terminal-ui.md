@@ -76,9 +76,10 @@ paths:
 - ViewModel のプロパティは `[ObservableProperty] public partial`、コマンドは `MakeAsyncCommand` / `MakeDelegateCommand` で作る
 - 一覧の項目の操作は ViewModel の引数つきコマンドにし、項目からは `RelativeSource AncestorType` と `x:DataType` を付けたバインドで呼ぶ (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
 - ポップアップの ViewModel が読み直しを続けるときは、`CancellationTokenSource` を `Dispose` で止める (閉じると ViewModel が破棄される)
+- ポップアップの ViewModel は `AppDialogViewModelBase` を継ぎ、基底の `CloseAsync` で閉じる (コンストラクタで `IPopupNavigator` を受け取らない。閉じ始めたら基底がコマンドを止める)
 - ポップアップの結果を値の型で返すときは、開く側と同じ型 (Nullable も含めて) で `CloseAsync<T>` を呼ぶ (例: `CloseAsync<Language?>(x)`。型が違うと結果が渡らず null になる)
 - コマンドの中で長く待たない (実行中は処理中の覆いで画面を止める)。支払の完了などを待つ繰り返しは、コマンドの外のタスクにする
-- `AcceptsCommand` は画面の有効・無効 (遷移) に合わせて基底クラスが切り替える。各画面では書き換えず、止める必要があれば画面のフラグを用意する
+- `AcceptsCommand` は、遷移の間と上にポップアップを開いている間 (`Extender/PopupActivationPlugin`) を無効として基底クラスが切り替える。各画面では書き換えず、止める必要があれば画面のフラグを用意する
 - ボタンを押せなくするのは `MakeXxxCommand` の `canExecute` (画面の状態) で行う。実行中と遷移中は `BusyState` で止まる
 - コマンドの外で待つ処理 (端末の戻るで API を呼ぶ・確かめる、通知で読み直すなど) は `using (BusyState.Begin())` で囲み、画面のボタンと重ならないようにする
 - タイマーや裏のタスクと操作の両方から起きる処理 (支払の完了、待受に戻すなど) は、処理済みの印 (画面の状態、フラグ) を見て 2 回目を行わない。処理済みにするときは、API を待つ前に画面の状態を変える
@@ -113,7 +114,7 @@ paths:
 
 - 折り返して並べるタイルは `FlexLayout` を使わず、行に分けて `HorizontalStackLayout` で並べる (`FlexLayout` は縦の大きさを誤る)
 - 表示を切り替える要素の列がある Grid は `ColumnSpacing` を使わず、要素の `Margin` で間を空ける (見えない列にも間隔が残り、隣の要素がずれる)
-- スクロールする要素 (`ScrollView`、`CollectionView`) は、スタイルで `behaviors:Scroll.DisableOverScroll` を付ける
+- スクロールの端の効果 (伸びる、光る) はアプリ全体で止める (各アプリの `MainActivity` で当てるテーマの `NoOverScrollTheme` と、`behaviors:Scroll.DisableOverScroll` の既定の true)。スタイルに `DisableOverScroll` を付けず、効果を出す要素だけ false にする
 - 横にスクロールする帯 (カテゴリのタブなど) は、続きがある向きの端に送りのボタン (`behaviors:ScrollPager`) を重ねる
 - ほかの要素を行の位置にそろえるラベルは `behaviors:LabelOption.FixedLineHeight` で行の高さを固定する (和文は CJK のフォントで行が広がり、英字と行の位置が変わる)
 - 添付プロパティ (`Behaviors`) は MAUI のプロパティと同じ名前にしない (ハンドラの対応付けの同じキーに混ざり、Controls が飛ばす処理で一緒に飛ばされる)
