@@ -19,6 +19,7 @@ public static class MenuEndpoints
             .WithName("MenuGet")
             .Produces<MenuResponse>()
             .Produces(StatusCodes.Status304NotModified)
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 

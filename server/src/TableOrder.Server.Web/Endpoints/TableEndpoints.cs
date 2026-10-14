@@ -16,7 +16,8 @@ public static class TableEndpoints
             .RequireAuthorization(Policies.TableReader)
             .WithName("TableList")
             .Produces<TableListResponse>()
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     //--------------------------------------------------------------------------------

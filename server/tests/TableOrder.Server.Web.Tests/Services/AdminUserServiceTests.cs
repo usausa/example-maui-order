@@ -203,18 +203,21 @@ public sealed class AdminUserServiceTests : IClassFixture<ServerFactory>
         using (factory.BeginTenant(SampleData.DemoTenantId))
         {
             added = (await Service.AddAsync(Input(email, AdminRole.TenantAdmin), TemporaryHash, TestContext.Current.CancellationToken)).Value!;
+        }
 
-            // Act
+        // Act / Assert: 止めた利用者はサインインできない (移らずにサインインの画面を返す)
+        using (factory.BeginTenant(SampleData.DemoTenantId))
+        {
             Assert.Null(await Service.SetActiveAsync(added.Id, false, added.Version, Guid.Empty, TestContext.Current.CancellationToken));
         }
 
-        // Assert
         using (var admin = new TestAdmin(factory))
         {
             using var refused = await admin.SignInAsync(email, TemporaryPassword);
             Assert.Equal(HttpStatusCode.OK, refused.StatusCode);
         }
 
+        // Act / Assert: 戻すとサインインでき、仮のパスワードの変更に移る
         using (factory.BeginTenant(SampleData.DemoTenantId))
         {
             Assert.Null(await Service.SetActiveAsync(added.Id, true, added.Version + 1, Guid.Empty, TestContext.Current.CancellationToken));

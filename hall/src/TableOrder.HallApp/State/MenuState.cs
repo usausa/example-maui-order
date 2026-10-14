@@ -9,14 +9,14 @@ public sealed class MenuState
 
     private Dictionary<Guid, MenuResponseOption> options = [];
 
-    private Dictionary<Guid, StockResponseItem> stocks = [];
+    private Dictionary<Guid, StockListResponseItem> stocks = [];
 
     public MenuResponse Menu { get; private set; } = default!;
 
     // 売れない品と残りの数のある品 (売れる品は持たない)
-    public IReadOnlyCollection<StockResponseItem> Stocks => stocks.Values;
+    public IReadOnlyCollection<StockListResponseItem> Stocks => stocks.Values;
 
-    public void Update(MenuResponse menu, StockResponse stock)
+    public void Update(MenuResponse menu, StockListResponse stock)
     {
         Menu = menu;
         items = menu.Items.ToDictionary(static x => x.Id);
@@ -26,17 +26,17 @@ public sealed class MenuState
     }
 
     // 読み直した品切れ (品切れのタブで替えたあと)
-    public void UpdateStock(StockResponse stock)
+    public void UpdateStock(StockListResponse stock)
     {
         stocks = stock.Items.ToDictionary(static x => x.TargetId);
     }
 
     // 品の品切れと残りの数 (売れる品は null)
-    public StockResponseItem? FindStock(Guid targetId) =>
+    public StockListResponseItem? FindStock(Guid targetId) =>
         stocks.GetValueOrDefault(targetId);
 
     // 通知で受けた変わった品だけを入れる (売れるように戻した品は除く)
-    public void ApplyStock(IEnumerable<StockResponseItem> changes)
+    public void ApplyStock(IEnumerable<StockListResponseItem> changes)
     {
         foreach (var change in changes)
         {

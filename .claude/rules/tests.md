@@ -25,6 +25,7 @@ paths:
 - 通知のハブのテストは `TestHubConnection` (Long Polling) でつなぎ、`ready` を受けてから操作する。`ready` の番号までの通知は端末と同じく読み飛ばす (送り手の遅れで、つないだあとに届くことがある)
 - 端末のアプリの窓口 (`TableOrder.Client` の REST と SignalR) は、サーバのテストで `TestTerminal` (テストのサーバの中のハンドラと Long Polling) につないで確かめ、`Client/` の下に窓口と同じフォルダ (`Rest/`、`SignalR/`) で置く
 - 注文のテストの単価は `TestMenu` (サーバのメニューと `Pricing`) で求め、メニューの価格を書かない
+- サンプルのメニューの Id (商品、オプション、ルール、持ち場) は `TestMenu` の定数を使い、テストのクラスに書き直さない (足りなければ `TestMenu` に足す)
 - 開発の環境の自動の進行は、`SimulationService` を DI から取り、時間を 0 にして店舗の文脈で呼んで確かめる (テストのサーバは自動の進行を止める)
 - 古いデータの片付けは、来店の営業日をさかのぼらせて (`ServerFactory.MoveVisitToPreviousDayAsync` の日数) `CleanupService` を店舗の文脈で呼び、子の表まで消えたことを表ごとの行の数 (`ServerFactory.CountVisitRowsAsync`) で確かめる
 - 管理画面の操作 (端末の管理、店内の今、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ

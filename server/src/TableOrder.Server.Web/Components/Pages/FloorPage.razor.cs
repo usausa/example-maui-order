@@ -341,7 +341,7 @@ public sealed partial class FloorPage : IDisposable
         return item.Stock.TargetKind == StockTargetKind.Option ? $"{name} (オプション)" : name;
     }
 
-    private static string StockText(StockResponseItem item) =>
+    private static string StockText(StockListResponseItem item) =>
         item.Status == StockStatus.Limited ? $"残り {item.Remaining}" : "品切れ";
 
     private static string EventName(string type) =>

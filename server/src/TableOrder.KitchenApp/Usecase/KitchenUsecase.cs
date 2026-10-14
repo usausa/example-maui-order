@@ -173,7 +173,7 @@ public sealed class KitchenUsecase
         return result;
     }
 
-    public async ValueTask<ApiResult<StockResponse>> RefreshStockAsync()
+    public async ValueTask<ApiResult<StockListResponse>> RefreshStockAsync()
     {
         var result = await kitchenApi.GetStockAsync();
         if (result.Content is { } stock)

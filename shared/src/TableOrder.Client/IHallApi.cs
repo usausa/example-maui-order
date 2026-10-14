@@ -12,7 +12,7 @@ public interface IHallApi
     ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default);
 
     // GET /stock
-    ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default);
+    ValueTask<ApiResult<StockListResponse>> GetStockAsync(CancellationToken cancel = default);
 
     // PUT /stock/{targetId} (売り切れと残りの数)
     ValueTask<ApiResult<NoContent>> UpdateStockAsync(Guid targetId, StockUpdateRequest request, CancellationToken cancel = default);

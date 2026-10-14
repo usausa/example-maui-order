@@ -8,7 +8,7 @@ using TableOrder.Server.Core.Accessors;
 public sealed record FloorCallResult(CallListResponseItem Call, LocalizedText ReasonName);
 
 // 店内の今の品切れ (今のメニューの名前を添える。メニューにない品は名前なし)
-public sealed record FloorStockResult(StockResponseItem Stock, LocalizedText? Name);
+public sealed record FloorStockResult(StockListResponseItem Stock, LocalizedText? Name);
 
 // 店内の今 (管理画面) で、端末と同じ応答に名前を添えて読む。来店・注文・案内は、端末と同じ Service をそのまま呼ぶ
 public sealed class FloorService
@@ -61,7 +61,7 @@ public sealed class FloorService
         return stock.Items.Select(x => new FloorStockResult(x, NameOf(catalog, x))).ToList();
     }
 
-    private static LocalizedText? NameOf(MenuCatalog? catalog, StockResponseItem stock)
+    private static LocalizedText? NameOf(MenuCatalog? catalog, StockListResponseItem stock)
     {
         if (catalog is null)
         {

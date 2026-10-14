@@ -81,7 +81,7 @@ html, body {
     letter-spacing: 0.05em;
 }
 
-/* Account (static pages: plain inputs instead of interactive MudBlazor fields) */
+/* Account (静的な画面なので、対話する部品ではなく素の入力欄にする) */
 .account-page {
     display: flex;
     flex-direction: column;

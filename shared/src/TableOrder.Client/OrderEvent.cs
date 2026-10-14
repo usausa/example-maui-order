@@ -33,7 +33,7 @@ public sealed record VisitClosedEvent(long Seq, DateTimeOffset OccurredAt, Visit
 public sealed record StoreUpdatedEvent(long Seq, DateTimeOffset OccurredAt, StoreResponse Store) : OrderEvent(Seq, OccurredAt);
 
 // 品切れが変わった (stock.updated。変わった品だけで、売れるように戻した品は Available)
-public sealed record StockUpdatedEvent(long Seq, DateTimeOffset OccurredAt, IReadOnlyList<StockResponseItem> Items) : OrderEvent(Seq, OccurredAt);
+public sealed record StockUpdatedEvent(long Seq, DateTimeOffset OccurredAt, IReadOnlyList<StockListResponseItem> Items) : OrderEvent(Seq, OccurredAt);
 
 // 注文を受けた (order.created。この端末で送った注文と、ホール端末で代わりに受けた注文)
 public sealed record OrderCreatedEvent(long Seq, DateTimeOffset OccurredAt, OrderListResponseItem Order) : OrderEvent(Seq, OccurredAt);

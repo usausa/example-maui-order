@@ -30,8 +30,10 @@ public sealed class StoreHoursTests
     [InlineData(null, false)]
     public void TryParse(string? value, bool expected)
     {
+        // Act
         var parsed = StoreHours.TryParse(value, out _);
 
+        // Assert
         Assert.Equal(expected, parsed);
     }
 
@@ -48,8 +50,10 @@ public sealed class StoreHoursTests
     [InlineData("09:00", -690)]
     public void UntilLastOrder(string now, int expectedMinutes)
     {
+        // Act
         var remaining = StoreHours.UntilLastOrder(StoreHours.Parse(now), StoreHours.Parse("11:00"), StoreHours.Parse("21:30"));
 
+        // Assert
         Assert.Equal(TimeSpan.FromMinutes(expectedMinutes), remaining);
     }
 
@@ -62,8 +66,10 @@ public sealed class StoreHoursTests
     [InlineData("16:00", -870)]
     public void UntilLastOrderAcrossMidnight(string now, int expectedMinutes)
     {
+        // Act
         var remaining = StoreHours.UntilLastOrder(StoreHours.Parse(now), StoreHours.Parse("17:00"), StoreHours.Parse("01:30"));
 
+        // Assert
         Assert.Equal(TimeSpan.FromMinutes(expectedMinutes), remaining);
     }
 
@@ -75,8 +81,10 @@ public sealed class StoreHoursTests
     [InlineData("2026-01-01T12:31:00Z", null, false)]
     public void IsAfterLastOrder(string now, string? lastOrder, bool expected)
     {
+        // Act
         var after = StoreHours.IsAfterLastOrder(DateTimeOffset.Parse(now, CultureInfo.InvariantCulture), "Asia/Tokyo", StoreHours.Parse("11:00"), lastOrder is null ? null : StoreHours.Parse(lastOrder));
 
+        // Assert
         Assert.Equal(expected, after);
     }
 
@@ -95,8 +103,10 @@ public sealed class StoreHoursTests
     [InlineData("15:02", 2, false)]
     public void InPeriod(string now, int graceMinutes, bool expected)
     {
+        // Act
         var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), StoreHours.Parse("11:00"), StoreHours.Parse("15:00"), TimeSpan.FromMinutes(graceMinutes));
 
+        // Assert
         Assert.Equal(expected, inPeriod);
     }
 
@@ -109,8 +119,10 @@ public sealed class StoreHoursTests
     [InlineData("02:00", false)]
     public void InPeriodAcrossMidnight(string now, bool expected)
     {
+        // Act
         var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), StoreHours.Parse("22:00"), StoreHours.Parse("02:00"));
 
+        // Assert
         Assert.Equal(expected, inPeriod);
     }
 
@@ -121,8 +133,10 @@ public sealed class StoreHoursTests
     [InlineData("12:00")]
     public void EmptyPeriodIsNeverIn(string now)
     {
+        // Act
         var inPeriod = StoreHours.InPeriod(StoreHours.Parse(now), TimeOnly.MinValue, TimeOnly.MinValue, TimeSpan.FromMinutes(2));
 
+        // Assert
         Assert.False(inPeriod);
     }
 
@@ -135,8 +149,10 @@ public sealed class StoreHoursTests
     [InlineData("11:00", "15:00", "10:00", null)]
     public void UntilPeriodEnd(string start, string end, string now, int? expectedMinutes)
     {
+        // Act
         var remaining = StoreHours.UntilPeriodEnd(StoreHours.Parse(now), StoreHours.Parse(start), StoreHours.Parse(end));
 
+        // Assert
         Assert.Equal(expectedMinutes, (int?)remaining?.TotalMinutes);
     }
 
@@ -148,8 +164,10 @@ public sealed class StoreHoursTests
     [Fact]
     public void LocalTimeInStoreTimeZone()
     {
+        // Act
         var time = StoreHours.LocalTime(new DateTimeOffset(2026, 1, 1, 0, 0, 0, TimeSpan.Zero), "Asia/Tokyo");
 
+        // Assert
         Assert.Equal(new TimeOnly(9, 0), time);
     }
 
@@ -180,8 +198,10 @@ public sealed class StoreHoursTests
     [InlineData("2026-03-01T20:00:00Z", "2026-03-02")]
     public void BusinessDateStartsAtOpen(string now, string expected)
     {
+        // Act
         var date = StoreHours.BusinessDate(DateTimeOffset.Parse(now, CultureInfo.InvariantCulture), "Asia/Tokyo", StoreHours.Parse("05:00"));
 
+        // Assert
         Assert.Equal(DateOnly.Parse(expected, CultureInfo.InvariantCulture), date);
     }
 }

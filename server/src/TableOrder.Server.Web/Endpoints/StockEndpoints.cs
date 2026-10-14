@@ -12,29 +12,32 @@ public static class StockEndpoints
     {
         var group = app.MapApiGroup(ApiRoutes.Stock);
 
-        group.MapGet(string.Empty, HandleGetAsync)
+        group.MapGet(string.Empty, HandleListAsync)
             .RequireAuthorization(Policies.MenuReader)
-            .WithName("StockGet")
-            .Produces<StockResponse>();
+            .WithName("StockList")
+            .Produces<StockListResponse>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPut("/{targetId:guid}", HandleUpdateAsync)
             .RequireAuthorization(Policies.StockWriter)
             .WithName("StockUpdate")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         group.MapPost("/reset", HandleResetAsync)
             .RequireAuthorization(Policies.HallDevice)
             .WithName("StockReset")
-            .Produces(StatusCodes.Status204NoContent);
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     //--------------------------------------------------------------------------------
-    // Get
+    // List
     //--------------------------------------------------------------------------------
 
-    private static async ValueTask<Ok<StockResponse>> HandleGetAsync(
+    private static async ValueTask<Ok<StockListResponse>> HandleListAsync(
         StockService stockService,
         CancellationToken cancellationToken) =>
         TypedResults.Ok(await stockService.GetStockAsync(cancellationToken));

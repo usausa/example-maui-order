@@ -7,6 +7,7 @@
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -108,6 +109,8 @@ def inspect(solution, out):
     # キャッシュが残っていると古い解析結果を返すことがあるので、毎回新しい場所を使う
     caches = out / f'inspect-cache-{stem}-{time.strftime("%Y%m%d%H%M%S")}'
     code = run(['jb', 'inspectcode', solution, '--swea', f'--caches-home={caches}', f'-o={sarif}'], out / f'inspect-{stem}.log')
+    # 使い終わったキャッシュは消す (実行のたびに一時フォルダに増えないように)
+    shutil.rmtree(caches, ignore_errors=True)
     if code != 0 or not sarif.exists():
         report(f'inspect {stem}', False, f'InspectCode が失敗しました (ログ {out / ("inspect-" + stem + ".log")})')
         return
@@ -242,6 +245,10 @@ def main():
         if build(solution, 'Release', out):
             for project in test_projects:
                 test(project, out)
+        else:
+            # ビルドが失敗したら、テストは実行せずに NG にする (結果に出ないテストを通ったものと見誤らないように)
+            for project in test_projects:
+                report(f'test {Path(project).name}', False, 'ビルドが失敗したので実行していない')
         build(solution, 'Debug', out)
         if not args.no_inspect:
             inspect(solution, out)

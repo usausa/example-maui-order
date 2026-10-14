@@ -56,7 +56,7 @@ public sealed partial class StockRow : ObservableObject
     [ObservableProperty]
     public partial bool IsSoldOut { get; set; }
 
-    public StockRow(StockTarget target, StockResponseItem? stock)
+    public StockRow(StockTarget target, StockListResponseItem? stock)
     {
         TargetId = target.Id;
         Kind = target.Kind;
@@ -65,7 +65,7 @@ public sealed partial class StockRow : ObservableObject
         Update(stock);
     }
 
-    public void Update(StockResponseItem? stock)
+    public void Update(StockListResponseItem? stock)
     {
         Status = stock?.Status ?? StockStatus.Available;
         Remaining = stock?.Remaining;

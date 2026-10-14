@@ -5,13 +5,6 @@ using TableOrder.Contract.Menu;
 
 public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
 {
-    // メニューの品 (いちごパフェ、生ビール) とオプション (チーズのソース)
-    private static readonly Guid ParfaitId = Guid.Parse("00000fa1-0000-0000-0000-000000000000");
-
-    private static readonly Guid BeerId = Guid.Parse("00001772-0000-0000-0000-000000000000");
-
-    private static readonly Guid CheeseOptionId = Guid.Parse("00001f4d-0000-0000-0000-000000000000");
-
     private readonly ServerFactory factory;
 
     public StockEndpointsTests(ServerFactory factory)
@@ -28,7 +21,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoHallCode);
 
         // Act
-        var stock = await device.GetAsync<StockResponse>("/api/v1/stock");
+        var stock = await device.GetAsync<StockListResponse>("/api/v1/stock");
 
         // Assert
         Assert.Contains(stock.Items, static x => x.Status == StockStatus.SoldOut);
@@ -44,7 +37,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.TestTableCode);
 
         // Act
-        var stock = await device.GetAsync<StockResponse>("/api/v1/stock");
+        var stock = await device.GetAsync<StockListResponse>("/api/v1/stock");
 
         // Assert
         Assert.Empty(stock.Items);
@@ -60,21 +53,21 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         await kitchen.SignInAsync(store.KitchenCode);
 
         // Act / Assert: 売り切れと、残りの数
-        using var soldOut = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
-        using var limited = await kitchen.PutAsync($"/api/v1/stock/{CheeseOptionId}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.Limited, Remaining = 5 });
-        using var zero = await kitchen.PutAsync($"/api/v1/stock/{BeerId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 0 });
+        using var soldOut = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var limited = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.CheeseSauce}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.Limited, Remaining = 5 });
+        using var zero = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Beer}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 0 });
         Assert.Equal(HttpStatusCode.NoContent, soldOut.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, limited.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, zero.StatusCode);
-        var stock = await kitchen.GetAsync<StockResponse>("/api/v1/stock");
-        Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == ParfaitId).Status);
-        Assert.Equal(5, stock.Items.Single(static x => x.TargetId == CheeseOptionId).Remaining);
-        Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == BeerId).Status);
+        var stock = await kitchen.GetAsync<StockListResponse>("/api/v1/stock");
+        Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == TestMenu.Parfait).Status);
+        Assert.Equal(5, stock.Items.Single(static x => x.TargetId == TestMenu.CheeseSauce).Remaining);
+        Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == TestMenu.Beer).Status);
 
         // Act / Assert: 売れるように戻す
-        using var available = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
+        using var available = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
         Assert.Equal(HttpStatusCode.NoContent, available.StatusCode);
-        Assert.DoesNotContain((await kitchen.GetAsync<StockResponse>("/api/v1/stock")).Items, static x => x.TargetId == ParfaitId);
+        Assert.DoesNotContain((await kitchen.GetAsync<StockListResponse>("/api/v1/stock")).Items, static x => x.TargetId == TestMenu.Parfait);
     }
 
     // 変わらない設定の送り直し (同じ売り切れ、行のない品を Available) は通知を書かない
@@ -85,13 +78,13 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var kitchen = new TestDevice(factory.CreateClient());
         await kitchen.SignInAsync(store.KitchenCode);
-        using var soldOut = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var soldOut = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
 
         // Act
-        using var again = await kitchen.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
-        using var available = await kitchen.PutAsync($"/api/v1/stock/{BeerId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
-        using var limited = await kitchen.PutAsync($"/api/v1/stock/{BeerId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 2 });
+        using var again = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var available = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Beer}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Available });
+        using var limited = await kitchen.PutAsync($"/api/v1/stock/{TestMenu.Beer}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 2 });
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
@@ -101,7 +94,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         var targets = events.Items
             .Where(static x => x.Type == EventTypes.StockUpdated)
             .Select(static x => Assert.Single(TestHubConnection.Read<StockUpdatedEventData>(x).Items).TargetId);
-        Assert.Equal([ParfaitId, BeerId], targets);
+        Assert.Equal([TestMenu.Parfait, TestMenu.Beer], targets);
     }
 
     // メニューにない品と、種類の違う品は見つからない
@@ -115,7 +108,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
 
         // Act
         using var unknown = await hall.PutAsync($"/api/v1/stock/{Guid.CreateVersion7()}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
-        using var wrongKind = await hall.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.SoldOut });
+        using var wrongKind = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.SoldOut });
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
@@ -131,7 +124,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var hall = new TestDevice(factory.CreateClient());
         await hall.SignInAsync(store.HallCode);
-        using var soldOut = await hall.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var soldOut = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
 
         // Act
@@ -139,7 +132,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Empty((await hall.GetAsync<StockResponse>("/api/v1/stock")).Items);
+        Assert.Empty((await hall.GetAsync<StockListResponse>("/api/v1/stock")).Items);
     }
 
     // テーブル端末は品切れを変えられない
@@ -152,7 +145,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         await table.SignInAsync(store.TableCodes[0]);
 
         // Act
-        using var response = await table.PutAsync($"/api/v1/stock/{ParfaitId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var response = await table.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

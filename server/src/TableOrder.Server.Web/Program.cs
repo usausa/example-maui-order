@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------
-// Configure builder
+// Builder
 //--------------------------------------------------------------------------------
 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 var builder = WebApplication.CreateBuilder(args);
@@ -32,7 +32,7 @@ builder.ConfigureTelemetry();
 builder.ConfigureComponents();
 
 //--------------------------------------------------------------------------------
-// Configure the HTTP request pipeline
+// Request pipeline
 //--------------------------------------------------------------------------------
 var app = builder.Build();
 

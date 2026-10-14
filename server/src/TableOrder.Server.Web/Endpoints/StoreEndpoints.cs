@@ -23,6 +23,7 @@ public static class StoreEndpoints
             .WithName("StoreOrdering")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 

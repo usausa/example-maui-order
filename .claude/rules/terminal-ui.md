@@ -70,7 +70,7 @@ paths:
 - ホール端末の下部のタブは、タブごとに画面 (`ViewId`) を分け、ヘッダとタブの帯の部品 (`Controls/TabHeader`、`Controls/TabFooter`) を各画面に置く。部品は画面の ViewModel の基底 (`TabViewModelBase`) にバインドする
 - 画面は `ViewId` に足して View に `[View(ViewId.Xxx)]` を、ポップアップは `DialogId` に足して `[Popup(DialogId.Xxx)]` を付ける
 - どの端末でも同じポップアップ (電卓、知らせ、確認) は `TableOrder.Terminal` の `TerminalDialogId` に足し、入口は `TableOrder.Terminal` の `PopupNavigatorExtensions` に置く。アプリのポップアップの登録には `TerminalModules.DialogSource` も足す
-- XAML で画面 ID を渡すときは `{markup:ViewId Xxx}` と書く (`x:Static` にしない)
+- XAML で画面 ID を渡すときは `{markup:ViewId Xxx}` と書く (`x:Static` にしない。拡張の `Markup/ViewIdExtension` は使うアプリだけに置く)
 - 端末の戻るは各画面で `OnNotifyBackAsync` (抽象) を実装して決める。お客様の画面では何もしない (アプリの外へ出さない)
 - 端末の戻るは画面の戻るのボタンと同じ条件で行い、ボタンを押せないとき (`CanBack` が false) は何もしない
 - ViewModel のプロパティは `[ObservableProperty] public partial`、コマンドは `MakeAsyncCommand` / `MakeDelegateCommand` で作る

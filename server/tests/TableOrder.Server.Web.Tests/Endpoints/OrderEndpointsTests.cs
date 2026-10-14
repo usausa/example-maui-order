@@ -153,7 +153,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         // Act / Assert: 残りをすべて頼むと売り切れになる
         using var ordered = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 2)));
         Assert.Equal(HttpStatusCode.Created, ordered.StatusCode);
-        var stock = await hall.GetAsync<StockResponse>("/api/v1/stock");
+        var stock = await hall.GetAsync<StockListResponse>("/api/v1/stock");
         Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == TestMenu.Salad).Status);
         using var soldOut = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, soldOut.StatusCode);

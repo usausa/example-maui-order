@@ -7,7 +7,7 @@ using TableOrder.KitchenApp;
 using TableOrder.KitchenApp.Components;
 
 //--------------------------------------------------------------------------------
-// Configure builder
+// Builder
 //--------------------------------------------------------------------------------
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 

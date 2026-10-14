@@ -24,7 +24,7 @@ public sealed partial class StockEditDialog
 
     // 今の状態 (売れる品は null)
     [Parameter]
-    public StockResponseItem? Stock { get; set; }
+    public StockListResponseItem? Stock { get; set; }
 
     [Parameter]
     public EventCallback<StockDecision> OnDecide { get; set; }

@@ -131,7 +131,7 @@ public static class ApplicationExtensions
 
     public static IHostApplicationBuilder ConfigureHttp(this IHostApplicationBuilder builder)
     {
-        // Add services to the container
+        // ログに付ける値 (接続元) と管理画面のサインインが、今の要求を読む
         builder.Services.AddHttpContextAccessor();
 
         // CSP nonce
@@ -142,7 +142,7 @@ public static class ApplicationExtensions
         {
             options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
 
-            // Do not restrict to local network/proxy
+            // 転送ヘッダーを、ローカルのネットワークとプロキシに限らずに受け付ける (前に置くロードバランサのアドレスは決まっていない)
             options.KnownIPNetworks.Clear();
             options.KnownProxies.Clear();
         });
@@ -158,9 +158,9 @@ public static class ApplicationExtensions
             app.UseHsts();
         }
 
-        // Headers. The nonce admits the import map that Blazor renders inline, MudBlazor needs inline styles,
-        // the kitchen app (WebAssembly) needs 'wasm-unsafe-eval' to compile the runtime,
-        // dotnet watch / Browser Link load their script from another localhost port and connect back to it
+        // CSP のヘッダー。nonce で Blazor が埋め込む import map を許し、画面の部品のために style の inline を許す
+        // キッチン端末 (WebAssembly) は、ランタイムのコンパイルに 'wasm-unsafe-eval' が要る
+        // 開発の環境は、ホットリロードのスクリプトを localhost のほかのポートから読み込み、そこへつなぎ直すので許す
         var development = app.Environment.IsDevelopment();
         var scriptSources = development ? "'self' 'wasm-unsafe-eval' http://localhost:*" : "'self' 'wasm-unsafe-eval'";
         var connectSources = development ? "'self' http://localhost:* ws://localhost:* wss://localhost:*" : "'self'";
@@ -766,7 +766,7 @@ public static class ApplicationExtensions
         {
             app.MapOpenApi();
 
-            // NSwag UI using MapOpenApi generated specification
+            // MapOpenApi の文書を NSwag の UI で見る
             app.UseSwaggerUi(static options =>
             {
                 options.DocumentPath = "/openapi/v1.json";
@@ -826,13 +826,13 @@ public static class ApplicationExtensions
 
     public static async ValueTask InitializeApplicationAsync(this WebApplication app)
     {
-        // Prepare instrument
+        // 計器を起動のときに作る (稼働時間を起動から数える)
         app.Services.GetRequiredService<ApplicationInstrument>();
 
         // 署名の鍵を先に用意する (本番の環境で鍵がなければ起動を止める)
         app.Services.GetRequiredService<SigningKeyProvider>();
 
-        // Prepare database (schema from the SQL file)
+        // データベースを用意する (スキーマは SQL のファイルから作る)
         var database = app.Services.GetRequiredService<DatabaseService>();
         await database.InitializeAsync(AssetPaths.Schema, CancellationToken.None);
 

@@ -10,8 +10,10 @@ public sealed class PricingTests
     [Fact]
     public void UnitPriceAddsOptionDeltas()
     {
+        // Act
         var price = Pricing.UnitPrice(999m, [330m, 299m]);
 
+        // Assert
         Assert.Equal(1628m, price);
     }
 
@@ -19,8 +21,10 @@ public sealed class PricingTests
     [Fact]
     public void UnitPriceWithoutOptions()
     {
+        // Act
         var price = Pricing.UnitPrice(999m, []);
 
+        // Assert
         Assert.Equal(999m, price);
     }
 
@@ -38,8 +42,10 @@ public sealed class PricingTests
     [InlineData(1000, TaxRounding.Ceiling, 91)]
     public void IncludedTaxRoundsBySetting(int amount, TaxRounding rounding, int expected)
     {
+        // Act
         var tax = Pricing.IncludedTax(amount, 0.10m, rounding);
 
+        // Assert
         Assert.Equal(expected, tax);
     }
 
@@ -47,8 +53,10 @@ public sealed class PricingTests
     [Fact]
     public void IncludedTaxReducedRate()
     {
+        // Act
         var tax = Pricing.IncludedTax(1080m, 0.08m, TaxRounding.Floor);
 
+        // Assert
         Assert.Equal(80m, tax);
     }
 
@@ -60,8 +68,10 @@ public sealed class PricingTests
     [Fact]
     public void SplitAddsRemainderFromFirst()
     {
+        // Act
         var amounts = Pricing.Split(4414m, 3);
 
+        // Assert
         Assert.Equal([1472m, 1471m, 1471m], amounts);
     }
 
@@ -69,8 +79,10 @@ public sealed class PricingTests
     [Fact]
     public void SplitEvenly()
     {
+        // Act
         var amounts = Pricing.Split(4000m, 4);
 
+        // Assert
         Assert.Equal([1000m, 1000m, 1000m, 1000m], amounts);
     }
 
@@ -80,8 +92,10 @@ public sealed class PricingTests
     [InlineData(0)]
     public void SplitSingleGuest(int guests)
     {
+        // Act
         var amounts = Pricing.Split(4414m, guests);
 
+        // Assert
         Assert.Equal([4414m], amounts);
     }
 
@@ -89,8 +103,10 @@ public sealed class PricingTests
     [Fact]
     public void SplitLessThanGuests()
     {
+        // Act
         var amounts = Pricing.Split(2m, 3);
 
+        // Assert
         Assert.Equal([1m, 1m, 0m], amounts);
     }
 

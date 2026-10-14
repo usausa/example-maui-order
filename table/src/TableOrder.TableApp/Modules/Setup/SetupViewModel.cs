@@ -43,8 +43,8 @@ public sealed partial class SetupViewModel : AppViewModelBase
     //--------------------------------------------------------------------------------
 
     public SetupViewModel(
-        IAppInfo appInfo,
         IPopupNavigator popupNavigator,
+        IAppInfo appInfo,
         Settings settings,
         DeviceUsecase deviceUsecase)
     {

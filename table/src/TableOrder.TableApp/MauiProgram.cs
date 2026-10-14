@@ -138,7 +138,7 @@ public static partial class MauiProgram
 
     private static MauiAppBuilder ConfigureGlobalSettings(this MauiAppBuilder builder)
     {
-        // TODO App center alternative
+        // TODO 異常終了の記録を集めるサービスにつなぐ (今は端末に残し、次の起動でログに書く)
 
         // Crash dump
         CrashReport.Start();
@@ -246,10 +246,10 @@ public static partial class MauiProgram
 
         var services = app.Services;
 
-        // Setup provider
+        // XAML からの解決 (ResolveProvider) にサービスを渡す
         ResolveProvider.Default.Provider = services;
 
-        // Start device information
+        // 電池と回線の状態を見始める (状態の報告とスタッフメニューで出す)
         services.GetRequiredService<DeviceInformation>().Start();
 
         // EMM が配る設定を読み、替わったときの知らせを受け始める (設定を読む画面より先に)
@@ -276,11 +276,10 @@ public static partial class MauiProgram
 #endif
 
 #if DEBUG
-        // Setup navigator
+        // 遷移をデバッグの出力に書く (エミュレータの確認で今の画面を読む)
         var navigator = services.GetRequiredService<INavigator>();
         navigator.Navigated += (_, args) =>
         {
-            // for debug
             System.Diagnostics.Debug.WriteLine($"Navigated: [{args.Context.FromId}]->[{args.Context.ToId}] : stacked=[{navigator.StackedCount}]");
         };
 #endif

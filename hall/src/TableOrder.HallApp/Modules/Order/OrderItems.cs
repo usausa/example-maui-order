@@ -59,7 +59,7 @@ public sealed partial class OrderRow : ObservableObject
         PriceText = priceText;
     }
 
-    public static OrderRow FromItem(MenuResponseItem item, StockResponseItem? stock)
+    public static OrderRow FromItem(MenuResponseItem item, StockListResponseItem? stock)
     {
         var row = new OrderRow(item.Id, false, ViewHelper.Text(item.Name), string.Empty, ViewHelper.Price(item.Price));
         row.UpdateStock(stock);
@@ -70,7 +70,7 @@ public sealed partial class OrderRow : ObservableObject
         new(line.Id, true, name, caption, $"× {line.Quantity}  {ViewHelper.Price(line.UnitPrice * line.Quantity)}");
 
     // 品切れと残りの数 (カートの明細は出さない)
-    public void UpdateStock(StockResponseItem? stock)
+    public void UpdateStock(StockListResponseItem? stock)
     {
         if (IsCartLine)
         {

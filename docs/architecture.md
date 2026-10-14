@@ -98,7 +98,7 @@ TableOrder.Server.Web ──> TableOrder.Server.Core ──> TableOrder.Contract
 | `Usecase/` | 通信と状態の更新を組み合わせる手順 (`OrderUsecase`。来店の開始と終了、メニューのルールの判定、注文の送信) |
 | `Models/` | 画面で使う形 (`MenuCategory`、`MenuProduct`、`CartLine`、`ItemSelection`、`OrderedLine`) |
 | `Controls/` | 見た目の部品 (`QrCodeView`。QR コードの代わりの模様) |
-| `Markup/` | 記号 (`AppIcons`)、画面 ID の拡張 |
+| `Markup/` | 記号 (`AppIcons`) |
 | `Resources/` | 色 (`Colors.xaml`。Brand・Neutral・Status の役割)、テーブル端末の画面のスタイル (`Styles.xaml`)、画面の文言 (`Strings/AppResources.resx`、`.en.resx`)、記号のフォントとグリフの表、アイコン、スプラッシュ |
 | `Shell/` | MainPage と通知の受け手 (`OrderEventReceiver`) から画面への知らせ (戻る、来店の開始・終了、店舗の変更、送れたかわからなかった注文の受け付け、起動からやり直す) |
 | `Platforms/` | Activity と Device Owner の受け口とマニフェスト |
@@ -489,7 +489,7 @@ Device Owner のときに掛ける端末の制限:
 | `State/` | 端末の設定と空席 (`ReceptionState`)、店舗の今の状態 (`StoreState`。ラストオーダーの時刻、注文の一時停止、設定の版) |
 | `Usecase/` | 空席の読み直しと、人数を送って来店を開く手順 (`ReceptionUsecase`) |
 | `Shell/` | 通知の受け手 (`OrderEventReceiver`) と画面への知らせ (`ShellEvent`) |
-| `Markup/` | 記号 (`AppIcons`)、画面 ID の拡張 |
+| `Markup/` | 記号 (`AppIcons`) |
 | `Resources/` | 色 (`Colors.xaml`。Brand・Neutral・Status の役割)、受付機の画面のスタイル (`Styles.xaml`)、画面の文言、記号のフォントとグリフの表、アイコン、スプラッシュ |
 | `Platforms/` | Activity と Device Owner の受け口、マニフェスト、管理対象の構成の定義 |
 

@@ -31,11 +31,11 @@ public sealed class StockService
     }
 
     // Available でない品 (行があるものだけ)
-    public async ValueTask<StockResponse> GetStockAsync(CancellationToken cancellationToken)
+    public async ValueTask<StockListResponse> GetStockAsync(CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;
         var stocks = await stockAccessor.QueryListAsync(context.RequireTenantId(), context.RequireStoreId(), cancellationToken);
-        return new StockResponse
+        return new StockListResponse
         {
             Items = stocks.Select(ToItem).ToList()
         };
@@ -99,7 +99,7 @@ public sealed class StockService
             {
                 Items =
                 [
-                    new StockResponseItem
+                    new StockListResponseItem
                     {
                         TargetId = targetId,
                         TargetKind = request.TargetKind,
@@ -132,7 +132,7 @@ public sealed class StockService
             await stockAccessor.DeleteAllAsync(transaction.Tx, tenantId, storeId, cancellationToken);
             var data = new StockUpdatedEventData
             {
-                Items = stocks.Select(x => new StockResponseItem
+                Items = stocks.Select(x => new StockListResponseItem
                 {
                     TargetId = x.TargetId,
                     TargetKind = x.TargetKind,
@@ -146,7 +146,7 @@ public sealed class StockService
         }, cancellationToken);
     }
 
-    internal static StockResponseItem ToItem(StockEntity stock) =>
+    internal static StockListResponseItem ToItem(StockEntity stock) =>
         new()
         {
             TargetId = stock.TargetId,

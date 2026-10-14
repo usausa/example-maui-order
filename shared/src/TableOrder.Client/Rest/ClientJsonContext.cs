@@ -19,7 +19,7 @@ using TableOrder.Contract.Events;
 [JsonSerializable(typeof(StoreOrderingRequest))]
 [JsonSerializable(typeof(TableListResponse))]
 [JsonSerializable(typeof(MenuResponse))]
-[JsonSerializable(typeof(StockResponse))]
+[JsonSerializable(typeof(StockListResponse))]
 [JsonSerializable(typeof(StockUpdateRequest))]
 [JsonSerializable(typeof(VisitCreateRequest))]
 [JsonSerializable(typeof(VisitUpdateRequest))]

@@ -20,8 +20,8 @@ public sealed class RestKitchenApi : IKitchenApi
     public ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default) =>
         menu.GetAsync(cancel);
 
-    public ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default) =>
-        connection.GetAsync("stock", ClientJsonContext.Default.StockResponse, cancel);
+    public ValueTask<ApiResult<StockListResponse>> GetStockAsync(CancellationToken cancel = default) =>
+        connection.GetAsync("stock", ClientJsonContext.Default.StockListResponse, cancel);
 
     public ValueTask<ApiResult<NoContent>> UpdateStockAsync(Guid targetId, StockUpdateRequest request, CancellationToken cancel = default) =>
         connection.PutNoContentAsync($"stock/{targetId}", request, ClientJsonContext.Default.StockUpdateRequest, cancel);

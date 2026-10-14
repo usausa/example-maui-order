@@ -35,6 +35,9 @@ public sealed class TestMenu
     // ドリンクバー (お客様がとる)
     public static readonly Guid DrinkBar = Guid.Parse("00001771-0000-0000-0000-000000000000");
 
+    // ドリンクバーを人数分にする提案のルール
+    public static readonly Guid DrinkBarRuleId = Guid.Parse("000003df-0000-0000-0000-000000000000");
+
     // 生ビール (お酒。来店で 1 回、年齢を確かめる)
     public static readonly Guid Beer = Guid.Parse("00001772-0000-0000-0000-000000000000");
 

@@ -5,11 +5,6 @@ using TableOrder.Contract.Visits;
 
 public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
 {
-    // 確認のルール (お酒の年齢) と、提案のルール (ドリンクバー)
-    private static readonly Guid ConfirmationRuleId = Guid.Parse("000003e0-0000-0000-0000-000000000000");
-
-    private static readonly Guid SuggestionRuleId = Guid.Parse("000003df-0000-0000-0000-000000000000");
-
     private readonly ServerFactory factory;
 
     public VisitEndpointsTests(ServerFactory factory)
@@ -341,13 +336,13 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
 
         // Act
-        using var first = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
-        using var second = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
-        using var suggestion = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = SuggestionRuleId });
+        using var first = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var second = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var suggestion = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.DrinkBarRuleId });
 
         // Assert
-        Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(first)).ConfirmedRuleIds);
-        Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(second)).ConfirmedRuleIds);
+        Assert.Equal([TestMenu.AlcoholRuleId], (await TestDevice.ReadAsync<VisitResponse>(first)).ConfirmedRuleIds);
+        Assert.Equal([TestMenu.AlcoholRuleId], (await TestDevice.ReadAsync<VisitResponse>(second)).ConfirmedRuleIds);
         Assert.Equal(HttpStatusCode.BadRequest, suggestion.StatusCode);
         Assert.Equal("VALIDATION_ERROR", await TestDevice.ReadErrorCodeAsync(suggestion));
     }
@@ -363,11 +358,11 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
 
         // Act
-        using var byHall = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
-        using var byKitchen = await kitchen.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+        using var byHall = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var byKitchen = await kitchen.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
 
         // Assert
-        Assert.Equal([ConfirmationRuleId], (await TestDevice.ReadAsync<VisitResponse>(byHall)).ConfirmedRuleIds);
+        Assert.Equal([TestMenu.AlcoholRuleId], (await TestDevice.ReadAsync<VisitResponse>(byHall)).ConfirmedRuleIds);
         Assert.Equal(HttpStatusCode.Forbidden, byKitchen.StatusCode);
         Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(byKitchen));
     }
@@ -384,15 +379,15 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var before = await table.GetAsync<EventListResponse>("/api/v1/events?after=0");
 
         // Act
-        using var first = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
-        using var second = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = ConfirmationRuleId });
+        using var first = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var second = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
         var events = await table.GetAsync<EventListResponse>($"/api/v1/events?after={before.LastSeq}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
         Assert.Equal([EventTypes.VisitUpdated], events.Items.Select(static x => x.Type));
-        Assert.Equal([ConfirmationRuleId], TestHubConnection.Read<VisitResponse>(events.Items[0]).ConfirmedRuleIds);
+        Assert.Equal([TestMenu.AlcoholRuleId], TestHubConnection.Read<VisitResponse>(events.Items[0]).ConfirmedRuleIds);
     }
 
     //--------------------------------------------------------------------------------

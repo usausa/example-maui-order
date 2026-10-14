@@ -11,7 +11,7 @@ public sealed class MenuState
 
     private Dictionary<string, MenuResponseAllergen> allergens = [];
 
-    private Dictionary<Guid, StockResponseItem> stocks = [];
+    private Dictionary<Guid, StockListResponseItem> stocks = [];
 
     public DeviceConfigResponse Config { get; private set; } = default!;
 
@@ -31,7 +31,7 @@ public sealed class MenuState
 
     public string? LogoImageName => Config.Brand.LogoImageName;
 
-    public void Update(DeviceConfigResponse config, MenuResponse menu, StockResponse stock)
+    public void Update(DeviceConfigResponse config, MenuResponse menu, StockListResponse stock)
     {
         Config = config;
         Menu = menu;
@@ -44,13 +44,13 @@ public sealed class MenuState
         UpdateStock(stock);
     }
 
-    public void UpdateStock(StockResponse stock)
+    public void UpdateStock(StockListResponse stock)
     {
         stocks = stock.Items.ToDictionary(static x => x.TargetId);
     }
 
     // 通知で受けた変わった品だけを入れる (売れるように戻した品は除く)
-    public void ApplyStock(IEnumerable<StockResponseItem> changes)
+    public void ApplyStock(IEnumerable<StockListResponseItem> changes)
     {
         foreach (var change in changes)
         {

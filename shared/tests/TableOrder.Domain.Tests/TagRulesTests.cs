@@ -9,8 +9,10 @@ public sealed class TagRulesTests
     [InlineData(GuestBasis.Children, 1)]
     public void GuestsByBasis(GuestBasis basis, int expected)
     {
+        // Act
         var guests = TagRules.Guests(basis, 2, 1);
 
+        // Assert
         Assert.Equal(expected, guests);
     }
 
@@ -21,8 +23,10 @@ public sealed class TagRulesTests
     [InlineData(5, 3, 0)]
     public void ShortageOfGuests(int count, int guests, int expected)
     {
+        // Act
         var shortage = TagRules.Shortage(count, guests);
 
+        // Assert
         Assert.Equal(expected, shortage);
     }
 
@@ -33,8 +37,10 @@ public sealed class TagRulesTests
     [InlineData(RuleScope.Visit, 1)]
     public void AllowanceByScope(RuleScope scope, int expected)
     {
+        // Act
         var allowance = TagRules.Allowance(scope, 1, 3);
 
+        // Assert
         Assert.Equal(expected, allowance);
     }
 
@@ -42,8 +48,10 @@ public sealed class TagRulesTests
     [Fact]
     public void AllowanceForNoGuests()
     {
+        // Act
         var allowance = TagRules.Allowance(RuleScope.Guest, 2, 0);
 
+        // Assert
         Assert.Equal(2, allowance);
     }
 
@@ -75,8 +83,10 @@ public sealed class TagRulesTests
     [InlineData(3, UnavailableReason.None)]
     public void AvailableWithChildren(int children, UnavailableReason expected)
     {
+        // Act
         var reason = TagRules.CheckAvailability([], true, StoreHours.Parse("03:00"), children);
 
+        // Assert
         Assert.Equal(expected, reason);
     }
 
@@ -88,8 +98,10 @@ public sealed class TagRulesTests
     [InlineData("16:00", 0, UnavailableReason.Children)]
     public void AvailableNeedsAllConditions(string now, int children, UnavailableReason expected)
     {
+        // Act
         var reason = TagRules.CheckAvailability([(StoreHours.Parse("11:00"), StoreHours.Parse("15:00"))], true, StoreHours.Parse(now), children);
 
+        // Assert
         Assert.Equal(expected, reason);
     }
 
@@ -97,8 +109,10 @@ public sealed class TagRulesTests
     [Fact]
     public void EmptyPeriodIsNeverAvailable()
     {
+        // Act
         var reason = TagRules.CheckAvailability([(TimeOnly.MinValue, TimeOnly.MinValue)], false, TimeOnly.MinValue.AddMinutes(1), 1, TimeSpan.FromMinutes(2));
 
+        // Assert
         Assert.Equal(UnavailableReason.Daypart, reason);
     }
 }

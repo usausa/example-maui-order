@@ -157,7 +157,7 @@ public sealed class HallUsecase
     //--------------------------------------------------------------------------------
 
     // 売れない品と残りの数のある品
-    public async ValueTask<ApiResult<StockResponse>> RefreshStockAsync()
+    public async ValueTask<ApiResult<StockListResponse>> RefreshStockAsync()
     {
         var result = await hallApi.GetStockAsync();
         if (result.Content is { } stock)

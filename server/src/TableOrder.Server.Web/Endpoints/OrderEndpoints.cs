@@ -45,6 +45,7 @@ public static class OrderEndpoints
             .WithName("OrderLineCancel")
             .Produces<OrderListResponseItem>()
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
     }

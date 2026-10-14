@@ -12,7 +12,7 @@ public interface ITableApi
     ValueTask<ApiResult<MenuResponse>> GetMenuAsync(CancellationToken cancel = default);
 
     // GET /stock
-    ValueTask<ApiResult<StockResponse>> GetStockAsync(CancellationToken cancel = default);
+    ValueTask<ApiResult<StockListResponse>> GetStockAsync(CancellationToken cancel = default);
 
     //--------------------------------------------------------------------------------
     // Store

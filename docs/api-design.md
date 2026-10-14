@@ -421,7 +421,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
-| GET | `/stock` | テーブル / ホール / キッチン | `Available` でないものの一覧 (`StockResponse`) |
+| GET | `/stock` | テーブル / ホール / キッチン | `Available` でないものの一覧 (`StockListResponse`) |
 | PUT | `/stock/{targetId}` | ホール / キッチン | 品切れ・残りの数の設定 `StockUpdateRequest { targetKind, status, remaining? }` → `204`。`Limited` の残りの数は `0` から `9999` で、`0` は `SoldOut` にする。今のメニューにない品は `404`。通知 `stock.updated` (同じ設定の送り直しでは送らない) |
 | POST | `/stock/reset` | ホール | すべて `Available` に戻す (営業日の始めなど) → `204`。通知 `stock.updated` (戻した品) |
 

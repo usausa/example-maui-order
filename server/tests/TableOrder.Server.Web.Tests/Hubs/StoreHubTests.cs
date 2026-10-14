@@ -87,10 +87,9 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         await using var kitchenHub = await TestHubConnection.ConnectAsync(factory, kitchen);
         await using var tableHub = await TestHubConnection.ConnectAsync(factory, table);
         await using var receptionHub = await TestHubConnection.ConnectAsync(factory, reception);
-        var itemId = Guid.Parse("00000fa1-0000-0000-0000-000000000000");
 
         // Act
-        using var soldOut = await hall.PutAsync($"/api/v1/stock/{itemId}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var soldOut = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
         using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
@@ -98,7 +97,7 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         // Assert
         var kitchenEvent = await kitchenHub.NextAsync();
         Assert.Equal(EventTypes.StockUpdated, kitchenEvent.Type);
-        Assert.Equal(StockStatus.SoldOut, TestHubConnection.Read<StockUpdatedEventData>(kitchenEvent).Items.Single(x => x.TargetId == itemId).Status);
+        Assert.Equal(StockStatus.SoldOut, TestHubConnection.Read<StockUpdatedEventData>(kitchenEvent).Items.Single(x => x.TargetId == TestMenu.Parfait).Status);
         Assert.Equal(EventTypes.StockUpdated, (await tableHub.NextAsync()).Type);
         Assert.Equal(EventTypes.StoreUpdated, (await receptionHub.NextAsync()).Type);
     }

@@ -1,12 +1,12 @@
 namespace TableOrder.Contract.Menu;
 
 // 売れるかどうか (Available でないものだけを返す)
-public sealed class StockResponse
+public sealed class StockListResponse
 {
-    public IReadOnlyList<StockResponseItem> Items { get; set; } = default!;
+    public IReadOnlyList<StockListResponseItem> Items { get; set; } = default!;
 }
 
-public sealed class StockResponseItem
+public sealed class StockListResponseItem
 {
     // 商品かオプションの Id
     public Guid TargetId { get; set; }

@@ -9,9 +9,9 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
 
     private readonly ILogger<StaffCallViewModel> log;
 
-    private readonly ITableApi tableApi;
-
     private readonly VisitState visitState;
+
+    private readonly ITableApi tableApi;
 
     private readonly Dictionary<string, string> reasonNames;
 
@@ -42,14 +42,14 @@ public sealed partial class StaffCallViewModel : AppDialogViewModelBase
 
     public StaffCallViewModel(
         ILogger<StaffCallViewModel> log,
-        ITableApi tableApi,
         MenuState menuState,
         VisitState visitState,
-        LanguageState languageState)
+        LanguageState languageState,
+        ITableApi tableApi)
     {
         this.log = log;
-        this.tableApi = tableApi;
         this.visitState = visitState;
+        this.tableApi = tableApi;
 
         var language = languageState.Current;
         var reasons = menuState.Config.CallReasons

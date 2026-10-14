@@ -109,8 +109,12 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 ## エンドポイント
 
 - API は `Endpoints/XxxEndpoints` に `// Mapping` と処理ごとの区切りで書き、経路は `ApiRoutes` の定数にし、`MapXxxEndpoints` を `MapEndpoints` に足す
-- API のグループは `MapApiGroup` で作る (既定で認証を求め、計測と文脈のフィルターが付く)。匿名で受ける入口は `AllowAnonymous()` を付け、推測できる値を受ける入口 (登録) は流量を限る
+- API のグループは `MapApiGroup` で作る (既定で認証を求め、計測と文脈のフィルターが付き、401 と 500 の応答を宣言する)。匿名で受ける入口は `AllowAnonymous()` を付け、推測できる値を受ける入口 (登録) は流量を限る
 - 端末の種類で使える API は `Policies` で絞り、範囲の外は `ApiAuthorizationResultHandler` が `403` (`DEVICE_SCOPE`) にする
+- エンドポイントは返す応答だけをすべて状態の小さい順に宣言する (本文は `Produces<T>`、本文なしは `Produces(状態)`、Problem Details は `ProducesProblem(状態)`。同じ状態は 1 回だけ)。401 と 500 はグループが宣言する
+- 端末の種類のポリシーで断るエンドポイントは 403 を、流量を限る入口は 429 を `ProducesProblem` で宣言する (本文のない応答も状態コードのページで Problem Details になる)
+- 400 は Service が入力を確かめるエンドポイントだけ `ProducesValidationProblem()` で宣言し、引数の結び付けと JSON の読み取りの失敗は個別に宣言しない
+- 通信データは `XxxRequest` / `XxxResponse` にし、一覧は `XxxListResponse` (要素は `XxxListResponseItem`)、一覧の取得の操作名とハンドラは `XxxList` / `HandleListAsync` にする
 - 失敗は `ApiProblems` で Problem Details にし (`errorCode` は端末と共有する `TableOrder.Contract` の `ErrorCodes`)、新しい失敗は `ErrorCodes` と `ApiProblems` の定義の両方に足す
 - Service の結果は `ApiResults` で応答にし、エンドポイントで入力の確かめや状態・errorCode の組み立てをしない (入口で行うのは公開鍵を JWK に書き直すような形の変換だけで、読めなければ null で渡して Service が断る)
 - 本文を省ける API (null を許す本文の引数) は作らない。本文のない要求は本文を受ける経路に合わず、知らない経路の 404 になる

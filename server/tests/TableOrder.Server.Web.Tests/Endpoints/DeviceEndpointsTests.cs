@@ -51,7 +51,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal("PAIRING_CODE_INVALID", await TestDevice.ReadErrorCodeAsync(response));
     }
 
-    // 登録の回数を超えた接続元は 429 にし、送り直せる時刻を Retry-After で知らせる
+    // 登録の回数を超えた接続元は 429 (Problem Details) にし、送り直せる時刻を Retry-After で知らせる
     [Fact]
     public async Task PairIsRateLimitedWithRetryAfter()
     {
@@ -70,6 +70,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
+        Assert.Equal("application/problem+json", limited.Content.Headers.ContentType?.MediaType);
         Assert.NotNull(limited.Headers.RetryAfter);
     }
 
@@ -173,7 +174,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
-    // ほかの鍵で署名した要求は 401 (端末があるかどうかを見せない)
+    // ほかの鍵で署名した要求は 401 (Problem Details。端末があるかどうかを見せない)
     [Fact]
     public async Task TokenRejectsAssertionSignedByOtherKey()
     {
@@ -187,6 +188,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     // 同じ要求 (jti) は 2 回受けない
@@ -380,7 +382,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         Assert.DoesNotContain("error", response.Headers.WwwAuthenticate.ToString(), StringComparison.Ordinal);
     }
 
-    // トークンのない要求は 401
+    // トークンのない要求は 401 (Problem Details)
     [Fact]
     public async Task RequestWithoutTokenIsUnauthorized()
     {
@@ -392,5 +394,6 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 }

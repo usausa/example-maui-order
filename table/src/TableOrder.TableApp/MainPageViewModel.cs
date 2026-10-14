@@ -42,7 +42,7 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
         Disposables.Add(Observable.FromEventPattern<EventArgs>(h => Navigator.ExecutingChanged += h, h => Navigator.ExecutingChanged -= h)
             .Subscribe(_ => UpdateNavigatingBusy()));
 
-        // Screen lock detection
+        // 画面が点いた・消えたことをデバッグのログに残す
         Disposables.Add(screen.StateChangedAsObservable().ObserveOnCurrentContext().Subscribe(x => log.DebugScreenStateChanged(x.ScreenOn)));
     }
 
@@ -61,7 +61,7 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
 
         await startup.Completed;
 
-        // Guard for the case where the Activity is recreated while initialization is still in progress
+        // 初期化の途中で Activity が作り直されたときは進めない
         if (destroying)
         {
             return;

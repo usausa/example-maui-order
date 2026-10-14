@@ -16,7 +16,7 @@ public sealed partial class App
         this.log = log;
         this.serviceProvider = serviceProvider;
 
-        // Light theme based application
+        // 端末のダークモードの設定によらず、ライトのテーマで出す
         Current!.UserAppTheme = AppTheme.Light;
 
         InitializeComponent();

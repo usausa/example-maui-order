@@ -16,12 +16,14 @@ public static class ServingEndpoints
         group.MapGet(string.Empty, HandleListAsync)
             .WithName("ServingList")
             .Produces<ServingListResponse>()
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapPost("/serve", HandleServeAsync)
             .WithName("ServingServe")
             .Produces(StatusCodes.Status204NoContent)
             .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
     }

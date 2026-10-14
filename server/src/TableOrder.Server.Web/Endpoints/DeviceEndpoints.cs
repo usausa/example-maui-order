@@ -22,13 +22,13 @@ public static class DeviceEndpoints
             .Produces<DevicePairResponse>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden)
-            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         group.MapPost("/token", HandleTokenAsync)
             .AllowAnonymous()
             .WithName("DeviceToken")
             .Produces<DeviceTokenResponse>()
-            .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
         group.MapGet("/me/config", HandleConfigAsync)
@@ -47,7 +47,8 @@ public static class DeviceEndpoints
             .RequireAuthorization(Policies.TableDevice)
             .WithName("DeviceVisit")
             .Produces<VisitResponse>()
-            .Produces(StatusCodes.Status204NoContent);
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status403Forbidden);
     }
 
     //--------------------------------------------------------------------------------

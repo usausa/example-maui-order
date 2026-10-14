@@ -28,11 +28,6 @@
                            NullValue="False"
                            NonNullValue="True" />
 
-    <s:CompareToBoolConverter x:Key="GreaterThanToBoolConverter"
-                              Expression="{x:Static s:CompareExpressions.GreaterThan}" />
-
-    <s:ColorToBrushConverter x:Key="ColorToBrushConverter" />
-
     <!-- ================================================================================ -->
     <!-- Main -->
     <!-- ================================================================================ -->

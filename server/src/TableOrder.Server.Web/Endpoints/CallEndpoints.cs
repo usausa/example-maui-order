@@ -35,16 +35,19 @@ public static class CallEndpoints
         calls.MapGet(string.Empty, HandleStoreListAsync)
             .WithName("CallList")
             .Produces<CallListResponse>()
-            .ProducesValidationProblem();
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
 
         calls.MapPost("/{id:guid}/acknowledge", HandleAcknowledgeAsync)
             .WithName("CallAcknowledge")
             .Produces<CallListResponseItem>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
 
         calls.MapPost("/{id:guid}/done", HandleDoneAsync)
             .WithName("CallDone")
             .Produces<CallListResponseItem>()
+            .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
