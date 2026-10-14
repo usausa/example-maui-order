@@ -115,12 +115,7 @@
 
   <ItemGroup>
     <PackageReference Include="BunnyTail.DependencyInjection" Version="0.9.0" />
-    <PackageReference Include="BunnyTail.EmbeddedBuildProperty" Version="1.21.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="BunnyTail.MemberAccessor" Version="1.18.0" />
-    <PackageReference Include="BunnyTail.XamlProperty.Maui" Version="1.4.0" />
     <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
     <PackageReference Include="Components.Maui" Version="1.50.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13">
@@ -135,11 +130,8 @@
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.11" />
     <PackageReference Include="System.Reactive" Version="7.0.0" />
-    <PackageReference Include="Usa.Smart.Converter" Version="2.18.0" />
     <PackageReference Include="Usa.Smart.Core" Version="2.20.0" />
-    <PackageReference Include="Usa.Smart.Mapper" Version="1.0.0-beta9" />
     <PackageReference Include="Usa.Smart.Maui" Version="2.33.0" />
     <PackageReference Include="Usa.Smart.Maui.Extensions" Version="2.33.0" />
     <PackageReference Include="Usa.Smart.Mvvm" Version="2.16.0" />

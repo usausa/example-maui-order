@@ -16,8 +16,6 @@ using SkiaSharp.Views.Maui.Controls.Hosting;
 
 using Smart.Mvvm.Resolver;
 
-using Syncfusion.Maui.Toolkit.Hosting;
-
 using TableOrder.Client.Rest;
 using TableOrder.TableApp.Modules;
 using TableOrder.TableApp.Shell;
@@ -41,7 +39,6 @@ public static partial class MauiProgram
             .ConfigureEssentials(ConfigureEssentials)
             .ConfigureLogging()
             .ConfigureGlobalSettings()
-            .ConfigureSyncfusionToolkit()
             .UseSkiaSharp()
             .UseMauiCommunityToolkit(ConfigureMauiCommunityToolkit)
             .UseMauiServices()
