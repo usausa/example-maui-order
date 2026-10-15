@@ -9,6 +9,7 @@ using TableOrder.Contract.Orders;
 using TableOrder.Contract.Payments;
 using TableOrder.Contract.Visits;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 電子レシートの画面 (お客様がテーブル端末のお礼の画面の QR から開く。サインインなし)
 public sealed class ReceiptPageTests : IClassFixture<ServerFactory>
@@ -137,7 +138,7 @@ public sealed class ReceiptPageTests : IClassFixture<ServerFactory>
         using var client = factory.CreateClient();
 
         // Act
-        using var response = await client.GetAsync(new Uri("/receipts/" + new string('0', 32), UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(new Uri($"{ApiRoutes.Receipts}/{new string('0', 32)}", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
@@ -171,7 +172,7 @@ public sealed class ReceiptPageTests : IClassFixture<ServerFactory>
     {
         var menu = await TestMenu.LoadAsync(table);
         var lines = items.Select(x => menu.Line(x)).ToArray();
-        using var ordered = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(lines));
+        using var ordered = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(lines));
         ordered.EnsureSuccessStatusCode();
         return lines;
     }
@@ -179,14 +180,14 @@ public sealed class ReceiptPageTests : IClassFixture<ServerFactory>
     // 会計を始めてテーブルの決済端末で払い終え (来店が閉じて電子レシートができる)、電子レシートの URL の経路を返す
     private static async Task<(BillResponse Bill, Uri Url)> PayAsync(TestDevice table, VisitResponse visit)
     {
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
         checkout.EnsureSuccessStatusCode();
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = bill.Total });
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = bill.Total });
         var payment = await TestDevice.ReadAsync<PaymentResponse>(created);
-        using var result = await table.PostAsync($"/api/v1/payments/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
+        using var result = await table.PostAsync($"{ApiRoutes.Payments}/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
         result.EnsureSuccessStatusCode();
-        var receipt = await table.GetAsync<ReceiptResponse>($"/api/v1/visits/{visit.Id}/receipt");
+        var receipt = await table.GetAsync<ReceiptResponse>($"{ApiRoutes.Visits}/{visit.Id}/receipt");
         return (bill, new Uri(receipt.Url.AbsolutePath, UriKind.Relative));
     }
 

@@ -6,6 +6,7 @@ using TableOrder.Client;
 using TableOrder.Contract.Devices;
 using TableOrder.Contract.Stores;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 管理画面のチェーンと店舗の設定 (サーバの中の SettingsService を、管理画面と同じく選んだ店舗の文脈で呼ぶ)
 public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
@@ -132,7 +133,7 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
             settings = (await Settings.GetStoreSettingsAsync(cancel))!;
         }
 
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Act

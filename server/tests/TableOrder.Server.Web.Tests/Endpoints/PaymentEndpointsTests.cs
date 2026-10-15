@@ -27,12 +27,12 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         var (visit, bill) = await CheckoutAsync(store, table);
 
         // Act / Assert: 残りを超える額は受けない
-        using var over = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total + 1 });
+        using var over = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total + 1 });
         Assert.Equal("PAYMENT_AMOUNT_INVALID", await TestDevice.ReadErrorCodeAsync(over));
 
         // Act / Assert: QR を出す
         var id = Guid.CreateVersion7();
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = id, Method = PaymentMethod.QrCode, Amount = bill.Total });
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = id, Method = PaymentMethod.QrCode, Amount = bill.Total });
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
         var payment = await TestDevice.ReadAsync<PaymentResponse>(created);
         Assert.Equal(PaymentStatus.Pending, payment.Status);
@@ -41,14 +41,14 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
 
         // Act / Assert: 決済サービスの通知 (匿名) で払い終える
         using var anonymous = factory.CreateClient();
-        using var callback = await anonymous.PostAsJsonAsync("/api/v1/payments/callbacks/fake", new PaymentCallbackRequest { ProviderReference = id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var callback = await anonymous.PostAsJsonAsync($"{ApiRoutes.Payments}/callbacks/fake", new PaymentCallbackRequest { ProviderReference = id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, callback.StatusCode);
-        Assert.Equal(PaymentStatus.Completed, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{id}")).Status);
-        var closed = await hall.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
+        Assert.Equal(PaymentStatus.Completed, (await table.GetAsync<PaymentResponse>($"{ApiRoutes.Payments}/{id}")).Status);
+        var closed = await hall.GetAsync<VisitResponse>($"{ApiRoutes.Visits}/{visit.Id}");
         Assert.Equal(VisitStatus.Closed, closed.Status);
         Assert.Equal(VisitClosedBy.TablePayment, closed.ClosedBy);
-        var receipt = await table.GetAsync<ReceiptResponse>($"/api/v1/visits/{visit.Id}/receipt");
-        Assert.Contains("/receipts/", receipt.Url.AbsolutePath, StringComparison.Ordinal);
+        var receipt = await table.GetAsync<ReceiptResponse>($"{ApiRoutes.Visits}/{visit.Id}/receipt");
+        Assert.Contains($"{ApiRoutes.Receipts}/", receipt.Url.AbsolutePath, StringComparison.Ordinal);
         Assert.Equal(bill.Total, receipt.Total);
     }
 
@@ -65,11 +65,11 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         // Act / Assert: 1 人目
         var first = await PayByCardAsync(table, visit, half);
         Assert.Equal(PaymentStatus.Completed, first.Status);
-        Assert.Equal(VisitStatus.Paying, (await table.GetAsync<VisitResponse>("/api/v1/devices/me/visit")).Status);
+        Assert.Equal(VisitStatus.Paying, (await table.GetAsync<VisitResponse>($"{ApiRoutes.Devices}/me/visit")).Status);
 
         // Act / Assert: 2 人目で閉じる
         await PayByCardAsync(table, visit, bill.Total - half);
-        using var current = await table.Client.GetAsync(new Uri("/api/v1/devices/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var current = await table.Client.GetAsync(new Uri($"{ApiRoutes.Devices}/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, current.StatusCode);
     }
 
@@ -84,18 +84,18 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         var first = await CreateQrAsync(table, visit, bill.Total);
 
         // Act / Assert: 待っている分は払えない
-        using var blocked = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total });
+        using var blocked = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total });
         Assert.Equal("PAYMENT_AMOUNT_INVALID", await TestDevice.ReadErrorCodeAsync(blocked));
 
         // Act / Assert: やめると払える
-        using var cancelled = await table.PostAsync($"/api/v1/payments/{first.Id}/cancel", new { });
+        using var cancelled = await table.PostAsync($"{ApiRoutes.Payments}/{first.Id}/cancel", new { });
         Assert.Equal(PaymentStatus.Cancelled, (await TestDevice.ReadAsync<PaymentResponse>(cancelled)).Status);
         var second = await CreateQrAsync(table, visit, bill.Total);
 
         // Act / Assert: 会計をやめると待っている支払もやめる
-        using var reopened = await table.Client.PostAsync(new Uri($"/api/v1/visits/{visit.Id}/checkout/cancel", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        using var reopened = await table.Client.PostAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}/checkout/cancel", UriKind.Relative), null, TestContext.Current.CancellationToken);
         Assert.Equal(VisitStatus.Open, (await TestDevice.ReadAsync<VisitResponse>(reopened)).Status);
-        Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{second.Id}")).Status);
+        Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"{ApiRoutes.Payments}/{second.Id}")).Status);
     }
 
     // 会計中の来店をレジで閉じると待っている支払をやめ、あとで届いた結果では払い終えない (二重に払わせない)
@@ -110,13 +110,13 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         var pending = await CreateQrAsync(table, visit, bill.Total);
 
         // Act
-        using var closed = await hall.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version });
+        using var closed = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version });
         using var anonymous = factory.CreateClient();
-        using var callback = await anonymous.PostAsJsonAsync("/api/v1/payments/callbacks/fake", new PaymentCallbackRequest { ProviderReference = pending.Id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var callback = await anonymous.PostAsJsonAsync($"{ApiRoutes.Payments}/callbacks/fake", new PaymentCallbackRequest { ProviderReference = pending.Id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(VisitClosedBy.Register, (await TestDevice.ReadAsync<VisitResponse>(closed)).ClosedBy);
-        Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"/api/v1/payments/{pending.Id}")).Status);
+        Assert.Equal(PaymentStatus.Cancelled, (await table.GetAsync<PaymentResponse>($"{ApiRoutes.Payments}/{pending.Id}")).Status);
     }
 
     // 店舗の設定で電子レシートを外した店は、テーブルで払い終えても電子レシートを作らない
@@ -141,7 +141,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(PaymentStatus.Completed, paid.Status);
-        using var receipt = await table.Client.GetAsync(new Uri($"/api/v1/visits/{visit.Id}/receipt", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var receipt = await table.Client.GetAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}/receipt", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, receipt.StatusCode);
     }
 
@@ -155,7 +155,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0, adults: 1);
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = 100 });
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = 100 });
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -174,25 +174,25 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
     {
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
-        using var ordered = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 3)));
+        using var ordered = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 3)));
         ordered.EnsureSuccessStatusCode();
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
         return (await TestDevice.ReadAsync<VisitResponse>(checkout), bill);
     }
 
     private static async Task<PaymentResponse> CreateQrAsync(TestDevice table, VisitResponse visit, decimal amount)
     {
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = amount });
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = amount });
         return await TestDevice.ReadAsync<PaymentResponse>(response);
     }
 
     // テーブルの決済端末で払う
     private static async Task<PaymentResponse> PayByCardAsync(TestDevice table, VisitResponse visit, decimal amount)
     {
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = amount });
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = amount });
         var payment = await TestDevice.ReadAsync<PaymentResponse>(created);
-        using var result = await table.PostAsync($"/api/v1/payments/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
+        using var result = await table.PostAsync($"{ApiRoutes.Payments}/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
         return await TestDevice.ReadAsync<PaymentResponse>(result);
     }
 }

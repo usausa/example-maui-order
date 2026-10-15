@@ -98,7 +98,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         var request = new DevicePairRequest { PairingCode = SampleData.DemoTableCode, PublicKey = device.PublicKey, DeviceName = "test" };
 
         // Act
-        using var response = await device.PostAsync("/api/v1/devices/pair", request);
+        using var response = await device.PostAsync(ApiRoutes.DevicePair, request);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -120,7 +120,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         };
 
         // Act
-        using var response = await client.PostAsJsonAsync("/api/v1/devices/pair", request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var response = await client.PostAsJsonAsync(ApiRoutes.DevicePair, request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -163,12 +163,12 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
             PublicKey = DeviceCredentials.CreatePublicKey(await key.GetPublicKeyAsync()),
             DeviceName = "test"
         };
-        using var pair = await client.PostAsJsonAsync("/api/v1/devices/pair", request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var pair = await client.PostAsJsonAsync(ApiRoutes.DevicePair, request, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
         var device = await pair.Content.ReadFromJsonAsync<DevicePairResponse>(TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Act
         var assertion = await DeviceCredentials.CreateAssertionAsync(key, device!.DeviceId, DateTimeOffset.UtcNow);
-        using var response = await client.PostAsJsonAsync("/api/v1/devices/token", new DeviceTokenRequest { Assertion = assertion }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var response = await client.PostAsJsonAsync(ApiRoutes.DeviceToken, new DeviceTokenRequest { Assertion = assertion }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -261,7 +261,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoTableCode);
 
         // Act
-        var config = await device.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
+        var config = await device.GetAsync<DeviceConfigResponse>(ApiRoutes.DeviceConfig);
 
         // Assert
         Assert.Equal("駅前店", config.StoreName.Ja);
@@ -283,8 +283,8 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         await test.SignInAsync(SampleData.TestTableCode);
 
         // Act
-        var demoConfig = await demo.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
-        var testConfig = await test.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
+        var demoConfig = await demo.GetAsync<DeviceConfigResponse>(ApiRoutes.DeviceConfig);
+        var testConfig = await test.GetAsync<DeviceConfigResponse>(ApiRoutes.DeviceConfig);
 
         // Assert
         Assert.Equal("バニーズ", demoConfig.Brand.Name.Ja);
@@ -319,7 +319,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoKitchenCode);
 
         // Act
-        var config = await device.GetAsync<DeviceConfigResponse>("/api/v1/devices/me/config");
+        var config = await device.GetAsync<DeviceConfigResponse>(ApiRoutes.DeviceConfig);
 
         // Assert
         Assert.Equal(DeviceKind.Kitchen, config.Device!.Kind);
@@ -337,7 +337,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
 
         // Act
         using var response = await device.Client.PostAsJsonAsync(
-            "/api/v1/devices/me/heartbeat",
+            $"{ApiRoutes.Devices}/me/heartbeat",
             new DeviceHeartbeatRequest { AppVersion = "1.0.1", BatteryLevel = 0.5m, IsCharging = true },
             TestDevice.JsonOptions,
             TestContext.Current.CancellationToken);
@@ -355,7 +355,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoTableCode);
 
         // Act
-        using var response = await device.PostAsync("/api/v1/devices/me/heartbeat", new DeviceHeartbeatRequest { AppVersion = "1.0.1", BatteryLevel = 1.5m });
+        using var response = await device.PostAsync($"{ApiRoutes.Devices}/me/heartbeat", new DeviceHeartbeatRequest { AppVersion = "1.0.1", BatteryLevel = 1.5m });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -375,7 +375,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         device.Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", String.Join('.', parts[0], parts[1], new string(signature)));
 
         // Act
-        using var response = await device.Client.GetAsync(new Uri("/api/v1/devices/me/config", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await device.Client.GetAsync(new Uri(ApiRoutes.DeviceConfig, UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
@@ -390,7 +390,7 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
         using var client = factory.CreateClient();
 
         // Act
-        using var response = await client.GetAsync(new Uri("/api/v1/devices/me/config", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await client.GetAsync(new Uri(ApiRoutes.DeviceConfig, UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);

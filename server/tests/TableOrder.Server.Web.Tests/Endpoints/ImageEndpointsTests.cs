@@ -22,10 +22,10 @@ public sealed class ImageEndpointsTests : IClassFixture<ServerFactory>
         // Arrange
         using var table = new TestDevice(factory.CreateClient());
         await table.SignInAsync(SampleData.DemoTableCode);
-        var name = (await table.GetAsync<MenuResponse>("/api/v1/menu")).Items.First(static x => x.ImageName is not null).ImageName!;
+        var name = (await table.GetAsync<MenuResponse>(ApiRoutes.Menu)).Items.First(static x => x.ImageName is not null).ImageName!;
 
         // Act
-        using var response = await table.Client.GetAsync(new Uri($"/api/v1/images/{name}", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await table.Client.GetAsync(new Uri($"{ApiRoutes.Images}/{name}", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -46,8 +46,8 @@ public sealed class ImageEndpointsTests : IClassFixture<ServerFactory>
         var cancel = TestContext.Current.CancellationToken;
 
         // Act
-        using var unknown = await hall.Client.GetAsync(new Uri("/api/v1/images/unknown.12345678.png", UriKind.Relative), cancel);
-        using var invalid = await hall.Client.GetAsync(new Uri("/api/v1/images/Hamburg.gif", UriKind.Relative), cancel);
+        using var unknown = await hall.Client.GetAsync(new Uri($"{ApiRoutes.Images}/unknown.12345678.png", UriKind.Relative), cancel);
+        using var invalid = await hall.Client.GetAsync(new Uri($"{ApiRoutes.Images}/Hamburg.gif", UriKind.Relative), cancel);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
@@ -69,8 +69,8 @@ public sealed class ImageEndpointsTests : IClassFixture<ServerFactory>
         await other.SignInAsync(SampleData.DemoTableCode);
 
         // Act
-        using var found = await own.Client.GetAsync(new Uri("/api/v1/images/own.0badf00d.png", UriKind.Relative), TestContext.Current.CancellationToken);
-        using var hidden = await other.Client.GetAsync(new Uri("/api/v1/images/own.0badf00d.png", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var found = await own.Client.GetAsync(new Uri($"{ApiRoutes.Images}/own.0badf00d.png", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var hidden = await other.Client.GetAsync(new Uri($"{ApiRoutes.Images}/own.0badf00d.png", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal([1, 2, 3], await found.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));

@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TableOrder.Client;
 using TableOrder.Contract.Devices;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 管理画面の端末の管理 (サーバの中の Service を、管理画面と同じく選んだ店舗の文脈で呼ぶ)
 public sealed class DeviceServiceTests : IClassFixture<ServerFactory>
@@ -141,7 +142,7 @@ public sealed class DeviceServiceTests : IClassFixture<ServerFactory>
         using var other = factory.CreateClient();
 
         // Act
-        using var copied = await other.PostAsJsonAsync("/api/v1/devices/pair", new DevicePairRequest { PairingCode = store.TableCodes[1], Kind = DeviceKind.Table, PublicKey = device.PublicKey, DeviceName = "copy" }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
+        using var copied = await other.PostAsJsonAsync(ApiRoutes.DevicePair, new DevicePairRequest { PairingCode = store.TableCodes[1], Kind = DeviceKind.Table, PublicKey = device.PublicKey, DeviceName = "copy" }, TestDevice.JsonOptions, TestContext.Current.CancellationToken);
         using var token = await device.RequestTokenAsync(device.CreateAssertion());
 
         // Assert
@@ -338,7 +339,7 @@ public sealed class DeviceServiceTests : IClassFixture<ServerFactory>
         var tableDevice = await table.SignInAsync(store.TableCodes[0]);
         using var kitchen = new TestDevice(factory.CreateClient());
         var kitchenDevice = await kitchen.SignInAsync(store.KitchenCode);
-        using var reported = await kitchen.PostAsync("/api/v1/devices/me/heartbeat", new DeviceHeartbeatRequest { AppVersion = "1.2.3", BatteryLevel = 0.5m, IsCharging = true });
+        using var reported = await kitchen.PostAsync($"{ApiRoutes.Devices}/me/heartbeat", new DeviceHeartbeatRequest { AppVersion = "1.2.3", BatteryLevel = 0.5m, IsCharging = true });
         reported.EnsureSuccessStatusCode();
         using var outside = new TestDevice(factory.CreateClient());
         var outsideDevice = await outside.SignInAsync(other.TableCodes[0]);

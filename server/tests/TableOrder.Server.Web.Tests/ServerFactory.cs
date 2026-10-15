@@ -19,6 +19,7 @@ using TableOrder.Server.Core.Models.Enums;
 using TableOrder.Server.Core.Services;
 using TableOrder.Server.Web.Application.Authentication;
 using TableOrder.Server.Web.Application.Context;
+using TableOrder.Server.Web.Endpoints;
 
 // テストのクラスごとのサーバ。一時ファイルの DB に、サンプルのデータ (2 つのテナント) を入れて起動する
 public sealed class ServerFactory : WebApplicationFactory<Program>
@@ -451,7 +452,7 @@ public sealed class ServerFactory : WebApplicationFactory<Program>
     {
         using var hall = new TestDevice(CreateClient());
         await hall.SignInAsync(store.HallCode);
-        using var response = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[table], Adults = adults });
+        using var response = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[table], Adults = adults });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 

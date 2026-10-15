@@ -5,6 +5,7 @@ using TableOrder.Contract.Calls;
 using TableOrder.Contract.Menu;
 using TableOrder.Contract.Orders;
 using TableOrder.Contract.Visits;
+using TableOrder.Server.Web.Endpoints;
 
 // 端末のアプリの通知の受け口 (SignalR) を、本物のサーバのハブにつないで確かめる
 public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
@@ -31,19 +32,19 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         Assert.True((await terminal.Events.ConnectAsync(TestContext.Current.CancellationToken)).IsSuccess);
 
         // Act / Assert: ホールが開く
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
         Assert.Equal(visit.Id, Assert.IsType<VisitOpenedEvent>(await terminal.NextAsync()).Visit.Id);
 
         // Act / Assert: ホールが人数を直す
-        using var updated = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 1, Version = visit.Version });
+        using var updated = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 1, Version = visit.Version });
         var changed = await TestDevice.ReadAsync<VisitResponse>(updated);
         var guests = Assert.IsType<VisitUpdatedEvent>(await terminal.NextAsync());
         Assert.Equal(3, guests.Visit.Adults);
         Assert.Equal(1, guests.Visit.Children);
 
         // Act / Assert: ほかのテーブルに移す
-        using var moved = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = changed.Version });
+        using var moved = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = changed.Version });
         moved.EnsureSuccessStatusCode();
         Assert.Equal(store.TableIds[1], Assert.IsType<VisitMovedEvent>(await terminal.NextAsync()).Visit.TableId);
     }
@@ -64,7 +65,7 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         Assert.True((await terminal.Events.ConnectAsync(cancel)).IsSuccess);
 
         // Act / Assert: ホールが売り切れにする
-        using var soldOut = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var soldOut = await hall.PutAsync($"{ApiRoutes.Stock}/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
         var stock = Assert.IsType<StockUpdatedEvent>(await terminal.NextAsync());
         Assert.Equal(StockStatus.SoldOut, Assert.Single(stock.Items, x => x.TargetId == TestMenu.Parfait).Status);
@@ -74,7 +75,7 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         Assert.Equal(ordered.Id, Assert.IsType<OrderCreatedEvent>(await terminal.NextAsync()).Order.Id);
 
         // Act / Assert: ホールが明細を取り消す
-        using var cancelled = await hall.PostAsync($"/api/v1/orders/{ordered.Id}/lines/{ordered.Lines[0].Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
+        using var cancelled = await hall.PostAsync($"{ApiRoutes.Orders}/{ordered.Id}/lines/{ordered.Lines[0].Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
         cancelled.EnsureSuccessStatusCode();
         var lines = Assert.IsType<OrderLinesUpdatedEvent>(await terminal.NextAsync());
         Assert.Equal(visit.Id, lines.VisitId);
@@ -114,12 +115,12 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         await terminal.PairAsync(store.TableCodes[0]);
         using var hall = new TestDevice(factory.CreateClient());
         await hall.SignInAsync(store.HallCode);
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
 
         // Act
         Assert.True((await terminal.Events.ConnectAsync(TestContext.Current.CancellationToken)).IsSuccess);
-        using var closed = await hall.PostAsync($"/api/v1/visits/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
+        using var closed = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
         closed.EnsureSuccessStatusCode();
 
         // Assert
@@ -151,13 +152,13 @@ public sealed class SignalROrderEventsTests : IClassFixture<ServerFactory>
         Assert.True((await terminal.Events.ConnectAsync(TestContext.Current.CancellationToken)).IsSuccess);
 
         // Act / Assert: 受け手が失敗した通知のあとに、追いかけられなくなった知らせが届く
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
         Assert.IsType<VisitOpenedEvent>(await terminal.NextAsync());
         await expired.Task.WaitAsync(TimeSpan.FromSeconds(10), TestContext.Current.CancellationToken);
 
         // Act / Assert: 続く通知も届く
-        using var updated = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 0, Version = visit.Version });
+        using var updated = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 0, Version = visit.Version });
         updated.EnsureSuccessStatusCode();
         Assert.Equal(3, Assert.IsType<VisitUpdatedEvent>(await terminal.NextAsync()).Visit.Adults);
     }

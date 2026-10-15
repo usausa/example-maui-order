@@ -21,13 +21,13 @@ public sealed class EventEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var hall = await SignInAsync(store.HallCode);
         var visit = await OpenAsync(hall, store.TableIds[0]);
-        using var updated = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 4, Version = visit.Version });
+        using var updated = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 4, Version = visit.Version });
         updated.EnsureSuccessStatusCode();
 
         // Act
-        var events = await hall.GetAsync<EventListResponse>("/api/v1/events?after=0");
-        var rest = await hall.GetAsync<EventListResponse>("/api/v1/events?after=1");
-        var none = await hall.GetAsync<EventListResponse>("/api/v1/events?after=2");
+        var events = await hall.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
+        var rest = await hall.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=1");
+        var none = await hall.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=2");
 
         // Assert
         Assert.Equal(2, events.LastSeq);
@@ -49,13 +49,13 @@ public sealed class EventEndpointsTests : IClassFixture<ServerFactory>
         using var kitchen = await SignInAsync(store.KitchenCode);
         await OpenAsync(hall, store.TableIds[0]);
         var own = await OpenAsync(hall, store.TableIds[1]);
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Act
-        var hallEvents = await hall.GetAsync<EventListResponse>("/api/v1/events?after=0");
-        var tableEvents = await table.GetAsync<EventListResponse>("/api/v1/events?after=0");
-        var kitchenEvents = await kitchen.GetAsync<EventListResponse>("/api/v1/events?after=0");
+        var hallEvents = await hall.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
+        var tableEvents = await table.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
+        var kitchenEvents = await kitchen.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
 
         // Assert
         Assert.Equal([1L, 2L, 3L], hallEvents.Items.Select(static x => x.Seq));
@@ -74,7 +74,7 @@ public sealed class EventEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
 
         // Act
-        using var response = await hall.Client.GetAsync(new Uri("/api/v1/events?after=5", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await hall.Client.GetAsync(new Uri($"{ApiRoutes.Events}?after=5", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Gone, response.StatusCode);
@@ -90,7 +90,7 @@ public sealed class EventEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
 
         // Act
-        using var response = await hall.Client.GetAsync(new Uri("/api/v1/events", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await hall.Client.GetAsync(new Uri(ApiRoutes.Events, UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -106,7 +106,7 @@ public sealed class EventEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await device.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 }

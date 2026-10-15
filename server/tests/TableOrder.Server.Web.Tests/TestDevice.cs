@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 using TableOrder.Contract.Devices;
+using TableOrder.Server.Web.Endpoints;
 
 // テストの端末。鍵を作ってペアリングコードで登録し、鍵で署名した要求でアクセストークンを受け取る
 public sealed class TestDevice : IDisposable
@@ -61,7 +62,7 @@ public sealed class TestDevice : IDisposable
     public Task<HttpResponseMessage> PairByTokenAsync(string enrollmentToken, DeviceKind kind) => PairAsync(null, enrollmentToken, kind);
 
     private Task<HttpResponseMessage> PairAsync(string? code, string? enrollmentToken, DeviceKind kind) =>
-        Client.PostAsJsonAsync("/api/v1/devices/pair", new DevicePairRequest
+        Client.PostAsJsonAsync(ApiRoutes.DevicePair, new DevicePairRequest
         {
             PairingCode = code,
             EnrollmentToken = enrollmentToken,
@@ -72,7 +73,7 @@ public sealed class TestDevice : IDisposable
         }, JsonOptions, TestContext.Current.CancellationToken);
 
     public Task<HttpResponseMessage> RequestTokenAsync(string assertion) =>
-        Client.PostAsJsonAsync("/api/v1/devices/token", new DeviceTokenRequest { Assertion = assertion }, JsonOptions, TestContext.Current.CancellationToken);
+        Client.PostAsJsonAsync(ApiRoutes.DeviceToken, new DeviceTokenRequest { Assertion = assertion }, JsonOptions, TestContext.Current.CancellationToken);
 
     // トークンの要求 (iss と sub は端末の Id、aud はサーバの名前、5 分以内、使い捨ての jti)
     public string CreateAssertion(ECDsa? signer = null)
@@ -141,5 +142,12 @@ public sealed class TestDevice : IDisposable
     {
         using var document = await JsonDocument.ParseAsync(await response.Content.ReadAsStreamAsync(TestContext.Current.CancellationToken), cancellationToken: TestContext.Current.CancellationToken);
         return document.RootElement.TryGetProperty("errorCode", out var value) ? value.GetString() : null;
+    }
+
+    // Problem Details の title (errorCode を読んだあとでも読めるように、読み込んだ本文から読む)
+    public static async Task<string?> ReadTitleAsync(HttpResponseMessage response)
+    {
+        using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        return document.RootElement.TryGetProperty("title", out var value) ? value.GetString() : null;
     }
 }

@@ -6,6 +6,7 @@ using TableOrder.Contract.Events;
 using TableOrder.Contract.Stores;
 using TableOrder.Server.Core.Models.Entity;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 店舗の通知 (管理画面の通知の記録)
 public sealed class EventServiceTests : IClassFixture<ServerFactory>
@@ -28,7 +29,7 @@ public sealed class EventServiceTests : IClassFixture<ServerFactory>
         await factory.OpenVisitAsync(store, 0);
         using var hall = new TestDevice(factory.CreateClient());
         await hall.SignInAsync(store.HallCode);
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Act

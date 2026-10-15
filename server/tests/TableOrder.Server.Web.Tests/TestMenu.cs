@@ -2,6 +2,7 @@ namespace TableOrder.Server.Web;
 
 using TableOrder.Contract.Menu;
 using TableOrder.Contract.Orders;
+using TableOrder.Server.Web.Endpoints;
 
 // テストの注文。単価はサーバのメニューと Pricing で求める (メニューの価格をテストに書かない)
 public sealed class TestMenu
@@ -56,7 +57,7 @@ public sealed class TestMenu
     }
 
     public static async Task<TestMenu> LoadAsync(TestDevice device) =>
-        new(await device.GetAsync<MenuResponse>("/api/v1/menu"));
+        new(await device.GetAsync<MenuResponse>(ApiRoutes.Menu));
 
     // 端末の窓口で読んだメニュー
     public static TestMenu From(MenuResponse menu) => new(menu);

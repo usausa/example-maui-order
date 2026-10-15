@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.SignalR.Client;
 
 using TableOrder.Contract.Events;
+using TableOrder.Server.Web.Endpoints;
 
 // テストの端末の通知のハブの接続。届いた通知を届いた順に読む (テストのサーバは WebSocket を通さないので Long Polling でつなぐ)
 public sealed class TestHubConnection : IAsyncDisposable
@@ -39,7 +40,7 @@ public sealed class TestHubConnection : IAsyncDisposable
     public static async Task<TestHubConnection> ConnectAsync(ServerFactory factory, TestDevice device)
     {
         var connection = new HubConnectionBuilder()
-            .WithUrl(new Uri(factory.Server.BaseAddress, "/hubs/store"), options =>
+            .WithUrl(new Uri(factory.Server.BaseAddress, ApiRoutes.StoreHub), options =>
             {
                 options.Transports = HttpTransportType.LongPolling;
                 options.HttpMessageHandlerFactory = _ => factory.Server.CreateHandler();

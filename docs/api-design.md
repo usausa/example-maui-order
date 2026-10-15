@@ -51,6 +51,7 @@ C# のプロパティ名は PascalCase (`tableId` → `TableId`)。
 
 RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-エラーコード))。  
 要求の値を読めないとき (クエリの値の形、JSON の形の誤り、知らない項目) も `400` (`VALIDATION_ERROR`) にする。  
+`title` は日本語の文言にし (要求の値を読めないときと `500` も)、端末は `title` ではなく `errorCode` で扱いを決める。  
 注文の検証で明細ごとの違反があるときは、`errors` のキーを明細の `id` にする。
 
 ```jsonc

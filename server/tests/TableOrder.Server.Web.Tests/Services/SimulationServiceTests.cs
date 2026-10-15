@@ -10,6 +10,7 @@ using TableOrder.Contract.Payments;
 using TableOrder.Contract.Visits;
 using TableOrder.Server.Core.Services;
 using TableOrder.Server.Web.Application.Context;
+using TableOrder.Server.Web.Endpoints;
 using TableOrder.Server.Web.Settings;
 
 // 開発の環境の自動の進行 (サーバの中の SimulationService を、時間を 0 にして店舗の文脈で呼ぶ)
@@ -36,30 +37,30 @@ public sealed class SimulationServiceTests : IClassFixture<ServerFactory>
         await kitchen.SignInAsync(store.KitchenCode);
         var visit = await factory.OpenVisitAsync(store, 0, adults: 1);
         var menu = await TestMenu.LoadAsync(table);
-        using var ordered = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var ordered = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         ordered.EnsureSuccessStatusCode();
-        using var called = await table.PostAsync($"/api/v1/visits/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Staff" });
+        using var called = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Staff" });
         called.EnsureSuccessStatusCode();
 
         // Act / Assert: 明細は提供まで進み、チケットは下がる。呼び出しには向かう
         await AdvanceAsync(store);
-        var orders = await table.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        var orders = await table.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.Equal(OrderLineStatus.Served, Assert.Single(orders.Items[0].Lines).Status);
-        Assert.Empty((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
-        Assert.Equal(CallStatus.Acknowledged, Assert.Single((await table.GetAsync<CallListResponse>($"/api/v1/visits/{visit.Id}/calls")).Items).Status);
+        Assert.Empty((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
+        Assert.Equal(CallStatus.Acknowledged, Assert.Single((await table.GetAsync<CallListResponse>($"{ApiRoutes.Visits}/{visit.Id}/calls")).Items).Status);
 
         // Act / Assert: 呼び出しの対応を終える
         await AdvanceAsync(store);
-        Assert.Equal(CallStatus.Done, Assert.Single((await table.GetAsync<CallListResponse>($"/api/v1/visits/{visit.Id}/calls")).Items).Status);
+        Assert.Equal(CallStatus.Done, Assert.Single((await table.GetAsync<CallListResponse>($"{ApiRoutes.Visits}/{visit.Id}/calls")).Items).Status);
 
         // Act / Assert: 待っている支払を払い終え、来店が閉じる
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
         checkout.EnsureSuccessStatusCode();
-        using var paid = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total });
+        using var paid = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total });
         paid.EnsureSuccessStatusCode();
         await AdvanceAsync(store);
-        using var current = await table.Client.GetAsync(new Uri("/api/v1/devices/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var current = await table.Client.GetAsync(new Uri($"{ApiRoutes.Devices}/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, current.StatusCode);
     }
 
@@ -73,16 +74,16 @@ public sealed class SimulationServiceTests : IClassFixture<ServerFactory>
         await hall.SignInAsync(store.HallCode);
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(hall);
-        using var ordered = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var ordered = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         ordered.EnsureSuccessStatusCode();
-        using var closed = await hall.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version });
+        using var closed = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version });
         closed.EnsureSuccessStatusCode();
 
         // Act
         await AdvanceAsync(store);
 
         // Assert
-        var orders = await hall.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        var orders = await hall.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.Equal(OrderLineStatus.Served, Assert.Single(orders.Items[0].Lines).Status);
     }
 

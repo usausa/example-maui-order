@@ -27,8 +27,8 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Salad, 2), menu.Line(TestMenu.Parfait)));
 
         // Act
-        var all = await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets");
-        var dessert = await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?stationId={TestMenu.DessertStation}");
+        var all = await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets");
+        var dessert = await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?stationId={TestMenu.DessertStation}");
 
         // Assert
         Assert.Equal(2, all.Items.Count);
@@ -52,28 +52,28 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         var salad = menu.Line(TestMenu.Salad);
         var hamburg = menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.Demiglace);
         await OrderAsync(hall, visit, menu.Order(salad, hamburg));
-        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
 
         // Act / Assert: 作り始めとできあがり
-        using var started = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/start", new { });
+        using var started = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/start", new { });
         Assert.Equal(OrderLineStatus.Cooking, (await TestDevice.ReadAsync<KitchenTicketListResponseItem>(started)).Lines.Single(x => x.LineId == salad.Id).Status);
-        using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
+        using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
         Assert.Equal(OrderLineStatus.Ready, (await TestDevice.ReadAsync<KitchenTicketListResponseItem>(ready)).Lines.Single(x => x.LineId == salad.Id).Status);
 
         // Act / Assert: 下げると残りの明細もできあがりになり、開いている一覧から外れる
-        using var bumped = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/bump", new { });
+        using var bumped = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/bump", new { });
         var done = await TestDevice.ReadAsync<KitchenTicketListResponseItem>(bumped);
         Assert.Equal(KitchenTicketStatus.Done, done.Status);
         Assert.All(done.Lines, static x => Assert.Equal(OrderLineStatus.Ready, x.Status));
-        Assert.Empty((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
-        Assert.Equal([ticket.Id], (await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets?status=Done")).Items.Select(static x => x.Id));
+        Assert.Empty((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
+        Assert.Equal([ticket.Id], (await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?status=Done")).Items.Select(static x => x.Id));
 
         // Act / Assert: 戻すと開き、まだ出していない明細は作っている途中に戻る
-        using var recalled = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/recall", new { });
+        using var recalled = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/recall", new { });
         var reopened = await TestDevice.ReadAsync<KitchenTicketListResponseItem>(recalled);
         Assert.Equal(KitchenTicketStatus.Open, reopened.Status);
         Assert.All(reopened.Lines, static x => Assert.Equal(OrderLineStatus.Cooking, x.Status));
-        var history = await hall.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        var history = await hall.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.All(history.Items[0].Lines, static x => Assert.Equal(OrderLineStatus.Cooking, x.Status));
     }
 
@@ -88,18 +88,18 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(hall);
         var visit = await OpenAsync(hall, store.TableIds[0]);
         await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Parfait)));
-        var parfait = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?stationId={TestMenu.DessertStation}")).Items);
+        var parfait = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?stationId={TestMenu.DessertStation}")).Items);
         await BumpAsync(kitchen, parfait.Id);
         for (var i = 0; i < 21; i++)
         {
             await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.Demiglace)));
-            var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?stationId={TestMenu.KitchenStation}")).Items);
+            var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?stationId={TestMenu.KitchenStation}")).Items);
             await BumpAsync(kitchen, ticket.Id);
         }
 
         // Act
-        var all = await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets?status=Done");
-        var dessert = await kitchen.GetAsync<KitchenTicketListResponse>($"/api/v1/kitchen/tickets?status=Done&stationId={TestMenu.DessertStation}");
+        var all = await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?status=Done");
+        var dessert = await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets?status=Done&stationId={TestMenu.DessertStation}");
 
         // Assert
         Assert.Equal(20, all.Items.Count);
@@ -122,19 +122,19 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(hall);
         var visit = await OpenAsync(hall, store.TableIds[0]);
         await OrderAsync(hall, visit, menu.Order(menu.Line(TestMenu.Salad)));
-        var current = await hall.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
-        var before = await kitchen.GetAsync<EventListResponse>("/api/v1/events?after=0");
+        var current = await hall.GetAsync<VisitResponse>($"{ApiRoutes.Visits}/{visit.Id}");
+        var before = await kitchen.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
 
         // Act
-        using var moved = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[2], Version = current.Version });
+        using var moved = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[2], Version = current.Version });
         moved.EnsureSuccessStatusCode();
-        var events = await kitchen.GetAsync<EventListResponse>($"/api/v1/events?after={before.LastSeq}");
+        var events = await kitchen.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after={before.LastSeq}");
 
         // Assert
         var item = Assert.Single(events.Items);
         Assert.Equal(EventTypes.TicketUpdated, item.Type);
         Assert.Equal("3", TestHubConnection.Read<KitchenTicketListResponseItem>(item).TableName);
-        Assert.Equal("3", Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items).TableName);
+        Assert.Equal("3", Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items).TableName);
     }
 
     // できあがった明細は作り始めに戻せない
@@ -149,12 +149,12 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
         var salad = menu.Line(TestMenu.Salad);
         await OrderAsync(hall, visit, menu.Order(salad));
-        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
-        using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
+        using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
         ready.EnsureSuccessStatusCode();
 
         // Act
-        using var response = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/start", new { });
+        using var response = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/start", new { });
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -171,8 +171,8 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
 
         // Act
-        using var otherStation = await kitchen.Client.GetAsync(new Uri($"/api/v1/kitchen/tickets?stationId={Guid.CreateVersion7()}", UriKind.Relative), TestContext.Current.CancellationToken);
-        using var fromHall = await hall.Client.GetAsync(new Uri("/api/v1/kitchen/tickets", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var otherStation = await kitchen.Client.GetAsync(new Uri($"{ApiRoutes.Kitchen}/tickets?stationId={Guid.CreateVersion7()}", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var fromHall = await hall.Client.GetAsync(new Uri($"{ApiRoutes.Kitchen}/tickets", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, otherStation.StatusCode);
@@ -189,19 +189,19 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await device.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 
     private static async Task OrderAsync(TestDevice device, VisitResponse visit, OrderCreateRequest request)
     {
-        using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var response = await device.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         response.EnsureSuccessStatusCode();
     }
 
     private static async Task BumpAsync(TestDevice device, Guid ticketId)
     {
-        using var response = await device.PostAsync($"/api/v1/kitchen/tickets/{ticketId}/bump", new { });
+        using var response = await device.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticketId}/bump", new { });
         response.EnsureSuccessStatusCode();
     }
 }

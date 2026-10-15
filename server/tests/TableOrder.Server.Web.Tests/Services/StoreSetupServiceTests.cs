@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TableOrder.Contract.Stores;
 using TableOrder.Server.Core.Accessors;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 public sealed class StoreSetupServiceTests : IClassFixture<ServerFactory>
 {
@@ -116,7 +117,7 @@ public sealed class StoreSetupServiceTests : IClassFixture<ServerFactory>
         Assert.Null(error);
         var after = (await stores.QueryAsync(store.TenantId, store.StoreId, TestContext.Current.CancellationToken))!;
         Assert.Equal(before.SettingsVersion + 1, after.SettingsVersion);
-        var response = await hall.GetAsync<StoreResponse>("/api/v1/store");
+        var response = await hall.GetAsync<StoreResponse>(ApiRoutes.Store);
         Assert.Equal("21:30", response.LastOrderTime);
         Assert.Equal("新しい店", response.Name.Ja);
     }

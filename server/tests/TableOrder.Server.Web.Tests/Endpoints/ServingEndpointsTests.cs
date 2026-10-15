@@ -26,21 +26,21 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[2]);
         var salad = menu.Line(TestMenu.Salad);
         await OrderAsync(hall, visit, menu.Order(salad));
-        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
-        using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
+        using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
         ready.EnsureSuccessStatusCode();
 
         // Act / Assert: 提供の一覧
-        var serving = await hall.GetAsync<ServingListResponse>("/api/v1/serving");
+        var serving = await hall.GetAsync<ServingListResponse>(ApiRoutes.Serving);
         var table = Assert.Single(serving.Items);
         Assert.Equal("3", table.TableName);
         Assert.Equal(salad.Id, Assert.Single(table.Lines).LineId);
 
         // Act / Assert: 提供する
-        using var served = await hall.PostAsync("/api/v1/serving/serve", new ServeRequest { LineIds = [salad.Id], StaffId = "S01" });
+        using var served = await hall.PostAsync($"{ApiRoutes.Serving}/serve", new ServeRequest { LineIds = [salad.Id], StaffId = "S01" });
         Assert.Equal(HttpStatusCode.NoContent, served.StatusCode);
-        Assert.Empty((await hall.GetAsync<ServingListResponse>("/api/v1/serving")).Items);
-        var history = await hall.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        Assert.Empty((await hall.GetAsync<ServingListResponse>(ApiRoutes.Serving)).Items);
+        var history = await hall.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.Equal(OrderLineStatus.Served, Assert.Single(history.Items[0].Lines).Status);
     }
 
@@ -58,8 +58,8 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
         await OrderAsync(hall, visit, menu.Order(salad, parfait));
 
         // Act
-        using var ordered = await hall.PostAsync("/api/v1/serving/serve", new ServeRequest { LineIds = [salad.Id] });
-        using var held = await hall.PostAsync("/api/v1/serving/serve", new ServeRequest { LineIds = [parfait.Id] });
+        using var ordered = await hall.PostAsync($"{ApiRoutes.Serving}/serve", new ServeRequest { LineIds = [salad.Id] });
+        using var held = await hall.PostAsync($"{ApiRoutes.Serving}/serve", new ServeRequest { LineIds = [parfait.Id] });
 
         // Assert
         Assert.Equal(HttpStatusCode.NoContent, ordered.StatusCode);
@@ -86,23 +86,23 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
         await factory.MoveVisitToPreviousDayAsync(store, previous.Id);
 
         // できあがるのは払い終えたあと (キッチンのチケットは来店を閉じても残る)
-        foreach (var ticket in (await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items)
+        foreach (var ticket in (await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items)
         {
-            using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{Assert.Single(ticket.Lines).LineId}/ready", new { });
+            using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{Assert.Single(ticket.Lines).LineId}/ready", new { });
             ready.EnsureSuccessStatusCode();
         }
 
         // Act / Assert: 提供の一覧
-        var serving = await hall.GetAsync<ServingListResponse>("/api/v1/serving");
+        var serving = await hall.GetAsync<ServingListResponse>(ApiRoutes.Serving);
         var table = Assert.Single(serving.Items);
         Assert.Equal(visit.Id, table.VisitId);
         Assert.Equal(VisitStatus.Closed, table.VisitStatus);
         Assert.Equal(salad.Id, Assert.Single(table.Lines).LineId);
 
         // Act / Assert: 提供する
-        using var served = await hall.PostAsync("/api/v1/serving/serve", new ServeRequest { LineIds = [salad.Id] });
+        using var served = await hall.PostAsync($"{ApiRoutes.Serving}/serve", new ServeRequest { LineIds = [salad.Id] });
         Assert.Equal(HttpStatusCode.NoContent, served.StatusCode);
-        Assert.Empty((await hall.GetAsync<ServingListResponse>("/api/v1/serving")).Items);
+        Assert.Empty((await hall.GetAsync<ServingListResponse>(ApiRoutes.Serving)).Items);
     }
 
     private async Task<TestDevice> SignInAsync(string code)
@@ -114,21 +114,21 @@ public sealed class ServingEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await device.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 
     // レジで払ったとして閉じる
     private static async Task CloseAsync(TestDevice device, VisitResponse visit)
     {
-        var current = await device.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
-        using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = current.Version });
+        var current = await device.GetAsync<VisitResponse>($"{ApiRoutes.Visits}/{visit.Id}");
+        using var response = await device.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = current.Version });
         response.EnsureSuccessStatusCode();
     }
 
     private static async Task OrderAsync(TestDevice device, VisitResponse visit, OrderCreateRequest request)
     {
-        using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var response = await device.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         response.EnsureSuccessStatusCode();
     }
 }

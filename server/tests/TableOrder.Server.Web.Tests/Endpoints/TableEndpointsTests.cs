@@ -20,11 +20,11 @@ public sealed class TableEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var hall = new TestDevice(factory.CreateClient());
         await hall.SignInAsync(store.HallCode);
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[1], Adults = 2, Children = 1 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[1], Adults = 2, Children = 1 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
 
         // Act
-        var tables = await hall.GetAsync<TableListResponse>("/api/v1/tables");
+        var tables = await hall.GetAsync<TableListResponse>(ApiRoutes.Tables);
 
         // Assert
         Assert.Equal(store.TableIds, tables.Items.Select(static x => x.Id));
@@ -47,12 +47,12 @@ public sealed class TableEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync(VisitOpening.Reception);
         using var reception = new TestDevice(factory.CreateClient());
         await reception.SignInAsync(store.ReceptionCode);
-        using var opened = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
+        using var opened = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
         opened.EnsureSuccessStatusCode();
 
         // Act
-        var vacant = await reception.GetAsync<TableListResponse>("/api/v1/tables?status=Vacant");
-        var occupied = await reception.GetAsync<TableListResponse>("/api/v1/tables?status=Occupied");
+        var vacant = await reception.GetAsync<TableListResponse>($"{ApiRoutes.Tables}?status=Vacant");
+        var occupied = await reception.GetAsync<TableListResponse>($"{ApiRoutes.Tables}?status=Occupied");
 
         // Assert
         Assert.Equal(store.TableIds.Skip(1), vacant.Items.Select(static x => x.Id));
@@ -69,7 +69,7 @@ public sealed class TableEndpointsTests : IClassFixture<ServerFactory>
         await hall.SignInAsync(store.HallCode);
 
         // Act
-        using var response = await hall.Client.GetAsync(new Uri("/api/v1/tables?status=Unknown", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await hall.Client.GetAsync(new Uri($"{ApiRoutes.Tables}?status=Unknown", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -86,7 +86,7 @@ public sealed class TableEndpointsTests : IClassFixture<ServerFactory>
         await table.SignInAsync(store.TableCodes[0]);
 
         // Act
-        using var response = await table.Client.GetAsync(new Uri("/api/v1/tables", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await table.Client.GetAsync(new Uri(ApiRoutes.Tables, UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

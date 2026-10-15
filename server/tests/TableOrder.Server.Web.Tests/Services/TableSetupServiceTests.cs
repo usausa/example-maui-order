@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TableOrder.Contract.Stores;
 using TableOrder.Server.Core.Accessors;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 public sealed class TableSetupServiceTests : IClassFixture<ServerFactory>
 {
@@ -47,7 +48,7 @@ public sealed class TableSetupServiceTests : IClassFixture<ServerFactory>
         Assert.Null(table.Area);
         Assert.Equal(3, table.Capacity);
         Assert.Equal(version + 2, await SettingsVersionAsync(store));
-        var list = await hall.GetAsync<TableListResponse>("/api/v1/tables");
+        var list = await hall.GetAsync<TableListResponse>(ApiRoutes.Tables);
         Assert.Contains(list.Items, x => x.Name == "A1");
     }
 
@@ -118,7 +119,7 @@ public sealed class TableSetupServiceTests : IClassFixture<ServerFactory>
         Assert.Contains("isActive", visiting!.Errors!.Keys);
         Assert.Contains("isActive", placed!.Errors!.Keys);
         Assert.Null(free);
-        var list = await hall.GetAsync<TableListResponse>("/api/v1/tables");
+        var list = await hall.GetAsync<TableListResponse>(ApiRoutes.Tables);
         Assert.DoesNotContain(list.Items, x => x.Id == store.TableIds[2]);
     }
 

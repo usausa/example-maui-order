@@ -23,7 +23,7 @@ public sealed class MenuEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoTableCode);
 
         // Act
-        using var response = await device.Client.GetAsync(new Uri("/api/v1/menu", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await device.Client.GetAsync(new Uri(ApiRoutes.Menu, UriKind.Relative), TestContext.Current.CancellationToken);
         var menu = await response.Content.ReadFromJsonAsync<MenuResponse>(TestDevice.JsonOptions, TestContext.Current.CancellationToken);
 
         // Assert
@@ -45,8 +45,8 @@ public sealed class MenuEndpointsTests : IClassFixture<ServerFactory>
         await test.SignInAsync(SampleData.TestTableCode);
 
         // Act
-        var demoMenu = await demo.GetAsync<MenuResponse>("/api/v1/menu");
-        var testMenu = await test.GetAsync<MenuResponse>("/api/v1/menu");
+        var demoMenu = await demo.GetAsync<MenuResponse>(ApiRoutes.Menu);
+        var testMenu = await test.GetAsync<MenuResponse>(ApiRoutes.Menu);
 
         // Assert
         Assert.Empty(demoMenu.Dayparts);
@@ -65,7 +65,7 @@ public sealed class MenuEndpointsTests : IClassFixture<ServerFactory>
         // Arrange
         using var device = new TestDevice(factory.CreateClient());
         await device.SignInAsync(SampleData.DemoTableCode);
-        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/api/v1/menu", UriKind.Relative));
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(ApiRoutes.Menu, UriKind.Relative));
         request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue("\"sample-1\""));
 
         // Act
@@ -84,7 +84,7 @@ public sealed class MenuEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoReceptionCode);
 
         // Act
-        using var response = await device.Client.GetAsync(new Uri("/api/v1/menu", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var response = await device.Client.GetAsync(new Uri(ApiRoutes.Menu, UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

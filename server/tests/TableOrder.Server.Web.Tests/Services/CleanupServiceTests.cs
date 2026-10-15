@@ -8,6 +8,7 @@ using TableOrder.Contract.Menu;
 using TableOrder.Contract.Payments;
 using TableOrder.Contract.Visits;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 古いデータの片付け (サーバの中の CleanupService を、裏の処理と同じく店舗の文脈で呼ぶ)
 public sealed class CleanupServiceTests : IClassFixture<ServerFactory>
@@ -124,7 +125,7 @@ public sealed class CleanupServiceTests : IClassFixture<ServerFactory>
         Assert.Contains(first, remaining);
         Assert.Contains(latest, remaining);
         using var table = await SignInAsync(store.TableCodes[0]);
-        Assert.NotEmpty((await table.GetAsync<MenuResponse>("/api/v1/menu")).Items);
+        Assert.NotEmpty((await table.GetAsync<MenuResponse>(ApiRoutes.Menu)).Items);
     }
 
     //--------------------------------------------------------------------------------
@@ -140,7 +141,7 @@ public sealed class CleanupServiceTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice hall, Guid tableId)
     {
-        using var response = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 
@@ -148,7 +149,7 @@ public sealed class CleanupServiceTests : IClassFixture<ServerFactory>
     private static async Task<Guid> CancelVisitAsync(TestDevice hall, Guid tableId)
     {
         var visit = await OpenAsync(hall, tableId);
-        using var cancelled = await hall.PostAsync($"/api/v1/visits/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
+        using var cancelled = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
         cancelled.EnsureSuccessStatusCode();
         return visit.Id;
     }
@@ -158,20 +159,20 @@ public sealed class CleanupServiceTests : IClassFixture<ServerFactory>
     {
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
-        using var confirmed = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var confirmed = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
         confirmed.EnsureSuccessStatusCode();
-        using var ordered = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.CheeseSauce), menu.Line(TestMenu.Beer)));
+        using var ordered = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.CheeseSauce), menu.Line(TestMenu.Beer)));
         ordered.EnsureSuccessStatusCode();
-        using var called = await table.PostAsync($"/api/v1/visits/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Staff" });
+        using var called = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Staff" });
         called.EnsureSuccessStatusCode();
 
-        var current = await table.GetAsync<VisitResponse>("/api/v1/devices/me/visit");
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = current.Version });
+        var current = await table.GetAsync<VisitResponse>($"{ApiRoutes.Devices}/me/visit");
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = current.Version });
         checkout.EnsureSuccessStatusCode();
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = bill.Total });
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/payments", new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.CreditCard, Amount = bill.Total });
         var payment = await TestDevice.ReadAsync<PaymentResponse>(created);
-        using var result = await table.PostAsync($"/api/v1/payments/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
+        using var result = await table.PostAsync($"{ApiRoutes.Payments}/{payment.Id}/result", new PaymentResultRequest { Status = PaymentStatus.Completed, Provider = "card", ProviderReference = Guid.CreateVersion7().ToString("N") });
         result.EnsureSuccessStatusCode();
         return visit.Id;
     }

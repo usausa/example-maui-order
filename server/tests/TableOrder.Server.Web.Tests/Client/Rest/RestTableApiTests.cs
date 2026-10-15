@@ -5,6 +5,7 @@ using TableOrder.Contract.Bills;
 using TableOrder.Contract.Calls;
 using TableOrder.Contract.Payments;
 using TableOrder.Contract.Visits;
+using TableOrder.Server.Web.Endpoints;
 
 // テーブル端末のアプリの REST の窓口を、本物のサーバにつないで確かめる
 public sealed class RestTableApiTests : IClassFixture<ServerFactory>
@@ -97,7 +98,7 @@ public sealed class RestTableApiTests : IClassFixture<ServerFactory>
         Assert.Equal(VisitStatus.Paying, paying.Content!.Status);
         var payment = (await api.CreatePaymentAsync(visit.Id, new PaymentCreateRequest { Id = Guid.CreateVersion7(), Method = PaymentMethod.QrCode, Amount = bill.Total }, cancel)).Content!;
         using var callback = factory.CreateClient();
-        using var completed = await callback.PostAsJsonAsync("/api/v1/payments/callbacks/fake", new PaymentCallbackRequest { ProviderReference = payment.Id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, cancel);
+        using var completed = await callback.PostAsJsonAsync($"{ApiRoutes.Payments}/callbacks/fake", new PaymentCallbackRequest { ProviderReference = payment.Id.ToString("N"), Status = PaymentStatus.Completed }, TestDevice.JsonOptions, cancel);
         completed.EnsureSuccessStatusCode();
         Assert.Equal(PaymentStatus.Completed, (await api.GetPaymentAsync(payment.Id, cancel)).Content!.Status);
         Assert.Null((await api.GetCurrentVisitAsync(cancel)).Content);

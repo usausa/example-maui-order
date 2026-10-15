@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using TableOrder.Contract.Calls;
 using TableOrder.Contract.Menu;
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // 店内の今 (管理画面と同じく、選んだ店舗の文脈で呼ぶ)
 public sealed class FloorServiceTests : IClassFixture<ServerFactory>
@@ -27,7 +28,7 @@ public sealed class FloorServiceTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
         using var table = new TestDevice(factory.CreateClient());
         await table.SignInAsync(store.TableCodes[0]);
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Water" });
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/calls", new CallCreateRequest { Id = Guid.CreateVersion7(), ReasonCode = "Water" });
         created.EnsureSuccessStatusCode();
 
         // Act
@@ -51,10 +52,10 @@ public sealed class FloorServiceTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var hall = new TestDevice(factory.CreateClient());
         await hall.SignInAsync(store.HallCode);
-        var menu = await hall.GetAsync<MenuResponse>("/api/v1/menu");
-        using var soldOut = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        var menu = await hall.GetAsync<MenuResponse>(ApiRoutes.Menu);
+        using var soldOut = await hall.PutAsync($"{ApiRoutes.Stock}/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
-        using var limited = await hall.PutAsync($"/api/v1/stock/{TestMenu.CheeseSauce}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.Limited, Remaining = 5 });
+        using var limited = await hall.PutAsync($"{ApiRoutes.Stock}/{TestMenu.CheeseSauce}", new StockUpdateRequest { TargetKind = StockTargetKind.Option, Status = StockStatus.Limited, Remaining = 5 });
         limited.EnsureSuccessStatusCode();
 
         // Act

@@ -35,7 +35,8 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
                 Exception = exception,
                 ProblemDetails = new ProblemDetails
                 {
-                    Status = badRequest.StatusCode
+                    Status = badRequest.StatusCode,
+                    Title = ApiProblems.ValidationTitle
                 }
             });
         }
@@ -51,7 +52,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             ProblemDetails = new ProblemDetails
             {
                 Status = StatusCodes.Status500InternalServerError,
-                Title = "An unexpected error occurred."
+                Title = ApiProblems.UnexpectedTitle
             }
         });
     }

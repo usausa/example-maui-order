@@ -32,7 +32,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var request = menu.Order(menu.Line(TestMenu.Hamburg, 2, OrderTiming.Now, TestMenu.CheeseSauce), menu.Line(TestMenu.Salad));
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -43,9 +43,9 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(request.Lines.Sum(static x => x.UnitPrice * x.Quantity), order.Amount);
         Assert.All(order.Lines, static x => Assert.Equal(OrderLineStatus.Ordered, x.Status));
         Assert.Equal([TestMenu.CheeseSauce], order.Lines[0].Options.Select(static x => x.OptionId));
-        var history = await table.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        var history = await table.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.Equal([order.Id], history.Items.Select(static x => x.Id));
-        Assert.Equal(order.Amount, (await table.GetAsync<VisitResponse>("/api/v1/devices/me/visit")).OrderTotal);
+        Assert.Equal(order.Amount, (await table.GetAsync<VisitResponse>($"{ApiRoutes.Devices}/me/visit")).OrderTotal);
     }
 
     // 同じ Id の送り直しは受け付けた注文を返し、内容が違えば受けない
@@ -58,12 +58,12 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
         var request = menu.Order(menu.Line(TestMenu.Salad));
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
 
         // Act
-        using var resent = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var resent = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         request.Lines[0].Quantity = 2;
-        using var changed = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var changed = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
@@ -71,7 +71,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(request.Id, (await TestDevice.ReadAsync<OrderListResponseItem>(resent)).Id);
         Assert.Equal(HttpStatusCode.Conflict, changed.StatusCode);
         Assert.Equal("DUPLICATE_ID_MISMATCH", await TestDevice.ReadErrorCodeAsync(changed));
-        Assert.Single((await table.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders")).Items);
+        Assert.Single((await table.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders")).Items);
     }
 
     // 表示していた単価が今のメニューと違えば受けず、明細の Id で知らせる
@@ -87,7 +87,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         line.UnitPrice += 1;
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(line));
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(line));
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -108,7 +108,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var order = menu.Order(menu.Line(TestMenu.Salad));
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", new { order.Id, order.MenuVersion, Lines = new OrderCreateRequestLine?[] { null } });
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", new { order.Id, order.MenuVersion, Lines = new OrderCreateRequestLine?[] { null } });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -126,7 +126,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(table);
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg)));
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg)));
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -140,22 +140,22 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         // Arrange
         var store = await factory.CreateStoreAsync();
         using var hall = await SignInAsync(store.HallCode);
-        using var limited = await hall.PutAsync($"/api/v1/stock/{TestMenu.Salad}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 2 });
+        using var limited = await hall.PutAsync($"{ApiRoutes.Stock}/{TestMenu.Salad}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.Limited, Remaining = 2 });
         limited.EnsureSuccessStatusCode();
         var visit = await OpenAsync(hall, store.TableIds[0]);
         var menu = await TestMenu.LoadAsync(hall);
 
         // Act / Assert: 残りを超える
-        using var insufficient = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 3)));
+        using var insufficient = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 3)));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, insufficient.StatusCode);
         Assert.Equal("STOCK_INSUFFICIENT", await TestDevice.ReadErrorCodeAsync(insufficient));
 
         // Act / Assert: 残りをすべて頼むと売り切れになる
-        using var ordered = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 2)));
+        using var ordered = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad, 2)));
         Assert.Equal(HttpStatusCode.Created, ordered.StatusCode);
-        var stock = await hall.GetAsync<StockListResponse>("/api/v1/stock");
+        var stock = await hall.GetAsync<StockListResponse>(ApiRoutes.Stock);
         Assert.Equal(StockStatus.SoldOut, stock.Items.Single(static x => x.TargetId == TestMenu.Salad).Status);
-        using var soldOut = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var soldOut = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, soldOut.StatusCode);
         Assert.Equal("ITEM_SOLD_OUT", await TestDevice.ReadErrorCodeAsync(soldOut));
     }
@@ -171,14 +171,14 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(table);
 
         // Act / Assert: 答える前
-        using var rejected = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Beer)));
+        using var rejected = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Beer)));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, rejected.StatusCode);
         Assert.Equal("CONFIRMATION_REQUIRED", await TestDevice.ReadErrorCodeAsync(rejected));
 
         // Act / Assert: 答えたあと
-        using var confirmed = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var confirmed = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
         confirmed.EnsureSuccessStatusCode();
-        using var accepted = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Beer)));
+        using var accepted = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Beer)));
         Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
     }
 
@@ -193,14 +193,14 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(table);
 
         // Act / Assert: 2 人で 3 点は超える
-        using var exceeded = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 3, OrderTiming.Now, TestMenu.Medium)));
+        using var exceeded = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 3, OrderTiming.Now, TestMenu.Medium)));
         Assert.Equal(HttpStatusCode.UnprocessableEntity, exceeded.StatusCode);
         Assert.Equal("LIMIT_EXCEEDED", await TestDevice.ReadErrorCodeAsync(exceeded));
 
         // Act / Assert: 2 点は受け、そのあとの 1 点は超える
-        using var accepted = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 2, OrderTiming.Now, TestMenu.Medium)));
+        using var accepted = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 2, OrderTiming.Now, TestMenu.Medium)));
         Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
-        using var more = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 1, OrderTiming.Now, TestMenu.Medium)));
+        using var more = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Sirloin, 1, OrderTiming.Now, TestMenu.Medium)));
         Assert.Equal("LIMIT_EXCEEDED", await TestDevice.ReadErrorCodeAsync(more));
     }
 
@@ -213,11 +213,11 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
         var visit = await OpenAsync(hall, store.TableIds[0]);
         var menu = await TestMenu.LoadAsync(hall);
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Act
-        using var response = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var response = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -236,12 +236,12 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var request = menu.Order(menu.Line(TestMenu.DrinkBar), menu.Line(TestMenu.Parfait, 1, OrderTiming.AfterMeal));
 
         // Act / Assert: 受けたとき
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         var order = await TestDevice.ReadAsync<OrderListResponseItem>(created);
         Assert.Equal([OrderLineStatus.Served, OrderLineStatus.Held], order.Lines.Select(static x => x.Status));
 
         // Act / Assert: 食後の品をお願いする
-        using var released = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders/release", new OrderReleaseRequest { LineIds = [] });
+        using var released = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders/release", new OrderReleaseRequest { LineIds = [] });
         var orders = await TestDevice.ReadAsync<OrderListResponse>(released);
         Assert.Equal([OrderLineStatus.Served, OrderLineStatus.Ordered], orders.Items[0].Lines.Select(static x => x.Status));
     }
@@ -259,8 +259,8 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var line = menu.Line(TestMenu.KidsPlate);
 
         // Act
-        using var rejected = await hall.PostAsync($"/api/v1/visits/{adults.Id}/orders", menu.Order(line));
-        using var accepted = await hall.PostAsync($"/api/v1/visits/{family.Id}/orders", menu.Order(menu.Line(TestMenu.KidsPlate)));
+        using var rejected = await hall.PostAsync($"{ApiRoutes.Visits}/{adults.Id}/orders", menu.Order(line));
+        using var accepted = await hall.PostAsync($"{ApiRoutes.Visits}/{family.Id}/orders", menu.Order(menu.Line(TestMenu.KidsPlate)));
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, rejected.StatusCode);
@@ -286,8 +286,8 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var unknown = menu.Line(TestMenu.DrinkBar);
 
         // Act
-        using var accepted = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), menu.Line(TestMenu.Soup)));
-        using var rejected = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), expired, later, unknown));
+        using var accepted = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), menu.Line(TestMenu.Soup)));
+        using var rejected = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad), expired, later, unknown));
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
@@ -310,7 +310,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(hall);
 
         // Act
-        using var response = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Soup)));
+        using var response = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Soup)));
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
@@ -328,12 +328,12 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
         var request = menu.Order(menu.Line(TestMenu.Salad));
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         await PublishDaypartsAsync(store, (TestMenu.Salad, -60, -3));
 
         // Act
-        using var resent = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
-        using var other = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var resent = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
+        using var other = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
@@ -357,12 +357,12 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(hall);
         var salad = menu.Line(TestMenu.Salad, 3);
         var drinkBar = menu.Line(TestMenu.DrinkBar);
-        using var created = await hall.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(salad, drinkBar));
+        using var created = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(salad, drinkBar));
         var order = await TestDevice.ReadAsync<OrderListResponseItem>(created);
 
         // Act
-        using var cancelled = await hall.PostAsync($"/api/v1/orders/{order.Id}/lines/{salad.Id}/cancel", new OrderLineCancelRequest { Quantity = 1, Reason = "作り間違い" });
-        using var served = await hall.PostAsync($"/api/v1/orders/{order.Id}/lines/{drinkBar.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
+        using var cancelled = await hall.PostAsync($"{ApiRoutes.Orders}/{order.Id}/lines/{salad.Id}/cancel", new OrderLineCancelRequest { Quantity = 1, Reason = "作り間違い" });
+        using var served = await hall.PostAsync($"{ApiRoutes.Orders}/{order.Id}/lines/{drinkBar.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
 
         // Assert
         var result = await TestDevice.ReadAsync<OrderListResponseItem>(cancelled);
@@ -385,11 +385,11 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
         var line = menu.Line(TestMenu.Salad);
-        using var created = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(line));
+        using var created = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(line));
         var order = await TestDevice.ReadAsync<OrderListResponseItem>(created);
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/orders/{order.Id}/lines/{line.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
+        using var response = await table.PostAsync($"{ApiRoutes.Orders}/{order.Id}/lines/{line.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -409,7 +409,7 @@ public sealed class OrderEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId, int children = 0)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2, Children = children });
+        using var response = await device.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2, Children = children });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 

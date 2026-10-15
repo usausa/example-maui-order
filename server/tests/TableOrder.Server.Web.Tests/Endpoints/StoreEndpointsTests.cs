@@ -22,8 +22,8 @@ public sealed class StoreEndpointsTests : IClassFixture<ServerFactory>
         await test.SignInAsync(SampleData.TestTableCode);
 
         // Act
-        var demoStore = await demo.GetAsync<StoreResponse>("/api/v1/store");
-        var testStore = await test.GetAsync<StoreResponse>("/api/v1/store");
+        var demoStore = await demo.GetAsync<StoreResponse>(ApiRoutes.Store);
+        var testStore = await test.GetAsync<StoreResponse>(ApiRoutes.Store);
 
         // Assert
         Assert.Equal(SampleData.DemoStoreId, demoStore.Id);
@@ -42,7 +42,7 @@ public sealed class StoreEndpointsTests : IClassFixture<ServerFactory>
         await device.SignInAsync(SampleData.DemoReceptionCode);
 
         // Act
-        var store = await device.GetAsync<StoreResponse>("/api/v1/store");
+        var store = await device.GetAsync<StoreResponse>(ApiRoutes.Store);
 
         // Assert
         Assert.Equal("Asia/Tokyo", store.TimeZone);
@@ -60,16 +60,16 @@ public sealed class StoreEndpointsTests : IClassFixture<ServerFactory>
         await table.SignInAsync(store.TableCodes[0]);
 
         // Act / Assert: 一時停止
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true, Message = new LocalizedText { Ja = "ただいま混み合っています" } });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true, Message = new LocalizedText { Ja = "ただいま混み合っています" } });
         Assert.Equal(HttpStatusCode.NoContent, paused.StatusCode);
-        var pausedStore = await table.GetAsync<StoreResponse>("/api/v1/store");
+        var pausedStore = await table.GetAsync<StoreResponse>(ApiRoutes.Store);
         Assert.True(pausedStore.OrderingPaused);
         Assert.Equal("ただいま混み合っています", pausedStore.PausedMessage!.Ja);
 
         // Act / Assert: 再開 (送った文言は使わない)
-        using var resumed = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = false, Message = new LocalizedText { Ja = "残らない文言" } });
+        using var resumed = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = false, Message = new LocalizedText { Ja = "残らない文言" } });
         Assert.Equal(HttpStatusCode.NoContent, resumed.StatusCode);
-        var resumedStore = await table.GetAsync<StoreResponse>("/api/v1/store");
+        var resumedStore = await table.GetAsync<StoreResponse>(ApiRoutes.Store);
         Assert.False(resumedStore.OrderingPaused);
         Assert.Null(resumedStore.PausedMessage);
     }
@@ -84,7 +84,7 @@ public sealed class StoreEndpointsTests : IClassFixture<ServerFactory>
         await table.SignInAsync(store.TableCodes[0]);
 
         // Act
-        using var response = await table.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var response = await table.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);

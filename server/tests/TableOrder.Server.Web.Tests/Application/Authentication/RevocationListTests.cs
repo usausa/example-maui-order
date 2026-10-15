@@ -5,11 +5,12 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 
 using TableOrder.Server.Core.Services;
+using TableOrder.Server.Web.Endpoints;
 
 // すぐに拒む一覧 (無効にした端末と止めたテナントのアクセストークンを、期限の前でも断る)
 public sealed class RevocationListTests : IClassFixture<ServerFactory>
 {
-    private const string ConfigPath = "/api/v1/devices/me/config";
+    private const string ConfigPath = ApiRoutes.DeviceConfig;
 
     private readonly ServerFactory factory;
 

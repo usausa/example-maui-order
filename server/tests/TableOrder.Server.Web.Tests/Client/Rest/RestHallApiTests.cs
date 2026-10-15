@@ -8,6 +8,7 @@ using TableOrder.Contract.Orders;
 using TableOrder.Contract.Serving;
 using TableOrder.Contract.Stores;
 using TableOrder.Contract.Visits;
+using TableOrder.Server.Web.Endpoints;
 
 // ホール端末のアプリの REST の窓口を、本物のサーバにつないで確かめる
 public sealed class RestHallApiTests : IClassFixture<ServerFactory>
@@ -120,8 +121,8 @@ public sealed class RestHallApiTests : IClassFixture<ServerFactory>
         // Act / Assert: できあがった品を提供すると、提供の一覧から消える
         var salad = menu.Line(TestMenu.Salad);
         Assert.True((await api.CreateOrderAsync(visit.Id, menu.Order(salad), cancel)).IsSuccess);
-        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
-        using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
+        using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
         ready.EnsureSuccessStatusCode();
         Assert.Equal(salad.Id, Assert.Single(Assert.Single((await api.GetServingAsync(cancel: cancel)).Content!.Items).Lines).LineId);
         Assert.True((await api.ServeAsync(new ServeRequest { LineIds = [salad.Id] }, cancel)).IsSuccess);

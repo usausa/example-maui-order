@@ -3,6 +3,11 @@ namespace TableOrder.Server.Web.Endpoints;
 // API の失敗の応答 (Problem Details に errorCode を付ける)
 public static class ApiProblems
 {
+    // 入力の誤り (Service の確かめと、フレームワークの要求の読み取り) と、作りの誤り (500) の文言 (フレームワークの英語の文言を置き換える)
+    public const string ValidationTitle = "入力を確かめてください";
+
+    public const string UnexpectedTitle = "サーバでエラーが起きました";
+
     private const string ErrorCodeKey = "errorCode";
 
     private const string ErrorsKey = "errors";
@@ -42,7 +47,7 @@ public static class ApiProblems
     };
 
     public static ValidationProblem Validation(IDictionary<string, string[]> errors) =>
-        TypedResults.ValidationProblem(errors, title: "入力を確かめてください", extensions: Extensions(ErrorCodes.ValidationError));
+        TypedResults.ValidationProblem(errors, title: ValidationTitle, extensions: Extensions(ErrorCodes.ValidationError));
 
     // ほかのテナントや店舗のものも同じにする (あるかどうかを見せない)
     public static ProblemHttpResult NotFound() => Problem(ErrorCodes.NotFound);

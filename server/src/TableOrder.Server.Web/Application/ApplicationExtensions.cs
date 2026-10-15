@@ -195,11 +195,12 @@ public static class ApplicationExtensions
             {
                 context.ProblemDetails.Extensions.TryAdd("traceId", Activity.Current?.Id ?? context.HttpContext.TraceIdentifier);
 
-                // 引数の結び付けと JSON の読み込みの失敗 (形の誤り、知らない項目) も入力の誤りとして errorCode を付ける (端末が扱いを決められるように)
+                // 引数の結び付けと JSON の読み込みの失敗 (形の誤り、知らない項目) も入力の誤りとして errorCode を付け (端末が扱いを決められるように)、既定の英語の文言を置き換える
                 if ((context.ProblemDetails.Status == StatusCodes.Status400BadRequest) &&
                     context.HttpContext.Request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase))
                 {
                     context.ProblemDetails.Extensions.TryAdd("errorCode", ErrorCodes.ValidationError);
+                    context.ProblemDetails.Title = ApiProblems.ValidationTitle;
                 }
             };
         });

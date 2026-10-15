@@ -5,6 +5,7 @@ using TableOrder.Contract.Kitchen;
 using TableOrder.Contract.Menu;
 using TableOrder.Contract.Stores;
 using TableOrder.Contract.Visits;
+using TableOrder.Server.Web.Endpoints;
 
 public sealed class StoreHubTests : IClassFixture<ServerFactory>
 {
@@ -29,9 +30,9 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         await using var otherHub = await TestHubConnection.ConnectAsync(factory, other);
 
         // Act
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Assert
@@ -55,13 +56,13 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
         using var from = await SignInAsync(store.TableCodes[0]);
         using var to = await SignInAsync(store.TableCodes[1]);
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
         await using var fromHub = await TestHubConnection.ConnectAsync(factory, from);
         await using var toHub = await TestHubConnection.ConnectAsync(factory, to);
 
         // Act
-        using var moved = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = visit.Version });
+        using var moved = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = visit.Version });
         moved.EnsureSuccessStatusCode();
 
         // Assert
@@ -89,9 +90,9 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         await using var receptionHub = await TestHubConnection.ConnectAsync(factory, reception);
 
         // Act
-        using var soldOut = await hall.PutAsync($"/api/v1/stock/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
+        using var soldOut = await hall.PutAsync($"{ApiRoutes.Stock}/{TestMenu.Parfait}", new StockUpdateRequest { TargetKind = StockTargetKind.Item, Status = StockStatus.SoldOut });
         soldOut.EnsureSuccessStatusCode();
-        using var paused = await hall.PutAsync("/api/v1/store/ordering", new StoreOrderingRequest { Paused = true });
+        using var paused = await hall.PutAsync($"{ApiRoutes.Store}/ordering", new StoreOrderingRequest { Paused = true });
         paused.EnsureSuccessStatusCode();
 
         // Assert
@@ -111,7 +112,7 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
         using var table = await SignInAsync(store.TableCodes[0]);
         using var kitchen = await SignInAsync(store.KitchenCode);
-        using var opened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var opened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
         var visit = await TestDevice.ReadAsync<VisitResponse>(opened);
         var menu = await TestMenu.LoadAsync(table);
         var salad = menu.Line(TestMenu.Salad);
@@ -120,7 +121,7 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         await using var kitchenHub = await TestHubConnection.ConnectAsync(factory, kitchen);
 
         // Act / Assert: 注文
-        using var ordered = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(salad));
+        using var ordered = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(salad));
         ordered.EnsureSuccessStatusCode();
         Assert.Equal(EventTypes.OrderCreated, (await hallHub.NextAsync()).Type);
         Assert.Equal(EventTypes.OrderCreated, (await tableHub.NextAsync()).Type);
@@ -130,7 +131,7 @@ public sealed class StoreHubTests : IClassFixture<ServerFactory>
         Assert.Equal(TestMenu.KitchenStation, ticket.StationId);
 
         // Act / Assert: できあがり
-        using var ready = await kitchen.PostAsync($"/api/v1/kitchen/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
+        using var ready = await kitchen.PostAsync($"{ApiRoutes.Kitchen}/tickets/{ticket.Id}/lines/{salad.Id}/ready", new { });
         ready.EnsureSuccessStatusCode();
         var updated = await tableHub.NextAsync();
         Assert.Equal(EventTypes.OrderLinesUpdated, updated.Type);

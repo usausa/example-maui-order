@@ -26,8 +26,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var request = new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2, Children = 1 };
 
         // Act
-        using var created = await hall.PostAsync("/api/v1/visits", request);
-        using var resent = await hall.PostAsync("/api/v1/visits", request);
+        using var created = await hall.PostAsync(ApiRoutes.Visits, request);
+        using var resent = await hall.PostAsync(ApiRoutes.Visits, request);
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
@@ -51,10 +51,10 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var store = await factory.CreateStoreAsync();
         using var hall = await SignInAsync(store.HallCode);
         var id = Guid.CreateVersion7();
-        using var created = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = id, TableId = store.TableIds[0], Adults = 2 });
+        using var created = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = id, TableId = store.TableIds[0], Adults = 2 });
 
         // Act
-        using var response = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = id, TableId = store.TableIds[1], Adults = 2 });
+        using var response = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = id, TableId = store.TableIds[1], Adults = 2 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -68,10 +68,10 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         // Arrange
         var store = await factory.CreateStoreAsync();
         using var hall = await SignInAsync(store.HallCode);
-        using var created = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var created = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
 
         // Act
-        using var response = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
+        using var response = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
@@ -87,7 +87,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
 
         // Act
-        using var response = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0] });
+        using var response = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0] });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -104,8 +104,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var reception = await SignInAsync(store.ReceptionCode);
 
         // Act
-        using var byTable = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
-        using var byReception = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
+        using var byTable = await table.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
+        using var byReception = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, byTable.StatusCode);
@@ -123,8 +123,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var table = await SignInAsync(store.TableCodes[1]);
 
         // Act
-        using var other = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
-        using var created = await table.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2, Children = 1 });
+        using var other = await table.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var created = await table.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2, Children = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, other.StatusCode);
@@ -146,10 +146,10 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var request = new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 };
 
         // Act
-        using var first = await reception.PostAsync("/api/v1/visits", request);
-        using var resent = await reception.PostAsync("/api/v1/visits", request);
-        using var large = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 4, Children = 1 });
-        using var small = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
+        using var first = await reception.PostAsync(ApiRoutes.Visits, request);
+        using var resent = await reception.PostAsync(ApiRoutes.Visits, request);
+        using var large = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 4, Children = 1 });
+        using var small = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, first.StatusCode);
@@ -171,8 +171,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         await factory.OpenVisitAsync(store, 2);
 
         // Act
-        using var full = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 5 });
-        using var chosen = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var full = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 5 });
+        using var chosen = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, full.StatusCode);
@@ -190,7 +190,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var reception = await SignInAsync(store.ReceptionCode);
         using var hall = await SignInAsync(store.HallCode);
         var opened = new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 };
-        using (var first = await reception.PostAsync("/api/v1/visits", opened))
+        using (var first = await reception.PostAsync(ApiRoutes.Visits, opened))
         {
             first.EnsureSuccessStatusCode();
         }
@@ -198,9 +198,9 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         await factory.SetLastOrderTimeAsync(store, "05:00");
 
         // Act
-        using var late = await reception.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
-        using var resent = await reception.PostAsync("/api/v1/visits", opened);
-        using var staff = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[1], Adults = 2 });
+        using var late = await reception.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), Adults = 2 });
+        using var resent = await reception.PostAsync(ApiRoutes.Visits, opened);
+        using var staff = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[1], Adults = 2 });
 
         // Assert
         Assert.Equal(HttpStatusCode.UnprocessableEntity, late.StatusCode);
@@ -218,7 +218,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var kitchen = await SignInAsync(store.KitchenCode);
 
         // Act
-        using var response = await kitchen.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
+        using var response = await kitchen.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 1 });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -239,12 +239,12 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var table = await SignInAsync(store.TableCodes[0]);
 
         // Act / Assert: 来店がなければ待受
-        using var none = await table.Client.GetAsync(new Uri("/api/v1/devices/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var none = await table.Client.GetAsync(new Uri($"{ApiRoutes.Devices}/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, none.StatusCode);
 
         // Act / Assert: ホールが開くと、テーブル端末の来店になる
         var visit = await OpenAsync(hall, store.TableIds[0]);
-        var current = await table.GetAsync<VisitResponse>("/api/v1/devices/me/visit");
+        var current = await table.GetAsync<VisitResponse>($"{ApiRoutes.Devices}/me/visit");
         Assert.Equal(visit.Id, current.Id);
     }
 
@@ -261,9 +261,9 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
 
         // Act
-        var fromHall = await hall.GetAsync<VisitResponse>($"/api/v1/visits/{visit.Id}");
-        using var fromTable = await table.Client.GetAsync(new Uri($"/api/v1/visits/{visit.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
-        using var fromOtherTenant = await otherHall.Client.GetAsync(new Uri($"/api/v1/visits/{visit.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
+        var fromHall = await hall.GetAsync<VisitResponse>($"{ApiRoutes.Visits}/{visit.Id}");
+        using var fromTable = await table.Client.GetAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var fromOtherTenant = await otherHall.Client.GetAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}", UriKind.Relative), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(visit.Id, fromHall.Id);
@@ -287,8 +287,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
 
         // Act
-        using var updated = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 2, Version = visit.Version });
-        using var stale = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 1, Version = visit.Version });
+        using var updated = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 3, Children = 2, Version = visit.Version });
+        using var stale = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 1, Version = visit.Version });
 
         // Assert
         var result = await TestDevice.ReadAsync<VisitResponse>(updated);
@@ -312,18 +312,18 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         await OpenAsync(hall, store.TableIds[2]);
 
         // Act / Assert: 来店のあるテーブルには移さない
-        using var occupied = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[2], Version = visit.Version });
+        using var occupied = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[2], Version = visit.Version });
         Assert.Equal(HttpStatusCode.Conflict, occupied.StatusCode);
         Assert.Equal("TABLE_OCCUPIED", await TestDevice.ReadErrorCodeAsync(occupied));
 
         // Act / Assert: 空いているテーブルに移す
-        using var moved = await hall.PostAsync($"/api/v1/visits/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = visit.Version });
+        using var moved = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/move", new VisitMoveRequest { ToTableId = store.TableIds[1], Version = visit.Version });
         var result = await TestDevice.ReadAsync<VisitResponse>(moved);
         Assert.Equal(store.TableIds[1], result.TableId);
         Assert.Equal("2", result.TableName);
-        using var fromVisit = await from.Client.GetAsync(new Uri("/api/v1/devices/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
+        using var fromVisit = await from.Client.GetAsync(new Uri($"{ApiRoutes.Devices}/me/visit", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, fromVisit.StatusCode);
-        Assert.Equal(visit.Id, (await to.GetAsync<VisitResponse>("/api/v1/devices/me/visit")).Id);
+        Assert.Equal(visit.Id, (await to.GetAsync<VisitResponse>($"{ApiRoutes.Devices}/me/visit")).Id);
     }
 
     // 確認のルールに答えた記録は来店で 1 回だけ持ち、確認のルールでないものは受けない
@@ -336,9 +336,9 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
 
         // Act
-        using var first = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
-        using var second = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
-        using var suggestion = await table.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.DrinkBarRuleId });
+        using var first = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var second = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var suggestion = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.DrinkBarRuleId });
 
         // Assert
         Assert.Equal([TestMenu.AlcoholRuleId], (await TestDevice.ReadAsync<VisitResponse>(first)).ConfirmedRuleIds);
@@ -358,8 +358,8 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
 
         // Act
-        using var byHall = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
-        using var byKitchen = await kitchen.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var byHall = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var byKitchen = await kitchen.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
 
         // Assert
         Assert.Equal([TestMenu.AlcoholRuleId], (await TestDevice.ReadAsync<VisitResponse>(byHall)).ConfirmedRuleIds);
@@ -376,12 +376,12 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         using var hall = await SignInAsync(store.HallCode);
         using var table = await SignInAsync(store.TableCodes[0]);
         var visit = await factory.OpenVisitAsync(store, 0);
-        var before = await table.GetAsync<EventListResponse>("/api/v1/events?after=0");
+        var before = await table.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after=0");
 
         // Act
-        using var first = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
-        using var second = await hall.PostAsync($"/api/v1/visits/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
-        var events = await table.GetAsync<EventListResponse>($"/api/v1/events?after={before.LastSeq}");
+        using var first = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        using var second = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/confirmations", new VisitConfirmationRequest { RuleId = TestMenu.AlcoholRuleId });
+        var events = await table.GetAsync<EventListResponse>($"{ApiRoutes.Events}?after={before.LastSeq}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
@@ -404,9 +404,9 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
 
         // Act
-        using var closed = await hall.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version, StaffId = "S01" });
-        using var update = await hall.PatchAsync($"/api/v1/visits/{visit.Id}", new VisitUpdateRequest { Adults = 1, Version = visit.Version + 1 });
-        using var reopened = await hall.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
+        using var closed = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.Register, Version = visit.Version, StaffId = "S01" });
+        using var update = await hall.PatchAsync($"{ApiRoutes.Visits}/{visit.Id}", new VisitUpdateRequest { Adults = 1, Version = visit.Version + 1 });
+        using var reopened = await hall.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = store.TableIds[0], Adults = 2 });
 
         // Assert
         var result = await TestDevice.ReadAsync<VisitResponse>(closed);
@@ -428,7 +428,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
 
         // Act
-        using var response = await hall.PostAsync($"/api/v1/visits/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.TablePayment, Version = visit.Version });
+        using var response = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/close", new VisitCloseRequest { ClosedBy = VisitClosedBy.TablePayment, Version = visit.Version });
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -445,7 +445,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await OpenAsync(hall, store.TableIds[0]);
 
         // Act
-        using var response = await hall.PostAsync($"/api/v1/visits/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
+        using var response = await hall.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
 
         // Assert
         var result = await TestDevice.ReadAsync<VisitResponse>(response);
@@ -463,7 +463,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
 
         // Act
-        using var response = await table.PostAsync($"/api/v1/visits/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
+        using var response = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/cancel", new VisitCancelRequest { Version = visit.Version });
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
@@ -483,7 +483,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<VisitResponse> OpenAsync(TestDevice device, Guid tableId)
     {
-        using var response = await device.PostAsync("/api/v1/visits", new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
+        using var response = await device.PostAsync(ApiRoutes.Visits, new VisitCreateRequest { Id = Guid.CreateVersion7(), TableId = tableId, Adults = 2 });
         return await TestDevice.ReadAsync<VisitResponse>(response);
     }
 }

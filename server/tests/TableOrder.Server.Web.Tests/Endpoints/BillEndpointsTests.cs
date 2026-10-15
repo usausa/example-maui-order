@@ -29,13 +29,13 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         var salad = menu.Line(TestMenu.Salad);
         await OrderAsync(table, visit, menu.Order(first, salad));
         var order = await OrderAsync(table, visit, menu.Order(second));
-        using var cancelled = await hall.PostAsync($"/api/v1/orders/{order.Id}/lines/{second.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
+        using var cancelled = await hall.PostAsync($"{ApiRoutes.Orders}/{order.Id}/lines/{second.Id}/cancel", new OrderLineCancelRequest { Quantity = 1 });
         cancelled.EnsureSuccessStatusCode();
-        using var third = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.CheeseSauce)));
+        using var third = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Hamburg, 1, OrderTiming.Now, TestMenu.CheeseSauce)));
         third.EnsureSuccessStatusCode();
 
         // Act
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
 
         // Assert
         var total = (first.UnitPrice * 2) + salad.UnitPrice;
@@ -65,7 +65,7 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         await factory.SetLineTaxRateAsync(store, before.Id, 0.08m);
 
         // Act
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
 
         // Assert
         Assert.Equal(2, bill.Lines.Count);
@@ -84,25 +84,25 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         var visit = await factory.OpenVisitAsync(store, 0);
         var menu = await TestMenu.LoadAsync(table);
         await OrderAsync(table, visit, menu.Order(menu.Line(TestMenu.Salad)));
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
 
         // Act / Assert: 明細が変わった
-        using var changed = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = "old", Version = visit.Version });
+        using var changed = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = "old", Version = visit.Version });
         Assert.Equal(HttpStatusCode.UnprocessableEntity, changed.StatusCode);
         Assert.Equal("BILL_CHANGED", await TestDevice.ReadErrorCodeAsync(changed));
 
         // Act / Assert: 会計を始めると注文できない (送り直しは会計中のまま返す)
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
         Assert.Equal(VisitStatus.Paying, (await TestDevice.ReadAsync<VisitResponse>(checkout)).Status);
-        using var resent = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        using var resent = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
         Assert.Equal(VisitStatus.Paying, (await TestDevice.ReadAsync<VisitResponse>(resent)).Status);
-        using var paying = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var paying = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         Assert.Equal("CHECKOUT_IN_PROGRESS", await TestDevice.ReadErrorCodeAsync(paying));
 
         // Act / Assert: やめると注文できる
-        using var cancel = await table.Client.PostAsync(new Uri($"/api/v1/visits/{visit.Id}/checkout/cancel", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        using var cancel = await table.Client.PostAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}/checkout/cancel", UriKind.Relative), null, TestContext.Current.CancellationToken);
         Assert.Equal(VisitStatus.Open, (await TestDevice.ReadAsync<VisitResponse>(cancel)).Status);
-        using var reopened = await table.PostAsync($"/api/v1/visits/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
+        using var reopened = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", menu.Order(menu.Line(TestMenu.Salad)));
         Assert.Equal(HttpStatusCode.Created, reopened.StatusCode);
     }
 
@@ -118,16 +118,16 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
         var menu = await TestMenu.LoadAsync(table);
         var parfait = menu.Line(TestMenu.Parfait, 1, OrderTiming.AfterMeal);
         await OrderAsync(table, visit, menu.Order(parfait));
-        var bill = await table.GetAsync<BillResponse>($"/api/v1/visits/{visit.Id}/bill");
+        var bill = await table.GetAsync<BillResponse>($"{ApiRoutes.Visits}/{visit.Id}/bill");
 
         // Act
-        using var checkout = await table.PostAsync($"/api/v1/visits/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
+        using var checkout = await table.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/checkout", new CheckoutRequest { BillVersion = bill.BillVersion, Version = visit.Version });
 
         // Assert
         Assert.Equal(VisitStatus.Paying, (await TestDevice.ReadAsync<VisitResponse>(checkout)).Status);
-        var orders = await table.GetAsync<OrderListResponse>($"/api/v1/visits/{visit.Id}/orders");
+        var orders = await table.GetAsync<OrderListResponse>($"{ApiRoutes.Visits}/{visit.Id}/orders");
         Assert.Equal(OrderLineStatus.Ordered, Assert.Single(orders.Items[0].Lines).Status);
-        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>("/api/v1/kitchen/tickets")).Items);
+        var ticket = Assert.Single((await kitchen.GetAsync<KitchenTicketListResponse>($"{ApiRoutes.Kitchen}/tickets")).Items);
         Assert.Equal(parfait.Id, Assert.Single(ticket.Lines).LineId);
     }
 
@@ -140,7 +140,7 @@ public sealed class BillEndpointsTests : IClassFixture<ServerFactory>
 
     private static async Task<OrderListResponseItem> OrderAsync(TestDevice device, VisitResponse visit, OrderCreateRequest request)
     {
-        using var response = await device.PostAsync($"/api/v1/visits/{visit.Id}/orders", request);
+        using var response = await device.PostAsync($"{ApiRoutes.Visits}/{visit.Id}/orders", request);
         return await TestDevice.ReadAsync<OrderListResponseItem>(response);
     }
 }

@@ -130,4 +130,5 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 端末の認証の失敗 (署名、期限、端末がない、使い捨ての値の使い回し、すぐに拒む一覧) はどれも `401` にし、理由を見せない (JwtBearer の `IncludeErrorDetails = false`。端末はトークンを取り直し、トークンの要求の `DEVICE_REVOKED` / `TENANT_SUSPENDED` で理由を知る)
 - 流量の制限の `429` には `Retry-After` を付け、接続元は `RateLimits.PartitionOf` で数える (IPv6 は /64。同じ回線の中でアドレスを替えて試させない)
 - 要求の値を読めない `400` (引数の結び付け、JSON の形の誤り、知らない項目) にも `VALIDATION_ERROR` を付ける (`CustomizeProblemDetails`)
+- Problem Details の title は日本語にし (`ApiProblems`)、フレームワークが付ける英語の title (要求の読み取りの `400`、`500`) も置き換える (端末は title を出さずに errorCode で扱うが、API の応答の文言をそろえる)
 - ハブはつないだ端末を `StoreHubConnections` に覚えて、すぐに拒む一覧に入った接続を切り、トークンの期限が来た接続も切る (`CloseOnAuthenticationExpiration`。WebSocket はつないだときにだけトークンを確かめるため)
