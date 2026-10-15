@@ -1,5 +1,7 @@
 namespace TableOrder.Server.Core.Services;
 
+using System.Text.RegularExpressions;
+
 using TableOrder.Contract.Devices;
 using TableOrder.Contract.Events;
 using TableOrder.Server.Core.Accessors;
@@ -9,11 +11,14 @@ using TableOrder.Server.Core.Infrastructure.Json;
 public sealed record BrandSettings(LocalizedText Name, string? LogoImageName, IReadOnlyDictionary<string, string> Theme, int Version);
 
 // 店舗の設定。呼び出しの用件は使うかどうかだけを替える。電子レシートは、テーブルで払い終えた来店に作るか
+// 事業者の名前と登録番号は電子レシートに出す (登録番号のない店は、登録番号のないレシートにする)
 public sealed record StoreSettings(
     DeviceConfigResponseFeatures Features,
     IReadOnlyList<string> Languages,
     IReadOnlyList<PaymentMethod> PaymentMethods,
     bool ElectronicReceipt,
+    string? IssuerName,
+    string? InvoiceRegistrationNumber,
     IReadOnlyList<CallReasonSetting> CallReasons,
     int Version);
 
@@ -23,7 +28,7 @@ public sealed record CallReasonSetting(string Code, LocalizedText Name, bool IsA
 public sealed record BrandUpdateResult(IReadOnlyList<LocalizedText> UnnotifiedStores);
 
 // チェーンと店舗の設定 (管理画面)。替えたら設定の版を上げて store.updated を送り、テーブル端末は待受のときに起動からやり直して反映する
-public sealed class SettingsService
+public sealed partial class SettingsService
 {
     // 画面で選べる言語
     private static readonly string[] SupportedLanguages = ["ja", "en"];
@@ -137,14 +142,19 @@ public sealed class SettingsService
             ReadList<string>(store.Languages),
             ReadList<PaymentMethod>(store.PaymentMethods),
             store.ElectronicReceipt,
+            store.IssuerName,
+            store.InvoiceRegistrationNumber,
             reasons.Select(static x => new CallReasonSetting(x.Code, x.Name, x.IsActive)).ToList(),
             store.Version);
     }
 
     // スタッフの PIN は替えるときだけ送る (null は替えない)。サーバはハッシュだけを持つ
+    // 事業者の名前と登録番号は、空なら持たない
     public async ValueTask<ServiceError?> UpdateStoreSettingsAsync(StoreSettings settings, string? newStaffPin, CancellationToken cancellationToken)
     {
-        if (ValidateStore(settings, newStaffPin) is { } invalid)
+        var issuerName = RequestValues.NullIfEmpty(settings.IssuerName);
+        var registrationNumber = RequestValues.NullIfEmpty(settings.InvoiceRegistrationNumber);
+        if ((ValidateStore(settings, newStaffPin) ?? ValidateIssuer(issuerName, registrationNumber)) is { } invalid)
         {
             return invalid;
         }
@@ -164,7 +174,7 @@ public sealed class SettingsService
         var storeId = context.RequireStoreId();
         return await eventService.WriteAsync<ServiceError?>(tenantId, storeId, async transaction =>
         {
-            if (await settingsAccessor.UpdateStoreAsync(transaction.Tx, tenantId, storeId, languages, paymentMethods, settings.ElectronicReceipt, features, staffPinHash, settings.Version, context.Now, cancellationToken) == 0)
+            if (await settingsAccessor.UpdateStoreAsync(transaction.Tx, tenantId, storeId, languages, paymentMethods, settings.ElectronicReceipt, issuerName, registrationNumber, features, staffPinHash, settings.Version, context.Now, cancellationToken) == 0)
             {
                 return new ServiceError(ErrorCodes.VersionMismatch);
             }
@@ -240,6 +250,32 @@ public sealed class SettingsService
 
         return null;
     }
+
+    // 登録番号は T と 13 桁の半角の数字。登録番号を出すレシート (適格簡易請求書) には事業者の名前も要る
+    private static ServiceError? ValidateIssuer(string? issuerName, string? registrationNumber)
+    {
+        if (issuerName?.Length > Length.IssuerName)
+        {
+            return ServiceError.Validation("issuerName", $"事業者の名前は {Length.IssuerName} 文字までで入れてください");
+        }
+
+        if (registrationNumber is null)
+        {
+            return null;
+        }
+
+        if (!RegistrationNumberPattern().IsMatch(registrationNumber))
+        {
+            return ServiceError.Validation("invoiceRegistrationNumber", "登録番号は T と 13 桁の半角の数字で入れてください (ないときは空にする)");
+        }
+
+        return issuerName is null
+            ? ServiceError.Validation("issuerName", "登録番号を入れるときは、事業者の名前も入れてください")
+            : null;
+    }
+
+    [GeneratedRegex("^T[0-9]{13}$")]
+    private static partial Regex RegistrationNumberPattern();
 
     //--------------------------------------------------------------------------------
     // Json

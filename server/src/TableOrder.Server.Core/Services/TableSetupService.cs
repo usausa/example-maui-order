@@ -67,7 +67,7 @@ public sealed class TableSetupService
         var storeId = context.RequireStoreId();
         return await WriteAsync(tenantId, storeId, async transaction =>
         {
-            await storeAccessor.InsertTableAsync(transaction.Tx, tenantId, Guid.CreateVersion7(context.Now), storeId, input.Name.Trim(), NullIfEmpty(input.Area), input.Capacity, context.Now, cancellationToken);
+            await storeAccessor.InsertTableAsync(transaction.Tx, tenantId, Guid.CreateVersion7(context.Now), storeId, input.Name.Trim(), RequestValues.NullIfEmpty(input.Area), input.Capacity, context.Now, cancellationToken);
             return null;
         }, cancellationToken);
     }
@@ -83,7 +83,7 @@ public sealed class TableSetupService
         var tenantId = context.RequireTenantId();
         var storeId = context.RequireStoreId();
         return await WriteAsync(tenantId, storeId, async transaction =>
-            await storeAccessor.UpdateTableAsync(transaction.Tx, tenantId, storeId, tableId, input.Name.Trim(), NullIfEmpty(input.Area), input.Capacity, version, context.Now, cancellationToken) > 0
+            await storeAccessor.UpdateTableAsync(transaction.Tx, tenantId, storeId, tableId, input.Name.Trim(), RequestValues.NullIfEmpty(input.Area), input.Capacity, version, context.Now, cancellationToken) > 0
                 ? null
                 : await UpdateFailedAsync(transaction.Tx, tenantId, storeId, tableId, cancellationToken),
             cancellationToken);
@@ -207,7 +207,4 @@ public sealed class TableSetupService
             ? ServiceError.Validation("capacity", $"席の数は 1 から {MaxCapacity} で入れてください")
             : null;
     }
-
-    private static string? NullIfEmpty(string? value) =>
-        String.IsNullOrWhiteSpace(value) ? null : value.Trim();
 }

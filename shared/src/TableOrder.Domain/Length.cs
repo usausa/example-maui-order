@@ -12,6 +12,11 @@ public static class Length
     // チェーンの名前 (言語ごと)
     public const int BrandName = 30;
 
+    // 電子レシートに出す事業者の名前と、適格請求書発行事業者の登録番号 (T と 13 桁の数字)
+    public const int IssuerName = 50;
+
+    public const int InvoiceRegistrationNumber = 14;
+
     // 端末の登録のペアリングコード (管理画面で出し、端末で入れる)
     public const int PairingCodeDigits = 6;
 

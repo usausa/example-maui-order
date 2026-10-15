@@ -4,6 +4,8 @@ SET
     Languages = /*@ languages */'',
     PaymentMethods = /*@ paymentMethods */'',
     ElectronicReceipt = /*@ electronicReceipt */0,
+    IssuerName = /*@ issuerName */NULL,
+    InvoiceRegistrationNumber = /*@ invoiceRegistrationNumber */NULL,
     Features = /*@ features */'',
     StaffPinHash = COALESCE(/*@ staffPinHash */NULL, StaffPinHash),
     SettingsVersion = SettingsVersion + 1,

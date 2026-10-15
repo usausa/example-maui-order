@@ -223,6 +223,81 @@ html, body {
     font-size: 1rem;
 }
 
+/* Receipt (お客様のスマートフォンで見る電子レシート。幅を限った 1 列にし、金額は右にそろえて折り返さない) */
+.receipt-page {
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 16px;
+    box-sizing: border-box;
+    background-color: var(--mud-palette-background-gray);
+}
+
+.receipt {
+    width: 100%;
+    max-width: 480px;
+    align-self: flex-start;
+    padding: 24px 20px;
+    box-sizing: border-box;
+    background-color: var(--mud-palette-surface);
+    color: var(--mud-palette-text-primary);
+    line-height: 1.6;
+}
+
+.receipt-header {
+    text-align: center;
+}
+
+.receipt-brand {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.receipt-title {
+    margin: 16px 0 8px;
+    font-size: 1.125rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.receipt-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.receipt-row > :last-child {
+    white-space: nowrap;
+}
+
+.receipt-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--mud-palette-lines-default);
+}
+
+.receipt-line + .receipt-line {
+    margin-top: 8px;
+}
+
+.receipt-sub {
+    color: var(--mud-palette-text-secondary);
+    font-size: 0.875rem;
+}
+
+.receipt-line .receipt-sub {
+    padding-left: 1em;
+}
+
+.receipt-total {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.receipt-label {
+    font-weight: 700;
+}
+
 /* Blazor error UI */
 #blazor-error-ui {
     color-scheme: light only;

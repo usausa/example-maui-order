@@ -7,7 +7,7 @@ using MudBlazor;
 using TableOrder.Contract.Devices;
 using TableOrder.Server.Web.Application.Context;
 
-// 店舗の設定 (選んだ店舗の来店の開き方、機能の有無、言語、支払方法、電子レシート、呼び出しの用件、スタッフの PIN)。保存すると店舗のテーブル端末に知らせる
+// 店舗の設定 (選んだ店舗の来店の開き方、機能の有無、言語、支払方法、電子レシートと事業者、呼び出しの用件、スタッフの PIN)。保存すると店舗のテーブル端末に知らせる
 public sealed partial class StoreSettingsPage : IDisposable
 {
     private List<ReasonChoice> reasons = [];
@@ -37,6 +37,10 @@ public sealed partial class StoreSettingsPage : IDisposable
     private bool creditCard;
 
     private bool electronicReceipt;
+
+    private string? issuerName;
+
+    private string? invoiceRegistrationNumber;
 
     private string? newPin;
 
@@ -90,6 +94,8 @@ public sealed partial class StoreSettingsPage : IDisposable
         qrCode = settings.PaymentMethods.Contains(PaymentMethod.QrCode);
         creditCard = settings.PaymentMethods.Contains(PaymentMethod.CreditCard);
         electronicReceipt = settings.ElectronicReceipt;
+        issuerName = settings.IssuerName;
+        invoiceRegistrationNumber = settings.InvoiceRegistrationNumber;
         reasons = settings.CallReasons.Select(static x => new ReasonChoice(x.Code, x.Name.Ja) { IsActive = x.IsActive }).ToList();
         version = settings.Version;
     }
@@ -119,6 +125,8 @@ public sealed partial class StoreSettingsPage : IDisposable
             Choose(("ja", japanese), ("en", english)),
             Choose((PaymentMethod.QrCode, qrCode), (PaymentMethod.CreditCard, creditCard)),
             electronicReceipt,
+            issuerName,
+            invoiceRegistrationNumber,
             reasons.Select(static x => new CallReasonSetting(x.Code, new LocalizedText { Ja = x.Name }, x.IsActive)).ToList(),
             current);
         var error = await SettingsService.UpdateStoreSettingsAsync(settings, String.IsNullOrEmpty(newPin) ? null : newPin, CancellationToken.None);

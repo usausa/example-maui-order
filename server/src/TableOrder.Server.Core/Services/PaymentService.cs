@@ -346,7 +346,7 @@ public sealed class PaymentService
 
         if (store.ElectronicReceipt)
         {
-            await paymentAccessor.InsertReceiptAsync(tx, tenantId, visit.Id, Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16)), now, cancellationToken);
+            await paymentAccessor.InsertReceiptAsync(tx, tenantId, visit.Id, storeId, Convert.ToHexStringLower(RandomNumberGenerator.GetBytes(16)), store.IssuerName, store.InvoiceRegistrationNumber, now, cancellationToken);
         }
 
         var closed = await visitService.LoadResponseAsync(tx, tenantId, storeId, visit.Id, cancellationToken);

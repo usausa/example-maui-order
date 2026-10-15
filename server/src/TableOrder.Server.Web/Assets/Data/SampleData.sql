@@ -3,6 +3,7 @@
 -- ID は表の番号を入れた固定値 (4 つ目の区切り)。メニューの品と持ち場の ID は Menu.json (デモ) と MenuWashoku.json (検証用) と同じ
 -- 2 つのテナントに同じ店舗コード (001) の店舗を置き、テナントで分けられていることを確かめられるようにする
 -- テナントは別のチェーン (名前・ロゴ・色) にし、店舗の設定 (言語、支払方法、機能、スタッフの PIN) も変えて、登録し直すだけで替わることを確かめる
+-- 電子レシートの事業者は、デモが登録番号のある店 (番号は架空)、検証用が事業者を入れていない店
 -- 来店の開き方はデモがスタッフ (既定)、検証用が席 (テーブル端末の待受で人数を入れて始める)
 -- メニューはデモが洋食 (キッズは子どもがいる来店だけ)、検証用が和食の定食 (朝定食とランチは時間帯だけ、お子様は子どもがいる来店だけ)
 -- スタッフの PIN はデモが 1234、検証用が 5678 (ハッシュは PBKDF2-HMAC-SHA256、100000 回)
@@ -15,10 +16,10 @@ VALUES
     ('00000000-0000-0000-0001-000000000002', 'test', '検証用', '{"ja":"さつき軒","en":"Satsukiken"}', 'logo-satsuki.eaf55532.png', '[{"role":"PrimaryColor","color":"#B32B53"},{"role":"PrimaryPressedColor","color":"#8E2242"},{"role":"OnPrimaryColor","color":"#FFFFFF"},{"role":"PrimaryContainerColor","color":"#F8E0E7"},{"role":"OnPrimaryContainerColor","color":"#6B1A32"},{"role":"SecondaryColor","color":"#1F2E52"},{"role":"SecondaryPressedColor","color":"#33446E"},{"role":"OnSecondaryColor","color":"#FFFFFF"},{"role":"CanvasColor","color":"#F4EFE7"},{"role":"SurfaceVariantColor","color":"#E9E1D5"},{"role":"OnSurfaceColor","color":"#24201C"},{"role":"OnSurfaceVariantColor","color":"#655D53"},{"role":"OutlineColor","color":"#D6CCBE"},{"role":"OutlineVariantColor","color":"#E6DED2"},{"role":"DisabledColor","color":"#E6E0D6"},{"role":"OnDisabledColor","color":"#A0978B"}]', 'Active', NULL, NULL, @now, @now, 1);
 
 INSERT INTO
-    Stores (TenantId, Id, Code, Name, TimeZone, OpenTime, CloseTime, LastOrderTime, OrderingPaused, PausedMessage, TaxRounding, MaxQuantityPerLine, MaxLinesPerOrder, Languages, PaymentMethods, ElectronicReceipt, Features, StaffPinHash, SettingsVersion, MenuPublicationId, IsActive, CreatedAt, UpdatedAt, Version)
+    Stores (TenantId, Id, Code, Name, TimeZone, OpenTime, CloseTime, LastOrderTime, OrderingPaused, PausedMessage, TaxRounding, MaxQuantityPerLine, MaxLinesPerOrder, Languages, PaymentMethods, ElectronicReceipt, IssuerName, InvoiceRegistrationNumber, Features, StaffPinHash, SettingsVersion, MenuPublicationId, IsActive, CreatedAt, UpdatedAt, Version)
 VALUES
-    ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0002-000000000001', '001', '{"ja":"駅前店","en":"Ekimae"}', 'Asia/Tokyo', '05:00', '04:00', NULL, 0, NULL, 'Floor', 9, 20, '["ja","en"]', '["QrCode","CreditCard"]', 1, '{}', '{"iterations":100000,"salt":"Wh88not9ak8uHAuajXxuXw==","hash":"+U/ovdh7Hsbwgp7uF330Ww+bi7ps1aHHx4xKWA2a7nI="}', 1, '00000000-0000-0000-0009-000000000001', 1, @now, @now, 1),
-    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0002-000000000002', '001', '{"ja":"本店","en":"Main"}', 'Asia/Tokyo', '05:00', '04:00', NULL, 0, NULL, 'Floor', 9, 20, '["ja"]', '["QrCode"]', 1, '{"splitPayment":false,"lastOrderNoticeMinutes":15,"finishSeconds":20,"visitOpening":"Table"}', '{"iterations":100000,"salt":"D56NfGtaSTgnFqW0w9Lh8A==","hash":"VOeq8IqoQmFrTDrR5Rjzp79khLLbEz2W4OleYGV8o/M="}', 1, '00000000-0000-0000-0009-000000000002', 1, @now, @now, 1);
+    ('00000000-0000-0000-0001-000000000001', '00000000-0000-0000-0002-000000000001', '001', '{"ja":"駅前店","en":"Ekimae"}', 'Asia/Tokyo', '05:00', '04:00', NULL, 0, NULL, 'Floor', 9, 20, '["ja","en"]', '["QrCode","CreditCard"]', 1, '株式会社バニーズ', 'T0000000000001', '{}', '{"iterations":100000,"salt":"Wh88not9ak8uHAuajXxuXw==","hash":"+U/ovdh7Hsbwgp7uF330Ww+bi7ps1aHHx4xKWA2a7nI="}', 1, '00000000-0000-0000-0009-000000000001', 1, @now, @now, 1),
+    ('00000000-0000-0000-0001-000000000002', '00000000-0000-0000-0002-000000000002', '001', '{"ja":"本店","en":"Main"}', 'Asia/Tokyo', '05:00', '04:00', NULL, 0, NULL, 'Floor', 9, 20, '["ja"]', '["QrCode"]', 1, NULL, NULL, '{"splitPayment":false,"lastOrderNoticeMinutes":15,"finishSeconds":20,"visitOpening":"Table"}', '{"iterations":100000,"salt":"D56NfGtaSTgnFqW0w9Lh8A==","hash":"VOeq8IqoQmFrTDrR5Rjzp79khLLbEz2W4OleYGV8o/M="}', 1, '00000000-0000-0000-0009-000000000002', 1, @now, @now, 1);
 
 INSERT INTO
     CallReasons (TenantId, StoreId, Code, Name, SortOrder, IsActive)

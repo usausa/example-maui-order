@@ -24,6 +24,7 @@ public sealed record MenuSeed(string MenuVersion, string Content);
 
 // 店舗の追加と基本の変更、使わなくすること (運営者とテナントの管理者が、選んだテナントの文脈で呼ぶ)
 // 新しい店舗の設定 (言語、支払方法、電子レシート、機能、呼び出しの用件、メニュー) は選んだ店舗から写し、なければ既定の設定とサンプルのメニューにする
+// 電子レシートの事業者の名前と登録番号は写さない (フランチャイズの店は事業者が違うので、店舗の設定で店ごとに入れる)
 public sealed partial class StoreSetupService
 {
     public const int MaxCodeLength = 16;
@@ -148,7 +149,7 @@ public sealed partial class StoreSetupService
                     basics.TimeZone,
                     basics.OpenTime,
                     basics.CloseTime,
-                    NullIfEmpty(basics.LastOrderTime),
+                    RequestValues.NullIfEmpty(basics.LastOrderTime),
                     basics.TaxRounding,
                     basics.MaxQuantityPerLine,
                     basics.MaxLinesPerOrder,
@@ -206,7 +207,7 @@ public sealed partial class StoreSetupService
                         basics.TimeZone,
                         basics.OpenTime,
                         basics.CloseTime,
-                        NullIfEmpty(basics.LastOrderTime),
+                        RequestValues.NullIfEmpty(basics.LastOrderTime),
                         basics.TaxRounding,
                         basics.MaxQuantityPerLine,
                         basics.MaxLinesPerOrder,
@@ -309,9 +310,6 @@ public sealed partial class StoreSetupService
 
     private static LocalizedText TrimName(LocalizedText name) =>
         new() { Ja = name.Ja.Trim(), En = String.IsNullOrWhiteSpace(name.En) ? null : name.En.Trim() };
-
-    private static string? NullIfEmpty(string? value) =>
-        String.IsNullOrWhiteSpace(value) ? null : value.Trim();
 
     [GeneratedRegex("^[0-9A-Za-z-]{1,16}$")]
     private static partial Regex CodePattern();

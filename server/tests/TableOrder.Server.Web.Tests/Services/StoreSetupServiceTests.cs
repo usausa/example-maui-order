@@ -19,12 +19,20 @@ public sealed class StoreSetupServiceTests : IClassFixture<ServerFactory>
 
     private static MenuSeed SampleMenu => new("sample", """{"menuVersion":"sample","categories":[],"items":[],"optionGroups":[],"tags":[],"rules":[],"allergens":[],"stations":[]}""");
 
-    // 選んだ店舗から設定 (言語、支払方法、機能、呼び出しの用件、メニュー) を写して店舗を足し、端末を登録して使える
+    // 選んだ店舗から設定 (言語、支払方法、電子レシート、機能、呼び出しの用件、メニュー) を写して店舗を足し、端末を登録して使える
+    // 電子レシートの事業者の名前と登録番号は写さない (フランチャイズの店は事業者が違う)
     [Fact]
     public async Task AddCopiesSettingsFromSourceStore()
     {
         // Arrange
         var source = await factory.CreateStoreAsync();
+        using (factory.BeginStore(source))
+        {
+            var settings = factory.Services.GetRequiredService<SettingsService>();
+            var current = (await settings.GetStoreSettingsAsync(TestContext.Current.CancellationToken))!;
+            Assert.Null(await settings.UpdateStoreSettingsAsync(current with { IssuerName = "テストの事業者", InvoiceRegistrationNumber = "T0000000000002" }, null, TestContext.Current.CancellationToken));
+        }
+
         using var scope = factory.BeginTenant(source.TenantId);
 
         // Act
@@ -36,6 +44,9 @@ public sealed class StoreSetupServiceTests : IClassFixture<ServerFactory>
         var sourceStore = (await factory.Services.GetRequiredService<StoreAccessor>().QueryAsync(source.TenantId, source.StoreId, TestContext.Current.CancellationToken))!;
         Assert.Equal(sourceStore.PaymentMethods, store.PaymentMethods);
         Assert.Equal(sourceStore.Features, store.Features);
+        Assert.Equal(sourceStore.ElectronicReceipt, store.ElectronicReceipt);
+        Assert.Equal("テストの事業者", sourceStore.IssuerName);
+        Assert.Equal((null, null), (store.IssuerName, store.InvoiceRegistrationNumber));
         Assert.Equal("Asia/Tokyo", store.TimeZone);
         var menus = factory.Services.GetRequiredService<MenuAccessor>();
         Assert.Equal(

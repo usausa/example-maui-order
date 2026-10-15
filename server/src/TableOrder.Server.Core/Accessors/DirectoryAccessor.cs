@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Accessors;
 
-// テナントのわからない要求 (端末の登録、トークンの要求) で、テナントを決めるための行を引く
+// テナントのわからない要求 (端末の登録、トークンの要求、決済の通知、電子レシート) で、テナントを決めるための行を引く
 // すべてのテナントで一意の列で引き、引いた行のテナントをその後の処理の文脈にする (テナントの条件を調べるテストから外す)
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
@@ -22,4 +22,8 @@ public sealed partial class DirectoryAccessor
     // 決済サービスの結果の通知で、テナントのわからないまま取引番号で支払を引く
     [QueryFirst]
     public partial ValueTask<PaymentEntity?> QueryPaymentByProviderReferenceAsync(string provider, string providerReference, CancellationToken cancellationToken);
+
+    // 電子レシートの画面で、テナントのわからないままトークンで電子レシートを引く
+    [QueryFirst]
+    public partial ValueTask<ReceiptEntity?> QueryReceiptByTokenAsync(string token, CancellationToken cancellationToken);
 }

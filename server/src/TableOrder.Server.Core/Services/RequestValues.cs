@@ -5,6 +5,10 @@ internal static class RequestValues
 {
     public static IReadOnlyList<T> ListOf<T>(IReadOnlyList<T>? values) => values ?? [];
 
+    // 省ける入力 (テーブルのエリア、ラストオーダー、事業者) は前後の空白を除き、空なら null にする
+    public static string? NullIfEmpty(string? value) =>
+        String.IsNullOrWhiteSpace(value) ? null : value.Trim();
+
     // 一覧の要素の null (JSON の読み込みは、null にしないと宣言した要素にも null を通す)
     public static bool HasNull<T>(IEnumerable<T?> values)
         where T : class =>

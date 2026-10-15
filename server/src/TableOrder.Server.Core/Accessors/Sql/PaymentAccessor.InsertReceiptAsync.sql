@@ -1,5 +1,5 @@
 INSERT INTO
-    Receipts (TenantId, VisitId, Token, IssuedAt)
+    Receipts (TenantId, VisitId, StoreId, Token, IssuerName, InvoiceRegistrationNumber, IssuedAt)
 VALUES
-    (/*@ tenantId */'', /*@ visitId */'', /*@ token */'', /*@ now */'')
+    (/*@ tenantId */'', /*@ visitId */'', /*@ storeId */'', /*@ token */'', /*@ issuerName */NULL, /*@ invoiceRegistrationNumber */NULL, /*@ now */'')
 ON CONFLICT (TenantId, VisitId) DO NOTHING

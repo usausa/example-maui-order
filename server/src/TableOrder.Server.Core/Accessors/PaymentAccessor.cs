@@ -37,9 +37,9 @@ public sealed partial class PaymentAccessor
     [Execute]
     public partial ValueTask<int> UpdateCancelledAsync(DbTransaction tx, Guid tenantId, Guid id, DateTimeOffset now, CancellationToken cancellationToken);
 
-    // 電子レシートを作る (作ってあれば足さずに 0 件)
+    // 電子レシートを作る (作ってあれば足さずに 0 件)。事業者は作るときの店舗の設定を写す
     [Execute]
-    public partial ValueTask<int> InsertReceiptAsync(DbTransaction tx, Guid tenantId, Guid visitId, string token, DateTimeOffset now, CancellationToken cancellationToken);
+    public partial ValueTask<int> InsertReceiptAsync(DbTransaction tx, Guid tenantId, Guid visitId, Guid storeId, string token, string? issuerName, string? invoiceRegistrationNumber, DateTimeOffset now, CancellationToken cancellationToken);
 
     [QueryFirst]
     public partial ValueTask<ReceiptEntity?> QueryReceiptAsync(Guid tenantId, Guid visitId, CancellationToken cancellationToken);

@@ -37,6 +37,11 @@ public sealed class StoreEntity
 
     public bool ElectronicReceipt { get; set; }
 
+    // 電子レシートに出す事業者の名前と、適格請求書発行事業者の登録番号 (ない店は登録番号のないレシートにする)
+    public string? IssuerName { get; set; }
+
+    public string? InvoiceRegistrationNumber { get; set; }
+
     // 機能の有無 (JSON。ない項目は既定の値)
     public string Features { get; set; } = default!;
 

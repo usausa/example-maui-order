@@ -1,0 +1,84 @@
+@using TableOrder.Server.Web.Endpoints
+@attribute [Microsoft.AspNetCore.Components.Route(ApiRoutes.Receipts + "/{Token}")]
+@attribute [AllowAnonymous]
+@attribute [ExcludeFromInteractiveRouting]
+@layout ReceiptLayout
+
+<PageTitle>@Texts.Title</PageTitle>
+
+<div class="receipt" lang="@Texts.Language">
+    @if (receipt is null)
+    {
+        <div class="receipt-title">@Texts.NotFound</div>
+        <p class="receipt-sub">@Texts.NotFoundDetail</p>
+    }
+    else
+    {
+        <div class="receipt-header">
+            <div class="receipt-brand">@Text(receipt.BrandName)</div>
+            <div>@Text(receipt.StoreName)</div>
+        </div>
+        <div class="receipt-title">@Texts.Title</div>
+        <div class="receipt-row receipt-sub">
+            <span>@IssuedAt(receipt)</span>
+            <span>@Texts.Table @receipt.TableName</span>
+        </div>
+
+        <div class="receipt-section">
+            @foreach (var line in receipt.Bill.Lines)
+            {
+                <div class="receipt-line">
+                    <div class="receipt-row">
+                        <span>@LineName(line)</span>
+                        <span>@Amount(line.Amount)</span>
+                    </div>
+                    @foreach (var option in line.Options)
+                    {
+                        <div class="receipt-sub">@Text(option)</div>
+                    }
+                    <div class="receipt-sub">@Amount(line.UnitPrice) × @line.Quantity</div>
+                </div>
+            }
+        </div>
+
+        <div class="receipt-section">
+            <div class="receipt-row receipt-total">
+                <span>@Texts.Total</span>
+                <span>@Amount(receipt.Bill.Total)</span>
+            </div>
+            @foreach (var tax in receipt.Bill.Taxes)
+            {
+                <div class="receipt-row receipt-sub">
+                    <span>@Rate(tax.Rate) @Texts.Taxable</span>
+                    <span>@Amount(tax.TaxableAmount)</span>
+                </div>
+                <div class="receipt-row receipt-sub">
+                    <span>@Texts.IncludedTax</span>
+                    <span>@Amount(tax.TaxAmount)</span>
+                </div>
+            }
+        </div>
+
+        <div class="receipt-section">
+            <div class="receipt-label">@Texts.Payment</div>
+            @foreach (var payment in receipt.Payments)
+            {
+                <div class="receipt-row">
+                    <span>@MethodName(payment.Method)</span>
+                    <span>@Amount(payment.Amount)</span>
+                </div>
+            }
+        </div>
+
+        @if (receipt.IssuerName is not null)
+        {
+            <div class="receipt-section receipt-sub">
+                <div>@receipt.IssuerName</div>
+                @if (receipt.InvoiceRegistrationNumber is not null)
+                {
+                    <div>@Texts.RegistrationNumber @receipt.InvoiceRegistrationNumber</div>
+                }
+            </div>
+        }
+    }
+</div>

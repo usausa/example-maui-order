@@ -74,7 +74,7 @@
 | 区分 | 表 | 内容 | 書くところ |
 | --- | --- | --- | --- |
 | テナント | `Tenants` | 契約した会社 (使える、止めた、解約した) | 運営者の管理画面 |
-| 店舗 | `Stores` | 店舗と店舗の設定 (営業時間、注文の一時停止、注文の上限、支払方法) | 管理画面、`PUT /store/ordering` |
+| 店舗 | `Stores` | 店舗と店舗の設定 (営業時間、注文の一時停止、注文の上限、支払方法、電子レシートの事業者) | 管理画面、`PUT /store/ordering` |
 | | `CallReasons` | 呼び出しの用件 | 管理画面 |
 | | `DiningTables` | テーブル (席) | 管理画面 |
 | 管理画面 | `AdminUsers` | 管理画面の利用者 (役割、パスワードのハッシュ、多要素)。運営者はテナントに属さない | 管理画面 (サインイン、利用者の管理) |
@@ -184,6 +184,8 @@ erDiagram
 | `Languages` | json | 画面で選べる言語 (`["ja", "en"]`) |
 | `PaymentMethods` | json | テーブルで使える支払方法 (`["QrCode", "CreditCard"]`) |
 | `ElectronicReceipt` | bool | 電子レシートを出すか |
+| `IssuerName` | string? | 電子レシートに出す事業者の名前 |
+| `InvoiceRegistrationNumber` | string? | 適格請求書発行事業者の登録番号 (`T` と 13 桁の数字)。ない店は登録番号のない電子レシート (適格簡易請求書でない) にする |
 | `Features` | json | 機能の有無 (`{ "registerCheckout": true, "splitPayment": true, "lastOrderNoticeMinutes": 30, "finishSeconds": 30, "visitOpening": "Hall", "kitchenAlertMinutes": 15, "daypartGraceMinutes": 2 }`)。増えていくので列にせず、ない項目は既定の値にする |
 | `StaffPinHash` | json | スタッフの PIN のハッシュ (`{ "iterations": 100000, "salt": "...", "hash": "..." }`。PBKDF2-HMAC-SHA256)。平文は持たない |
 | `SettingsVersion` | int | チェーンと店舗の設定の版。設定 (チェーン、店舗、テーブル) を替えるたびに上げる (端末が読み直すかを決める。店舗の行の編集の `Version` と分ける) |
@@ -578,13 +580,16 @@ erDiagram
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `VisitId` | guid | |
+| `StoreId` | guid | 来店の店舗 (電子レシートの画面で、引いた行のテナントと店舗を文脈にする) |
 | `Token` | string | 電子レシートの URL に入れる推測できない値 |
-| `IssuedAt` | datetime | |
+| `IssuerName` / `InvoiceRegistrationNumber` | string? | 作ったときの店舗の事業者の名前と登録番号 |
+| `IssuedAt` | datetime | 払い終えた日時 |
 
 - 主キー: `VisitId`
 - すべてのテナントで一意: `Token` (電子レシートの画面で、テナントのわからないまま引く)
 - 電子レシートを出す店 (`ElectronicReceipt`) だけ、支払が揃ったときに作る
 - 電子レシートの画面は `Token` で来店を引いて会計の明細を出す (閉じた来店は変わらないので、明細を写さない)
+- 事業者の名前と登録番号は作ったときの店舗の設定を写す (あとで店舗の設定を替えても、出した電子レシートの事業者は替えない)
 
 ---
 

@@ -39,6 +39,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 提供の一覧と提供は、払い終えて閉じた来店の品もその営業日のうちは扱う (キッチンのチケットは来店を閉じても残るので、できあがった品を運べなくしない)
 - 来店のテーブルを移したら、開いているチケットも `ticket.updated` で持ち場に知らせる (キッチン端末はチケットの通知で一覧を読み直し、来店の今のテーブルを出す)
 - 決済サービスは `IPaymentProvider` の実装で替え、Service から決済サービスを直接呼ばない
+- 電子レシートには作ったときの店舗の事業者 (名前と登録番号) を写し、あとで店舗の設定を替えても出したレシートを替えない (明細は閉じた来店から会計と同じ計算 (`BillCalculator`) で作り、写さない)
 - Core が入口の側に持たせるもの (通知を送る先、すぐに拒む一覧) は Core にインタフェース (`IEventPublisher`、`IRevocationList`) を置いて Web で実装し、Service は替えたあとに知らせるだけにする
 - 画像の置き場は `IImageStore` の実装で替え (開発とテストはファイル、本番は Amazon S3)、テナントごとに分ける。名前は `ImageNames.IsValid` で確かめてから渡す (置き場の経路に使うため)
 - サンプルの画像は `Assets/Images` に `{名前}.{内容の SHA-256 の先頭 8 桁}.png` で置き、中身を替えたら名前も替えて `Menu.json` の `imageName` を直す (端末は名前で保存して取り直さない)
@@ -63,7 +64,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - ログに秘密と個人の情報を出さない。HTTP のログの本文 (`Log:HttpDump`) から秘密を運ぶ API (登録、トークン、端末の設定) を外し (`BodyExcludingHttpLoggingInterceptor`)、利用者はメールアドレスではなく Id で出す
 - 登録したあとの設定で決める部品の設定 (HTTP のログの項目) は `AddOptions<T>().Configure<TSetting>` で組み立て、構成を登録の前に直接読まない
 - 使わない計測の部品 (作るだけの `ActivitySource`、出どころの重なった `AddSource`) を置かない
-- 管理画面はどの環境でも開き、ページはサインインを求める (`MapRazorComponents` に `AdminPolicies.SignedIn`)。サインインの前に開く画面 (サインイン、多要素のコード、エラー) だけ `[AllowAnonymous]` を付ける
+- 管理画面はどの環境でも開き、ページはサインインを求める (`MapRazorComponents` に `AdminPolicies.SignedIn`)。サインインの前に開く画面 (サインイン、多要素のコード、エラー) と、お客様が開く電子レシートの画面だけ `[AllowAnonymous]` を付ける
 - 管理画面の確かめ方は Cookie に限り (ポリシーは `IdentityConstants.ApplicationScheme`)、端末の API と通知のハブはアクセストークンに限る (既定の確かめ方は経路で選ぶ)
 - 役割で絞る画面は `[Authorize(Policy = AdminPolicies.Xxx)]` を付け、メニュー (`NavMenu`) にも出さない
 - Cookie を書く画面 (サインイン、パスワード、多要素) は `[ExcludeFromInteractiveRouting]` の静的な画面にして `AccountLayout` で出し、入力は対話しない素の部品 (`InputText`) にする。フォームの値 (`[SupplyParameterFromForm]`) は初期化子を付けず `OnInitialized` で作る
@@ -83,6 +84,10 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 発行や追加のように重ねて押すと 2 回行うボタンは、`AppPageBase.RunOnceAsync` で 1 回にし、処理中は `Busy` で押せなくする
 - テナントを選び直したら、前のテナントの店舗を指す入力 (受け持つ店舗、設定を写す店舗) を消す
 - 店舗の設定の値 (電子レシートなど) は管理画面の店舗の設定で替えられるようにし、店舗を足すときに写すだけの値を残さない
+- 電子レシートの事業者の名前と登録番号は店ごとに店舗の設定で入れ、店舗を足すときに写さない (フランチャイズの店は事業者が違い、違う登録番号のレシートを出さないように)
+- お客様が開く画面 (電子レシート) は、管理画面の外の素の枠 (`ReceiptLayout`) の静的な画面 (`[ExcludeFromInteractiveRouting]`) にし、検索に載せず (`X-Robots-Tag: noindex`) キャッシュさせない (`Cache-Control: no-cache, no-store`。静的な画面に付く偽造防止の値と同じにして、上書きの警告を出させない)
+- お客様が開く画面の文言はブラウザの言語 (`Accept-Language` の重みの順) で日本語と英語から選び (`ReceiptTexts`)、メニューの名前は `LocalizedText` のその言語 (ない言語は日本語) を出す
+- 静的な画面で 404 を返すときは、本文を書き始めるとき (`Response.OnStarting`) に状態を替える (画面の中で 404 にすると、Blazor は本文を書かずに StatusCodePages の作り直しに任せる)。見つからないトークンは、あるかないかのほかは見せない
 - 失敗の文言は `AdminNames.ErrorMessage` で作り、画面ごとの文言は errorCode から返す関数で渡す (骨組みを画面ごとに写さない)。どの画面でも同じもの (利用者の状態、出した仮のパスワード、確かめのダイアログ) は `Components` にまとめる
 - 管理画面に列挙の値を出すときは `AdminNames` の名前にする (列挙の名前をそのまま出さない)。時刻は 1 つに決めたタイムゾーンで出し、見出しにタイムゾーンを書く
 - 管理画面の時刻と店舗の名前の書式は `AdminNames` で作り、画面ごとに組まない (今日の動きは時刻だけ、近い日時は月日から、何年も前のことがある日時 (最後のサインイン、最後の通信) は年から)。見出しのない表の時刻は、画面の上にタイムゾーンを書く

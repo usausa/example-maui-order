@@ -180,4 +180,36 @@ public sealed class SettingsServiceTests : IClassFixture<ServerFactory>
         Assert.Equal(ErrorCodes.ValidationError, badGrace!.ErrorCode);
         Assert.Equal(ErrorCodes.VersionMismatch, stale!.ErrorCode);
     }
+
+    // 事業者の名前と登録番号は前後の空白を除いて持ち、空なら持たない
+    // 形の違う登録番号 (桁の違い、全角)、事業者の名前のない登録番号、長すぎる事業者の名前は受けない
+    [Fact]
+    public async Task StoreSettingsTrimIssuerAndRejectInvalidRegistrationNumber()
+    {
+        // Arrange
+        var store = await factory.CreateStoreAsync();
+        var cancel = TestContext.Current.CancellationToken;
+        using var scope = factory.BeginStore(store);
+        var settings = (await Settings.GetStoreSettingsAsync(cancel))!;
+
+        // Act
+        var shortNumber = await Settings.UpdateStoreSettingsAsync(settings with { IssuerName = "テストの事業者", InvoiceRegistrationNumber = "T000000000002" }, null, cancel);
+        var fullWidth = await Settings.UpdateStoreSettingsAsync(settings with { IssuerName = "テストの事業者", InvoiceRegistrationNumber = "Ｔ０００００００００００２" }, null, cancel);
+        var noName = await Settings.UpdateStoreSettingsAsync(settings with { IssuerName = " ", InvoiceRegistrationNumber = "T0000000000002" }, null, cancel);
+        var longName = await Settings.UpdateStoreSettingsAsync(settings with { IssuerName = new string('あ', Length.IssuerName + 1) }, null, cancel);
+        var saved = await Settings.UpdateStoreSettingsAsync(settings with { IssuerName = " テストの事業者 ", InvoiceRegistrationNumber = " T0000000000002 " }, null, cancel);
+        var withIssuer = (await Settings.GetStoreSettingsAsync(cancel))!;
+        var cleared = await Settings.UpdateStoreSettingsAsync(withIssuer with { IssuerName = String.Empty, InvoiceRegistrationNumber = " " }, null, cancel);
+        var withoutIssuer = (await Settings.GetStoreSettingsAsync(cancel))!;
+
+        // Assert
+        Assert.Equal(ErrorCodes.ValidationError, shortNumber!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, fullWidth!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, noName!.ErrorCode);
+        Assert.Equal(ErrorCodes.ValidationError, longName!.ErrorCode);
+        Assert.Null(saved);
+        Assert.Equal(("テストの事業者", "T0000000000002"), (withIssuer.IssuerName, withIssuer.InvoiceRegistrationNumber));
+        Assert.Null(cleared);
+        Assert.Equal((null, null), (withoutIssuer.IssuerName, withoutIssuer.InvoiceRegistrationNumber));
+    }
 }

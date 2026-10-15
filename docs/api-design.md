@@ -628,7 +628,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | POST | `/payments/callbacks/{provider}` | 外部 (決済サービス) | 決済の結果の通知 (`QrCode`)。署名を確かめる。今は仮の決済サービス (`fake`。`PaymentCallbackRequest { providerReference, status }`) だけで、開発の環境だけで受ける |
 | GET | `/payments/{id}` | テーブル | 支払の状態 (通知を受け損ねたとき) |
 | POST | `/payments/{id}/cancel` | テーブル | 待っている支払をやめる (`Pending` だけ。ほかは変えずに返す) |
-| GET | `/visits/{visitId}/receipt` | テーブル | 領収の内容と電子レシートの URL (`ReceiptResponse`。画面に QR で出す)。電子レシートを出す店で、テーブルで払い終えて来店を閉じたあと (ほかは `404`)。URL は要求を受けた接続先の `/receipts/{token}` (電子レシートの画面はまだない) |
+| GET | `/visits/{visitId}/receipt` | テーブル | 領収の内容と電子レシートの URL (`ReceiptResponse`。画面に QR で出す)。電子レシートを出す店で、テーブルで払い終えて来店を閉じたあと (ほかは `404`)。URL は要求を受けた接続先の `/receipts/{token}` (サーバが配る電子レシートの画面) |
 
 - 支払は残り (`balance` から、期限内の待っている支払も引いた額) を超えない (`422` `PAYMENT_AMOUNT_INVALID`)。  
   割り勘は、目安の額で支払を何回かに分けて行う
