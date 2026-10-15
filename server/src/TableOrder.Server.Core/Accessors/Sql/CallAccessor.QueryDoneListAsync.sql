@@ -11,6 +11,7 @@ WHERE
     AND C.StoreId = /*@ storeId */''
     AND C.Status = 'Done'
 ORDER BY
-    C.DoneAt DESC
+    C.DoneAt DESC,
+    C.Id DESC
 LIMIT
     /*@ limit */0

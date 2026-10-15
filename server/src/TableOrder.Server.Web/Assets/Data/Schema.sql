@@ -293,7 +293,7 @@ CREATE TABLE IF NOT EXISTS Visits (
 );
 -- 1 つのテーブルに開いている来店を 2 つ作らない
 CREATE UNIQUE INDEX IF NOT EXISTS UX_Visits_TableId ON Visits (TenantId, TableId) WHERE Status IN ('Open', 'Paying');
-CREATE INDEX IF NOT EXISTS IX_Visits_BusinessDate ON Visits (TenantId, StoreId, BusinessDate);
+CREATE INDEX IF NOT EXISTS IX_Visits_StoreId_BusinessDate ON Visits (TenantId, StoreId, BusinessDate);
 
 CREATE TABLE IF NOT EXISTS VisitConfirmations (
     TenantId     TEXT  NOT NULL,
@@ -335,7 +335,7 @@ CREATE TABLE IF NOT EXISTS KitchenTickets (
     FOREIGN KEY (TenantId, OrderId) REFERENCES Orders (TenantId, Id),
     FOREIGN KEY (TenantId, VisitId) REFERENCES Visits (TenantId, Id)
 );
-CREATE INDEX IF NOT EXISTS IX_KitchenTickets_StationId ON KitchenTickets (TenantId, StationId, Status, CreatedAt);
+CREATE INDEX IF NOT EXISTS IX_KitchenTickets_StationId_Status_CreatedAt ON KitchenTickets (TenantId, StationId, Status, CreatedAt);
 
 CREATE TABLE IF NOT EXISTS OrderLines (
     TenantId         TEXT     NOT NULL,
@@ -375,7 +375,7 @@ CREATE INDEX IF NOT EXISTS IX_OrderLines_OrderId ON OrderLines (TenantId, OrderI
 CREATE INDEX IF NOT EXISTS IX_OrderLines_VisitId ON OrderLines (TenantId, VisitId);
 CREATE INDEX IF NOT EXISTS IX_OrderLines_TicketId ON OrderLines (TenantId, TicketId);
 -- 提供を待つ明細
-CREATE INDEX IF NOT EXISTS IX_OrderLines_Ready ON OrderLines (TenantId, StoreId) WHERE Status = 'Ready';
+CREATE INDEX IF NOT EXISTS IX_OrderLines_StoreId ON OrderLines (TenantId, StoreId) WHERE Status = 'Ready';
 
 CREATE TABLE IF NOT EXISTS OrderLineOptions (
     TenantId       TEXT     NOT NULL,
@@ -404,7 +404,7 @@ CREATE TABLE IF NOT EXISTS Calls (
     FOREIGN KEY (TenantId, VisitId) REFERENCES Visits (TenantId, Id)
 );
 -- 同じ用件の終わっていない呼び出しを増やさない
-CREATE UNIQUE INDEX IF NOT EXISTS UX_Calls_ReasonCode ON Calls (TenantId, VisitId, ReasonCode) WHERE Status <> 'Done';
+CREATE UNIQUE INDEX IF NOT EXISTS UX_Calls_VisitId_ReasonCode ON Calls (TenantId, VisitId, ReasonCode) WHERE Status <> 'Done';
 CREATE INDEX IF NOT EXISTS IX_Calls_StoreId ON Calls (TenantId, StoreId) WHERE Status <> 'Done';
 
 CREATE TABLE IF NOT EXISTS Payments (
@@ -428,7 +428,7 @@ CREATE TABLE IF NOT EXISTS Payments (
     FOREIGN KEY (TenantId, VisitId) REFERENCES Visits (TenantId, Id)
 );
 -- 決済サービスの通知で、テナントのわからないまま支払を引く
-CREATE UNIQUE INDEX IF NOT EXISTS UX_Payments_ProviderReference ON Payments (Provider, ProviderReference) WHERE ProviderReference IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS UX_Payments_Provider_ProviderReference ON Payments (Provider, ProviderReference) WHERE ProviderReference IS NOT NULL;
 CREATE INDEX IF NOT EXISTS IX_Payments_VisitId ON Payments (TenantId, VisitId);
 
 -- 事業者の名前と登録番号は、作ったときの店舗の設定を写す (あとで店舗の設定を替えても、出したレシートの事業者は替えない)
@@ -469,3 +469,10 @@ CREATE TABLE IF NOT EXISTS Events (
 );
 -- テナントをまたいで古いものを消す
 CREATE INDEX IF NOT EXISTS IX_Events_OccurredAt ON Events (OccurredAt);
+
+-- 名前を替えた索引の前の名前 (前の版の DB に残る)
+DROP INDEX IF EXISTS IX_Visits_BusinessDate;
+DROP INDEX IF EXISTS IX_KitchenTickets_StationId;
+DROP INDEX IF EXISTS IX_OrderLines_Ready;
+DROP INDEX IF EXISTS UX_Calls_ReasonCode;
+DROP INDEX IF EXISTS UX_Payments_ProviderReference;

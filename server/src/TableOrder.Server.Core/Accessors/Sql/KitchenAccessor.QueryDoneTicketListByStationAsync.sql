@@ -14,6 +14,7 @@ WHERE
     AND K.StationId = /*@ stationId */''
     AND K.Status = 'Done'
 ORDER BY
-    K.DoneAt DESC
+    K.DoneAt DESC,
+    K.Id DESC
 LIMIT
     /*@ limit */0

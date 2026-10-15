@@ -10,6 +10,7 @@ WHERE
     AND NOT EXISTS (SELECT 1 FROM Visits V WHERE V.TenantId = T.TenantId AND V.TableId = T.Id AND V.Status IN ('Open', 'Paying'))
 ORDER BY
     T.Capacity,
-    T.SortOrder
+    T.SortOrder,
+    T.Id
 LIMIT
     1
