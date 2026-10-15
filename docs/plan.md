@@ -1460,7 +1460,7 @@ API の形は [API の想定](api-design.md#46-外部) の各節、表は [datab
 
 ## ❓ 決めたいこと
 
-決めたいことは [backlog.md](backlog.md#-決めたいこと) にまとめた。
+決めたいことは、作っていない機能と一緒に [backlog.md](backlog.md) の章ごとにまとめた。
 
 ## 📚 参考
 
