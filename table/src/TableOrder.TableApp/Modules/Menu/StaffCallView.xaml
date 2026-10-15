@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
            xmlns:fonts="clr-namespace:Fonts"
            xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+           xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
            xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Menu"
            x:Class="TableOrder.TableApp.Modules.Menu.StaffCallView"
            x:DataType="{x:Type module:StaffCallViewModel}"
@@ -29,12 +30,11 @@
                                                BindableLayout.ItemsSource="{Binding Items}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="{x:Type module:CallReasonItem}">
-                                    <Border Style="{StaticResource CallReasonBorder}">
-                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StaffCallViewModel}}, Path=SelectCommand, x:DataType={x:Type module:StaffCallViewModel}}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </Border.GestureRecognizers>
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <Border Style="{StaticResource CallReasonBorder}"
+                                            behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:StaffCallViewModel}}, Path=SelectCommand, x:DataType={x:Type module:StaffCallViewModel}}"
+                                            behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                            behaviors:TouchOption.Ripple="True">
                                         <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                         <VerticalStackLayout Style="{StaticResource CallReasonStack}">
                                             <Label Style="{StaticResource CallReasonGlyphLabel}"

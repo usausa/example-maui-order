@@ -27,7 +27,12 @@
                                        BindableLayout.ItemsSource="{Binding Categories}">
                     <BindableLayout.ItemTemplate>
                         <DataTemplate x:DataType="{x:Type module:StockCategory}">
-                            <Border Style="{StaticResource CategoryTabBorder}">
+                            <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                            <Border Style="{StaticResource CategoryTabBorder}"
+                                    behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:StockViewModel}}"
+                                    behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                    behaviors:TouchOption.Ripple="True">
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                 <Border.Triggers>
                                     <DataTrigger TargetType="Border"
                                                  Binding="{Binding IsSelected}"
@@ -35,12 +40,6 @@
                                         <Setter Property="BackgroundColor" Value="{DynamicResource PrimaryColor}" />
                                     </DataTrigger>
                                 </Border.Triggers>
-                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                <Border.GestureRecognizers>
-                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:StockViewModel}}"
-                                                          CommandParameter="{Binding .}" />
-                                </Border.GestureRecognizers>
-                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                 <Label Style="{StaticResource CategoryTabLabel}"
                                        Text="{Binding Name}">
                                     <Label.Triggers>
@@ -87,13 +86,12 @@
                         ItemsSource="{Binding Rows}">
             <CollectionView.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type module:StockRow}">
+                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                     <Grid Style="{StaticResource ListRowGrid}"
-                          RowDefinitions="*,1">
-                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                        <Grid.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=EditCommand, x:DataType={x:Type module:StockViewModel}}"
-                                                  CommandParameter="{Binding .}" />
-                        </Grid.GestureRecognizers>
+                          RowDefinitions="*,1"
+                          behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:StockViewModel}}, Path=EditCommand, x:DataType={x:Type module:StockViewModel}}"
+                          behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                          behaviors:TouchOption.Ripple="True">
                         <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                         <Grid Grid.Row="0"
                               Style="{StaticResource ListRowContentGrid}"

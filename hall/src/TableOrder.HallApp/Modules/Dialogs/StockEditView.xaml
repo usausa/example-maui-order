@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
            xmlns:fonts="clr-namespace:Fonts"
            xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+           xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
            xmlns:enums="clr-namespace:TableOrder.Domain.Enums;assembly=TableOrder.Domain"
            xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Dialogs"
            xmlns:styles="clr-namespace:TableOrder.Terminal.Resources.Styles;assembly=TableOrder.Terminal"
@@ -27,11 +28,10 @@
                    Text="{Binding StatusText}" />
 
             <!-- available -->
-            <Border Style="{StaticResource ChoiceTileBorder}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding SelectCommand}"
-                                          CommandParameter="{x:Static enums:StockStatus.Available}" />
-                </Border.GestureRecognizers>
+            <Border Style="{StaticResource ChoiceTileBorder}"
+                    behaviors:TouchOption.ClickCommand="{Binding SelectCommand}"
+                    behaviors:TouchOption.ClickCommandParameter="{x:Static enums:StockStatus.Available}"
+                    behaviors:TouchOption.Ripple="True">
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0"
                            Style="{StaticResource ChoiceNameLabel}"
@@ -44,11 +44,10 @@
             </Border>
 
             <!-- limited -->
-            <Border Style="{StaticResource ChoiceTileBorder}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding SelectCommand}"
-                                          CommandParameter="{x:Static enums:StockStatus.Limited}" />
-                </Border.GestureRecognizers>
+            <Border Style="{StaticResource ChoiceTileBorder}"
+                    behaviors:TouchOption.ClickCommand="{Binding SelectCommand}"
+                    behaviors:TouchOption.ClickCommandParameter="{x:Static enums:StockStatus.Limited}"
+                    behaviors:TouchOption.Ripple="True">
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0"
                            Style="{StaticResource ChoiceNameLabel}"
@@ -61,11 +60,10 @@
             </Border>
 
             <!-- sold out -->
-            <Border Style="{StaticResource ChoiceTileBorder}">
-                <Border.GestureRecognizers>
-                    <TapGestureRecognizer Command="{Binding SelectCommand}"
-                                          CommandParameter="{x:Static enums:StockStatus.SoldOut}" />
-                </Border.GestureRecognizers>
+            <Border Style="{StaticResource ChoiceTileBorder}"
+                    behaviors:TouchOption.ClickCommand="{Binding SelectCommand}"
+                    behaviors:TouchOption.ClickCommandParameter="{x:Static enums:StockStatus.SoldOut}"
+                    behaviors:TouchOption.Ripple="True">
                 <Grid ColumnDefinitions="*,Auto">
                     <Label Grid.Column="0"
                            Style="{StaticResource ChoiceNameLabel}"

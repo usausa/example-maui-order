@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Visit"
              x:Class="TableOrder.HallApp.Modules.Visit.VisitView"
              x:DataType="{x:Type module:VisitViewModel}"
@@ -100,15 +101,14 @@
                                 <VerticalStackLayout BindableLayout.ItemsSource="{Binding Lines}">
                                     <BindableLayout.ItemTemplate>
                                         <DataTemplate x:DataType="{x:Type module:VisitLine}">
+                                            <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                                             <Grid Style="{StaticResource VisitLineGrid}"
-                                                  ColumnDefinitions="*,Auto,Auto">
-                                                <!-- 押すと取り消す (提供と取消を除く) -->
-                                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                                <Grid.GestureRecognizers>
-                                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:VisitViewModel}}, Path=CancelLineCommand, x:DataType={x:Type module:VisitViewModel}}"
-                                                                          CommandParameter="{Binding .}" />
-                                                </Grid.GestureRecognizers>
+                                                  ColumnDefinitions="*,Auto,Auto"
+                                                  behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:VisitViewModel}}, Path=CancelLineCommand, x:DataType={x:Type module:VisitViewModel}}"
+                                                  behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                                  behaviors:TouchOption.Ripple="True">
                                                 <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
+                                                <!-- 押すと取り消す (提供と取消を除く) -->
                                                 <VerticalStackLayout Grid.Column="0"
                                                                      Style="{StaticResource VisitLineNameStack}">
                                                     <Label Style="{StaticResource VisitLineNameLabel}"

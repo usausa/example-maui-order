@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <mct:Popup xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
            xmlns:fonts="clr-namespace:Fonts"
            xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+           xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
            xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Dialogs"
            x:Class="TableOrder.TableApp.Modules.Dialogs.LanguageView"
            x:DataType="{x:Type module:LanguageViewModel}"
@@ -21,7 +22,12 @@
                              BindableLayout.ItemsSource="{Binding Languages}">
             <BindableLayout.ItemTemplate>
                 <DataTemplate x:DataType="{x:Type module:LanguageChoice}">
-                    <Border Style="{StaticResource LanguageTileBorder}">
+                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                    <Border Style="{StaticResource LanguageTileBorder}"
+                            behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:LanguageViewModel}}, Path=SelectCommand, x:DataType={x:Type module:LanguageViewModel}}"
+                            behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                            behaviors:TouchOption.Ripple="True">
+                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                         <Border.Triggers>
                             <DataTrigger TargetType="Border"
                                          Binding="{Binding IsSelected}"
@@ -31,12 +37,6 @@
                                 <Setter Property="BackgroundColor" Value="{StaticResource PrimaryContainerColor}" />
                             </DataTrigger>
                         </Border.Triggers>
-                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                        <Border.GestureRecognizers>
-                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:LanguageViewModel}}, Path=SelectCommand, x:DataType={x:Type module:LanguageViewModel}}"
-                                                  CommandParameter="{Binding .}" />
-                        </Border.GestureRecognizers>
-                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                         <Grid ColumnDefinitions="*,Auto">
                             <Label Grid.Column="0"
                                    Style="{StaticResource LanguageNameLabel}"

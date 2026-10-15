@@ -1,8 +1,9 @@
-<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:markup="clr-namespace:TableOrder.HallApp.Markup"
              xmlns:modules="clr-namespace:TableOrder.HallApp.Modules"
              x:Class="TableOrder.HallApp.Controls.TabFooter"
@@ -17,11 +18,10 @@
 
         <!-- seats -->
         <Grid Grid.Row="1" Grid.Column="0"
-              Style="{StaticResource TabItemGrid}">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding TabCommand}"
-                                      CommandParameter="{markup:ViewId Seats}" />
-            </Grid.GestureRecognizers>
+              Style="{StaticResource TabItemGrid}"
+              behaviors:TouchOption.ClickCommand="{Binding TabCommand}"
+              behaviors:TouchOption.ClickCommandParameter="{markup:ViewId Seats}"
+              behaviors:TouchOption.Ripple="True">
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsSeats}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
@@ -51,11 +51,10 @@
 
         <!-- calls -->
         <Grid Grid.Row="1" Grid.Column="1"
-              Style="{StaticResource TabItemGrid}">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding TabCommand}"
-                                      CommandParameter="{markup:ViewId Calls}" />
-            </Grid.GestureRecognizers>
+              Style="{StaticResource TabItemGrid}"
+              behaviors:TouchOption.ClickCommand="{Binding TabCommand}"
+              behaviors:TouchOption.ClickCommandParameter="{markup:ViewId Calls}"
+              behaviors:TouchOption.Ripple="True">
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsCalls}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
@@ -90,11 +89,10 @@
 
         <!-- serving -->
         <Grid Grid.Row="1" Grid.Column="2"
-              Style="{StaticResource TabItemGrid}">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding TabCommand}"
-                                      CommandParameter="{markup:ViewId Serving}" />
-            </Grid.GestureRecognizers>
+              Style="{StaticResource TabItemGrid}"
+              behaviors:TouchOption.ClickCommand="{Binding TabCommand}"
+              behaviors:TouchOption.ClickCommandParameter="{markup:ViewId Serving}"
+              behaviors:TouchOption.Ripple="True">
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsServing}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
@@ -129,11 +127,10 @@
 
         <!-- stock -->
         <Grid Grid.Row="1" Grid.Column="3"
-              Style="{StaticResource TabItemGrid}">
-            <Grid.GestureRecognizers>
-                <TapGestureRecognizer Command="{Binding TabCommand}"
-                                      CommandParameter="{markup:ViewId Stock}" />
-            </Grid.GestureRecognizers>
+              Style="{StaticResource TabItemGrid}"
+              behaviors:TouchOption.ClickCommand="{Binding TabCommand}"
+              behaviors:TouchOption.ClickCommandParameter="{markup:ViewId Stock}"
+              behaviors:TouchOption.Ripple="True">
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsStock}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">

@@ -94,7 +94,12 @@
                                                BindableLayout.ItemsSource="{Binding Categories}">
                             <BindableLayout.ItemTemplate>
                                 <DataTemplate x:DataType="{x:Type module:CategoryTab}">
-                                    <Border Style="{StaticResource CategoryTabBorder}">
+                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                                    <Border Style="{StaticResource CategoryTabBorder}"
+                                            behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                            behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                            behaviors:TouchOption.Ripple="True">
+                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                         <Border.Triggers>
                                             <DataTrigger TargetType="Border"
                                                          Binding="{Binding IsSelected}"
@@ -102,12 +107,6 @@
                                                 <Setter Property="BackgroundColor" Value="{StaticResource PrimaryColor}" />
                                             </DataTrigger>
                                         </Border.Triggers>
-                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                        <Border.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=SelectCategoryCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </Border.GestureRecognizers>
-                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                         <Label Style="{StaticResource CategoryTabLabel}"
                                                Text="{Binding Name}">
                                             <Label.Triggers>
@@ -164,20 +163,15 @@
                     </CollectionView.Footer>
                     <CollectionView.ItemTemplate>
                         <DataTemplate x:DataType="{x:Type module:MenuCard}">
-                            <Border Style="{StaticResource MenuCardBorder}">
-                                <!-- 詳細を開くタッチは一番下の面に付け、+ はその上に重ねる (+ を押したときに詳細を開かないように) -->
+                            <!-- カードを押すと詳細を開く (+ は自分でタップを受けるので、+ を押したときは詳細を開かない) -->
+                            <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
+                            <Border Style="{StaticResource MenuCardBorder}"
+                                    behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=OpenItemCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                    behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                    behaviors:TouchOption.Ripple="True">
+                                <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                 <Grid Style="{StaticResource FillGrid}"
                                       RowDefinitions="Auto,Auto">
-                                    <!-- touch -->
-                                    <BoxView Grid.Row="0" Grid.RowSpan="2">
-                                        <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                        <BoxView.GestureRecognizers>
-                                            <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=OpenItemCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                                  CommandParameter="{Binding .}" />
-                                        </BoxView.GestureRecognizers>
-                                        <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                                    </BoxView>
-
                                     <!-- image / badge / sold out -->
                                     <Grid Grid.Row="0"
                                           Style="{StaticResource MenuCardImageGrid}"
@@ -307,21 +301,16 @@
                         <DataTemplate x:DataType="{x:Type module:CartLineItem}">
                             <Grid Style="{StaticResource FillGrid}"
                                   RowDefinitions="Auto,1">
-                                <!-- 行を押すと詳細を開いて直す。そのタッチは一番下の面に付け、増減のボタンは上に置く -->
-                                <BoxView Grid.Row="0">
-                                    <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
-                                    <BoxView.GestureRecognizers>
-                                        <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=EditLineCommand, x:DataType={x:Type module:MenuViewModel}}"
-                                                              CommandParameter="{Binding .}" />
-                                    </BoxView.GestureRecognizers>
-                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
-                                </BoxView>
+                                <!-- 行を押すと詳細を開いて直す (増減のボタンは自分でタップを受けるので、押しても詳細を開かない) -->
+                                <!-- ReSharper disable Xaml.BindingWithContextNotResolved -->
                                 <Grid Grid.Row="0"
                                       Style="{StaticResource CartLineGrid}"
                                       RowDefinitions="64,Auto"
                                       ColumnDefinitions="*,Auto"
-                                      InputTransparent="True"
-                                      CascadeInputTransparent="False">
+                                      behaviors:TouchOption.ClickCommand="{Binding Source={RelativeSource AncestorType={x:Type module:MenuViewModel}}, Path=EditLineCommand, x:DataType={x:Type module:MenuViewModel}}"
+                                      behaviors:TouchOption.ClickCommandParameter="{Binding .}"
+                                      behaviors:TouchOption.Ripple="True">
+                                    <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                     <!-- name / quantity -->
                                     <Label Grid.Row="0" Grid.Column="0"
                                            Style="{StaticResource CartLineNameLabel}"
