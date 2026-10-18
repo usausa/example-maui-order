@@ -77,7 +77,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 端末は自分の鍵で署名して、短命のアクセストークン (JWT) を受け取る。
 
-1. **登録**: 端末は取り出せない鍵 (P-256。Android は Keystore、キッチン端末はブラウザの取り出せない鍵) を作り、`POST /devices/pair` でペアリングコードか登録トークン、アプリの端末の種類、公開鍵 (JWK) を送る ([§2.1](#-21-端末-devices))。  
+1. **登録**: 端末は取り出せない鍵 (P-256。Android は Keystore、キッチン端末はブラウザの取り出せない鍵) を作り、`POST /devices/pair` でペアリングコードか登録トークン、アプリの端末の種類、公開鍵 (JWK) を送る ([§2.1](#21-端末-devices))。  
    サーバは端末 (テナント、店舗、種類、置き場所、公開鍵) を記録する。  
    コードやトークンの種類とアプリの種類が違えば、コードを使わずに断る
 2. **トークン**: 端末は自分の鍵で署名した使い捨ての JWT (期限 5 分以内) を `POST /devices/token` に送り、アクセストークン (JWT、30 分) を受け取る。  
@@ -174,7 +174,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 各表の「利用者」: テーブル / ホール / キッチン / 受付 / 外部 ([§1.5](#15-認証認可))。  
 フィールドの表は応答の項目。
 
-### 📱 2.1 端末 (Devices)
+### 2.1 端末 (Devices)
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -213,11 +213,11 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `languages` | string[] | 画面で選べる言語 (`["ja", "en"]`)。端末は 1 つなら言語のボタンを出さない |
 | `orderRules` | object | `maxQuantityPerLine` (1 明細の数量の上限)、`maxLinesPerOrder` (1 回の注文の明細の上限) |
 | `paymentMethods` | enum[] | テーブルで使える支払方法 (`QrCode` / `CreditCard`)。空ならテーブルでは会計せず、レジに案内する |
-| `callReasons` | object[] | 呼び出しの用件 `{ code, name (LocalizedText), sortOrder }` (店舗で選べる。[§2.9](#-29-呼び出し-calls))。空なら端末は店員呼出を出さない |
+| `callReasons` | object[] | 呼び出しの用件 `{ code, name (LocalizedText), sortOrder }` (店舗で選べる。[§2.9](#29-呼び出し-calls))。空なら端末は店員呼出を出さない |
 | `electronicReceipt` | bool | 電子レシートを出すか |
 | `taxRounding` | enum | 税額の端数 (§2.2) |
 | `device` | object | 端末 `{ id, kind, name, tableId, tableName, stationIds }` (§2.1)。置き場所はここで受け取る |
-| `brand` | object | チェーンの設定 `{ name (LocalizedText), logoImageName (string?), theme }`。ロゴは正方形の画像 (地の色を含む。[§2.3](#-23-メニュー-menu) の画像) で、なければ端末は印に名前の頭の文字を出す |
+| `brand` | object | チェーンの設定 `{ name (LocalizedText), logoImageName (string?), theme }`。ロゴは正方形の画像 (地の色を含む。[§2.3](#23-メニュー-menu) の画像) で、なければ端末は印に名前の頭の文字を出す |
 | `brand.theme` | object[] | 替える色 `[{ role, color }]` (例: `{ "role": "PrimaryColor", "color": "#1E5FA8" }`)。役割は Brand・Neutral・Status の色 (`ThemeRoles`) で、色は `#RRGGBB` か `#AARRGGBB`。ない役割は端末の既定のまま |
 | `features` | object | 機能の有無 `{ registerCheckout, splitPayment, lastOrderNoticeMinutes, finishSeconds, visitOpening, kitchenAlertMinutes, daypartGraceMinutes }` (下の表)。ない項目は既定の値 |
 | `staffPin` | object? | スタッフの PIN のハッシュ `{ iterations, salt, hash }` (PBKDF2-HMAC-SHA256。`salt` と `hash` は Base64)。端末は入れた PIN を同じ計算で確かめ、平文を持たない。PIN を使う端末 (テーブル端末、ホール端末、受付機) だけに返し、キッチン端末は null |
@@ -235,9 +235,9 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `kitchenAlertMinutes` | int | `15` | キッチン端末で、チケットができてから何分で注意の色にするか (`0` は色を替えない) |
 | `daypartGraceMinutes` | int | `2` | 時間帯の終わりから何分までに届いた注文を受けるか (確定を押したあとの通信の遅れの猶予。`0` は受けない、`10` まで)。サーバだけが使い、端末は終わりの時刻で隠す |
 
-お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§2.3](#-23-メニュー-menu)) で決める。
+お酒の年齢の確認やドリンクバーの人数分の提案は、店舗の設定ではなくメニューのルール ([§2.3](#23-メニュー-menu)) で決める。
 
-### 🏪 2.2 店舗とテーブル (Store / Tables)
+### 2.2 店舗とテーブル (Store / Tables)
 
 店舗:
 
@@ -272,7 +272,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | PUT | `/store/ordering` | ホール | 注文の一時停止と再開 `StoreOrderingRequest { paused, message? }` → `204` (再開では文言を消す)。通知 `store.updated` |
 | GET | `/tables?status` | ホール / 受付 / 外部 (POS) | テーブルと今の来店の要約 (`TableListResponse`。表示順)。`status` で絞る (`Vacant` は来店なし、`Occupied` は会計の前の来店、`Paying` は会計中) |
 
-### 📖 2.3 メニュー (Menu)
+### 2.3 メニュー (Menu)
 
 店舗で出すメニュー全体を 1 回で返す。  
 メニューの編集は本部の管理システムで行い、公開した結果をこの API で配る ([扱わないもの](business.md#-6-扱わないもの))。
@@ -408,7 +408,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 }
 ```
 
-### ⛔ 2.4 品切れ (Stock)
+### 2.4 品切れ (Stock)
 
 商品とオプションごとに、売れるかどうかと残りの数を持つ。
 
@@ -429,7 +429,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 - `Limited` の残りの数は、注文を受けるたびにサーバが減らし、`0` になったら `SoldOut` にする
 - 品切れの品の注文は `422` (`ITEM_SOLD_OUT`)、残りの数を超える注文は `422` (`STOCK_INSUFFICIENT`)
 
-### 🪑 2.5 来店 (Visits)
+### 2.5 来店 (Visits)
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -456,7 +456,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | POST | `/visits/{id}/close` | ホール / 外部 (POS) | レジで払ったなど、テーブルの外で会計した来店を終える `{ closedBy, version, staffId? }`。`closedBy` は `Register` / `Hall` (`TablePayment` はテーブルで払い終えたときにサーバが付ける)。会計中の来店の待っている支払はやめ (あとで届いた結果で払い終えない)、終わっていない呼び出しは終える。通知 `visit.closed`、`payment.updated`、`call.updated` |
 | POST | `/visits/{id}/cancel` | ホール | 注文のないまま帰った来店の取りやめ `{ version }`。取消を除いた明細があれば `422` (`VISIT_HAS_ORDERS`)、会計中は `422` (`CHECKOUT_IN_PROGRESS`)。終わっていない呼び出しは終える。通知 `visit.closed` (`status` は `Cancelled`)、`call.updated` |
 
-### 🧾 2.6 注文 (Orders)
+### 2.6 注文 (Orders)
 
 1 回の「注文を確定する」で送る明細の束を注文とする。  
 明細は調理と提供の状態を持つ。
@@ -532,7 +532,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 - 確かめる順はメニュー (`MENU_CHANGED`、`OPTION_INVALID`、`QUANTITY_EXCEEDED`)、出せる条件 (`ITEM_UNAVAILABLE`)、品切れ、ルールで、先に見つけた種類の誤りを `errors` に明細の `id` ごとに返す
 - 注文の取消はお客様にはさせない (テーブル端末からは呼び出しでスタッフに頼む)
 
-### 🍳 2.7 キッチン (Kitchen)
+### 2.7 キッチン (Kitchen)
 
 注文の明細を持ち場ごとに分けたものをチケットとし、キッチン端末に出す。
 
@@ -559,14 +559,14 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
   チケットが変わると `ticket.updated` を送る
 - すでにその状態の操作 (送り直し) は変えずにチケットを返し、状態に合わない操作 (できあがった明細の作り始め) は `422` (`LINE_STATUS_INVALID`)
 
-### 🍛 2.8 提供 (Serving)
+### 2.8 提供 (Serving)
 
 | Method | Path | 利用者 | 概要 |
 | --- | --- | --- | --- |
 | GET | `/serving?status` | ホール | 提供を待つ明細をテーブルごとに、できあがりの古い順 (`ServingListResponse`。`status` は `Ordered` / `Cooking` / `Ready` で既定は `Ready`)。払い終えて閉じた来店の品も、その営業日のうちは出す (`visitStatus` が `Closed`。ホール端末は会計済みの印を出す) |
 | POST | `/serving/serve` | ホール | 提供した `ServeRequest { lineIds, staffId? }` → `204` (`Served`)。できあがりの前の品と、払い終えて閉じた来店の品も出せ、食後まで止めている品と取消は `422` (`LINE_STATUS_INVALID`)。通知 `order.lines.updated`、`ticket.updated` |
 
-### 🙋 2.9 呼び出し (Calls)
+### 2.9 呼び出し (Calls)
 
 | フィールド | 型 | 説明 |
 | --- | --- | --- |
@@ -588,7 +588,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 
 すでに進んでいる呼び出しへの操作 (ホール端末どうしで同時に押した) は、変えずに呼び出しを返す。
 
-### 💳 2.10 会計 (Bill / Payments)
+### 2.10 会計 (Bill / Payments)
 
 テーブル端末で明細を確かめ、QR コード決済かクレジットカードで払う。  
 決済の処理そのものは決済サービスが行い、注文サーバは支払の開始と結果を記録して、支払が揃ったら来店を終える。

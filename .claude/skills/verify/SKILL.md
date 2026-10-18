@@ -17,7 +17,8 @@ python .claude/skills/verify/scripts/verify.py
 - `hall` / `reception`: `hall/TableOrder.HallApp.slnx` / `reception/TableOrder.ReceptionApp.slnx` の Release と Debug のビルド (作り直し)、InspectCode
 - `server`: `server/TableOrder.Server.slnx` の Release と Debug のビルド (作り直し)、`server/tests/TableOrder.Server.Core.Tests`・`server/tests/TableOrder.Server.Web.Tests` の `dotnet run --project` (Release)、InspectCode
 - `files`: 変更したファイル (git の未コミット分) の改行コード (新しいファイルは CRLF、既存のファイルは元のまま) と、`docs/*.md`・README の改行 (1 行 1 文、「。」の後に 2 スペース)
-- `--fix` で改行コードと文書の改行を直す。`--all-docs` で変更のない文書も確かめる
+- `--fix` で改行コードと文書の改行を直す
+- `--all-docs` で変更のない文書も確かめる
 - `--no-inspect` は途中の確認用。作業の単位の検証では InspectCode を省かない
 - ログは `--out` のフォルダ (既定は一時フォルダの `tableorder-verify`) に残る。NG のときはログを読んで直す
 

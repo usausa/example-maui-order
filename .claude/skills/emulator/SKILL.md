@@ -11,7 +11,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 端末アプリを足したら、スクリプトの `APPS` にパッケージ名とプロジェクトを足す。
 テーブル端末は横置きのタブレット (1920x1200)、受付機は縦置きのタブレット (1200x1920)、ホール端末はスマートフォン (1080x2400、縦向き) の AVD で確かめる。
 スクリプトはエミュレータ (`emulator-` で始まる機器) だけを選び、実機が接続されていても使わない。
-`adb` や `dotnet build -t:Run` を直接使うときも、必ず `-s emulator-xxxx` / `-p:AdbTarget=-s emulator-xxxx` でエミュレータを指定する。
+`adb` や `dotnet build -t:Run` を直接使うときも、必ずエミュレータを指定する (`adb` は `-s emulator-xxxx`、`dotnet build -t:Run` は値に空白があるので `"-p:AdbTarget=-s emulator-xxxx"`)。
 
 ## 準備
 
@@ -55,7 +55,7 @@ description: 端末アプリ (MAUI Android。テーブル端末はタブレッ�
 - 文字: `emu.py text <ASCII>` (日本語は送れない)。キーは `emu.py key BACK` / `ENTER` / `DEL` (入力欄を消すときは `emu.py key DEL --repeat 30`)
 - なぞる: `emu.py swipe <x1> <y1> <x2> <y2> [ms]` (一覧やタブのスクロール)
 - 例外の確認: `emu.py logcat --grep "Exception|FATAL"`
-- アプリの設定: `emu.py pref get <キー>` / `emu.py pref set <キー> <値>` (アプリを止めてから書き換わる)
+- アプリの設定: `emu.py pref get <キー>` / `emu.py pref set <キー> <値>` (動いているアプリを止めてから書き換える。設定のファイルにないキーは足さないので、入れたばかりのアプリの接続先は端末の設定の画面で入れる)
 - アプリの言語: 端末の言語に従うアプリ (ホール端末) は、`emu.py locale ja-JP` でアプリだけの言語を替えて確かめる (アプリを止めて替えるので `emu.py launch` で起動する。`emu.py locale` で端末の言語に戻す)
 
 ## 専用端末 (Device Owner)

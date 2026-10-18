@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 推移的な依存のピン (Aspire.Hosting と StreamJsonRpc が 2.5.302 を引く): GHSA-qhrr-8q5h-9q3h -->
+    <!-- 推移的な依存のピン (Aspire.AppHost.Sdk → Aspire.Hosting.AppHost が 2.5.302 を引く): GHSA-qhrr-8q5h-9q3h -->
     <PackageReference Include="MessagePack" Version="2.5.307" />
   </ItemGroup>
 

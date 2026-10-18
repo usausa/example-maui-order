@@ -21,7 +21,7 @@
 #   python emu.py screen                     今の画面の遷移 (logcat の Navigated) を出す
 #   python emu.py logcat [--lines N] [--grep 正規表現]
 #   python emu.py pref get <key>             アプリの設定 (shared_prefs) の値を出す
-#   python emu.py pref set <key> <value>     アプリの設定の文字列を書き換える (アプリを止めてから)
+#   python emu.py pref set <key> <value>     アプリの設定の文字列を書き換える (動いているアプリを止めてから。ないキーは足さない)
 #   python emu.py browse <url>               既定のブラウザで Web アプリ (キッチン端末) を開く (localhost はこの PC の同じポートにつなぐ。同じタブを使い回す)
 #   python emu.py browse --reload            ブラウザで開いている画面を読み込み直す (全画面の間も使える)
 #   python emu.py browse --locale <言語>     ブラウザを止めて、ブラウザだけの言語を替える (例: ja-JP。default で端末の言語に戻す)
