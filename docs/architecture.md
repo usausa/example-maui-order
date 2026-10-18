@@ -670,7 +670,7 @@ Device Owner のときに掛ける端末の制限:
 - 入口 (`Endpoints/`) は要求の形を確かめて Service に渡し、結果を応答にするだけにする
 - Service は `TableOrder.Contract` の Request を受けて Response を返し、Accessor は 2-way SQL (`Accessors/Sql/`) で DB を読み書きする
 - 入力の誤りと業務の失敗は、Service が `ServiceError` (`errorCode` と項目ごとの理由) で返し、入口が `ApiProblems` で HTTP の状態と Problem Details にする
-- データベースは SQLite で、`Assets/Data/Schema.sql` を起動のたびに実行して [database.md](database.md) のすべての表を作る
+- データベースは SQLite (Microsoft.Data.Sqlite に SQLitePCLRaw.bundle_e_sqlite3 を足して、エンジンを 3.x 系にする) で、`Assets/Data/Schema.sql` を起動のたびに実行して [database.md](database.md) のすべての表を作る
 
 ### テナントの文脈
 
