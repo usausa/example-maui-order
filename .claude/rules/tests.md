@@ -1,19 +1,31 @@
 ---
 paths:
   - "*/tests/**"
+  - "server/src/TableOrder.Server.Web/Assets/Data/SampleData.sql"
+  - "server/src/TableOrder.Server.Web/Assets/Data/Menu.json"
+  - "server/src/TableOrder.Server.Web/Assets/Data/MenuWashoku.json"
 ---
 # テスト
 
 - xunit v3 (Microsoft Testing Platform)。実行は `dotnet run --project`、キャンセルは `TestContext.Current.CancellationToken`
 - テストのプロジェクトは対象の区分の `tests/` に `{対象のプロジェクト名}.Tests` で置き、テストは対象と同じフォルダ構成と名前空間に置く
-- テスト名はアンダースコアなしの PascalCase (`SplitPaymentClosesVisitWhenFullyPaid`) にし、目的はメソッドの上に日本語のコメントで書く
-- 本文は `// Arrange` / `// Act` / `// Assert` で区切る。準備がなければ `// Arrange` を省き、段階を追うシナリオは `// Act / Assert: 確かめること` を重ねる
-- テストは実行順に依存させず、テストの間で状態を共有しない
+- テスト名はアンダースコアなしの PascalCase (`SplitPaymentClosesVisitWhenFullyPaid`) にする
+- テストの目的は、メソッドの上に日本語のコメントで書く
+- 本文は `// Arrange`、`// Act`、`// Assert` で区切り、準備がなければ `// Arrange` を省く。ラベルには説明を付けず、準備の意図はその処理の行のコメントに書く
+- 段階を追うシナリオは `// Act / Assert: 確かめること` を重ね、段階の間に `// Arrange` を挟まない (準備と変更前の値の記録は、最初の `// Arrange` か段階の中に書く)
+- 段階のないテストで、対象の呼び出しをすべて Assert の式の中に書くとき (複数行でもよい) は、説明のない `// Act / Assert` にする
+- `// Act` と `// Assert` を分けるテストでは、応答の読み取り (`ReadErrorCodeAsync`、`ReadPageAsync`) を `// Assert` に置く (要求と一体の `GetAsync<T>` は `// Act` でよい)
+- 例外として、続きの前提 (書き込みの成否、次の要求や呼び出しに使う値) は、準備と `// Act` の途中で確かめてよい
+- テストは実行順に依存させない
+- テストの間で状態を共有しない
 - 計算のテストは、例の値と境界 (割り切れない、ちょうど、日をまたぐ、開店前) で確かめる
 - 共有のプロジェクト (`Domain`、`Client`) が画面・端末・サーバに依存しないことは、各テストの `DependencyTests` で確かめる
 - 端末の鍵の値の変換 (`DeviceCredentials`) は、Keystore と同じ形を返すテストの鍵で確かめ、サーバの API のテストでもその変換で登録とトークンが通ることを確かめる
 - サーバのテストから `TableOrder.Client` を参照しても、サーバのソリューションには入れない (サーバの InspectCode が、端末だけが使う型を使われていないと指摘するため)
 - API の結果は状態とエラーコード (`"ORDERING_PAUSED"` のような文字列) で確かめる
+- errorCode のない応答 (204、304、401、429、画面の転送) は状態コードで確かめる (ポリシーの 403 は `DEVICE_SCOPE` まで確かめる)
+- 端末の API は `TestDevice` で呼ぶ (JSON を送る要求は `PostAsync`、`PutAsync`、`PatchAsync`、成功の JSON を読む GET は `GetAsync<T>`)。例外として、本文のない POST、失敗や状態コードだけを確かめる GET、ヘッダーの要る要求は `TestDevice.Client` を直接呼ぶ
+- サンプルのデータ (`SampleData.sql`、`Menu.json`、`MenuWashoku.json`) を変えたら、`SampleData.cs`、`TestMenu.cs` と、値を確かめるテストを合わせる
 - API と画面の経路は `ApiRoutes` で書き、直書きしない (`$"{ApiRoutes.Visits}/{visit.Id}/bill"`。経路を替えたら、テストもビルドで気づく)
 - 期待する額はメニューの値 (価格) を書かず、明細と `Pricing` から求める (サンプルのメニューを変えてもテストを壊さない)
 - 通知は別のスレッドで届くので、届いた順に読んで時間を区切って待つ。送っていないことは、後から起こした通知が次に届くことで確かめる (通知は seq の順に届く)

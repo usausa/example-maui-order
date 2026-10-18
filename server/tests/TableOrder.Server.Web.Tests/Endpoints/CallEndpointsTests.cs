@@ -106,7 +106,9 @@ public sealed class CallEndpointsTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, fromHall.StatusCode);
+        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(fromHall));
         Assert.Equal(HttpStatusCode.Forbidden, fromTable.StatusCode);
+        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(fromTable));
     }
 
     private async Task<TestDevice> SignInAsync(string code)

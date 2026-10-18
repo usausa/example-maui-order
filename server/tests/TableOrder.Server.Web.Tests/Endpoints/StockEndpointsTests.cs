@@ -114,6 +114,7 @@ public sealed class StockEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
         Assert.Equal("NOT_FOUND", await TestDevice.ReadErrorCodeAsync(unknown));
         Assert.Equal(HttpStatusCode.NotFound, wrongKind.StatusCode);
+        Assert.Equal("NOT_FOUND", await TestDevice.ReadErrorCodeAsync(wrongKind));
     }
 
     // ホール端末はすべて Available に戻せる

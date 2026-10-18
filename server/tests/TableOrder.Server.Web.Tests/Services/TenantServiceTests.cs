@@ -62,6 +62,7 @@ public sealed class TenantServiceTests : IClassFixture<ServerFactory>
         {
             using var pair = await device.PairAsync(code);
             Assert.Equal(HttpStatusCode.Forbidden, pair.StatusCode);
+            Assert.Equal("TENANT_SUSPENDED", await TestDevice.ReadErrorCodeAsync(pair));
         }
 
         using (var admin = new TestAdmin(factory))

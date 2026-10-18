@@ -178,6 +178,7 @@ public sealed class KitchenEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(HttpStatusCode.Forbidden, otherStation.StatusCode);
         Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(otherStation));
         Assert.Equal(HttpStatusCode.Forbidden, fromHall.StatusCode);
+        Assert.Equal("DEVICE_SCOPE", await TestDevice.ReadErrorCodeAsync(fromHall));
     }
 
     private async Task<TestDevice> SignInAsync(string code)

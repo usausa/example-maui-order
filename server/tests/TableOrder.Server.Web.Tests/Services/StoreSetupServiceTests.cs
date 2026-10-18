@@ -149,6 +149,7 @@ public sealed class StoreSetupServiceTests : IClassFixture<ServerFactory>
         using var table = new TestDevice(factory.CreateClient());
         using var pair = await table.PairAsync(store.TableCodes[0]);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, pair.StatusCode);
+        Assert.Equal("PAIRING_CODE_INVALID", await TestDevice.ReadErrorCodeAsync(pair));
     }
 
     private static StoreBasics Basics(string code) =>

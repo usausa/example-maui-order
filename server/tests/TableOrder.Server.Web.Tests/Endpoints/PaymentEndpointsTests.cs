@@ -143,6 +143,7 @@ public sealed class PaymentEndpointsTests : IClassFixture<ServerFactory>
         Assert.Equal(PaymentStatus.Completed, paid.Status);
         using var receipt = await table.Client.GetAsync(new Uri($"{ApiRoutes.Visits}/{visit.Id}/receipt", UriKind.Relative), TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, receipt.StatusCode);
+        Assert.Equal("NOT_FOUND", await TestDevice.ReadErrorCodeAsync(receipt));
     }
 
     // 会計を始める前は払えない

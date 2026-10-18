@@ -11,10 +11,12 @@ public sealed class EventDispatcherTests
     [Fact]
     public async Task SweepRunsWhileOtherStoresSignal()
     {
-        // Arrange: 見回りの間隔を 1 秒にしたサーバと、知らせの続く店舗
+        // Arrange
         await using var server = new ServerFactory();
+        // 見回りの間隔を 1 秒にする
         server.Settings["Event:SweepSeconds"] = "1";
         var store = await server.CreateStoreAsync();
+        // 知らせの続く店舗
         var busy = await server.CreateStoreAsync();
         using var hall = new TestDevice(server.CreateClient());
         await hall.SignInAsync(store.HallCode);

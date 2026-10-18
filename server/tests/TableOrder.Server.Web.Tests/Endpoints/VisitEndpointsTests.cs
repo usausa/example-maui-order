@@ -185,7 +185,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
     [Fact]
     public async Task ReceptionRejectsAfterLastOrder()
     {
-        // Arrange: 受け付けたあとに、ラストオーダーを過ぎた店舗にする
+        // Arrange
         var store = await factory.CreateStoreAsync(VisitOpening.Reception);
         using var reception = await SignInAsync(store.ReceptionCode);
         using var hall = await SignInAsync(store.HallCode);
@@ -195,6 +195,7 @@ public sealed class VisitEndpointsTests : IClassFixture<ServerFactory>
             first.EnsureSuccessStatusCode();
         }
 
+        // 受け付けたあとに、ラストオーダーを過ぎた店舗にする
         await factory.SetLastOrderTimeAsync(store, "05:00");
 
         // Act

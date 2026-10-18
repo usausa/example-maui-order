@@ -75,5 +75,6 @@ public sealed class ImageEndpointsTests : IClassFixture<ServerFactory>
         // Assert
         Assert.Equal([1, 2, 3], await found.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.NotFound, hidden.StatusCode);
+        Assert.Equal("NOT_FOUND", await TestDevice.ReadErrorCodeAsync(hidden));
     }
 }

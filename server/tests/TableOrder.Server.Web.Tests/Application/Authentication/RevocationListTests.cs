@@ -83,8 +83,9 @@ public sealed class RevocationListTests : IClassFixture<ServerFactory>
     [Fact]
     public async Task SweepRejectsDeviceRevokedElsewhere()
     {
-        // Arrange: 読み直しの間隔を 1 秒にしたサーバ
+        // Arrange
         await using var server = new ServerFactory();
+        // 読み直しの間隔を 1 秒にする
         server.Settings["Token:RevocationSweepSeconds"] = "1";
         var store = await server.CreateStoreAsync();
         using var device = new TestDevice(server.CreateClient());

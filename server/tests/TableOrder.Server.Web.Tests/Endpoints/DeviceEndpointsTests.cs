@@ -55,8 +55,9 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
     [Fact]
     public async Task PairIsRateLimitedWithRetryAfter()
     {
-        // Arrange: 登録の回数を 1 分に 2 回にしたサーバ
+        // Arrange
         await using var server = new ServerFactory();
+        // 登録の回数を 1 分に 2 回にする
         server.Settings["RateLimit:PairingPerMinute"] = "2";
         using var device = new TestDevice(server.CreateClient());
 
@@ -230,7 +231,8 @@ public sealed class DeviceEndpointsTests : IClassFixture<ServerFactory>
     [Fact]
     public async Task TokenRejectsSuspendedTenant()
     {
-        // Arrange: このテストだけのテナントを作る (ほかのテストのテナントを止めない)
+        // Arrange
+        // このテストだけのテナントを作る (ほかのテストのテナントを止めない)
         var (tenantId, code) = await factory.CreateTenantAsync();
         using var device = new TestDevice(factory.CreateClient());
         await device.SignInAsync(code);
