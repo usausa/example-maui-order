@@ -47,6 +47,7 @@ paths:
 - EMM の登録トークンは、登録していない端末が起動したときだけ使う (登録している端末は登録し直さない)
 - 無効にされた端末は、EMM の登録トークンが残っていても自分では登録し直さない (`Settings.IsRevoked`。端末の設定で登録し直す)
 - どの端末のアプリでも同じもの (起動の準備 `StartupState`、処理中の覆い `ShellProperty`、長押しの時間 `AppGestures`) は、アプリごとに写さずに `TableOrder.Terminal` に置く
+- Android だけのクラスは `Platforms/Android/` の直下ではなく、用途のフォルダ (`DirectFontImageSourceService` は `Graphics/`) に置く (直下は Android の入口 (`MainActivity`、`MainApplication`) と `AndroidHelper` だけ)
 - メニューの出し分け (出せる条件のルール) は `TableOrder.Terminal` の `MenuAvailability` で求め (時刻は店舗の現地時刻、人数は来店の子ども)、アプリごとに判定を写さない
 - 使わない部品 (フォーカスの移動、入力のフィルタ、角丸、選択の添付プロパティ、使わない端末の値) を共通の部品に残さない (規則に反する部品を新しい画面が使えないように)
 - 画像 (料理の写真、チェーンのロゴ) は `ImageCache` (`TableOrder.Terminal`) が登録ごとのフォルダに名前で保存し、保存したものは取り直さない (名前は内容が変わると変わる)。名前は保存の前に `ImageNames.IsValid` で確かめる
