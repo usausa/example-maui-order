@@ -1,5 +1,6 @@
 namespace TableOrder.Terminal.Modules.Dialogs;
 
+// 電卓: 数と番号 (PIN、ペアリングコード) を入れ、入れた文字を返す (閉じたら null)
 public sealed partial class InputNumberViewModel : AppDialogViewModelBase, IPopupInitialize<NumberInputParameter>
 {
     [ObservableProperty]

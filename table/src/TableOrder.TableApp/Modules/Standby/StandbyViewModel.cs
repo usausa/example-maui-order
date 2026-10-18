@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Standby;
 
 using TableOrder.Terminal.Components;
 
-// 待受。来店の開き方が席の店はお客様が人数を入れて始め、ほかの店はスタッフ (ホール端末、管理画面の案内) か受付機が開いた知らせで注文の画面に進む
+// 待受: 来店の開き方が席の店はお客様が人数を入れて始め、ほかの店はスタッフ (ホール端末、管理画面の案内) か受付機が開いた知らせで注文の画面に進む
 // チェーンと店舗の設定が替わったら (設定の版)、来店のないここで起動からやり直して反映する
 public sealed class StandbyViewModel : AppViewModelBase
 {

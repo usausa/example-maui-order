@@ -2,7 +2,7 @@ namespace TableOrder.ReceptionApp.Modules.Staff;
 
 using TableOrder.Terminal.Components;
 
-// スタッフメニュー。ブランドの印の長押しと PIN で入る
+// スタッフメニュー: ブランドの印の長押しと PIN で入る
 // 端末の情報、端末の設定、専用端末の一時的な解除を置く (PIN は管理画面の店舗の設定で替える)
 public sealed partial class StaffViewModel : AppViewModelBase
 {

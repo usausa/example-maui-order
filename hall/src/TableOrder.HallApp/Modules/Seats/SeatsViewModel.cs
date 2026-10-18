@@ -2,7 +2,7 @@ namespace TableOrder.HallApp.Modules.Seats;
 
 using TableOrder.HallApp.Modules.Dialogs;
 
-// 席のタブ。テーブルを 2 列のタイルで並べ、空きを押すと案内 (人数を入れて来店を開く)、来店中と会計中を押すと来店の詳細を開く
+// 席のタブ: テーブルを 2 列のタイルで並べ、空きを押すと案内 (人数を入れて来店を開く)、来店中と会計中を押すと来店の詳細を開く
 // タイルは通知で読み直した席の一覧 (TableState) から出し、経過時間は時間ごとに出し直す
 public sealed class SeatsViewModel : TabViewModelBase
 {

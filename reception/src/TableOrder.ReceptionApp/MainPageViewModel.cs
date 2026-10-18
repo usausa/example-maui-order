@@ -3,6 +3,7 @@ namespace TableOrder.ReceptionApp;
 using TableOrder.ReceptionApp.Modules;
 using TableOrder.Terminal.Components;
 
+// 画面の枠: 画面を切り替える入れ物。起動の準備を待って起動の画面に進み、遷移の間は処理中にして操作を止め、前に出たら専用端末と管理対象の構成を掛け直す
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
 public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
 {

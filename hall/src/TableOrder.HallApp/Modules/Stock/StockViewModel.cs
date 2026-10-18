@@ -2,7 +2,7 @@ namespace TableOrder.HallApp.Modules.Stock;
 
 using TableOrder.HallApp.Modules.Dialogs;
 
-// 品切れのタブ。カテゴリの帯 (品切れ・残り、メニューのカテゴリ、オプション) で選んだ品を並べ、品を押すと状態を選んで送る
+// 品切れのタブ: カテゴリの帯 (品切れ・残り、メニューのカテゴリ、オプション) で選んだ品を並べ、品を押すと状態を選んで送る
 // 下の帯に、注文の一時停止と再開 (どちらかだけ)、すべて戻すを置く。品は品切れの通知 (StockChanged) で出し直す
 public sealed partial class StockViewModel : TabViewModelBase
 {

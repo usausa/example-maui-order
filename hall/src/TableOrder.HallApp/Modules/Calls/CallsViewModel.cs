@@ -1,6 +1,6 @@
 namespace TableOrder.HallApp.Modules.Calls;
 
-// 呼び出しのタブ。終わっていない呼び出しを古い順にカードで並べ、向かう・対応したを送る (確かめずに送る)
+// 呼び出しのタブ: 終わっていない呼び出しを古い順にカードで並べ、向かう・対応したを送る (確かめずに送る)
 // カードは通知で読み直した呼び出し (CallState) から出し、呼ばれてからの時間は時間ごとに出し直す
 public sealed partial class CallsViewModel : TabViewModelBase
 {

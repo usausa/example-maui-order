@@ -1,17 +1,17 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-// 店員の呼び出し。用件を選んで呼び、開いている間は呼び出しの状態 (向かっています) を読み直す
+// 店員の呼び出し: 用件を選んで呼び、開いている間は呼び出しの状態 (向かっています) を読み直す
 public sealed partial class StaffCallViewModel : AppDialogViewModelBase
 {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(2);
-
-    private readonly CancellationTokenSource cancel = new();
 
     private readonly ILogger<StaffCallViewModel> log;
 
     private readonly VisitState visitState;
 
     private readonly ITableApi tableApi;
+
+    private readonly CancellationTokenSource cancel = new();
 
     private readonly Dictionary<string, string> reasonNames;
 

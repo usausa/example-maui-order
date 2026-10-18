@@ -128,11 +128,11 @@
               ColumnDefinitions="*,*">
             <Button Grid.Column="0"
                     Style="{StaticResource SecondaryActionButton}"
-                    Command="{Binding BackCommand}"
+                    Command="{Binding CloseCommand}"
                     Text="{x:Static strings:AppResources.CommonBack}" />
             <Button Grid.Column="1"
                     Style="{StaticResource PrimaryActionButton}"
-                    Command="{Binding SubmitCommand}"
+                    Command="{Binding CommitCommand}"
                     Text="{Binding SubmitText}" />
         </Grid>
 

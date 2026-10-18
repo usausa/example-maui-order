@@ -1,6 +1,6 @@
 namespace TableOrder.HallApp.Modules;
 
-// 下部のタブの画面 (席、呼び出し、提供、品切れ) の基底。ヘッダ (タブの名前、店舗の名前、注文の一時停止の知らせ) とタブの帯 (切り替え、待っている件数) を持つ
+// タブの画面の基底: 下部のタブの画面 (席、呼び出し、提供、品切れ) のヘッダ (タブの名前、店舗の名前、注文の一時停止の知らせ) とタブの帯 (切り替え、待っている件数) を持つ
 // ヘッダとタブの帯の部品 (Controls/TabHeader、Controls/TabFooter) はこの型にバインドする
 // 店舗の設定の版が替わったら、タブの画面で起動からやり直して読み直す (入ったときと store.updated。来店の詳細と代わりの注文の画面では、入れかけの操作を捨てないように替えない)
 public abstract partial class TabViewModelBase : AppViewModelBase

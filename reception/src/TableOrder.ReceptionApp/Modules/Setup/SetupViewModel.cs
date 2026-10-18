@@ -1,6 +1,6 @@
 namespace TableOrder.ReceptionApp.Modules.Setup;
 
-// 端末の設定。接続先 (注文サーバの URL) と、端末の登録 (ペアリングコードを電卓で入れる)。保存したら起動からやり直す
+// 端末の設定: 接続先 (注文サーバの URL) と、端末の登録 (ペアリングコードを電卓で入れる)。保存したら起動からやり直す
 // 登録は接続先ごとに行う。コードを入れずに保存したときは起動で今の登録を確かめ、なければ EMM の登録トークンで登録する
 public sealed partial class SetupViewModel : AppViewModelBase
 {

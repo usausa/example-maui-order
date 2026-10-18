@@ -1,6 +1,6 @@
 namespace TableOrder.HallApp.Modules.Serving;
 
-// 提供のタブ。できあがった明細をテーブルごとに並べ、提供した明細を送る (明細ごとと、テーブルのすべて。確かめずに送る)
+// 提供のタブ: できあがった明細をテーブルごとに並べ、提供した明細を送る (明細ごとと、テーブルのすべて。確かめずに送る)
 // 一覧は通知で読み直した提供を待つ明細 (ServingState) から出し、できあがってからの時間は時間ごとに出し直す
 public sealed partial class ServingViewModel : TabViewModelBase
 {

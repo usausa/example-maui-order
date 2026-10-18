@@ -1,11 +1,9 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-// 注文履歴。開いている間は明細の状態を読み直す (サーバの通知ができたら通知で替える)。食後の品はここからお願いする
+// 注文履歴: 開いている間は明細の状態を読み直す (サーバの通知ができたら通知で替える)。食後の品はここからお願いする
 public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
 {
     private static readonly TimeSpan RefreshInterval = TimeSpan.FromSeconds(3);
-
-    private readonly CancellationTokenSource cancel = new();
 
     private readonly ILogger<OrderHistoryViewModel> log;
 
@@ -16,6 +14,8 @@ public sealed partial class OrderHistoryViewModel : AppDialogViewModelBase
     private readonly StoreState storeState;
 
     private readonly ITableApi tableApi;
+
+    private readonly CancellationTokenSource cancel = new();
 
     // 操作 (お願い) で内容を反映するたびに進める。読み直しの結果は、頼んだあとに操作で反映していたら古いので使わない
     private int revision;

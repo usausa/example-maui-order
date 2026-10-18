@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Menu;
 
 using TableOrder.Terminal.Components;
 
-// 商品の詳細 (大きな写真、説明、アレルギー、オプション、出す時機、数量)。選んだ内容を返し、カートに入れるのは注文の画面が行う
+// 商品の詳細: 大きな写真、説明、アレルギー、オプション、出す時機、数量を出し、選んだ内容を返す (カートに入れるのは注文の画面が行う)
 public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopupInitialize<ItemDetailParameter>
 {
     private readonly ImageCache imageCache;
@@ -114,7 +114,7 @@ public sealed partial class ItemDetailViewModel : AppDialogViewModelBase, IPopup
         SelectTimingCommand = MakeDelegateCommand<TimingChoice>(SelectTiming);
         DecreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity - 1), () => Quantity > 1);
         IncreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity + 1), () => Quantity < maxQuantity);
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
         CommitCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
     }
 

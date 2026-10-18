@@ -2,7 +2,7 @@ namespace TableOrder.Terminal.Modules.Dialogs;
 
 public sealed record ConfirmParameter(string Title, string Message, string Ok, string Cancel);
 
-// 確かめる (年齢の確認、注文していない商品があるときのお会計など)。受けたら true
+// 確認: 年齢の確認や、注文していない商品があるときのお会計などを確かめる。受けたら true
 public sealed partial class ConfirmViewModel : AppDialogViewModelBase, IPopupInitialize<ConfirmParameter>
 {
     [ObservableProperty]
@@ -17,14 +17,14 @@ public sealed partial class ConfirmViewModel : AppDialogViewModelBase, IPopupIni
     [ObservableProperty]
     public partial string CancelText { get; set; } = string.Empty;
 
-    public IObserveCommand OkCommand { get; }
+    public IObserveCommand CloseCommand { get; }
 
-    public IObserveCommand CancelCommand { get; }
+    public IObserveCommand CommitCommand { get; }
 
     public ConfirmViewModel()
     {
-        OkCommand = MakeAsyncCommand(async () => await CloseAsync(true));
-        CancelCommand = MakeAsyncCommand(async () => await CloseAsync(false));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
+        CommitCommand = MakeAsyncCommand(async () => await CloseAsync(true));
     }
 
     public void Initialize(ConfirmParameter parameter)

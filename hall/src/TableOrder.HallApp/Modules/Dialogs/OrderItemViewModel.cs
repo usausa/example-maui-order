@@ -1,6 +1,6 @@
 namespace TableOrder.HallApp.Modules.Dialogs;
 
-// 代わりの注文の品の詳細。オプション (品切れと出せる条件を満たさないものは選べない)、出す時機 (選べる品だけ)、数量を選び、選んだ内容を返す (閉じたら null)
+// 代わりの注文の品の詳細: オプション (品切れと出せる条件を満たさないものは選べない)、出す時機 (選べる品だけ)、数量を選び、選んだ内容を返す (閉じたら null)
 // カートに入れる前のルールの確かめ (確認、上限) は開いた画面が行う
 public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupInitialize<OrderItemParameter>
 {
@@ -56,7 +56,7 @@ public sealed partial class OrderItemViewModel : AppDialogViewModelBase, IPopupI
         IncreaseCommand = MakeDelegateCommand(() => ChangeQuantity(Quantity + 1), () => Quantity < maxQuantity);
 
         // 結果は開く側と同じ型 (ItemSelection?) で返す
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
         CommitCommand = MakeAsyncCommand(async () => await CloseAsync<ItemSelection?>(CreateSelection()), () => CanCommit);
     }
 

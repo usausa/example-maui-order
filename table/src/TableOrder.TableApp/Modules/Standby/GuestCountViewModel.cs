@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Standby;
 
 public sealed record GuestCountResult(int Adults, int Children);
 
-// 来店の人数 (大人と子ども)。合わせて 1 人以上で始められる (閉じたら null)
+// 来店の人数: 大人と子どもを入れる。合わせて 1 人以上で始められる (閉じたら null)
 public sealed partial class GuestCountViewModel : AppDialogViewModelBase
 {
     [ObservableProperty]
@@ -30,7 +30,7 @@ public sealed partial class GuestCountViewModel : AppDialogViewModelBase
         DecreaseChildrenCommand = MakeDelegateCommand(() => Children--, () => Children > 0);
         IncreaseChildrenCommand = MakeDelegateCommand(() => Children++, () => Children < Length.MaxGuests);
 
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<GuestCountResult?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
         CommitCommand = MakeAsyncCommand(
             async () => await CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
             () => Adults + Children > 0);

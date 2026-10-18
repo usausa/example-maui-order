@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Menu;
 
 using TableOrder.Terminal.Components;
 
-// 注文の画面。上にカテゴリのタブ、左にメニューのカード、右に注文リスト、下に履歴・呼出・会計を置く
+// 注文の画面: 上にカテゴリのタブ、左にメニューのカード、右に注文リスト、下に履歴・呼出・会計を置く
 public sealed partial class MenuViewModel : AppViewModelBase
 {
     // ラストオーダーの知らせと時間帯の出し分けは時刻で変わるので、しばらくごとに見直す

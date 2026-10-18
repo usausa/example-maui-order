@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Modules.Staff;
 
 using TableOrder.Terminal.Components;
 
-// スタッフメニュー。ブランドの印の長押しと PIN で入る
+// スタッフメニュー: ブランドの印の長押しと PIN で入る
 // 端末の情報、端末の設定、専用端末の一時的な解除を置く (PIN は管理画面の店舗の設定で替える。来店はスタッフがホール端末や管理画面の案内で開く)
 public sealed partial class StaffViewModel : AppViewModelBase
 {
@@ -17,13 +17,13 @@ public sealed partial class StaffViewModel : AppViewModelBase
 
     private readonly DeviceState deviceState;
 
+    private readonly VisitState visitState;
+
     // 画面を離れたら時間切れの見張りをやめる
     private readonly CancellationTokenSource watching = new();
 
     // 最後に操作した時刻
     private DateTimeOffset touchedAt;
-
-    private readonly VisitState visitState;
 
     public string TableText { get; }
 

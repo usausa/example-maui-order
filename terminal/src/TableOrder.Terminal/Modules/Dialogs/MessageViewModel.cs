@@ -2,7 +2,7 @@ namespace TableOrder.Terminal.Modules.Dialogs;
 
 public sealed record MessageParameter(string Title, string Message);
 
-// 知らせ (上限、失敗など)。閉じるだけ
+// 知らせ: 上限や失敗などを知らせ、閉じるだけ
 public sealed partial class MessageViewModel : AppDialogViewModelBase, IPopupInitialize<MessageParameter>
 {
     [ObservableProperty]

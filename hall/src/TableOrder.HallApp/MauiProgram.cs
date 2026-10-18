@@ -35,9 +35,9 @@ public static partial class MauiProgram
             .UseCustomView()
             .BuildApplication();
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Logging
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     private static MauiAppBuilder ConfigureLogging(this MauiAppBuilder builder)
     {
@@ -63,9 +63,9 @@ public static partial class MauiProgram
         return builder;
     }
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Application
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     private static void ConfigureMauiCommunityToolkit(Options options)
     {
@@ -100,18 +100,18 @@ public static partial class MauiProgram
         return builder;
     }
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Design
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     private static void ConfigureFonts(IFontCollection fonts)
     {
         fonts.AddFont("MaterialIcons-Regular.ttf", MaterialIcons.FontFamily);
     }
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Components
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     private static MauiAppBuilder UseGeneratedServiceProvider(this MauiAppBuilder builder)
     {
@@ -180,9 +180,9 @@ public static partial class MauiProgram
         services.AddSingleton<OrderEventReceiver>();
     }
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Build
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     private static MauiApp BuildApplication(this MauiAppBuilder builder)
     {
@@ -228,9 +228,9 @@ public static partial class MauiProgram
         return app;
     }
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // View & ViewModel
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     // ReSharper disable UnusedMethodReturnValue.Local
     [ComponentRegistration(Lifetime.Transient, "View$", Namespace = ModulesNamespace)]
@@ -240,9 +240,9 @@ public static partial class MauiProgram
     private static partial IServiceCollection AddViewModels(this IServiceCollection services);
     // ReSharper restore UnusedMethodReturnValue.Local
 
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // Navigation
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     [ViewSource]
     public static partial IEnumerable<KeyValuePair<ViewId, Type>> ViewSource();

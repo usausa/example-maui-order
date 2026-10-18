@@ -3,7 +3,7 @@ namespace TableOrder.HallApp.Modules.Dialogs;
 // 品の名前と添える文 (オプションはグループの名前)、今の状態
 public sealed record StockEditParameter(string Name, string Caption, StockStatus Status, string StatusText);
 
-// 品の状態 (売れる、残りの数を決める、品切れ) を選び、選んだ状態を返す (閉じたら null)。残りの数は開いた側が電卓で入れる
+// 品の状態: 売れる、残りの数を決める、品切れから選び、選んだ状態を返す (閉じたら null)。残りの数は開いた側が電卓で入れる
 public sealed partial class StockEditViewModel : AppDialogViewModelBase, IPopupInitialize<StockEditParameter>
 {
     [ObservableProperty]
@@ -33,7 +33,7 @@ public sealed partial class StockEditViewModel : AppDialogViewModelBase, IPopupI
     {
         // 結果は開く側と同じ型 (StockStatus?) で返す
         SelectCommand = MakeAsyncCommand<StockStatus>(async x => await CloseAsync<StockStatus?>(x));
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<StockStatus?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
     }
 
     public void Initialize(StockEditParameter parameter)

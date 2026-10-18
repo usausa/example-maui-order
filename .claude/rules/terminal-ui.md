@@ -74,10 +74,13 @@ paths:
 - 端末の戻るは各画面で `OnNotifyBackAsync` (抽象) を実装して決める。お客様の画面では何もしない (アプリの外へ出さない)
 - 端末の戻るは画面の戻るのボタンと同じ条件で行い、ボタンを押せないとき (`CanBack` が false) は何もしない
 - ViewModel のプロパティは `[ObservableProperty] public partial`、コマンドは `MakeAsyncCommand` / `MakeDelegateCommand` で作る
+- ViewModel (ポップアップと画面の枠の `MainPageViewModel` も) のクラスの前に「画面名: 役割」のコメントを書く (続く行に意図と制約を書いてよい)
+- コマンドは行や欄の操作 (`-`、`+`、選ぶ) を先、閉じる (`CloseCommand`) と確定 (`CommitCommand`) を後にして、宣言と代入を同じ順に並べる
 - 一覧の項目の操作は ViewModel の引数つきコマンドにし、項目からは `RelativeSource AncestorType` と `x:DataType` を付けたバインドで呼ぶ (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
 - ポップアップの ViewModel が読み直しを続けるときは、`CancellationTokenSource` を `Dispose` で止める (閉じると ViewModel が破棄される)
 - ポップアップの ViewModel は `AppDialogViewModelBase` を継ぎ、基底の `CloseAsync` で閉じる (コンストラクタで `IPopupNavigator` を受け取らない。閉じ始めたら基底がコマンドを止める)
 - ポップアップの結果を値の型で返すときは、開く側と同じ型 (Nullable も含めて) で `CloseAsync<T>` を呼ぶ (例: `CloseAsync<Language?>(x)`。型が違うと結果が渡らず null になる)
+- ポップアップの下段の取りやめは `CloseCommand` にして結果を渡さない `CloseAsync()` で閉じ (開く側には null か既定の値が返る)、確定は `CommitCommand` にする
 - コマンドの中で長く待たない (実行中は処理中の覆いで画面を止める)。支払の完了などを待つ繰り返しは、コマンドの外のタスクにする
 - `AcceptsCommand` は、遷移の間と上にポップアップを開いている間 (`Extender/PopupActivationPlugin`) を無効として基底クラスが切り替える。各画面では書き換えず、止める必要があれば画面のフラグを用意する
 - ボタンを押せなくするのは `MakeXxxCommand` の `canExecute` (画面の状態) で行う。実行中と遷移中は `BusyState` で止まる

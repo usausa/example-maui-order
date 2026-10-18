@@ -19,7 +19,7 @@ public sealed record BillLineItem(string Name, string OptionText, string Quantit
 // 税率ごとの内税
 public sealed record BillTaxItem(string Name, string AmountText);
 
-// 会計の手伝い。明細、内税、合計、払った額、残り、まだ出していない品の注意を出し、会計を始めるか取りやめるかを返す (閉じたら null)
+// 会計の手伝い: 明細、内税、合計、払った額、残り、まだ出していない品の注意を出し、会計を始めるか取りやめるかを返す (閉じたら null)
 public sealed partial class BillViewModel : AppDialogViewModelBase, IPopupInitialize<BillParameter>
 {
     [ObservableProperty]
@@ -75,7 +75,7 @@ public sealed partial class BillViewModel : AppDialogViewModelBase, IPopupInitia
         // 結果は開く側と同じ型 (BillAction?) で返す。明細のない来店は会計を始めない
         StartCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(BillAction.StartCheckout), () => !IsEmpty);
         CancelCheckoutCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(BillAction.CancelCheckout));
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<BillAction?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
     }
 
     public void Initialize(BillParameter parameter)

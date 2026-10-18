@@ -6,9 +6,9 @@ using Smart.Maui.Interactivity;
 
 public static class ShellProperty
 {
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
     // BusyOverlay
-    // ------------------------------------------------------------
+    //--------------------------------------------------------------------------------
 
     // 処理中は画面全体を透明な面で覆い、タッチを受け付けない
     public static readonly BindableProperty BusyOverlayProperty = BindableProperty.CreateAttached(

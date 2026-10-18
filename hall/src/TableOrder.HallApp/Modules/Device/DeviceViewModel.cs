@@ -2,7 +2,7 @@ namespace TableOrder.HallApp.Modules.Device;
 
 using TableOrder.Terminal.Components;
 
-// 端末の画面。端末の情報を出し、端末の設定と専用端末の一時的な解除は、スタッフの PIN を確かめてから行う
+// 端末の画面: 端末の情報を出し、端末の設定と専用端末の一時的な解除は、スタッフの PIN を確かめてから行う
 // 閉じたら開いたタブに戻る
 public sealed partial class DeviceViewModel : AppViewModelBase
 {

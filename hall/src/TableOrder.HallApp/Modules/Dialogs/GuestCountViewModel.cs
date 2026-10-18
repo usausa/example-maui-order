@@ -5,7 +5,7 @@ public sealed record GuestCountParameter(string Title, string Hint, int Adults, 
 
 public sealed record GuestCountResult(int Adults, int Children);
 
-// 人数 (大人と子ども) を増減のボタンで入れる。合わせて 1 人以上で決められる (閉じたら null)
+// 人数: 大人と子どもを増減のボタンで入れる。合わせて 1 人以上で決められる (閉じたら null)
 public sealed partial class GuestCountViewModel : AppDialogViewModelBase, IPopupInitialize<GuestCountParameter>
 {
     [ObservableProperty]
@@ -43,7 +43,7 @@ public sealed partial class GuestCountViewModel : AppDialogViewModelBase, IPopup
         IncreaseChildrenCommand = MakeDelegateCommand(() => Children++, () => Children < Length.MaxGuests);
 
         // 結果は開く側と同じ型 (GuestCountResult?) で返す
-        CloseCommand = MakeAsyncCommand(async () => await CloseAsync<GuestCountResult?>(null));
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
         CommitCommand = MakeAsyncCommand(
             async () => await CloseAsync<GuestCountResult?>(new GuestCountResult(Adults, Children)),
             () => Adults + Children > 0);

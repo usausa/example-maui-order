@@ -1,6 +1,6 @@
 namespace TableOrder.TableApp.Modules.Menu;
 
-// 注文の確認。明細と合計を見せ、提案のルールに当たれば 1 枠だけ提案する。送れたら受け付けの知らせを出して閉じる
+// 注文の確認: 明細と合計を見せ、提案のルールに当たれば 1 枠だけ提案する。送れたら受け付けの知らせを出して閉じる
 // 送れたかわからない注文があるときは、同じ内容の送り直しとして開く (提案は出さない)
 public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 {
@@ -49,9 +49,9 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
 
     public IObserveCommand AddSuggestionCommand { get; }
 
-    public IObserveCommand BackCommand { get; }
+    public IObserveCommand CloseCommand { get; }
 
-    public IObserveCommand SubmitCommand { get; }
+    public IObserveCommand CommitCommand { get; }
 
     //--------------------------------------------------------------------------------
     // Constructor
@@ -71,8 +71,8 @@ public sealed partial class OrderConfirmViewModel : AppDialogViewModelBase
         this.orderUsecase = orderUsecase;
 
         AddSuggestionCommand = MakeDelegateCommand<SuggestItem>(AddSuggestion);
-        BackCommand = MakeAsyncCommand(async () => await CloseAsync(false));
-        SubmitCommand = MakeAsyncCommand(SubmitAsync);
+        CloseCommand = MakeAsyncCommand(async () => await CloseAsync());
+        CommitCommand = MakeAsyncCommand(SubmitAsync);
 
         if (cartState.HasPendingOrder)
         {

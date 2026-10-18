@@ -1,6 +1,6 @@
 namespace TableOrder.ReceptionApp.Modules.Dialogs;
 
-// 言語を選ぶ。今の言語に印を付け、選んだ言語を返す (閉じたら null)
+// 言語の選択: 今の言語に印を付け、選んだ言語を返す (閉じたら null)
 public sealed class LanguageViewModel : AppDialogViewModelBase
 {
     public IReadOnlyList<LanguageChoice> Languages { get; }
