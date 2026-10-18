@@ -114,8 +114,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BunnyTail.DependencyInjection" Version="0.9.0" />
-    <PackageReference Include="BunnyTail.MemberAccessor" Version="1.18.0" />
+    <PackageReference Include="BunnyTail.DependencyInjection" Version="0.10.0" />
+    <PackageReference Include="BunnyTail.MemberAccessor" Version="1.19.0" />
     <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
     <PackageReference Include="Components.Maui" Version="1.50.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13">
@@ -134,7 +134,7 @@
     <PackageReference Include="Usa.Smart.Core" Version="2.20.0" />
     <PackageReference Include="Usa.Smart.Maui" Version="2.33.0" />
     <PackageReference Include="Usa.Smart.Maui.Extensions" Version="2.33.0" />
-    <PackageReference Include="Usa.Smart.Mvvm" Version="2.16.0" />
+    <PackageReference Include="Usa.Smart.Mvvm" Version="2.17.0" />
     <PackageReference Include="Usa.Smart.Navigation" Version="3.16.0" />
     <PackageReference Include="Usa.Smart.Navigation.Extensions.DependencyInjection" Version="3.16.0" />
     <PackageReference Include="Usa.Smart.Navigation.Maui" Version="3.16.0" />

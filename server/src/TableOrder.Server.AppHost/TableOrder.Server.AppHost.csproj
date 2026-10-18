@@ -1,4 +1,4 @@
-<Project Sdk="Aspire.AppHost.Sdk/13.5.3">
+<Project Sdk="Aspire.AppHost.Sdk/13.6.1">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -7,6 +7,11 @@
     <AspireUseCliBundle>true</AspireUseCliBundle>
     <UserSecretsId>58807b69-ffe9-4e03-ac21-cfca410babf8</UserSecretsId>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 推移的な依存のピン (Aspire.Hosting と StreamJsonRpc が 2.5.302 を引く): GHSA-qhrr-8q5h-9q3h -->
+    <PackageReference Include="MessagePack" Version="2.5.307" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TableOrder.Server.Web\TableOrder.Server.Web.csproj" />
