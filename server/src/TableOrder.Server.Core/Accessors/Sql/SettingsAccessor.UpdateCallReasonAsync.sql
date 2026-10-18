@@ -1,7 +1,7 @@
 UPDATE
     CallReasons
 SET
-    IsActive = /*@ isActive */0
+    IsActive = /*@ isActive */1
 WHERE
     TenantId = /*@ tenantId */''
     AND StoreId = /*@ storeId */''

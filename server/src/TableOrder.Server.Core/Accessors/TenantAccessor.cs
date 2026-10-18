@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // テナントの表 (この表だけは TenantId を持たないので、テナントの条件を調べるテストから外す)
+// 条件 (版、状態) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class TenantAccessor

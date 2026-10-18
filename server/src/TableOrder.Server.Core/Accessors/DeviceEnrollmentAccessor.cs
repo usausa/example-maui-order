@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // 端末の登録の受け口 (ペアリングコードと登録トークンを出し、登録で使った数を数える)
+// 条件を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class DeviceEnrollmentAccessor

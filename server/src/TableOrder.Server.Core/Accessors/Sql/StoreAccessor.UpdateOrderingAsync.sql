@@ -1,7 +1,7 @@
 UPDATE
     Stores
 SET
-    OrderingPaused = /*@ paused */0,
+    OrderingPaused = /*@ paused */1,
     PausedMessage = /*@ message */NULL,
     UpdatedAt = /*@ now */''
 WHERE

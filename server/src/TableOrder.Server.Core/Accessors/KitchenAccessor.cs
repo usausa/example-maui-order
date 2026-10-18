@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // チケット (注文の明細を持ち場ごとに分けたもの) と、その明細
+// 状態を条件にした更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class KitchenAccessor

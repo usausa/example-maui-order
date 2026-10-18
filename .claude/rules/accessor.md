@@ -12,13 +12,16 @@ SQL ファイルの書き方は sql.md に置く。
 | --- | --- | --- |
 | 件数 | `CountXxx` | `Count` |
 | 1 件取得 | `QueryXxx` (キー以外の条件は `QueryXxxBy{条件}`) | `Query`、`QueryTable`、`QueryEnrollmentByPairingCode` |
-| 複数件取得 | `QueryXxxList` (ページングしない全件は `QueryXxxAll`) | `QueryCallReasonList`、`QueryAll` |
+| 複数件取得 | `QueryXxxList` (使わなくした行も含める全件と、テナントや店舗をまたぐ全件は `QueryXxxAll`) | `QueryCallReasonList`、`QueryCallReasonAll`、`QueryStoreAll` |
 | 登録 | `InsertXxx` | `Insert`、`InsertStation` |
 | 更新 | `UpdateXxx` (状態を変える更新は結果の状態で `UpdateXxxed`) | `Update` |
 | 加減算 | `AddXxx` | `AddUsedCount` |
 | 登録または更新 | `UpsertXxx` | `UpsertStatus` |
 | 削除 | `DeleteXxx` | `Delete` |
 | スクリプトの実行 | `ExecuteXxx` | `ExecuteSchema`、`ExecuteScript` |
+
+- `By{…}` は、キーでない条件を名前に出すときに付ける (`QueryEnrollmentByPairingCode`、`QueryVacantTableByGuests`、`QueryDoneTicketListByStation`)。親の Id で選ぶ子の一覧 (`QueryStationList`) には付けない
+- 戻り値の 0 や null が何を意味するか (見つからない、先に変えられた) は、メソッドのコメントに書く (同じ意味のメソッドが多い Accessor は、クラスのコメントにまとめてよい)
 
 - SQL はすべて 2-way SQL のファイルに書き、Builder 属性 (`[SelectSingle]` / `[Insert]` / `[Delete]`) は使わない (テナントの条件をファイルで確かめるため)
 - テナントを持つ表を扱うメソッドは、最初の引数 (トランザクションがあればその次) に `Guid tenantId` を受ける

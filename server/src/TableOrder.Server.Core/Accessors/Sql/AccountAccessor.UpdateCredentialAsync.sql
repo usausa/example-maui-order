@@ -2,9 +2,9 @@ UPDATE
     AdminUsers
 SET
     PasswordHash = /*@ passwordHash */'',
-    MustChangePassword = /*@ mustChangePassword */0,
+    MustChangePassword = /*@ mustChangePassword */1,
     SecurityStamp = /*@ securityStamp */'',
-    TwoFactorEnabled = /*@ twoFactorEnabled */0,
+    TwoFactorEnabled = /*@ twoFactorEnabled */1,
     AuthenticatorKey = /*@ authenticatorKey */NULL,
     RecoveryCodes = /*@ recoveryCodes */NULL,
     UpdatedAt = /*@ now */'',

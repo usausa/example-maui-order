@@ -18,7 +18,7 @@ WHERE
             K.DoneAt DESC,
             K.Id DESC
         LIMIT
-            /*@ limit */0
+            /*@ limit */20
     )
 ORDER BY
     L.LineNo

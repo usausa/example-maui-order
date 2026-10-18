@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // 店舗と、店舗に付く設定 (呼び出しの用件、テーブル)
+// 条件 (版、使っている) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class StoreAccessor

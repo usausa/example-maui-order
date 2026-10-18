@@ -1,5 +1,6 @@
 namespace TableOrder.Server.Core.Accessors;
 
+// 店舗のメニューの公開。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class MenuAccessor

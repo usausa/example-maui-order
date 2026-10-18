@@ -25,5 +25,5 @@ WHERE
             PublishedAt DESC,
             Id DESC
         LIMIT
-            /*@ kept */0
+            /*@ kept */10
     )

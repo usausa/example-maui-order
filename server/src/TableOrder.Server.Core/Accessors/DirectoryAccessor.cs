@@ -2,6 +2,7 @@ namespace TableOrder.Server.Core.Accessors;
 
 // テナントのわからない要求 (端末の登録、トークンの要求、決済の通知、電子レシート) で、テナントを決めるための行を引く
 // すべてのテナントで一意の列で引き、引いた行のテナントをその後の処理の文脈にする (テナントの条件を調べるテストから外す)
+// 1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class DirectoryAccessor

@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // チェーンと店舗の設定 (管理画面で替え、端末の設定に入れる)。チェーンの設定はテナントの行に持つ
+// 条件 (版) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class SettingsAccessor

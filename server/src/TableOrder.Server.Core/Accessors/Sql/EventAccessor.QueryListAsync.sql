@@ -9,4 +9,4 @@ WHERE
 ORDER BY
     Seq
 LIMIT
-    /*@ limit */0
+    /*@ limit */20

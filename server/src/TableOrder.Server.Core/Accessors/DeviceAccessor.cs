@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // 端末と、端末の持ち場・状態
+// 条件 (版、有効) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class DeviceAccessor

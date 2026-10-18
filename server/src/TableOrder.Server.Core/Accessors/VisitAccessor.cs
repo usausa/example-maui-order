@@ -1,6 +1,7 @@
 namespace TableOrder.Server.Core.Accessors;
 
 // 来店と、確認のルールに答えた記録
+// 状態と版を条件にした更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class VisitAccessor

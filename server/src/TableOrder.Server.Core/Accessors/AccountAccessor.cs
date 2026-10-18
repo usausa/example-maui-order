@@ -2,6 +2,7 @@ namespace TableOrder.Server.Core.Accessors;
 
 // 管理画面のサインインと、利用者が自分の資格情報を読み書きするところ (利用者の id かメールアドレスで引く)。運営者の管理もここで行う
 // 利用者の表は運営者を含むのでテナントの外に置き、サインインの前はテナントもわからないので、テナントの条件を調べるテストから外す
+// 条件 (版、止めていない) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]
 public sealed partial class AccountAccessor

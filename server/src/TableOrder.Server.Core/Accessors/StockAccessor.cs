@@ -16,6 +16,7 @@ public sealed partial class StockAccessor
     public partial ValueTask<int> UpsertAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid targetId, StockTargetKind targetKind, StockStatus status, int? remaining, DateTimeOffset now, CancellationToken cancellationToken);
 
     // 残りの数を足し引きする (注文で減らす)。残りがなくなったら SoldOut にし、残りより多くは引かない
+    // 0 件は、残りの数を持たない (Limited でない) か、残りより多く引こうとした
     [Execute]
     public partial ValueTask<int> AddRemainingAsync(DbTransaction tx, Guid tenantId, Guid storeId, Guid targetId, int quantity, DateTimeOffset now, CancellationToken cancellationToken);
 

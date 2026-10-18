@@ -3,7 +3,7 @@ UPDATE
 SET
     Languages = /*@ languages */'',
     PaymentMethods = /*@ paymentMethods */'',
-    ElectronicReceipt = /*@ electronicReceipt */0,
+    ElectronicReceipt = /*@ electronicReceipt */1,
     IssuerName = /*@ issuerName */NULL,
     InvoiceRegistrationNumber = /*@ invoiceRegistrationNumber */NULL,
     Features = /*@ features */'',
