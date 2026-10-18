@@ -55,7 +55,7 @@ else
                 @if (SelectedTable is not { } selected)
                 {
                     <MudText Typo="Typo.h6">来店</MudText>
-                    <MudText Class="mt-2">テーブルを押すと、来店の注文と明細を出します。空いているテーブルは、ここで来店を開けます。</MudText>
+                    <MudText Class="mt-2">テーブルを選んでいません。</MudText>
                 }
                 else if (selected.Visit is not { } visit)
                 {
@@ -74,7 +74,7 @@ else
                 else
                 {
                     <MudText Typo="Typo.h6">テーブル @selected.Name の来店 (@StatusText(visit))</MudText>
-                    <MudText Typo="Typo.body2" Class="mt-1">@GuestText(visit)、@FormatTime(visit.OpenedAt) から。注文の額 @FormatAmount(orders.Sum(static x => x.Amount)) (税込、取消を除く)</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">@GuestText(visit)、@FormatTime(visit.OpenedAt) から。注文の額 @AdminNames.FormatAmount(orders.Sum(static x => x.Amount)) (税込、取消を除く)</MudText>
                     <div class="d-flex gap-2 mt-2">
                         <MudButton Size="Size.Small" Variant="Variant.Outlined" OnClick="() => CloseAsync(selected)">閉じる (レジで払った)</MudButton>
                         @if (CanCancel(visit))
@@ -88,14 +88,14 @@ else
                     }
                     @foreach (var order in orders)
                     {
-                        <MudText Typo="Typo.subtitle2" Class="mt-4">注文 @order.OrderNo (@FormatTime(order.OrderedAt)、@SourceName(order.Source)) @FormatAmount(order.Amount)</MudText>
+                        <MudText Typo="Typo.subtitle2" Class="mt-4">注文 @order.OrderNo (@FormatTime(order.OrderedAt)、@AdminNames.OrderSourceName(order.Source)) @AdminNames.FormatAmount(order.Amount)</MudText>
                         <MudSimpleTable Dense="true" Elevation="0" Class="mt-1">
                             <tbody>
                                 @foreach (var line in order.Lines)
                                 {
                                     <tr class="@(line.Status == OrderLineStatus.Cancelled ? "line-cancelled" : null)">
                                         <td>@LineText(line) × @line.Quantity</td>
-                                        <td class="floor-nowrap">@LineStatusText(line.Status)</td>
+                                        <td class="floor-nowrap">@AdminNames.OrderLineStatusName(line.Status)</td>
                                     </tr>
                                 }
                             </tbody>
@@ -122,7 +122,7 @@ else
                                     <td class="floor-nowrap">@FormatTime(call.Call.CreatedAt)</td>
                                     <td class="floor-nowrap">テーブル @call.Call.TableName</td>
                                     <td>@call.ReasonName.Ja</td>
-                                    <td class="floor-nowrap">@CallStatusText(call.Call.Status)</td>
+                                    <td class="floor-nowrap">@AdminNames.CallStatusName(call.Call.Status)</td>
                                 </tr>
                             }
                         </tbody>

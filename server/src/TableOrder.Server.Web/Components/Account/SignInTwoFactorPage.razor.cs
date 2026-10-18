@@ -22,6 +22,9 @@ public sealed partial class SignInTwoFactorPage
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = AccountPaths.ErrorQuery)]
+    private string? Error { get; set; }
+
     //--------------------------------------------------------------------------------
     // Property
     //--------------------------------------------------------------------------------
@@ -41,6 +44,12 @@ public sealed partial class SignInTwoFactorPage
 
     protected override async Task OnInitializedAsync()
     {
+        // 流量の制限で戻されたときは知らせる (送り直したときは、その結果を出す)
+        if ((Code is null) && (Recovery is null) && (Error == AccountPaths.RateLimitedError))
+        {
+            message = AdminNames.RateLimitedMessage;
+        }
+
         Code ??= new CodeInput();
         Recovery ??= new CodeInput();
         user = await SignInManager.GetTwoFactorAuthenticationUserAsync();

@@ -2,7 +2,6 @@
 
 <MudThemeProvider Theme="Styles.Theme" />
 <MudPopoverProvider />
-<MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout>
@@ -31,6 +30,8 @@
                 @* 店舗の選択の失敗も画面の失敗として出す (外に置くと、回線ごと終わって選択と入力を失う) *@
                 <ErrorBoundary @ref="errorBoundary">
                     <ChildContent>
+                        @* ダイアログの例外もここで受ける (外に置くと回線の未処理例外になる) *@
+                        <MudDialogProvider />
                         @if (Scope.IsInitialized)
                         {
                             <StoreSelector />

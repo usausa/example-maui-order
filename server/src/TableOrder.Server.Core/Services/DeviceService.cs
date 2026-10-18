@@ -8,15 +8,6 @@ using TableOrder.Contract.Menu;
 using TableOrder.Server.Core.Accessors;
 using TableOrder.Server.Core.Infrastructure.Json;
 
-public enum DeviceAuthorizeStatus
-{
-    Success,
-    Revoked,
-    TenantSuspended
-}
-
-public sealed record DeviceAuthorizeResult(DeviceAuthorizeStatus Status, DeviceIdentity? Identity = null);
-
 // 管理画面の端末の一覧の行 (端末と、キッチン端末の持ち場)
 public sealed record DeviceSummaryResult(DeviceSummaryEntity Device, IReadOnlyList<Guid> StationIds)
 {
@@ -35,6 +26,10 @@ public sealed class DeviceService
     private readonly ServiceContextProvider contextProvider;
 
     private readonly IRevocationList revocationList;
+
+    private readonly IDeviceAssertionValidator assertionValidator;
+
+    private readonly IAccessTokenIssuer tokenIssuer;
 
     private readonly DirectoryAccessor directoryAccessor;
 
@@ -55,6 +50,8 @@ public sealed class DeviceService
     public DeviceService(
         ServiceContextProvider contextProvider,
         IRevocationList revocationList,
+        IDeviceAssertionValidator assertionValidator,
+        IAccessTokenIssuer tokenIssuer,
         DirectoryAccessor directoryAccessor,
         TenantAccessor tenantAccessor,
         StoreAccessor storeAccessor,
@@ -66,6 +63,8 @@ public sealed class DeviceService
     {
         this.contextProvider = contextProvider;
         this.revocationList = revocationList;
+        this.assertionValidator = assertionValidator;
+        this.tokenIssuer = tokenIssuer;
         this.directoryAccessor = directoryAccessor;
         this.tenantAccessor = tenantAccessor;
         this.storeAccessor = storeAccessor;
@@ -194,23 +193,38 @@ public sealed class DeviceService
     // Token
     //--------------------------------------------------------------------------------
 
-    // トークンの要求の署名を確かめるための端末 (テナントのわからないまま、すべてのテナントで一意の Id で引く)
-    public ValueTask<DeviceEntity?> FindAsync(Guid deviceId, CancellationToken cancellationToken) =>
-        directoryAccessor.QueryDeviceAsync(deviceId, cancellationToken);
+    // アクセストークンの要求。署名を確かめるまでは、端末があるかどうかも無効かどうかも見せない (どれも null で、入口が 401 にする)
+    // 署名を確かめる端末は、テナントのわからないまま、すべてのテナントで一意の Id で引く
+    public async ValueTask<ServiceResult<DeviceTokenResponse>?> CreateTokenAsync(DeviceTokenRequest request, CancellationToken cancellationToken)
+    {
+        if (String.IsNullOrEmpty(request.Assertion) || (assertionValidator.ReadDeviceId(request.Assertion) is not { } deviceId))
+        {
+            return null;
+        }
+
+        var device = await directoryAccessor.QueryDeviceAsync(deviceId, cancellationToken);
+        if ((device is null) || !await assertionValidator.ValidateAsync(request.Assertion, device))
+        {
+            return null;
+        }
+
+        var authorized = await AuthorizeAsync(device, cancellationToken);
+        return authorized.Succeeded ? new(tokenIssuer.CreateDeviceToken(authorized.Value)) : new(authorized.Error);
+    }
 
     // 署名を確かめたあとに、トークンを出してよいかを決める。トークンに入れる値は端末の記録から作る
     // 登録し直した端末が新しい登録でトークンを受け取るときに、同じ鍵の前の登録を無効にする
-    public async ValueTask<DeviceAuthorizeResult> AuthorizeAsync(DeviceEntity device, CancellationToken cancellationToken)
+    private async ValueTask<ServiceResult<DeviceIdentity>> AuthorizeAsync(DeviceEntity device, CancellationToken cancellationToken)
     {
         if (!device.IsActive)
         {
-            return new DeviceAuthorizeResult(DeviceAuthorizeStatus.Revoked);
+            return new(new ServiceError(ErrorCodes.DeviceRevoked));
         }
 
         var tenant = await tenantAccessor.QueryAsync(device.TenantId, cancellationToken);
         if (tenant?.Status != TenantStatus.Active)
         {
-            return new DeviceAuthorizeResult(DeviceAuthorizeStatus.TenantSuspended);
+            return new(new ServiceError(ErrorCodes.TenantSuspended));
         }
 
         await RevokePreviousAsync(device, cancellationToken);
@@ -218,9 +232,7 @@ public sealed class DeviceService
         var stations = device.Kind == DeviceKind.Kitchen
             ? (await deviceAccessor.QueryStationListAsync(device.TenantId, device.Id, cancellationToken)).Select(static x => x.StationId).ToList()
             : [];
-        return new DeviceAuthorizeResult(
-            DeviceAuthorizeStatus.Success,
-            new DeviceIdentity(device.TenantId, device.StoreId, device.Id, device.Kind, device.TableId, stations));
+        return new(new DeviceIdentity(device.TenantId, device.StoreId, device.Id, device.Kind, device.TableId, stations));
     }
 
     // 同じ鍵の前の登録 (登録し直す前の端末) を無効にして、その店舗に知らせる (前の行がテーブルや店舗を使ったまま残らない)

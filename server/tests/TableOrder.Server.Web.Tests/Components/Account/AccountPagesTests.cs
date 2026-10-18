@@ -127,12 +127,13 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         Assert.Contains("しばらくサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
     }
 
-    // サインインの送信は、接続元ごとに 1 分の回数を超えると断る (画面を開くのは限らない)
+    // サインインの送信は、接続元ごとに 1 分の回数を超えると断り、サインインの画面に戻して知らせる (画面を開くのは限らない)
     [Fact]
     public async Task SignInPostsAreRateLimited()
     {
-        // Arrange: サインインの回数を 1 分に 3 回にしたサーバ
+        // Arrange
         await using var server = new ServerFactory();
+        // サインインの回数を 1 分に 3 回にする
         server.Settings["RateLimit:SignInPerMinute"] = "3";
         using var admin = new TestAdmin(server);
 
@@ -143,12 +144,13 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         }
 
         using var limited = await admin.SignInAsync("nobody@example.com", "wrong-password-3");
-        using var page = await admin.GetAsync("/account/sign-in");
+        using var page = await admin.GetAsync(TestAdmin.LocationOf(limited)!);
 
         // Assert
-        Assert.Equal(HttpStatusCode.TooManyRequests, limited.StatusCode);
-        Assert.NotNull(limited.Headers.RetryAfter);
+        Assert.Equal(HttpStatusCode.Redirect, limited.StatusCode);
+        Assert.Equal("/account/sign-in?error=limit", TestAdmin.LocationOf(limited));
         Assert.Equal(HttpStatusCode.OK, page.StatusCode);
+        Assert.Contains("しばらく受け付けません", await TestAdmin.ReadPageAsync(page), StringComparison.Ordinal);
     }
 
     // 店舗の担当は、テナントの管理者の画面 (チェーン) を開けない

@@ -53,8 +53,8 @@ else
                 </MudTd>
                 <MudTd>@context.Name</MudTd>
                 <MudTd>@(context.Area ?? "--")</MudTd>
-                <MudTd>@context.Capacity</MudTd>
-                <MudTd>@(context.DeviceCount > 0 ? $"{context.DeviceCount} 台" : "--")</MudTd>
+                <MudTd>@AdminNames.FormatCount(context.Capacity)</MudTd>
+                <MudTd>@(context.DeviceCount > 0 ? $"{AdminNames.FormatCount(context.DeviceCount)} 台" : "--")</MudTd>
                 <MudTd>@StatusText(context)</MudTd>
                 <MudTd>
                     <MudButton Size="Size.Small" OnClick="() => Edit(context)">変更</MudButton>

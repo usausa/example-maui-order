@@ -1,8 +1,15 @@
 namespace TableOrder.Server.Web.Application.Account;
 
+using Microsoft.AspNetCore.WebUtilities;
+
 // 管理画面のサインインとアカウントの画面の経路
 public static class AccountPaths
 {
+    // 画面に戻して知らせる失敗の印 (クエリの名前と値)
+    public const string ErrorQuery = "error";
+
+    public const string RateLimitedError = "limit";
+
     public const string Account = "/account";
 
     public const string SignIn = "/account/sign-in";
@@ -25,4 +32,12 @@ public static class AccountPaths
         !returnPath.StartsWith("/\\", StringComparison.Ordinal)
             ? returnPath
             : "/";
+
+    // 流量の制限で断ったフォームの送信を戻す先。同じ画面に失敗の印を付けて戻す (戻る先などのクエリは残す)
+    public static string RateLimitedPath(PathString path, QueryString query)
+    {
+        var values = QueryHelpers.ParseQuery(query.Value);
+        values[ErrorQuery] = RateLimitedError;
+        return path.Add(QueryString.Create(values));
+    }
 }

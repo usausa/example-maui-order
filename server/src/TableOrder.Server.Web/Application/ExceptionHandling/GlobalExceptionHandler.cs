@@ -6,15 +6,15 @@ using TableOrder.Server.Web.Endpoints;
 
 public sealed class GlobalExceptionHandler : IExceptionHandler
 {
-    private readonly ILogger<GlobalExceptionHandler> logger;
+    private readonly ILogger<GlobalExceptionHandler> log;
 
     private readonly IProblemDetailsService problemDetailsService;
 
     public GlobalExceptionHandler(
-        ILogger<GlobalExceptionHandler> logger,
+        ILogger<GlobalExceptionHandler> log,
         IProblemDetailsService problemDetailsService)
     {
-        this.logger = logger;
+        this.log = log;
         this.problemDetailsService = problemDetailsService;
     }
 
@@ -41,7 +41,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             });
         }
 
-        logger.ErrorUnhandledException(exception);
+        log.ErrorUnhandledException(exception);
 
         httpContext.Response.StatusCode = StatusCodes.Status500InternalServerError;
 

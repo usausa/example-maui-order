@@ -21,6 +21,8 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 
 - エンドポイントと Blazor のページは `Services/` の `XxxService` を呼び、Service が Accessor と `TableOrder.Domain` を使う
 - Service は個別に DI 登録しない (`AddCoreServices()` が自動で登録する)
+- Service の取得のメソッド名は `GetAsync` (1 件)、`GetListAsync` (一覧。数を添えた一覧は `GetSummaryListAsync`)、`GetAllAsync` (テナントや店舗をまたぐ全件) を基本にし、対象を入れるとき (`GetStoreAsync`、`GetTokenListAsync`、`GetStoreAllAsync`) と内容の名前にするとき (`GetConfigAsync`、`GetCatalogAsync`、`GetReceiptAsync`) はその形にする。ないことを null で返す引き当て (サインインの利用者) は `FindAsync` にする
+- Service の書き込みのメソッド名は、業務の登録 (来店、注文、呼び出し、支払、テナント) は `CreateAsync`、管理画面で一覧に足す行 (利用者、運営者、店舗、テーブル) は `AddAsync`、更新は `UpdateAsync` (一部の更新は `UpdateBrandAsync` のように対象を入れる)、有無の切り替えは `SetXxxAsync` (`SetActiveAsync`、`SetOrderingAsync`)、片付けは `DeleteXxxAsync`、業務の操作と状態の遷移は業務の動詞 (`CancelAsync`、`MoveAsync`、`ServeAsync`、`StartCheckoutAsync`) にする
 - Service は `TableOrder.Contract` の Request を受けて Response を返してよい (入口は渡して返すだけにする)
 - 表の行は `Models/Entity` の `XxxEntity`、Service が組み立てる文脈は `Models` の record (`DeviceIdentity`) にする
 - 1 つの Service だけが返す結果型 (`XxxResult`) と状態 (`XxxStatus`) は、その Service のファイルの先頭で定義する
@@ -40,7 +42,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 来店のテーブルを移したら、開いているチケットも `ticket.updated` で持ち場に知らせる (キッチン端末はチケットの通知で一覧を読み直し、来店の今のテーブルを出す)
 - 決済サービスは `IPaymentProvider` の実装で替え、Service から決済サービスを直接呼ばない
 - 電子レシートには作ったときの店舗の事業者 (名前と登録番号) を写し、あとで店舗の設定を替えても出したレシートを替えない (明細は閉じた来店から会計と同じ計算 (`BillCalculator`) で作り、写さない)
-- Core が入口の側に持たせるもの (通知を送る先、すぐに拒む一覧) は Core にインタフェース (`IEventPublisher`、`IRevocationList`) を置いて Web で実装し、Service は替えたあとに知らせるだけにする
+- Core が入口の側に持たせるもの (通知を送る先、すぐに拒む一覧、トークンの要求の署名の確かめ、アクセストークンの発行) は Core にインタフェース (`IEventPublisher`、`IRevocationList`、`IDeviceAssertionValidator`、`IAccessTokenIssuer`) を置いて Web で実装する。通知を送る先とすぐに拒む一覧には、Service は替えたあとに知らせるだけにする
 - 画像の置き場は `IImageStore` の実装で替え (開発とテストはファイル、本番は Amazon S3)、テナントごとに分ける。名前は `ImageNames.IsValid` で確かめてから渡す (置き場の経路に使うため)
 - サンプルの画像は `Assets/Images` に `{名前}.{内容の SHA-256 の先頭 8 桁}.png` で置き、中身を替えたら名前も替えて `Menu.json` の `imageName` を直す (端末は名前で保存して取り直さない)
 - 開発の環境の自動の進行は `SimulationService` に置き、業務の処理と同じ条件付きの更新と通知で進める (設定 `Simulation:Enabled` で動かし、テストのサーバでは止める)
@@ -89,8 +91,11 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - お客様が開く画面の文言はブラウザの言語 (`Accept-Language` の重みの順) で日本語と英語から選び (`ReceiptTexts`)、メニューの名前は `LocalizedText` のその言語 (ない言語は日本語) を出す
 - 静的な画面で 404 を返すときは、本文を書き始めるとき (`Response.OnStarting`) に状態を替える (画面の中で 404 にすると、Blazor は本文を書かずに StatusCodePages の作り直しに任せる)。見つからないトークンは、あるかないかのほかは見せない
 - 失敗の文言は `AdminNames.ErrorMessage` で作り、画面ごとの文言は errorCode から返す関数で渡す (骨組みを画面ごとに写さない)。どの画面でも同じもの (利用者の状態、出した仮のパスワード、確かめのダイアログ) は `Components` にまとめる
-- 管理画面に列挙の値を出すときは `AdminNames` の名前にする (列挙の名前をそのまま出さない)。時刻は 1 つに決めたタイムゾーンで出し、見出しにタイムゾーンを書く
-- 管理画面の時刻と店舗の名前の書式は `AdminNames` で作り、画面ごとに組まない (今日の動きは時刻だけ、近い日時は月日から、何年も前のことがある日時 (最後のサインイン、最後の通信) は年から)。見出しのない表の時刻は、画面の上にタイムゾーンを書く
+- 管理画面に列挙の値を出すときは `AdminNames` の名前から引き、ページとダイアログに名前を書かない (列挙の名前をそのまま出さない。入力の選択肢は注記を添えた文言をその場に書いてよい)。時刻は 1 つに決めたタイムゾーンで出し、見出しにタイムゾーンを書く
+- 管理画面の時刻、店舗の名前、金額、件数の書式は `AdminNames` で作り、画面ごとに組まない (今日の動きは時刻だけ、近い日時は月日から、何年も前のことがある日時 (最後のサインイン、最後の通信) は年から)。見出しのない表の時刻は、画面の上にタイムゾーンを書く
+- 金額は 3 桁で区切って「円」を付け (`AdminNames.FormatAmount`)、件数・人数・台数は 3 桁で区切る (`AdminNames.FormatCount`)
+- 画面の作りとボタンの文言でわかる自明な案内 (「[保存] で反映します」「行を押すと詳細を出します」のような手順や操作の説明) を出さない。説明の文言は、画面からわからない業務の規則 (役割でできること、入力の決まり) と、操作の結果 (端末が起動からやり直す、取り消せない) と事実 (「〜がありません」) を伝えるために使う
+- `MudDialogProvider` は `MainLayout` の `ErrorBoundary` の中にだけ置く (ダイアログの例外も `ErrorBoundary` が受け、回線の未処理例外にしない)。エラーを出している間は `MudDialogProvider` がないので、`ErrorBoundary` の外の部品 (上の帯、メニュー) からダイアログを開かない
 - 管理画面の部品のログも `Application/Log.cs` に置き、`.razor` の `@code` のコメントも日本語にする
 - 管理画面で端末を替えたとき (置き場所、名前、無効化) は `device.updated` を送り、端末に起動からやり直させる (トークンの置き場所と無効化をすぐに反映する)
 - 無効にした端末と止めたテナントのアクセストークンは、JwtBearer が確かめたあとに `RevocationList` (すぐに拒む一覧) を引いて断り、要求ごとにデータベースを引かない
@@ -108,6 +113,7 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 重なりの判定 (`IDialect.IsDuplicate`) は主キーと一意の違反だけにする (外部キーや NOT NULL の違反を、重なりや入力の誤りに見せない)
 - 管理画面の利用者の間違えた回数と止める時刻は、資格情報の版を見ずに 1 文で書き (`AdminUserStore`)、資格情報の書き込み (`UpdateCredential`) には含めない (同時に間違えたサインインを数え漏らさず、止めたことを消さない)
 - 管理画面のサインインと多要素のコードの送信は、接続元ごとに流量を限る (`RateLimits.SignIn`)。流量の区分の名前は、限り方の違う区分 (送信と画面) で分ける (同じ名前は先に作った限り方を使い回す)
+- 流量の制限で断った管理画面のフォームの送信は、本文のない 429 ではなく、同じ画面に失敗の印を付けて戻して知らせる (`AccountPaths.RateLimitedPath`。戻る先などのクエリは残す)
 - 利用者のメールアドレスは足すときに形を確かめ (`AdminUserService.IsEmail`)、Identity の利用者名の文字の制限は使わない (足せたアドレスで資格情報を替えられなくならないように)
 - Identity の更新は結果 (`IdentityResult`、回復用のコードの null) を確かめ、書けなかったら Cookie を出し直さずに知らせる。続けて書く更新は 1 回にまとめるか、途中で書けなくても食い違わない順にする
 - 店舗の通知で読み直す管理画面は、`StoreActivity.Watch` で選んだ店舗を見て (店舗を選び直したら見直す)、送り手のスレッドから呼ばれたら少し待って 1 回だけ、画面の文脈 (`InvokeAsync` と `BeginServiceScope`) で読み直す。読み直しで選んだものと入力の途中の値を消さない
@@ -122,13 +128,13 @@ Accessor の書き方は accessor.md、SQL は sql.md に置く。
 - 400 は Service が入力を確かめるエンドポイントだけ `ProducesValidationProblem()` で宣言し、引数の結び付けと JSON の読み取りの失敗は個別に宣言しない
 - 通信データは `XxxRequest` / `XxxResponse` にし、一覧は `XxxListResponse` (要素は `XxxListResponseItem`)、一覧の取得の操作名とハンドラは `XxxList` / `HandleListAsync` にする
 - 失敗は `ApiProblems` で Problem Details にし (`errorCode` は端末と共有する `TableOrder.Contract` の `ErrorCodes`)、新しい失敗は `ErrorCodes` と `ApiProblems` の定義の両方に足す
-- Service の結果は `ApiResults` で応答にし、エンドポイントで入力の確かめや状態・errorCode の組み立てをしない (入口で行うのは公開鍵を JWK に書き直すような形の変換だけで、読めなければ null で渡して Service が断る)
+- Service の結果は `ApiResults` で応答にし、エンドポイントで入力の確かめ、状態・errorCode の組み立て、複数の Service の組み合わせをしない (入口で行うのは公開鍵を JWK に書き直すような形の変換だけで、読めなければ null で渡して Service が断る)
 - 本文を省ける API (null を許す本文の引数) は作らない。本文のない要求は本文を受ける経路に合わず、知らない経路の 404 になる
 - 通知のハブ (`Hubs/StoreHub`) は端末をグループに入れて送るだけにし、グループの名前は `StoreHubGroups` で作る (テナントと店舗を入れる)
 - ハブはグループに入れ終えたら `ready` で店舗の今の通し番号を送る (端末ははじめはその番号から数え、つなぎ直したら抜けた通知を読む)
 - 端末の公開鍵は読んだ座標から書き直した JWK で持つ (`DevicePublicKeys`。同じ鍵を同じ文字列で引く)
 - 端末の認証の失敗 (署名、期限、端末がない、使い捨ての値の使い回し、すぐに拒む一覧) はどれも `401` にし、理由を見せない (JwtBearer の `IncludeErrorDetails = false`。端末はトークンを取り直し、トークンの要求の `DEVICE_REVOKED` / `TENANT_SUSPENDED` で理由を知る)
-- 流量の制限の `429` には `Retry-After` を付け、接続元は `RateLimits.PartitionOf` で数える (IPv6 は /64。同じ回線の中でアドレスを替えて試させない)
+- API の流量の制限の `429` には `Retry-After` を付け、接続元は `RateLimits.PartitionOf` で数える (IPv6 は /64。同じ回線の中でアドレスを替えて試させない)
 - 要求の値を読めない `400` (引数の結び付け、JSON の形の誤り、知らない項目) にも `VALIDATION_ERROR` を付ける (`CustomizeProblemDetails`)
 - Problem Details の title は日本語にし (`ApiProblems`)、フレームワークが付ける英語の title (要求の読み取りの `400`、`500`) も置き換える (端末は title を出さずに errorCode で扱うが、API の応答の文言をそろえる)
 - ハブはつないだ端末を `StoreHubConnections` に覚えて、すぐに拒む一覧に入った接続を切り、トークンの期限が来た接続も切る (`CloseOnAuthenticationExpiration`。WebSocket はつないだときにだけトークンを確かめるため)

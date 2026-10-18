@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using TableOrder.Contract.Devices;
 
 // アクセストークン (JWT) を出す。クレームは端末の記録から作った DeviceIdentity から入れる (端末が送った値は使わない)
-public sealed class AccessTokenService
+public sealed class AccessTokenService : IAccessTokenIssuer
 {
     private static readonly JsonWebTokenHandler Handler = new();
 

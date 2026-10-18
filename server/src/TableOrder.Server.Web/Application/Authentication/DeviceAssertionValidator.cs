@@ -6,7 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 
 // 端末の鍵で署名した使い捨ての JWT (トークンの要求) を確かめる
 // iss と sub は端末の Id、aud はトークンを出すサーバ (Token:Issuer)、期限は 5 分以内、jti は使い捨て
-public sealed class DeviceAssertionValidator
+public sealed class DeviceAssertionValidator : IDeviceAssertionValidator
 {
     private static readonly JsonWebTokenHandler Handler = new();
 
@@ -31,7 +31,7 @@ public sealed class DeviceAssertionValidator
     }
 
     // 署名を確かめる前に、端末を引くための Id (sub) を読む。形の崩れた値は null
-    public static Guid? ReadDeviceId(string assertion)
+    public Guid? ReadDeviceId(string assertion)
     {
         if (!Handler.CanReadToken(assertion))
         {

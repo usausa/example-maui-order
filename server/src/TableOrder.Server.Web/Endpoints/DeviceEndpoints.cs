@@ -72,31 +72,10 @@ public static class DeviceEndpoints
 
     // アクセストークンの要求。署名を確かめるまでは、端末があるかどうかも無効かどうかも見せない (どれも 401)
     private static async ValueTask<IResult> HandleTokenAsync(
-        DeviceAssertionValidator validator,
-        AccessTokenService tokenService,
         DeviceService deviceService,
         DeviceTokenRequest request,
-        CancellationToken cancellationToken)
-    {
-        if (String.IsNullOrEmpty(request.Assertion) || (DeviceAssertionValidator.ReadDeviceId(request.Assertion) is not { } deviceId))
-        {
-            return TypedResults.Unauthorized();
-        }
-
-        var device = await deviceService.FindAsync(deviceId, cancellationToken);
-        if ((device is null) || !await validator.ValidateAsync(request.Assertion, device))
-        {
-            return TypedResults.Unauthorized();
-        }
-
-        var result = await deviceService.AuthorizeAsync(device, cancellationToken);
-        return result.Status switch
-        {
-            DeviceAuthorizeStatus.Success => TypedResults.Ok(tokenService.CreateDeviceToken(result.Identity!)),
-            DeviceAuthorizeStatus.TenantSuspended => ApiProblems.TenantSuspended(),
-            _ => ApiProblems.DeviceRevoked()
-        };
-    }
+        CancellationToken cancellationToken) =>
+        await deviceService.CreateTokenAsync(request, cancellationToken) is { } result ? ApiResults.Ok(result) : TypedResults.Unauthorized();
 
     //--------------------------------------------------------------------------------
     // Me

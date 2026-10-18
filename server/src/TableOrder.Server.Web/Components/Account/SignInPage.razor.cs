@@ -17,6 +17,9 @@ public sealed partial class SignInPage
     [SupplyParameterFromQuery]
     private string? ReturnUrl { get; set; }
 
+    [SupplyParameterFromQuery(Name = AccountPaths.ErrorQuery)]
+    private string? Error { get; set; }
+
     //--------------------------------------------------------------------------------
     // Property
     //--------------------------------------------------------------------------------
@@ -34,7 +37,16 @@ public sealed partial class SignInPage
     // Lifecycle
     //--------------------------------------------------------------------------------
 
-    protected override void OnInitialized() => Input ??= new SignInInput();
+    protected override void OnInitialized()
+    {
+        // 流量の制限で戻されたときは知らせる (送り直したときは、その結果を出す)
+        if ((Input is null) && (Error == AccountPaths.RateLimitedError))
+        {
+            message = AdminNames.RateLimitedMessage;
+        }
+
+        Input ??= new SignInInput();
+    }
 
     //--------------------------------------------------------------------------------
     // Sign in

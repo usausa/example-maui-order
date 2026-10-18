@@ -168,7 +168,7 @@ public sealed partial class DevicePage : IDisposable
     {
         var confirmed = await DialogService.ShowMessageBoxAsync(
             "登録トークンを取り消す",
-            $"{FormatTime(token.CreatedAt)} に出した{KindName(token.Kind)}の登録トークンを取り消します。それからの登録を断ります (登録した端末はそのまま使えます)。",
+            $"{FormatTime(token.CreatedAt)} に出した{AdminNames.DeviceKindName(token.Kind)}の登録トークンを取り消します。それからの登録を断ります (登録した端末はそのまま使えます)。",
             yesText: "取り消す",
             cancelText: "やめる");
         if (confirmed != true)
@@ -261,16 +261,6 @@ public sealed partial class DevicePage : IDisposable
     //--------------------------------------------------------------------------------
     // Display
     //--------------------------------------------------------------------------------
-
-    private static string KindName(DeviceKind kind) =>
-        kind switch
-        {
-            DeviceKind.Table => "テーブル端末",
-            DeviceKind.Hall => "ホール端末",
-            DeviceKind.Kitchen => "キッチン端末",
-            DeviceKind.Reception => "受付機",
-            _ => kind.ToString()
-        };
 
     private string PlacementText(DeviceSummaryResult item) =>
         item.Device.Kind switch

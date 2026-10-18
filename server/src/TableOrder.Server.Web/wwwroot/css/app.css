@@ -320,6 +320,12 @@ html, body {
     top: 0.5rem;
 }
 
+#blazor-error-ui .dismiss svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    fill: currentColor;
+}
+
 /* Reconnect modal */
 .components-reconnect-first-attempt-visible,
 .components-reconnect-repeated-attempt-visible,

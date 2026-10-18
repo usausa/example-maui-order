@@ -290,18 +290,15 @@ public sealed partial class FloorPage : IDisposable
     //--------------------------------------------------------------------------------
 
     private static string StatusText(TableListResponseVisit? visit) =>
-        visit?.Status switch
-        {
-            null => "空き",
-            VisitStatus.Paying => "会計中",
-            _ => "来店中"
-        };
+        visit is null ? "空き" : AdminNames.VisitStatusName(visit.Status);
 
     private static string GuestText(TableListResponseVisit visit) =>
-        visit.Children > 0 ? $"大人 {visit.Adults}・子ども {visit.Children}" : $"大人 {visit.Adults}";
+        visit.Children > 0
+            ? $"大人 {AdminNames.FormatCount(visit.Adults)}・子ども {AdminNames.FormatCount(visit.Children)}"
+            : $"大人 {AdminNames.FormatCount(visit.Adults)}";
 
     private static string CountText(int? count) =>
-        count?.ToString(CultureInfo.InvariantCulture) ?? "--";
+        count is { } value ? AdminNames.FormatCount(value) : "--";
 
     private string ElapsedText(DateTimeOffset openedAt)
     {
@@ -309,30 +306,9 @@ public sealed partial class FloorPage : IDisposable
         return minutes < 60 ? $"{minutes} 分" : $"{minutes / 60} 時間 {minutes % 60} 分";
     }
 
-    private static string FormatAmount(decimal amount) =>
-        $"{amount.ToString("N0", CultureInfo.InvariantCulture)} 円";
-
-    private static string SourceName(OrderSource source) =>
-        source == OrderSource.Hall ? "ホール端末" : "テーブル端末";
-
     // 品の名前に、選んだオプションを添える
     private static string LineText(OrderListResponseLine line) =>
         line.Options.Count > 0 ? $"{line.Name.Ja} ({String.Join("、", line.Options.Select(static x => x.Name.Ja))})" : line.Name.Ja;
-
-    private static string LineStatusText(OrderLineStatus status) =>
-        status switch
-        {
-            OrderLineStatus.Held => "食後に",
-            OrderLineStatus.Ordered => "注文済み",
-            OrderLineStatus.Cooking => "調理中",
-            OrderLineStatus.Ready => "できあがり",
-            OrderLineStatus.Served => "提供済み",
-            OrderLineStatus.Cancelled => "取消",
-            _ => status.ToString()
-        };
-
-    private static string CallStatusText(CallStatus status) =>
-        status == CallStatus.Acknowledged ? "向かっています" : "呼び出し中";
 
     // メニューにない品 (公開し直して外した品) は Id で出す
     private static string StockName(FloorStockResult item)
@@ -342,7 +318,7 @@ public sealed partial class FloorPage : IDisposable
     }
 
     private static string StockText(StockListResponseItem item) =>
-        item.Status == StockStatus.Limited ? $"残り {item.Remaining}" : "品切れ";
+        item.Status == StockStatus.Limited ? $"残り {AdminNames.FormatCount(item.Remaining.GetValueOrDefault())}" : "品切れ";
 
     private static string EventName(string type) =>
         type switch

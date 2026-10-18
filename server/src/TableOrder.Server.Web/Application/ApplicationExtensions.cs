@@ -395,9 +395,17 @@ public static class ApplicationExtensions
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
-            // いつ送り直せばよいかを Retry-After (秒) で知らせる
+            // API はいつ送り直せばよいかを Retry-After (秒) で知らせる
+            // 管理画面のフォームの送信 (サインイン、多要素のコード) は、本文のない 429 ではなく同じ画面に戻して知らせる
             options.OnRejected = static (context, _) =>
             {
+                var request = context.HttpContext.Request;
+                if (!request.Path.StartsWithSegments(ApiRoutes.Root, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.HttpContext.Response.Redirect(AccountPaths.RateLimitedPath(request.Path, request.QueryString));
+                    return ValueTask.CompletedTask;
+                }
+
                 if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
                 {
                     context.HttpContext.Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(CultureInfo.InvariantCulture);
@@ -647,8 +655,8 @@ public static class ApplicationExtensions
 
         // Security
         builder.Services.AddSingleton<SigningKeyProvider>();
-        builder.Services.AddSingleton<AccessTokenService>();
-        builder.Services.AddSingleton<DeviceAssertionValidator>();
+        builder.Services.AddSingleton<IAccessTokenIssuer, AccessTokenService>();
+        builder.Services.AddSingleton<IDeviceAssertionValidator, DeviceAssertionValidator>();
 
         // Revocation (無効にした端末と止めたテナントのトークンをすぐに拒む一覧。数秒ごとに読み直し、通知の接続も切る)
         builder.Services.AddSingleton<StoreHubConnections>();

@@ -8,6 +8,9 @@ public static class AdminNames
     // 時刻のタイムゾーンをそろえられない (店舗がない、店舗によって違う) ときに使うもの
     public const string Utc = "UTC";
 
+    // サインインと多要素のコードの送信を、流量の制限で断ったとき
+    public const string RateLimitedMessage = "続けて送ったため、しばらく受け付けません。1 分ほどしてから入れ直してください。";
+
     public static string RoleName(AdminRole role) =>
         role switch
         {
@@ -30,6 +33,46 @@ public static class AdminNames
             TaxRounding.Floor => "切り捨て",
             TaxRounding.Round => "四捨五入",
             _ => "切り上げ"
+        };
+
+    public static string DeviceKindName(DeviceKind kind) =>
+        kind switch
+        {
+            DeviceKind.Table => "テーブル端末",
+            DeviceKind.Hall => "ホール端末",
+            DeviceKind.Kitchen => "キッチン端末",
+            _ => "受付機"
+        };
+
+    public static string VisitStatusName(VisitStatus status) =>
+        status switch
+        {
+            VisitStatus.Open => "来店中",
+            VisitStatus.Paying => "会計中",
+            VisitStatus.Closed => "閉じた",
+            _ => "取りやめ"
+        };
+
+    public static string OrderSourceName(OrderSource source) =>
+        source == OrderSource.Hall ? "ホール端末" : "テーブル端末";
+
+    public static string OrderLineStatusName(OrderLineStatus status) =>
+        status switch
+        {
+            OrderLineStatus.Held => "食後に",
+            OrderLineStatus.Ordered => "注文済み",
+            OrderLineStatus.Cooking => "調理中",
+            OrderLineStatus.Ready => "できあがり",
+            OrderLineStatus.Served => "提供済み",
+            _ => "取消"
+        };
+
+    public static string CallStatusName(CallStatus status) =>
+        status switch
+        {
+            CallStatus.Open => "呼び出し中",
+            CallStatus.Acknowledged => "向かっています",
+            _ => "対応した"
         };
 
     // 業務の処理の失敗を画面の文言にする (入力の誤りは項目の理由をそのまま出す)。画面ごとの文言 (specific が null 以外を返す errorCode) を先に使う
@@ -57,6 +100,14 @@ public static class AdminNames
 
     public static string FormatFullDateTime(DateTimeOffset value, string timeZone) =>
         LocalDateTime(value, timeZone).ToString("yyyy/M/d HH:mm", CultureInfo.InvariantCulture);
+
+    // 金額は 3 桁で区切って「円」を付ける (文の中に出すので、表の見出しに任せない)
+    public static string FormatAmount(decimal amount) =>
+        $"{amount.ToString("N0", CultureInfo.InvariantCulture)} 円";
+
+    // 件数、人数、台数は 3 桁で区切る
+    public static string FormatCount(int count) =>
+        count.ToString("N0", CultureInfo.InvariantCulture);
 
     private static DateTime LocalDateTime(DateTimeOffset value, string timeZone) =>
         timeZone == Utc ? value.UtcDateTime : StoreHours.LocalDateTime(value, timeZone);

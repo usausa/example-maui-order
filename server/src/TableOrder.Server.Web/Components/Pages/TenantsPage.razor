@@ -47,7 +47,7 @@
             <MudTd>@context.Code</MudTd>
             <MudTd>@context.Name</MudTd>
             <MudTd>@context.BrandName.Ja</MudTd>
-            <MudTd>@context.StoreCount</MudTd>
+            <MudTd>@AdminNames.FormatCount(context.StoreCount)</MudTd>
             <MudTd>@AdminNames.TenantStatusName(context.Status)</MudTd>
             <MudTd>
                 @if (context.Status == TenantStatus.Active)

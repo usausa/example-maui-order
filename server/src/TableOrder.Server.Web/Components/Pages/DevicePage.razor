@@ -19,7 +19,7 @@ else
                 <MudSelect T="DeviceKind" Value="issueKind" ValueChanged="SelectIssueKind" Label="端末の種類">
                     @foreach (var kind in Kinds)
                     {
-                        <MudSelectItem T="DeviceKind" Value="@kind">@KindName(kind)</MudSelectItem>
+                        <MudSelectItem T="DeviceKind" Value="@kind">@AdminNames.DeviceKindName(kind)</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
@@ -65,7 +65,7 @@ else
                 <MudSelect T="DeviceKind" @bind-Value="tokenKind" Label="端末の種類">
                     @foreach (var kind in Kinds)
                     {
-                        <MudSelectItem T="DeviceKind" Value="@kind">@KindName(kind)</MudSelectItem>
+                        <MudSelectItem T="DeviceKind" Value="@kind">@AdminNames.DeviceKindName(kind)</MudSelectItem>
                     }
                 </MudSelect>
             </MudItem>
@@ -105,8 +105,8 @@ else
                 <MudTh></MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd>@KindName(context.Kind)</MudTd>
-                <MudTd>@context.UsedCount / @context.MaxUses</MudTd>
+                <MudTd>@AdminNames.DeviceKindName(context.Kind)</MudTd>
+                <MudTd>@AdminNames.FormatCount(context.UsedCount) / @AdminNames.FormatCount(context.MaxUses)</MudTd>
                 <MudTd>@FormatTime(context.ExpiresAt)</MudTd>
                 <MudTd>@FormatTime(context.CreatedAt)</MudTd>
                 <MudTd>@TokenStatusText(context)</MudTd>
@@ -142,7 +142,7 @@ else
             </HeaderContent>
             <RowTemplate>
                 <MudTd>@context.Device.Name</MudTd>
-                <MudTd>@KindName(context.Device.Kind)</MudTd>
+                <MudTd>@AdminNames.DeviceKindName(context.Device.Kind)</MudTd>
                 <MudTd>
                     @if (context.IsWaitingPlacement)
                     {

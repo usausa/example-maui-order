@@ -54,10 +54,6 @@ public static class ApiProblems
 
     public static ProblemHttpResult DeviceScope() => Problem(ErrorCodes.DeviceScope);
 
-    public static ProblemHttpResult DeviceRevoked() => Problem(ErrorCodes.DeviceRevoked);
-
-    public static ProblemHttpResult TenantSuspended() => Problem(ErrorCodes.TenantSuspended);
-
     // 業務の処理の失敗。明細ごとの理由 (品切れなど) は errors に明細の Id で入れる
     public static IResult From(ServiceError error) =>
         error.ErrorCode == ErrorCodes.ValidationError
