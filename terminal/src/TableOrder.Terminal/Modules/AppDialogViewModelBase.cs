@@ -1,6 +1,9 @@
 namespace TableOrder.Terminal.Modules;
 
+using System.Diagnostics.CodeAnalysis;
+
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public abstract class AppDialogViewModelBase :
     ExtendViewModelBase,
     IValidatable,
@@ -16,7 +19,7 @@ public abstract class AppDialogViewModelBase :
 
     public void Validate(string name)
     {
-        ValidationHelper.Validate(this, name, Errors);
+        ValidationHelper.Validate(this, GetType(), name, Errors);
     }
 
     public void SetPopupNavigator(IPopupNavigator navigator) => popupNavigator = navigator;

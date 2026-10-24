@@ -1,8 +1,11 @@
 namespace TableOrder.TableApp.Modules;
 
+using System.Diagnostics.CodeAnalysis;
+
 using TableOrder.TableApp.Shell;
 
 [ObservableGeneratorOption(Reactive = true, ViewModel = true)]
+[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)]
 public abstract class AppViewModelBase :
     ExtendViewModelBase,
     IValidatable,
@@ -27,7 +30,7 @@ public abstract class AppViewModelBase :
 
     public void Validate(string name)
     {
-        ValidationHelper.Validate(this, name, Errors);
+        ValidationHelper.Validate(this, GetType(), name, Errors);
     }
 
     public virtual Task OnNavigatingFromAsync(INavigationContext context) => Task.CompletedTask;
