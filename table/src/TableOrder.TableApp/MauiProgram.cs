@@ -201,6 +201,7 @@ public static partial class MauiProgram
         services.AddNavigator(static (_, config) =>
         {
             config.UseMauiNavigationProvider(static options => options.RestoreFocus = false);
+            config.AddPlugin<NavigationFocusPlugin>();
             config.AddPlugin<NavigationFeedbackPlugin>();
 #if DEBUG
             config.AddPlugin<LeakDetectionPlugin>();
