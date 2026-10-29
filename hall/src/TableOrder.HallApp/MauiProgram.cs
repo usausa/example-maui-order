@@ -135,9 +135,9 @@ public static partial class MauiProgram
             c.AutoRegister(DialogSource());
             c.AutoRegister(TerminalModules.DialogSource());
         });
-        services.AddSingleton<IPopupPlugin, PopupActivationPlugin>();
-        services.AddSingleton<IPopupPlugin, FullscreenPopupPlugin>();
-        services.AddSingleton<IPopupPlugin, PopupClosePlugin>();
+        services.AddComponentsPopupPlugin<PopupActivationPlugin>();
+        services.AddComponentsPopupPlugin<FullscreenPopupPlugin>();
+        services.AddComponentsPopupPlugin<PopupClosePlugin>();
         services.AddComponentsScreen();
 
         // Messenger

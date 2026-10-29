@@ -196,13 +196,18 @@ public sealed partial class OrderViewModel : AppViewModelBase
 
     // 来店と注文を読み直す。終わった来店と見つからない来店は席のタブ、会計中の来店は来店の詳細に戻る
     // 開いたときの読み込み (遷移の途中) からも移るので、遷移を終えてから移る
-    // 開いたときの読み込みと通知での読み直しが重なっても、移るのは表示中のこの画面からの 1 回だけにする
+    // 開いたときの読み込みと通知での読み直しは重なることがあるので、読む間にほかの読み直しが先に移っていたら何もしない
     private async Task LoadAsync()
     {
         var visitResult = await hallApi.GetVisitAsync(visitId);
+        if (!IsCurrent)
+        {
+            return;
+        }
+
         if (visitResult.ErrorCode == ErrorCodes.NotFound)
         {
-            await Navigator.PostForwardAsync(this, ViewId.Seats);
+            await Navigator.PostForwardAsync(ViewId.Seats);
             return;
         }
 
@@ -215,8 +220,8 @@ public sealed partial class OrderViewModel : AppViewModelBase
         if (current.Status != VisitStatus.Open)
         {
             await (current.Status == VisitStatus.Paying
-                ? Navigator.PostForwardAsync(this, ViewId.Visit, Parameters.MakeVisit(visitId))
-                : Navigator.PostForwardAsync(this, ViewId.Seats));
+                ? Navigator.PostForwardAsync(ViewId.Visit, Parameters.MakeVisit(visitId))
+                : Navigator.PostForwardAsync(ViewId.Seats));
             return;
         }
 

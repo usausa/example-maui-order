@@ -37,7 +37,7 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
 {
     private readonly ILogger<DeviceState> log;
 
-    private readonly DeviceInformation deviceInformation;
+    private readonly List<IDisposable> disposables = [];
 
     // Battery
 
@@ -66,7 +66,6 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
         DeviceInformation deviceInformation)
     {
         this.log = log;
-        this.deviceInformation = deviceInformation;
 
         // Battery
         if (deviceInformation.Battery is { } battery)
@@ -74,7 +73,10 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
             UpdateBattery(battery);
         }
 
-        deviceInformation.BatteryChanged += OnBatteryChanged;
+        disposables.Add(deviceInformation.BatteryChangedAsObservable()
+            .Select(_ => deviceInformation.Battery!)
+            .ObserveOnCurrentContext()
+            .Subscribe(UpdateBattery));
 
         // Connectivity
         if (deviceInformation.Network is { } network)
@@ -82,29 +84,20 @@ public sealed partial class DeviceState : ObservableObject, IDisposable
             UpdateConnectivity(network);
         }
 
-        deviceInformation.NetworkChanged += OnNetworkChanged;
+        disposables.Add(deviceInformation.NetworkChangedAsObservable()
+            .Select(_ => deviceInformation.Network!)
+            .ObserveOnCurrentContext()
+            .Subscribe(UpdateConnectivity));
     }
 
     public void Dispose()
     {
-        deviceInformation.BatteryChanged -= OnBatteryChanged;
-        deviceInformation.NetworkChanged -= OnNetworkChanged;
-    }
-
-    private void OnBatteryChanged(object? sender, EventArgs args)
-    {
-        if (deviceInformation.Battery is { } battery)
+        foreach (var disposable in disposables)
         {
-            MainThread.BeginInvokeOnMainThread(() => UpdateBattery(battery));
+            disposable.Dispose();
         }
-    }
 
-    private void OnNetworkChanged(object? sender, EventArgs args)
-    {
-        if (deviceInformation.Network is { } network)
-        {
-            MainThread.BeginInvokeOnMainThread(() => UpdateConnectivity(network));
-        }
+        disposables.Clear();
     }
 
     //--------------------------------------------------------------------------------

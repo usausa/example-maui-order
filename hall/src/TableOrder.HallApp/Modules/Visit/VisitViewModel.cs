@@ -168,18 +168,23 @@ public sealed partial class VisitViewModel : AppViewModelBase
     }
 
     // 開いたときの読み込み (遷移の途中) からも戻るので、遷移を終えてから戻る
-    // 開いたときの読み込みと通知での読み直しが重なっても、戻るのは表示中のこの画面からの 1 回だけにする
     private async Task BackAsync() =>
-        await Navigator.PostForwardAsync(this, ViewId.Seats);
+        await Navigator.PostForwardAsync(ViewId.Seats);
 
     //--------------------------------------------------------------------------------
     // Load
     //--------------------------------------------------------------------------------
 
     // 来店と注文を読み直す。終わった来店と見つからない来店は席のタブに戻る
+    // 開いたときの読み込みと通知での読み直しは重なることがあるので、読む間にほかの読み直しが先に戻っていたら何もしない
     private async Task LoadAsync()
     {
         var visitResult = await hallApi.GetVisitAsync(visitId);
+        if (!IsCurrent)
+        {
+            return;
+        }
+
         if (visitResult.ErrorCode == ErrorCodes.NotFound)
         {
             await BackAsync();
@@ -424,8 +429,14 @@ public sealed partial class VisitViewModel : AppViewModelBase
     }
 
     // 終えたら席のタブに戻る。断られたら知らせて読み直す
+    // 終える間に通知での読み直しが先に戻っていたら (終えた来店を読んだ) 何もしない
     private async Task AfterEndAsync(string title, ApiResult<VisitResponse> result)
     {
+        if (!IsCurrent)
+        {
+            return;
+        }
+
         if (result.IsSuccess)
         {
             await BackAsync();

@@ -1,5 +1,6 @@
 namespace TableOrder.Terminal.Models.Input;
 
+// 数の入力 (空は 0 にし、先頭の 0 は残さない)。番号と PIN は DigitsInputParameter
 public sealed class NumberInputParameter
 {
     public string Title { get; }
@@ -8,18 +9,10 @@ public sealed class NumberInputParameter
 
     public int MaxLength { get; }
 
-    // true: 番号入力 (先頭の 0 を残し、空も許す)
-    public bool Digits { get; }
-
-    // true: 入力を伏せて表示する (PIN)
-    public bool Masked { get; }
-
-    public NumberInputParameter(string title, string value, int maxLength, bool digits = false, bool masked = false)
+    public NumberInputParameter(string title, string value, int maxLength)
     {
         Title = title;
         Value = value;
         MaxLength = maxLength;
-        Digits = digits;
-        Masked = masked;
     }
 }

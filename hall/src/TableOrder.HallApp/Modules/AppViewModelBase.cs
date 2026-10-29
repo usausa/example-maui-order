@@ -12,6 +12,9 @@ public abstract class AppViewModelBase :
 {
     public INavigator Navigator { get; set; } = default!;
 
+    // 表示中の画面か (待つ間に、重なったほかの処理がほかの画面に移していることがある)
+    protected bool IsCurrent => ReferenceEquals(Navigator.CurrentTarget, this);
+
     protected AppViewModelBase()
     {
         AcceptsCommand = false;

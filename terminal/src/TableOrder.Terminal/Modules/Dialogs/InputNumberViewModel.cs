@@ -1,7 +1,7 @@
 namespace TableOrder.Terminal.Modules.Dialogs;
 
 // 電卓: 数と番号 (PIN、ペアリングコード) を入れ、入れた文字を返す (閉じたら null)
-public sealed partial class InputNumberViewModel : AppDialogViewModelBase, IPopupInitialize<NumberInputParameter>
+public sealed partial class InputNumberViewModel : AppDialogViewModelBase, IPopupInitialize<NumberInputParameter>, IPopupInitialize<DigitsInputParameter>
 {
     [ObservableProperty]
     public partial string Title { get; set; } = default!;
@@ -36,8 +36,15 @@ public sealed partial class InputNumberViewModel : AppDialogViewModelBase, IPopu
     public void Initialize(NumberInputParameter parameter)
     {
         Title = parameter.Title;
-        Input.AllowEmpty = parameter.Digits;
-        Input.KeepLeadingZeros = parameter.Digits;
+        Input.MaxLength = parameter.MaxLength;
+        Input.Text = parameter.Value;
+    }
+
+    public void Initialize(DigitsInputParameter parameter)
+    {
+        Title = parameter.Title;
+        Input.AllowEmpty = true;
+        Input.KeepLeadingZeros = true;
         Input.MaxLength = parameter.MaxLength;
         Input.Masked = parameter.Masked;
         Input.Text = parameter.Value;

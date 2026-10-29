@@ -6,7 +6,7 @@ public static partial class TouchOption
 {
     public static partial void UseCustomMapper(BehaviorOptions options);
 
-    // 押したときの波紋。色は面の上の文字の色 (OnSurfaceColor) を薄くしたもの (チェーンの色に従う)
+    // 押したときの波紋
     public static readonly BindableProperty RippleProperty = BindableProperty.CreateAttached(
         "Ripple",
         typeof(bool),
@@ -16,6 +16,17 @@ public static partial class TouchOption
     public static bool GetRipple(BindableObject bindable) => (bool)bindable.GetValue(RippleProperty);
 
     public static void SetRipple(BindableObject bindable, bool value) => bindable.SetValue(RippleProperty, value);
+
+    // 波紋の色。既定は黒に近い色を薄くしたもの (明るい面の上で薄い灰色に見え、チェーンの色によらない)
+    public static readonly BindableProperty RippleColorProperty = BindableProperty.CreateAttached(
+        "RippleColor",
+        typeof(Color),
+        typeof(TouchOption),
+        Color.FromArgb("#2E1C1B1F"));
+
+    public static Color GetRippleColor(BindableObject bindable) => (Color)bindable.GetValue(RippleColorProperty);
+
+    public static void SetRippleColor(BindableObject bindable, Color value) => bindable.SetValue(RippleColorProperty, value);
 
     // 押して離したときに実行するコマンド (実行できないとき (処理中、ポップアップを開いている間) は何もしない)
     public static readonly BindableProperty ClickCommandProperty = BindableProperty.CreateAttached(

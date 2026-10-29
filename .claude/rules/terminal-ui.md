@@ -33,7 +33,7 @@ paths:
 
 ## 色
 
-- 色は `Resources/Styles/Colors.xaml` の役割の名前 (`PrimaryColor`、`SecondaryColor`、`SurfaceColor`、`OnSurfaceColor`、`OutlineColor`、`ErrorColor` など) だけを使い、XAML と C# に色の値を直接書かない
+- 色は `Resources/Styles/Colors.xaml` の役割の名前 (`PrimaryColor`、`SecondaryColor`、`SurfaceColor`、`OnSurfaceColor`、`OutlineColor`、`ErrorColor` など) だけを使い、XAML と C# に色の値を直接書かない (波紋の既定の色は除く)
 - System の役割の色は `TableOrder.Terminal` の `SystemColors`、どの端末でも同じスタイルは `TerminalStyles` に置き、アプリの `App.xaml` でアプリの色の辞書とアプリのスタイルの辞書の間に入れる (`TerminalStyles` は `SystemColors` を中に入れ、アプリが値を持つ役割の色は `DynamicResource` で引く)
 - 新しい用途の色が要るときは既存の役割で足りないかを先に考え、足りなければ役割として Colors.xaml に足す (画面ごとの色の名前は作らない)
 - 面の色と文字の色は対 (`Xxx` と `OnXxx`) で使う
@@ -45,7 +45,7 @@ paths:
 - C# で資源 (色など) を引くときは `FindResource` (`TryGetValue`) を使い、`ContainsKey` で探さない (`Source` で入れた辞書の中身は `ContainsKey` では見つからない)
 - 記号 (`FontImageSource`) は `Markup/AppIcons` にグリフと色の役割の名前で足し、色の値を持たない。XAML からは `{x:Static markup:AppIcons.Xxx}` で使う
 - ヘッダと待受のチェーンの印は `ViewHelper.Brand` (`BrandMark`) から出し、ロゴ (`BrandLogoImage`) を保存していなければ名前の頭の文字 (`BrandInitialLabel`) を出す (チェーンの名前・ロゴ・グリフを画面に書かない)
-- 部品の色の既定値も色の値にせず、スタイルで役割の色を渡す (`QrCodeView.ForegroundColor` など)
+- 部品の色の既定値も色の値にせず、スタイルで役割の色を渡す (`QrCodeView.ForegroundColor` など)。波紋の色 (`TouchOption.RippleColor`) だけは既定の色の値を持ち、役割の色を渡さない
 
 ## 文言
 
@@ -110,7 +110,7 @@ paths:
 - 待受の文言は来店の開き方で替える (スタッフは案内を待つ、受付機は受付機で受け付ける、席は人数を入れて始める)
 - 通知は別の画面にいる間にも届くので、画面に入ったとき (`OnNavigatedToAsync`) にも状態を確かめる (来店が閉じていたら待受に戻すなど)
 - `OnNavigatedToAsync` は遷移の途中で呼ばれ、その中では遷移できない (例外になる)。入ったときの処理の結果でほかの画面に移るときは、`Navigator.PostForwardAsync` (移るだけ) か `Navigator.PostActionAsync` (処理ごと) で遷移を終えてから行う (終えるまでに別の画面に移っていたら行わない)
-- 読み込みの結果で移る処理 (来店が終わっていたら戻るなど) は、開いたときの読み込みと通知での読み直しが重なることがあるので、`Navigator.PostForwardAsync` に画面 (`this`) を渡し、表示中の画面からの 1 回だけ移る
+- 読み込みの結果で移る処理 (来店が終わっていたら戻るなど) は、開いたときの読み込みと通知での読み直しが重なることがあるので、待ったあとに表示中の画面のままか (`IsCurrent`) を確かめ、ほかの画面に移っていたら何もしない (`PostForwardAsync` は呼んだ画面を確かめない。移るのは表示中の画面からの 1 回だけにする)
 - テーブル端末の来店が終わったか (閉じた、取りやめた、ほかのテーブルに移った) は `VisitState.IsFinished` で見る (状態の `Closed` だけで見ない。移った来店の状態は `Open` のまま届く)
 - 起動からやり直したときは、読んだ来店が前と同じときだけカートと言語を残す (来店が替わっていたら、前のお客様のものを引き継がない)
 - テーブル端末は、来店が終わってから画面が来店を終えるまで (お礼の間、スタッフメニューの間) に同じテーブルで開いた次の来店 (移ってきた来店も) を `VisitState.Next` に残し、来店を終えたら続けて開いて注文の画面にする (知らせを捨てると、次のお客様の来店が待受のまま止まる)
@@ -127,7 +127,7 @@ paths:
 - ほかの要素を行の位置にそろえるラベルは `behaviors:LabelOption.FixedLineHeight` で行の高さを固定する (和文は CJK のフォントで行が広がり、英字と行の位置が変わる)
 - 添付プロパティ (`Behaviors`) は MAUI のプロパティと同じ名前にしない (ハンドラの対応付けの同じキーに混ざり、Controls が飛ばす処理で一緒に飛ばされる)
 - `GridItemsLayout` の間隔は端の項目の外側と見出し・末尾にも半分ずつ入る。外側の余白は `CollectionView` の `Margin` と見出しの高さからその分を引いて決める
-- 押せる行とタイル (メニューのカード、注文リストの行、選ぶタイル、タブ) は `behaviors:TouchOption.ClickCommand` (と `ClickCommandParameter`) で受け、`behaviors:TouchOption.Ripple` で波紋を出す。`TapGestureRecognizer` は使わない (要素を増やさずに前景に波紋を描き、上に重ねたボタンのタップは拾わない)
+- 押せる行とタイル (メニューのカード、注文リストの行、選ぶタイル、タブ) は `behaviors:TouchOption.ClickCommand` (と `ClickCommandParameter`) で受け、`behaviors:TouchOption.Ripple` で波紋を出す。`TapGestureRecognizer` は使わない (要素を増やさずに前景に波紋を描き、上に重ねたボタンのタップは拾わない)。波紋の色は `TouchOption.RippleColor` の既定 (黒に近い色を薄くしたもの。明るい面の上で薄い灰色に見え、チェーンの色によらない) のまま使う
 - 全画面と専用端末 (ロックタスク、Device Owner の制限、一時的な解除) は `Components/KioskManager` にまとめ、画面から直接 Android の API を呼ばない
 - 全画面の間は、ポップアップの窓のシステムバーも隠す (`Extender/FullscreenPopupPlugin`)。ステータスバーの色の指定は全画面と合わせない
 - CommunityToolkit の `TouchBehavior` は付けた要素の BindingContext を受け継がないので、要素に `x:Name` を付けて `BindingContext="{Binding Source={x:Reference Xxx}, Path=BindingContext, x:DataType={x:Type Border}}"` で渡す (前後を `ReSharper disable Xaml.BindingWithContextNotResolved` で挟む)
@@ -140,6 +140,7 @@ paths:
 ## 操作
 
 - 物理キーボードを前提にしない。数値は電卓のポップアップで入力し、`PopupNavigatorExtensions` に入力の種類ごとのメソッドを置く。桁は `Length` の上限から求め、別に持たない
+- 電卓の引数は、数 (`NumberInputParameter`) と番号・PIN (`DigitsInputParameter`。先頭の 0 を残し、空も許す) で型を分け、画面で作らずに `PopupNavigatorExtensions` から渡す
 - 押せる面は高さ 64dp (約 10mm) 以上、主な操作は 80dp 以上にする
 - 受ける / 断るのボタンは同じ大きさにする (提案を断りにくくしない)
 - 押せない間の見た目がないボタン (記号つきの帯のボタンなど) は、押せない間は出さない

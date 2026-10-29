@@ -7,8 +7,6 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 
-using AndroidX.Activity;
-
 // 店の入口に縦に置くタブレットなので縦向きに固定する (台に逆さに置いても使えるように 180 度の回転は許す)
 // ロックタスクを許されていれば (Device Owner / EMM)、起動したときにシステムがロックタスクに入れる (落ちて起動し直したときも)
 // 専用端末のホームアプリにもなる (Device Owner のときに KioskManager が常に使うホームにする)
@@ -27,51 +25,11 @@ using AndroidX.Activity;
 [IntentFilter([Intent.ActionMain], Categories = [Intent.CategoryHome, Intent.CategoryDefault])]
 public sealed class MainActivity : MauiAppCompatActivity
 {
-    private BackPressedCallback? backPressedCallback;
-
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         // アプリ全体のオーバースクロールを無効にする
         Theme?.ApplyStyle(_Microsoft.Android.Resource.Designer.ResourceConstant.Style.NoOverScrollTheme, true);
 
         base.OnCreate(savedInstanceState);
-
-        backPressedCallback = new BackPressedCallback(this);
-        OnBackPressedDispatcher.AddCallback(this, backPressedCallback);
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            backPressedCallback?.Dispose();
-            backPressedCallback = null;
-        }
-
-        base.Dispose(disposing);
-    }
-
-    // 戻るは MainPage が画面へ渡す。MainPage が扱わないときだけアプリを終了せずタスクを背面へ回す
-    private sealed class BackPressedCallback : OnBackPressedCallback
-    {
-        private readonly MainActivity activity;
-
-        public BackPressedCallback(MainActivity activity)
-            : base(true)
-        {
-            this.activity = activity;
-        }
-
-        public override void HandleOnBackPressed()
-        {
-            var windows = Microsoft.Maui.Controls.Application.Current?.Windows;
-            var page = windows is { Count: > 0 } ? windows[^1].Page : null;
-            if (page?.SendBackButtonPressed() ?? false)
-            {
-                return;
-            }
-
-            activity.MoveTaskToBack(true);
-        }
     }
 }

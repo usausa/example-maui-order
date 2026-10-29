@@ -1,6 +1,7 @@
 namespace TableOrder.Terminal.Diagnostics;
 
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 public sealed record CrashInfo
 {
@@ -21,6 +22,10 @@ public sealed record CrashInfo
     public bool Shown { get; init; }
 }
 
+// 記録はリフレクションを使わずに読み書きする (端末のトリミングに残す)
+[JsonSerializable(typeof(CrashInfo))]
+internal sealed partial class CrashInfoJsonContext : JsonSerializerContext;
+
 // 落ちたときの例外を記録し、次の起動でログに残す (お客様の画面には出さず、起動を待たせない)
 public static partial class CrashReport
 {
@@ -32,7 +37,7 @@ public static partial class CrashReport
         {
             if (args.ExceptionObject is Exception ex)
             {
-                LogException(ex);
+                LogException(ex, args.IsTerminating);
             }
         };
 
@@ -59,7 +64,7 @@ public static partial class CrashReport
 
     private static partial string ResolveCrashPath();
 
-    public static void LogException(Exception e)
+    public static void LogException(Exception e, bool isTerminating)
     {
         if (ReferenceEquals(Interlocked.Exchange(ref lastException, e), e))
         {
@@ -80,7 +85,11 @@ public static partial class CrashReport
                 Message = e.Message,
                 Detail = e.ToString()
             };
-            Save(info);
+            // 落ちるときだけ記録に残す (処理された例外を、次の起動で前回の異常終了にしない)
+            if (isTerminating)
+            {
+                Save(info);
+            }
         }
         catch
         {
@@ -99,7 +108,7 @@ public static partial class CrashReport
 
         try
         {
-            return JsonSerializer.Deserialize<CrashInfo>(File.ReadAllText(path));
+            return JsonSerializer.Deserialize(File.ReadAllText(path), CrashInfoJsonContext.Default.CrashInfo);
         }
         catch (JsonException)
         {
@@ -108,5 +117,5 @@ public static partial class CrashReport
     }
 
     private static void Save(CrashInfo info) =>
-        File.WriteAllText(ResolveCrashPath(), JsonSerializer.Serialize(info));
+        File.WriteAllText(ResolveCrashPath(), JsonSerializer.Serialize(info, CrashInfoJsonContext.Default.CrashInfo));
 }

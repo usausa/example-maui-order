@@ -12,15 +12,15 @@ public static class PopupNavigatorExtensions
 
     // ペアリングコード (先頭の 0 を残し、空も許す)
     public static ValueTask<string?> InputPairingCodeAsync(this IPopupNavigator popupNavigator, string value) =>
-        popupNavigator.PopupAsync<NumberInputParameter, string?>(
+        popupNavigator.PopupAsync<DigitsInputParameter, string?>(
             TerminalDialogId.InputNumber,
-            new NumberInputParameter(TerminalResources.SetupPairingCode, value, Length.PairingCodeDigits, digits: true));
+            new DigitsInputParameter(TerminalResources.SetupPairingCode, value, Length.PairingCodeDigits));
 
     // スタッフの PIN (入れた桁数だけを見せる)
     public static ValueTask<string?> InputPinAsync(this IPopupNavigator popupNavigator, string title) =>
-        popupNavigator.PopupAsync<NumberInputParameter, string?>(
+        popupNavigator.PopupAsync<DigitsInputParameter, string?>(
             TerminalDialogId.InputNumber,
-            new NumberInputParameter(title, string.Empty, Length.StaffPinDigits, digits: true, masked: true));
+            new DigitsInputParameter(title, string.Empty, Length.StaffPinDigits, masked: true));
 
     // スタッフメニュー (と起動に失敗したときの端末の設定) に入る前に PIN を確かめる。違うときと止めているときは知らせて false
     // PIN を受け取る前の端末 (登録していない) は確かめずに入れる

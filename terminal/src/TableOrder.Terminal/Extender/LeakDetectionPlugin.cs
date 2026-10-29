@@ -31,7 +31,9 @@ public sealed class LeakDetectionPlugin : PluginBase
         // Java 側からの参照 (プラットフォームのビュー) も切れるように両方の GC を回す
         GC.Collect();
         GC.WaitForPendingFinalizers();
+#if ANDROID
         Java.Lang.JavaSystem.Gc();
+#endif
         GC.Collect();
 
         foreach (var (name, reference) in references)

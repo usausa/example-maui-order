@@ -29,6 +29,7 @@ global using Smart.Mvvm;
 global using Smart.Mvvm.Messaging;
 global using Smart.Mvvm.ViewModels;
 global using Smart.Navigation;
+global using Smart.Reactive;
 
 global using TableOrder.Client;
 global using TableOrder.Contract;

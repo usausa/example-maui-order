@@ -18,7 +18,7 @@ public sealed partial class MainPage
     {
         if (BindingContext is MainPageViewModel { BusyState.IsBusy: false } context)
         {
-            // 待たずに進めるが、例外はログに残す (観測されないまま次の起動で異常終了として知らせないように)
+            // 待たずに進めるが、例外はログに残す
             context.Navigator.NotifyAsync(ShellEvent.Back).ContinueWith(
                 t => log.WarnUnhandledNavigationError(t.Exception!),
                 CancellationToken.None,

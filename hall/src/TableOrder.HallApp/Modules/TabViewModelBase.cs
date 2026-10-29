@@ -73,7 +73,7 @@ public abstract partial class TabViewModelBase : AppViewModelBase
     {
         if (storeState.IsSettingsChanged)
         {
-            await Navigator.PostForwardAsync(this, ViewId.Startup);
+            await Navigator.PostForwardAsync(ViewId.Startup);
         }
     }
 
