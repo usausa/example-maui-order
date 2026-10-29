@@ -1,7 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
              xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:markup="clr-namespace:TableOrder.HallApp.Markup"
@@ -9,7 +8,7 @@
              x:Class="TableOrder.HallApp.Controls.TabFooter"
              x:DataType="{x:Type modules:TabViewModelBase}">
 
-    <!-- 下部のタブ (席、呼び出し、提供、品切れ)。選んでいるタブは上の線と主色で示し、待っている件数を記号の右上に出す。画面の ViewModel (TabViewModelBase) にバインドする -->
+    <!-- 下部のタブ (席、呼び出し、提供、品切れ)。選んでいるタブは上の線と主色の文字で示し、待っている件数を絵文字の右上に出す。画面の ViewModel (TabViewModelBase) にバインドする -->
     <Grid Style="{StaticResource TabBarGrid}"
           RowDefinitions="1,72"
           ColumnDefinitions="*,*,*,*">
@@ -25,16 +24,8 @@
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsSeats}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
-                <Label Style="{StaticResource TabGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Table_restaurant}">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsSeats}"
-                                     Value="True">
-                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
-                        </DataTrigger>
-                    </Label.Triggers>
-                </Label>
+                <Label Style="{StaticResource TabEmojiLabel}"
+                       Text="🪑" />
                 <Label Style="{StaticResource TabTextLabel}"
                        Text="{x:Static strings:AppResources.TabSeats}">
                     <Label.Triggers>
@@ -58,16 +49,8 @@
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsCalls}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
-                <Label Style="{StaticResource TabGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Notifications}">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsCalls}"
-                                     Value="True">
-                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
-                        </DataTrigger>
-                    </Label.Triggers>
-                </Label>
+                <Label Style="{StaticResource TabEmojiLabel}"
+                       Text="🔔" />
                 <Label Style="{StaticResource TabTextLabel}"
                        Text="{x:Static strings:AppResources.TabCalls}">
                     <Label.Triggers>
@@ -96,16 +79,8 @@
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsServing}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
-                <Label Style="{StaticResource TabGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Room_service}">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsServing}"
-                                     Value="True">
-                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
-                        </DataTrigger>
-                    </Label.Triggers>
-                </Label>
+                <Label Style="{StaticResource TabEmojiLabel}"
+                       Text="🍽️" />
                 <Label Style="{StaticResource TabTextLabel}"
                        Text="{x:Static strings:AppResources.TabServing}">
                     <Label.Triggers>
@@ -134,16 +109,8 @@
             <BoxView Style="{StaticResource TabIndicator}"
                      IsVisible="{Binding IsStock}" />
             <VerticalStackLayout Style="{StaticResource TabItemStack}">
-                <Label Style="{StaticResource TabGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Inventory_2}">
-                    <Label.Triggers>
-                        <DataTrigger TargetType="Label"
-                                     Binding="{Binding IsStock}"
-                                     Value="True">
-                            <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
-                        </DataTrigger>
-                    </Label.Triggers>
-                </Label>
+                <Label Style="{StaticResource TabEmojiLabel}"
+                       Text="📦" />
                 <Label Style="{StaticResource TabTextLabel}"
                        Text="{x:Static strings:AppResources.TabStock}">
                     <Label.Triggers>

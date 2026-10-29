@@ -587,12 +587,10 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <Style x:Key="EmptyGlyphLabel"
+    <Style x:Key="EmptyEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
         <Setter Property="FontSize" Value="56" />
-        <Setter Property="TextColor" Value="{DynamicResource OutlineColor}" />
     </Style>
 
     <Style x:Key="EmptyLabel"
@@ -898,12 +896,10 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <Style x:Key="CompletedGlyphLabel"
+    <Style x:Key="CompletedEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="96" />
-        <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
+        <Setter Property="FontSize" Value="88" />
     </Style>
 
     <Style x:Key="CompletedTitleLabel"
@@ -1355,12 +1351,10 @@
         <Setter Property="VerticalOptions" Value="Center" />
     </Style>
 
-    <Style x:Key="CallReasonGlyphLabel"
+    <Style x:Key="CallReasonEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="40" />
-        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+        <Setter Property="FontSize" Value="36" />
     </Style>
 
     <Style x:Key="CallReasonNameLabel"
@@ -1383,12 +1377,10 @@
         <Setter Property="ColumnSpacing" Value="12" />
     </Style>
 
-    <Style x:Key="CallStatusGlyphLabel"
+    <Style x:Key="CallStatusEmojiLabel"
            TargetType="Label">
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="28" />
-        <Setter Property="TextColor" Value="{DynamicResource OnPrimaryContainerColor}" />
+        <Setter Property="FontSize" Value="24" />
     </Style>
 
     <Style x:Key="CallStatusNameLabel"
@@ -1534,13 +1526,11 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="MethodGlyphLabel"
+    <Style x:Key="MethodEmojiLabel"
            TargetType="Label">
         <Setter Property="Margin" Value="0,0,20,0" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="44" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+        <Setter Property="FontSize" Value="40" />
     </Style>
 
     <Style x:Key="MethodTextStack"
@@ -1586,12 +1576,10 @@
         <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
     </Style>
 
-    <Style x:Key="PaymentGlyphLabel"
+    <Style x:Key="PaymentEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="120" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceColor}" />
+        <Setter Property="FontSize" Value="104" />
     </Style>
 
     <Style x:Key="PaymentTitleLabel"

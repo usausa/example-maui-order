@@ -4,6 +4,7 @@
              xmlns:s="http://smart/maui"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:tmarkup="clr-namespace:TableOrder.Terminal.Markup;assembly=TableOrder.Terminal"
              xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Visit"
              x:Class="TableOrder.HallApp.Modules.Visit.VisitView"
@@ -158,7 +159,7 @@
                 <Button Style="{StaticResource VisitReleaseButton}"
                         Command="{Binding ReleaseCommand}"
                         IsVisible="{Binding HasHeld}"
-                        Text="{Binding ReleaseText}" />
+                        Text="{Binding ReleaseText, StringFormat='🍨 {0}'}" />
             </VerticalStackLayout>
         </ScrollView>
 
@@ -172,19 +173,19 @@
             <Button Grid.Row="1" Grid.Column="0"
                     Style="{StaticResource ActionBarButton}"
                     Command="{Binding GuestsCommand}"
-                    Text="{x:Static strings:AppResources.GuestChangeTitle}" />
+                    Text="{tmarkup:Emoji 👥, Text={x:Static strings:AppResources.GuestChangeTitle}}" />
             <BoxView Grid.Row="1" Grid.Column="1"
                      Style="{StaticResource VerticalRule}" />
             <Button Grid.Row="1" Grid.Column="2"
                     Style="{StaticResource ActionBarButton}"
                     Command="{Binding MoveCommand}"
-                    Text="{x:Static strings:AppResources.VisitMove}" />
+                    Text="{tmarkup:Emoji 🔀, Text={x:Static strings:AppResources.VisitMove}}" />
             <BoxView Grid.Row="1" Grid.Column="3"
                      Style="{StaticResource VerticalRule}" />
             <Button Grid.Row="1" Grid.Column="4"
                     Style="{StaticResource ActionBarButton}"
                     Command="{Binding BillCommand}"
-                    Text="{x:Static strings:AppResources.VisitBill}" />
+                    Text="{tmarkup:Emoji 🧾, Text={x:Static strings:AppResources.VisitBill}}" />
             <BoxView Grid.Row="2" Grid.ColumnSpan="5"
                      Style="{StaticResource HorizontalRule}" />
             <!-- 注文のある来店と会計中はレジで払った、注文のない来店は取りやめ -->

@@ -279,7 +279,7 @@
     <value>小学生以下</value>
   </data>
   <data name="GuestChangeTitle" xml:space="preserve">
-    <value>人数を変える</value>
+    <value>人数変更</value>
   </data>
   <data name="GuestChange" xml:space="preserve">
     <value>変える</value>
@@ -312,7 +312,7 @@
     <value>{0} 回目</value>
   </data>
   <data name="VisitMove" xml:space="preserve">
-    <value>席を移る</value>
+    <value>席移動</value>
   </data>
   <data name="VisitClose" xml:space="preserve">
     <value>レジで払った</value>

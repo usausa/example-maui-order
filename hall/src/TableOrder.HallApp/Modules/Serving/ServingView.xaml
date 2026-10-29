@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:strings="clr-namespace:TableOrder.HallApp.Resources.Strings"
+             xmlns:tmarkup="clr-namespace:TableOrder.Terminal.Markup;assembly=TableOrder.Terminal"
              xmlns:controls="clr-namespace:TableOrder.HallApp.Controls"
              xmlns:module="clr-namespace:TableOrder.HallApp.Modules.Serving"
              x:Class="TableOrder.HallApp.Modules.Serving.ServingView"
@@ -88,7 +89,7 @@
                                                     Style="{StaticResource ServingLineButton}"
                                                     Command="{Binding Source={RelativeSource AncestorType={x:Type module:ServingViewModel}}, Path=ServeLineCommand, x:DataType={x:Type module:ServingViewModel}}"
                                                     CommandParameter="{Binding .}"
-                                                    Text="{x:Static strings:AppResources.ServeLine}" />
+                                                    Text="{tmarkup:Emoji 🍽️, Text={x:Static strings:AppResources.ServeLine}}" />
                                             <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                         </Grid>
                                     </DataTemplate>

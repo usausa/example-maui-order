@@ -119,18 +119,22 @@ public static class ViewHelper
     // 今は注文できない品がカートにある知らせ
     public static string UnavailableNoticeGlyph => MaterialIcons.Error_outline;
 
-    // 呼び出しの用件の記号 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの記号にする)
-    public static string CallGlyph(string code) =>
+    //--------------------------------------------------------------------------------
+    // Emoji
+    //--------------------------------------------------------------------------------
+
+    // 呼び出しの用件の絵文字 (用件のコードは店舗の設定で決まるので、知らないコードは呼び出しの絵文字にする)
+    public static string CallEmoji(string code) =>
         code switch
         {
-            "Staff" => MaterialIcons.Room_service,
-            "Water" => MaterialIcons.Water_drop,
-            "Plates" => MaterialIcons.Dinner_dining,
-            "Cutlery" => MaterialIcons.Flatware,
-            "KidsTableware" => MaterialIcons.Child_care,
-            "Clear" => MaterialIcons.Cleaning_services,
-            "Payment" => MaterialIcons.Payments,
-            _ => MaterialIcons.Notifications
+            "Staff" => "🛎️",
+            "Water" => "💧",
+            "Plates" => "🍽️",
+            "Cutlery" => "🍴",
+            "KidsTableware" => "🧒",
+            "Clear" => "🧹",
+            "Payment" => "💴",
+            _ => "🔔"
         };
 
     //--------------------------------------------------------------------------------

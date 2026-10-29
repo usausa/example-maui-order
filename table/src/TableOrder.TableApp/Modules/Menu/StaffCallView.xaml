@@ -3,7 +3,6 @@
            xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
            xmlns:s="http://smart/maui"
            xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-           xmlns:fonts="clr-namespace:Fonts"
            xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
            xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
            xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Menu"
@@ -37,8 +36,8 @@
                                             behaviors:TouchOption.Ripple="True">
                                         <!-- ReSharper restore Xaml.BindingWithContextNotResolved -->
                                         <VerticalStackLayout Style="{StaticResource CallReasonStack}">
-                                            <Label Style="{StaticResource CallReasonGlyphLabel}"
-                                                   Text="{Binding Glyph}" />
+                                            <Label Style="{StaticResource CallReasonEmojiLabel}"
+                                                   Text="{Binding Emoji}" />
                                             <Label Style="{StaticResource CallReasonNameLabel}"
                                                    Text="{Binding Name}" />
                                         </VerticalStackLayout>
@@ -65,13 +64,13 @@
                     <Grid Style="{StaticResource CallStatusGrid}"
                           ColumnDefinitions="Auto,*,Auto">
                         <Label Grid.Column="0"
-                               Style="{StaticResource CallStatusGlyphLabel}"
-                               Text="{x:Static fonts:MaterialIcons.Hourglass_empty}">
+                               Style="{StaticResource CallStatusEmojiLabel}"
+                               Text="⏳">
                             <Label.Triggers>
                                 <DataTrigger TargetType="Label"
                                              Binding="{Binding IsAcknowledged}"
                                              Value="True">
-                                    <Setter Property="Text" Value="{x:Static fonts:MaterialIcons.Directions_walk}" />
+                                    <Setter Property="Text" Value="🚶" />
                                 </DataTrigger>
                             </Label.Triggers>
                         </Label>

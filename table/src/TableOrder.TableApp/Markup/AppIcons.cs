@@ -2,7 +2,7 @@ namespace TableOrder.TableApp.Markup;
 
 using Fonts;
 
-// 記号の色はテーマの役割 (Colors.xaml) から引く。画面を作るたびに引き直すので、起動時に差し替えたテーマの色も反映される
+// 色で塗ったボタンと帯の白い記号 (明るい背景の記号は絵文字にする)。記号の色はテーマの役割 (Colors.xaml) から引く。画面を作るたびに引き直すので、起動時に差し替えたテーマの色も反映される
 public static class AppIcons
 {
     private const double HeaderSize = 24d;
@@ -11,19 +11,9 @@ public static class AppIcons
 
     private const double StandbySize = 36d;
 
-    // Header
-
-    public static FontImageSource Language => Create(MaterialIcons.Language, HeaderSize, "OnSurfaceColor");
-
     // Action
 
-    public static FontImageSource History => Create(MaterialIcons.Receipt_long, ActionSize, "OnSurfaceColor");
-
-    public static FontImageSource Call => Create(MaterialIcons.Room_service, ActionSize, "OnSurfaceColor");
-
     public static FontImageSource Checkout => Create(MaterialIcons.Payments, ActionSize, "OnSecondaryColor");
-
-    public static FontImageSource Back => Create(MaterialIcons.Arrow_back, ActionSize, "OnSurfaceColor");
 
     // Standby
 

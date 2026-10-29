@@ -7,13 +7,13 @@ public sealed class CallReasonItem
 
     public string Name { get; }
 
-    public string Glyph { get; }
+    public string Emoji { get; }
 
     public CallReasonItem(string code, string name)
     {
         Code = code;
         Name = name;
-        Glyph = ViewHelper.CallGlyph(code);
+        Emoji = ViewHelper.CallEmoji(code);
     }
 }
 

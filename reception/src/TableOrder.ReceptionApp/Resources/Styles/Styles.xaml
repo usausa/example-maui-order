@@ -336,12 +336,10 @@
         <Setter Property="Spacing" Value="8" />
     </Style>
 
-    <Style x:Key="StandbyStepGlyphLabel"
+    <Style x:Key="StandbyStepEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="56" />
-        <Setter Property="TextColor" Value="{DynamicResource PrimaryColor}" />
+        <Setter Property="FontSize" Value="48" />
     </Style>
 
     <Style x:Key="StandbyStepNumberLabel"
@@ -370,13 +368,11 @@
         <Setter Property="BackgroundColor" Value="{DynamicResource SurfaceColor}" />
     </Style>
 
-    <Style x:Key="StandbyStatusGlyphLabel"
+    <Style x:Key="StandbyStatusEmojiLabel"
            TargetType="Label">
         <Setter Property="Margin" Value="0,0,24,0" />
         <Setter Property="VerticalOptions" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="48" />
-        <Setter Property="TextColor" Value="{DynamicResource OnSurfaceVariantColor}" />
+        <Setter Property="FontSize" Value="40" />
     </Style>
 
     <Style x:Key="StandbyStatusLabel"
@@ -390,13 +386,6 @@
     <Style x:Key="StandbyStatusStack"
            TargetType="VerticalStackLayout">
         <Setter Property="Spacing" Value="20" />
-    </Style>
-
-    <!-- 注文の一時停止は、受け付けられる状態に添えて注意の色で出す -->
-    <Style x:Key="StandbyPausedGlyphLabel"
-           TargetType="Label"
-           BasedOn="{StaticResource StandbyStatusGlyphLabel}">
-        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
     </Style>
 
     <Style x:Key="StandbyPausedLabel"
@@ -519,19 +508,11 @@
         <Setter Property="Spacing" Value="32" />
     </Style>
 
-    <!-- 案内の記号 (案内できた / 満席) -->
-    <Style x:Key="GuideGlyphLabel"
+    <!-- 案内の絵文字 (案内できた / 満席) -->
+    <Style x:Key="GuideEmojiLabel"
            TargetType="Label">
         <Setter Property="HorizontalTextAlignment" Value="Center" />
-        <Setter Property="FontFamily" Value="{x:Static fonts:MaterialIcons.FontFamily}" />
-        <Setter Property="FontSize" Value="96" />
-        <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
-    </Style>
-
-    <Style x:Key="GuideFullGlyphLabel"
-           TargetType="Label"
-           BasedOn="{StaticResource GuideGlyphLabel}">
-        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
+        <Setter Property="FontSize" Value="88" />
     </Style>
 
     <!-- 決まったテーブルは主色の札にして、離れても読める大きさで出す -->

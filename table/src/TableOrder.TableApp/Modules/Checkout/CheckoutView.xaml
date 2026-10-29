@@ -5,9 +5,9 @@
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:tmarkup="clr-namespace:TableOrder.Terminal.Markup;assembly=TableOrder.Terminal"
              xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:controls="clr-namespace:TableOrder.TableApp.Controls"
-             xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Checkout"
              xmlns:terminal="clr-namespace:TableOrder.Terminal.Modules;assembly=TableOrder.Terminal"
              x:Class="TableOrder.TableApp.Modules.Checkout.CheckoutView"
@@ -152,9 +152,7 @@
                     <Button Style="{StaticResource ActionBarButton}"
                             Command="{Binding BackCommand}"
                             IsVisible="{Binding CanBack}"
-                            Text="{x:Static strings:AppResources.CheckoutBackToMenu}"
-                            ImageSource="{x:Static markup:AppIcons.Back}"
-                            ContentLayout="Left,12" />
+                            Text="{tmarkup:Emoji ↩️, Text={x:Static strings:AppResources.CheckoutBackToMenu}}" />
                 </Grid>
             </Grid>
 
@@ -230,8 +228,8 @@
                                 IsVisible="{Binding CanUseQrCode}">
                             <Grid ColumnDefinitions="Auto,*">
                                 <Label Grid.Column="0"
-                                       Style="{StaticResource MethodGlyphLabel}"
-                                       Text="{x:Static fonts:MaterialIcons.Qr_code_2}" />
+                                       Style="{StaticResource MethodEmojiLabel}"
+                                       Text="📱" />
                                 <VerticalStackLayout Grid.Column="1"
                                                      Style="{StaticResource MethodTextStack}">
                                     <Label Style="{StaticResource MethodNameLabel}"
@@ -247,8 +245,8 @@
                                 IsVisible="{Binding CanUseCreditCard}">
                             <Grid ColumnDefinitions="Auto,*">
                                 <Label Grid.Column="0"
-                                       Style="{StaticResource MethodGlyphLabel}"
-                                       Text="{x:Static fonts:MaterialIcons.Credit_card}" />
+                                       Style="{StaticResource MethodEmojiLabel}"
+                                       Text="💳" />
                                 <VerticalStackLayout Grid.Column="1"
                                                      Style="{StaticResource MethodTextStack}">
                                     <Label Style="{StaticResource MethodNameLabel}"
@@ -264,8 +262,8 @@
                                 IsVisible="{Binding CanUseRegister}">
                             <Grid ColumnDefinitions="Auto,*">
                                 <Label Grid.Column="0"
-                                       Style="{StaticResource MethodGlyphLabel}"
-                                       Text="{x:Static fonts:MaterialIcons.Point_of_sale}" />
+                                       Style="{StaticResource MethodEmojiLabel}"
+                                       Text="💴" />
                                 <VerticalStackLayout Grid.Column="1"
                                                      Style="{StaticResource MethodTextStack}">
                                     <Label Style="{StaticResource MethodNameLabel}"
@@ -295,8 +293,8 @@
                                          IsVisible="{Binding IsCreditCard}">
                         <Label Style="{StaticResource PaymentAmountLabel}"
                                Text="{Binding PayAmountText}" />
-                        <Label Style="{StaticResource PaymentGlyphLabel}"
-                               Text="{x:Static fonts:MaterialIcons.Contactless}" />
+                        <Label Style="{StaticResource PaymentEmojiLabel}"
+                               Text="💳" />
                         <Label Style="{StaticResource PaymentMessageLabel}"
                                Text="{x:Static strings:AppResources.CardInstruction}" />
                     </VerticalStackLayout>
@@ -304,8 +302,8 @@
                     <!-- register -->
                     <VerticalStackLayout Style="{StaticResource PaymentCenterStack}"
                                          IsVisible="{Binding IsRegister}">
-                        <Label Style="{StaticResource PaymentGlyphLabel}"
-                               Text="{x:Static fonts:MaterialIcons.Point_of_sale}" />
+                        <Label Style="{StaticResource PaymentEmojiLabel}"
+                               Text="💴" />
                         <Label Style="{StaticResource PaymentTitleLabel}"
                                Text="{x:Static strings:AppResources.RegisterTitle}" />
                         <Label Style="{StaticResource PaymentMessageLabel}"
@@ -315,8 +313,8 @@
                     <!-- completed -->
                     <VerticalStackLayout Style="{StaticResource PaymentCenterStack}"
                                          IsVisible="{Binding IsCompleted}">
-                        <Label Style="{StaticResource CompletedGlyphLabel}"
-                               Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                        <Label Style="{StaticResource CompletedEmojiLabel}"
+                               Text="✅" />
                         <Label Style="{StaticResource PaymentTitleLabel}"
                                Text="{x:Static strings:AppResources.ThanksTitle}" />
                         <Label Style="{StaticResource PaymentMessageLabel}"

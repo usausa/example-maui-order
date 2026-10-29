@@ -1,7 +1,5 @@
 namespace TableOrder.ReceptionApp.Modules.Helpers;
 
-using Fonts;
-
 using TableOrder.ReceptionApp.Modules.Standby;
 using TableOrder.Terminal.Components;
 
@@ -54,17 +52,17 @@ public static class ViewHelper
         new(receptionState.BrandName(language), imageCache.PathOf(receptionState.LogoImageName));
 
     //--------------------------------------------------------------------------------
-    // Glyph
+    // Emoji
     //--------------------------------------------------------------------------------
 
-    // 待受の受付の状態の記号 (すぐに案内できる、満席、本日の受付の終了、受付を止めている)
-    public static string Glyph(StandbyStatus value) =>
+    // 待受の受付の状態の絵文字 (すぐに案内できる、満席、本日の受付の終了と開店の前、受付を止めている)
+    public static string Emoji(StandbyStatus value) =>
         value switch
         {
-            StandbyStatus.Available => MaterialIcons.Event_available,
-            StandbyStatus.Full => MaterialIcons.Hourglass_top,
-            StandbyStatus.Closed or StandbyStatus.BeforeOpen => MaterialIcons.Schedule,
-            _ => MaterialIcons.Do_not_disturb_on
+            StandbyStatus.Available => "✅",
+            StandbyStatus.Full => "⏳",
+            StandbyStatus.Closed or StandbyStatus.BeforeOpen => "🕒",
+            _ => "⛔"
         };
 
     //--------------------------------------------------------------------------------

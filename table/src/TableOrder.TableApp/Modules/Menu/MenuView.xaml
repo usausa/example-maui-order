@@ -5,6 +5,7 @@
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.TableApp.Resources.Strings"
+             xmlns:tmarkup="clr-namespace:TableOrder.Terminal.Markup;assembly=TableOrder.Terminal"
              xmlns:behaviors="clr-namespace:TableOrder.Terminal.Behaviors;assembly=TableOrder.Terminal"
              xmlns:markup="clr-namespace:TableOrder.TableApp.Markup"
              xmlns:module="clr-namespace:TableOrder.TableApp.Modules.Menu"
@@ -68,9 +69,7 @@
                     Style="{StaticResource HeaderButton}"
                     Command="{Binding LanguageCommand}"
                     IsVisible="{Binding HasLanguages}"
-                    Text="{Binding LanguageText}"
-                    ImageSource="{x:Static markup:AppIcons.Language}"
-                    ContentLayout="Left,10" />
+                    Text="{Binding LanguageText, StringFormat='🌐 {0}'}" />
         </Grid>
         <BoxView Grid.Row="1"
                  Style="{StaticResource HorizontalRule}" />
@@ -242,16 +241,12 @@
                             Grid.ColumnSpan="{Binding HistorySpan}"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding HistoryCommand}"
-                            Text="{x:Static strings:AppResources.MenuHistory}"
-                            ImageSource="{x:Static markup:AppIcons.History}"
-                            ContentLayout="Left,12" />
+                            Text="{tmarkup:Emoji 🧾, Text={x:Static strings:AppResources.MenuHistory}}" />
                     <Button Grid.Column="1"
                             Style="{StaticResource ActionBarButton}"
                             Command="{Binding CallCommand}"
                             IsVisible="{Binding CanCall}"
-                            Text="{x:Static strings:AppResources.MenuCall}"
-                            ImageSource="{x:Static markup:AppIcons.Call}"
-                            ContentLayout="Left,12" />
+                            Text="{tmarkup:Emoji 🛎️, Text={x:Static strings:AppResources.MenuCall}}" />
                     <Button Grid.Column="2"
                             Style="{StaticResource ActionBarStrongButton}"
                             Command="{Binding CheckoutCommand}"
@@ -289,8 +284,8 @@
                                 ItemsSource="{Binding CartLines}">
                     <CollectionView.EmptyView>
                         <VerticalStackLayout Style="{StaticResource EmptyStack}">
-                            <Label Style="{StaticResource EmptyGlyphLabel}"
-                                   Text="{x:Static fonts:MaterialIcons.Restaurant_menu}" />
+                            <Label Style="{StaticResource EmptyEmojiLabel}"
+                                   Text="🍽️" />
                             <Label Style="{StaticResource EmptyLabel}"
                                    Text="{x:Static strings:AppResources.MenuCartEmpty}" />
                             <Label Style="{StaticResource EmptyHintLabel}"

@@ -44,9 +44,9 @@ public sealed partial class StandbyViewModel : AppViewModelBase
 
     public string StoreText { get; }
 
-    // 受付の状態の記号と文言
+    // 受付の状態の絵文字と文言
     [ObservableProperty]
-    public partial string StatusGlyph { get; set; } = string.Empty;
+    public partial string StatusEmoji { get; set; } = string.Empty;
 
     [ObservableProperty]
     public partial string StatusText { get; set; } = string.Empty;
@@ -226,7 +226,7 @@ public sealed partial class StandbyViewModel : AppViewModelBase
 
     private void SetState(StandbyStatus status)
     {
-        StatusGlyph = ViewHelper.Glyph(status);
+        StatusEmoji = ViewHelper.Emoji(status);
         StatusText = status == StandbyStatus.BeforeOpen
             ? ViewHelper.Format(AppResources.StandbyBeforeOpenFormat, storeState.OpenTimeText)
             : ViewHelper.Name(status);

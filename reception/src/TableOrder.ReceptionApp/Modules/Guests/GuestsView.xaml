@@ -4,6 +4,7 @@
              xmlns:s="http://smart/maui"
              xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
+             xmlns:tmarkup="clr-namespace:TableOrder.Terminal.Markup;assembly=TableOrder.Terminal"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Guests"
              x:Class="TableOrder.ReceptionApp.Modules.Guests.GuestsView"
              x:DataType="{x:Type module:GuestsViewModel}"
@@ -133,7 +134,7 @@
                         Text="{x:Static strings:AppResources.GuestsDecide}" />
                 <Button Style="{StaticResource KioskSecondaryButton}"
                         Command="{Binding BackCommand}"
-                        Text="{x:Static strings:AppResources.CommonBack}" />
+                        Text="{tmarkup:Emoji ↩️, Text={x:Static strings:AppResources.CommonBack}}" />
                 <Label Style="{StaticResource KioskNoteLabel}"
                        Text="{Binding IdleText}" />
             </VerticalStackLayout>

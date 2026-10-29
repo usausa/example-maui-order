@@ -72,8 +72,8 @@
             <VerticalStackLayout Grid.Row="1"
                                  Style="{StaticResource GuideStack}"
                                  IsVisible="{Binding IsFull, Converter={StaticResource ReverseConverter}}">
-                <Label Style="{StaticResource GuideGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Check_circle}" />
+                <Label Style="{StaticResource GuideEmojiLabel}"
+                       Text="✅" />
                 <Label Style="{StaticResource KioskTitleLabel}"
                        Text="{x:Static strings:AppResources.GuideTitle}" />
                 <Border Style="{StaticResource GuideTicketBorder}">
@@ -95,8 +95,8 @@
             <VerticalStackLayout Grid.Row="1"
                                  Style="{StaticResource GuideStack}"
                                  IsVisible="{Binding IsFull}">
-                <Label Style="{StaticResource GuideFullGlyphLabel}"
-                       Text="{x:Static fonts:MaterialIcons.Hourglass_top}" />
+                <Label Style="{StaticResource GuideEmojiLabel}"
+                       Text="⏳" />
                 <Label Style="{StaticResource KioskTitleLabel}"
                        Text="{x:Static strings:AppResources.GuideFullTitle}" />
                 <Label Style="{StaticResource GuideMessageLabel}"

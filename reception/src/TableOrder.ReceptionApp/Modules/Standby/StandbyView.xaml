@@ -3,7 +3,6 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:s="http://smart/maui"
              xmlns:mct="http://schemas.microsoft.com/dotnet/2022/maui/toolkit"
-             xmlns:fonts="clr-namespace:Fonts"
              xmlns:strings="clr-namespace:TableOrder.ReceptionApp.Resources.Strings"
              xmlns:markup="clr-namespace:TableOrder.ReceptionApp.Markup"
              xmlns:module="clr-namespace:TableOrder.ReceptionApp.Modules.Standby"
@@ -81,8 +80,8 @@
                     <Border Grid.Column="0"
                             Style="{StaticResource StandbyStepBorder}">
                         <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
-                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
-                                   Text="{x:Static fonts:MaterialIcons.Groups}" />
+                            <Label Style="{StaticResource StandbyStepEmojiLabel}"
+                                   Text="👥" />
                             <Label Style="{StaticResource StandbyStepNumberLabel}"
                                    Text="1" />
                             <Label Style="{StaticResource StandbyStepTextLabel}"
@@ -92,8 +91,8 @@
                     <Border Grid.Column="1"
                             Style="{StaticResource StandbyStepBorder}">
                         <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
-                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
-                                   Text="{x:Static fonts:MaterialIcons.Table_restaurant}" />
+                            <Label Style="{StaticResource StandbyStepEmojiLabel}"
+                                   Text="🪑" />
                             <Label Style="{StaticResource StandbyStepNumberLabel}"
                                    Text="2" />
                             <Label Style="{StaticResource StandbyStepTextLabel}"
@@ -103,8 +102,8 @@
                     <Border Grid.Column="2"
                             Style="{StaticResource StandbyStepBorder}">
                         <VerticalStackLayout Style="{StaticResource StandbyStepStack}">
-                            <Label Style="{StaticResource StandbyStepGlyphLabel}"
-                                   Text="{x:Static fonts:MaterialIcons.Directions_walk}" />
+                            <Label Style="{StaticResource StandbyStepEmojiLabel}"
+                                   Text="🚶" />
                             <Label Style="{StaticResource StandbyStepNumberLabel}"
                                    Text="3" />
                             <Label Style="{StaticResource StandbyStepTextLabel}"
@@ -113,26 +112,13 @@
                     </Border>
                 </Grid>
 
-                <!-- status (記号の色で状態を示す: すぐに案内できる・満席・受付を止めている。注文の一時停止は注意の色で添える) -->
+                <!-- status (絵文字で状態を示す: すぐに案内できる・満席・受付を止めている。注文の一時停止は注意の色の文言で添える) -->
                 <Border Style="{StaticResource StandbyStatusBorder}">
                     <VerticalStackLayout Style="{StaticResource StandbyStatusStack}">
                         <Grid ColumnDefinitions="Auto,*">
                             <Label Grid.Column="0"
-                                   Style="{StaticResource StandbyStatusGlyphLabel}"
-                                   Text="{Binding StatusGlyph}">
-                                <Label.Triggers>
-                                    <DataTrigger TargetType="Label"
-                                                 Binding="{Binding CanStart}"
-                                                 Value="True">
-                                        <Setter Property="TextColor" Value="{DynamicResource SuccessColor}" />
-                                    </DataTrigger>
-                                    <DataTrigger TargetType="Label"
-                                                 Binding="{Binding IsFull}"
-                                                 Value="True">
-                                        <Setter Property="TextColor" Value="{DynamicResource WarningColor}" />
-                                    </DataTrigger>
-                                </Label.Triggers>
-                            </Label>
+                                   Style="{StaticResource StandbyStatusEmojiLabel}"
+                                   Text="{Binding StatusEmoji}" />
                             <Label Grid.Column="1"
                                    Style="{StaticResource StandbyStatusLabel}"
                                    Text="{Binding StatusText}" />
@@ -140,8 +126,8 @@
                         <Grid ColumnDefinitions="Auto,*"
                               IsVisible="{Binding IsPaused}">
                             <Label Grid.Column="0"
-                                   Style="{StaticResource StandbyPausedGlyphLabel}"
-                                   Text="{x:Static fonts:MaterialIcons.Pause_circle}" />
+                                   Style="{StaticResource StandbyStatusEmojiLabel}"
+                                   Text="⏸️" />
                             <Label Grid.Column="1"
                                    Style="{StaticResource StandbyPausedLabel}"
                                    Text="{Binding PausedText}" />

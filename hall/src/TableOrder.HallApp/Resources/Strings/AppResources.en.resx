@@ -279,7 +279,7 @@
     <value>Elementary school age and under</value>
   </data>
   <data name="GuestChangeTitle" xml:space="preserve">
-    <value>Change guests</value>
+    <value>Guests</value>
   </data>
   <data name="GuestChange" xml:space="preserve">
     <value>Change</value>
