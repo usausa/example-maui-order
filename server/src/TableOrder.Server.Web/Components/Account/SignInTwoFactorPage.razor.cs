@@ -72,7 +72,7 @@ public sealed partial class SignInTwoFactorPage
         }
 
         var code = Code!.Code.Replace(" ", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal);
-        await CompleteAsync(user, await SignInManager.TwoFactorAuthenticatorSignInAsync(code, isPersistent: false, rememberClient: false), "コードが違います。");
+        await CompleteAsync(user, await SignInManager.TwoFactorAuthenticatorSignInAsync(code, isPersistent: false, rememberClient: false), "コードが正しくありません");
     }
 
     private async Task RecoverAsync()
@@ -83,7 +83,7 @@ public sealed partial class SignInTwoFactorPage
         }
 
         var code = Recovery!.Code.Replace(" ", string.Empty, StringComparison.Ordinal);
-        await CompleteAsync(user, await SignInManager.TwoFactorRecoveryCodeSignInAsync(code), "回復用のコードが違うか、使い終えています。");
+        await CompleteAsync(user, await SignInManager.TwoFactorRecoveryCodeSignInAsync(code), "回復コードが正しくないか、使用済みです");
     }
 
     private async Task CompleteAsync(AdminUserEntity signedIn, SignInResult result, string failure)
@@ -91,7 +91,7 @@ public sealed partial class SignInTwoFactorPage
         if (!result.Succeeded)
         {
             message = result.IsLockedOut
-                ? "続けて間違えたため、しばらくサインインできません。15 分ほどしてから入れ直してください。"
+                ? "続けて失敗したため、15 分ほどサインインできません"
                 : failure;
             return;
         }

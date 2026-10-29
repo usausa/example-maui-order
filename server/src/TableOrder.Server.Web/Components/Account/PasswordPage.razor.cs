@@ -57,7 +57,7 @@ public sealed partial class PasswordPage
 
         if (Input!.NewPassword == Input.CurrentPassword)
         {
-            errors = ["新しいパスワードは、今のパスワードと違うものにしてください。"];
+            errors = ["現在のパスワードと異なるパスワードにしてください"];
             return;
         }
 

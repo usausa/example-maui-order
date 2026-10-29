@@ -114,7 +114,7 @@ public sealed class AdminUserServiceTests : IClassFixture<ServerFactory>
         Assert.Equal("/", TestAdmin.LocationOf(changed));
     }
 
-    // 店舗の担当は、テナントの店舗を 1 つ以上受け持つ
+    // 店舗担当者は、テナントの店舗を 1 つ以上受け持つ
     [Fact]
     public async Task StoreStaffRequiresTenantStores()
     {

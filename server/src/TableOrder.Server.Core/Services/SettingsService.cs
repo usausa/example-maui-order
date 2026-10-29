@@ -80,14 +80,14 @@ public sealed partial class SettingsService
 
         if (settings.Theme.FirstOrDefault(static x => !ThemeRoles.IsRole(x.Key) || !ThemeRoles.IsColor(x.Value)) is { Key: not null } invalidColor)
         {
-            return new(ServiceError.Validation("theme", $"{invalidColor.Key} の色は #RRGGBB か #AARRGGBB で入れてください"));
+            return new(ServiceError.Validation("theme", $"{invalidColor.Key} の色は #RRGGBB か #AARRGGBB で入力してください"));
         }
 
         var context = contextProvider.Current;
         var tenantId = context.RequireTenantId();
         if ((settings.LogoImageName is { } logo) && (!ImageNames.IsValid(logo) || !await imageStore.ExistsAsync(tenantId, logo, cancellationToken)))
         {
-            return new(ServiceError.Validation("logoImageName", "ロゴは置いてある画像から選んでください"));
+            return new(ServiceError.Validation("logoImageName", "ロゴは登録済みの画像から選択してください"));
         }
 
         var theme = settings.Theme.Count > 0
@@ -197,55 +197,55 @@ public sealed partial class SettingsService
 
     private static ServiceError? ValidateName(LocalizedText name) =>
         String.IsNullOrWhiteSpace(name.Ja) || (name.Ja.Length > Length.BrandName) || (name.En?.Length > Length.BrandName)
-            ? ServiceError.Validation("name", $"チェーンの名前は日本語を必ず入れ、言語ごとに {Length.BrandName} 文字までで入れてください")
+            ? ServiceError.Validation("name", $"チェーン名は日本語を必須とし、言語ごとに {Length.BrandName} 文字以内で入力してください")
             : null;
 
     private static ServiceError? ValidateStore(StoreSettings settings, string? newStaffPin)
     {
         if ((settings.Languages.Count == 0) || !settings.Languages.All(SupportedLanguages.Contains) || (settings.Languages.Distinct().Count() != settings.Languages.Count))
         {
-            return ServiceError.Validation("languages", "言語を 1 つ以上選んでください");
+            return ServiceError.Validation("languages", "言語を 1 つ以上選択してください");
         }
 
         if (!settings.PaymentMethods.All(Enum.IsDefined) || (settings.PaymentMethods.Distinct().Count() != settings.PaymentMethods.Count))
         {
-            return ServiceError.Validation("paymentMethods", "支払方法を選び直してください");
+            return ServiceError.Validation("paymentMethods", "支払方法を選択し直してください");
         }
 
         var features = settings.Features;
         if (!features.RegisterCheckout && (settings.PaymentMethods.Count == 0))
         {
-            return ServiceError.Validation("registerCheckout", "テーブルで払えない店は、レジでの会計を外せません");
+            return ServiceError.Validation("registerCheckout", "テーブルで支払えない店舗は、レジ払いを無効にできません");
         }
 
         if (features.LastOrderNoticeMinutes is < 0 or > 180)
         {
-            return ServiceError.Validation("lastOrderNoticeMinutes", "ラストオーダーの知らせは 0 から 180 分で入れてください");
+            return ServiceError.Validation("lastOrderNoticeMinutes", "ラストオーダーのお知らせは 0 から 180 分で入力してください");
         }
 
         if (features.FinishSeconds is < 5 or > 300)
         {
-            return ServiceError.Validation("finishSeconds", "お礼の画面の時間は 5 から 300 秒で入れてください");
+            return ServiceError.Validation("finishSeconds", "お礼の画面の表示時間は 5 から 300 秒で入力してください");
         }
 
         if (!Enum.IsDefined(features.VisitOpening))
         {
-            return ServiceError.Validation("visitOpening", "来店の開き方を選び直してください");
+            return ServiceError.Validation("visitOpening", "案内方法を選択し直してください");
         }
 
         if (features.KitchenAlertMinutes is < 0 or > 120)
         {
-            return ServiceError.Validation("kitchenAlertMinutes", "キッチンの遅れの時間は 0 から 120 分で入れてください");
+            return ServiceError.Validation("kitchenAlertMinutes", "キッチンの遅れの警告は 0 から 120 分で入力してください");
         }
 
         if (features.DaypartGraceMinutes is < 0 or > 10)
         {
-            return ServiceError.Validation("daypartGraceMinutes", "時間帯の終わりから注文を受ける分数は 0 から 10 分で入れてください");
+            return ServiceError.Validation("daypartGraceMinutes", "時間帯の終了後の注文の猶予は 0 から 10 分で入力してください");
         }
 
         if ((newStaffPin is not null) && !StaffPins.IsValid(newStaffPin))
         {
-            return ServiceError.Validation("staffPin", $"PIN は {Length.StaffPinDigits} 桁の数字で入れてください");
+            return ServiceError.Validation("staffPin", $"PIN は {Length.StaffPinDigits} 桁の数字で入力してください");
         }
 
         return null;
@@ -256,7 +256,7 @@ public sealed partial class SettingsService
     {
         if (issuerName?.Length > Length.IssuerName)
         {
-            return ServiceError.Validation("issuerName", $"事業者の名前は {Length.IssuerName} 文字までで入れてください");
+            return ServiceError.Validation("issuerName", $"事業者名は {Length.IssuerName} 文字以内で入力してください");
         }
 
         if (registrationNumber is null)
@@ -266,11 +266,11 @@ public sealed partial class SettingsService
 
         if (!RegistrationNumberPattern().IsMatch(registrationNumber))
         {
-            return ServiceError.Validation("invoiceRegistrationNumber", "登録番号は T と 13 桁の半角の数字で入れてください (ないときは空にする)");
+            return ServiceError.Validation("invoiceRegistrationNumber", "登録番号は T と 13 桁の半角数字で入力してください");
         }
 
         return issuerName is null
-            ? ServiceError.Validation("issuerName", "登録番号を入れるときは、事業者の名前も入れてください")
+            ? ServiceError.Validation("issuerName", "登録番号を入力するときは、事業者名も入力してください")
             : null;
     }
 

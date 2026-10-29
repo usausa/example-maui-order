@@ -4,13 +4,13 @@ using System.Net.Mail;
 
 using TableOrder.Server.Core.Accessors;
 
-// 利用者の一覧の行と、受け持つ店舗 (店舗の担当だけ)
+// 利用者の一覧の行と、受け持つ店舗 (店舗担当者だけ)
 public sealed record AdminUserListItem(AdminUserSummaryEntity User, IReadOnlyList<Guid> StoreIds);
 
 // 足す利用者 (メールアドレスは大文字にそろえたものも渡す)
 public sealed record AdminUserInput(string Email, string NormalizedEmail, string Name, AdminRole Role, IReadOnlyList<Guid> StoreIds);
 
-// テナントの利用者 (テナントの管理者と店舗の担当) の管理 (管理画面から、選んだテナントの文脈で呼ぶ)
+// テナントの利用者 (テナント管理者と店舗担当者) の管理 (管理画面から、選んだテナントの文脈で呼ぶ)
 // パスワードは管理画面がハッシュにして渡す。役割・受け持つ店舗・パスワード・多要素・止めることを替えたら資格の印を替え、開いている管理画面をやり直させる
 public sealed class AdminUserService
 {
@@ -66,12 +66,12 @@ public sealed class AdminUserService
         var email = input.Email.Trim();
         if ((email.Length == 0) || (email.Length > MaxEmailLength))
         {
-            return new(ServiceError.Validation("email", "メールアドレスを入れてください"));
+            return new(ServiceError.Validation("email", "メールアドレスを入力してください"));
         }
 
         if (!IsEmail(email))
         {
-            return new(ServiceError.Validation("email", "メールアドレスの形で入れてください"));
+            return new(ServiceError.Validation("email", "メールアドレスの形式で入力してください"));
         }
 
         if (await ValidateAsync(tenantId, input.Name, input.Role, input.StoreIds, cancellationToken) is { } invalid)
@@ -92,7 +92,7 @@ public sealed class AdminUserService
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
             // メールアドレスはすべてのテナントで一意 (サインインの名前)
-            return new(ServiceError.Validation("email", "このメールアドレスはほかの利用者が使っています"));
+            return new(ServiceError.Validation("email", "このメールアドレスはすでに使われています"));
         }
 
         return new((await adminUserAccessor.QueryAsync(tenantId, id, cancellationToken))!, true);
@@ -116,7 +116,7 @@ public sealed class AdminUserService
 
         if ((userId == actorId) && (role != user.Role))
         {
-            return ServiceError.Validation("role", "自分の役割は替えられません");
+            return ServiceError.Validation("role", "自分の役割は変更できません");
         }
 
         // 資格の印は、扱える範囲 (役割と受け持つ店舗) が替わるときだけ替える (名前だけなら開いている管理画面をやり直させない)
@@ -161,7 +161,7 @@ public sealed class AdminUserService
     {
         if (!isActive && (userId == actorId))
         {
-            return ServiceError.Validation("isActive", "自分は止められません");
+            return ServiceError.Validation("isActive", "自分は停止できません");
         }
 
         var context = contextProvider.Current;
@@ -183,12 +183,12 @@ public sealed class AdminUserService
         var trimmed = name.Trim();
         if ((trimmed.Length == 0) || (trimmed.Length > MaxNameLength))
         {
-            return ServiceError.Validation("name", $"名前は {MaxNameLength} 文字までで入れてください");
+            return ServiceError.Validation("name", $"名前は {MaxNameLength} 文字以内で入力してください");
         }
 
         if (role is not (AdminRole.TenantAdmin or AdminRole.StoreStaff))
         {
-            return ServiceError.Validation("role", "テナントの管理者か店舗の担当を選んでください");
+            return ServiceError.Validation("role", "テナント管理者か店舗担当者を選択してください");
         }
 
         if (role != AdminRole.StoreStaff)
@@ -198,14 +198,14 @@ public sealed class AdminUserService
 
         if (storeIds.Count == 0)
         {
-            return ServiceError.Validation("storeIds", "店舗の担当は受け持つ店舗を選んでください");
+            return ServiceError.Validation("storeIds", "店舗担当者は担当店舗を選択してください");
         }
 
         var stores = (await storeAccessor.QueryAllAsync(tenantId, cancellationToken)).Select(static x => x.Id).ToHashSet();
-        return storeIds.All(stores.Contains) ? null : ServiceError.Validation("storeIds", "テナントの店舗を選んでください");
+        return storeIds.All(stores.Contains) ? null : ServiceError.Validation("storeIds", "テナントの店舗を選択してください");
     }
 
-    // テナントの管理者はすべての店舗を扱うので、受け持つ店舗は店舗の担当にだけ持つ
+    // テナント管理者はすべての店舗を扱うので、受け持つ店舗は店舗担当者にだけ持つ
     private async ValueTask InsertStoresAsync(DbTransaction tx, Guid tenantId, Guid userId, AdminRole role, IEnumerable<Guid> storeIds, CancellationToken cancellationToken)
     {
         if (role != AdminRole.StoreStaff)

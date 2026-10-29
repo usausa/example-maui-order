@@ -136,7 +136,7 @@ public sealed partial class StoreSettingsPage : IDisposable
             return;
         }
 
-        Snackbar.Add("店舗の設定を保存しました。テーブル端末は待受のときに読み直します", Severity.Success);
+        Snackbar.Add("店舗設定を保存しました", Severity.Success);
         await LoadAsync();
     }
 

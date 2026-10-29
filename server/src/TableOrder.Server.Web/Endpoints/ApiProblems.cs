@@ -4,9 +4,9 @@ namespace TableOrder.Server.Web.Endpoints;
 public static class ApiProblems
 {
     // 入力の誤り (Service の確かめと、フレームワークの要求の読み取り) と、作りの誤り (500) の文言 (フレームワークの英語の文言を置き換える)
-    public const string ValidationTitle = "入力を確かめてください";
+    public const string ValidationTitle = "入力内容を確認してください";
 
-    public const string UnexpectedTitle = "サーバでエラーが起きました";
+    public const string UnexpectedTitle = "サーバでエラーが発生しました";
 
     private const string ErrorCodeKey = "errorCode";
 
@@ -15,35 +15,35 @@ public static class ApiProblems
     // errorCode ごとの HTTP の状態と文言 (端末は文言ではなく errorCode で扱いを決める)
     private static readonly Dictionary<string, (int Status, string Title)> Definitions = new(StringComparer.Ordinal)
     {
-        [ErrorCodes.DeviceScope] = (StatusCodes.Status403Forbidden, "この端末では使えません"),
-        [ErrorCodes.DeviceRevoked] = (StatusCodes.Status403Forbidden, "この端末は無効にされています"),
+        [ErrorCodes.DeviceScope] = (StatusCodes.Status403Forbidden, "この端末では利用できません"),
+        [ErrorCodes.DeviceRevoked] = (StatusCodes.Status403Forbidden, "この端末は無効化されています"),
         [ErrorCodes.TenantSuspended] = (StatusCodes.Status403Forbidden, "ご利用を停止しています"),
-        [ErrorCodes.VisitOpeningDisabled] = (StatusCodes.Status403Forbidden, "この店ではこの端末から来店を開けません"),
+        [ErrorCodes.VisitOpeningDisabled] = (StatusCodes.Status403Forbidden, "この店舗ではこの端末から来店を登録できません"),
         [ErrorCodes.NotFound] = (StatusCodes.Status404NotFound, "対象が見つかりません"),
         [ErrorCodes.DuplicateIdMismatch] = (StatusCodes.Status409Conflict, "同じ Id で内容の違う要求です"),
-        [ErrorCodes.VersionMismatch] = (StatusCodes.Status409Conflict, "ほかの端末で変わっています。読み直してください"),
-        [ErrorCodes.TableOccupied] = (StatusCodes.Status409Conflict, "テーブルには来店があります"),
-        [ErrorCodes.NoVacantTable] = (StatusCodes.Status409Conflict, "人数の入る空席がありません"),
-        [ErrorCodes.EventsExpired] = (StatusCodes.Status410Gone, "通知を追いかけられません。今の状態を読み直してください"),
+        [ErrorCodes.VersionMismatch] = (StatusCodes.Status409Conflict, "ほかの端末で変更されたため、再読み込みしてください"),
+        [ErrorCodes.TableOccupied] = (StatusCodes.Status409Conflict, "テーブルはすでに来店中です"),
+        [ErrorCodes.NoVacantTable] = (StatusCodes.Status409Conflict, "人数に合う空席がありません"),
+        [ErrorCodes.EventsExpired] = (StatusCodes.Status410Gone, "通知を追跡できないため、現在の状態を再読み込みしてください"),
         [ErrorCodes.PairingCodeInvalid] = (StatusCodes.Status422UnprocessableEntity, "コードが正しくないか、期限が切れています"),
         [ErrorCodes.DeviceKindMismatch] = (StatusCodes.Status422UnprocessableEntity, "この端末の種類のコードではありません"),
-        [ErrorCodes.VisitNotOpen] = (StatusCodes.Status422UnprocessableEntity, "来店は終わっています"),
+        [ErrorCodes.VisitNotOpen] = (StatusCodes.Status422UnprocessableEntity, "来店はすでに終了しています"),
         [ErrorCodes.CheckoutInProgress] = (StatusCodes.Status422UnprocessableEntity, "会計中です"),
         [ErrorCodes.OrderingPaused] = (StatusCodes.Status422UnprocessableEntity, "注文を一時停止しています"),
         [ErrorCodes.LastOrderPassed] = (StatusCodes.Status422UnprocessableEntity, "ラストオーダーを過ぎました"),
         [ErrorCodes.MenuChanged] = (StatusCodes.Status422UnprocessableEntity, "メニューが変わりました"),
-        [ErrorCodes.ItemUnavailable] = (StatusCodes.Status422UnprocessableEntity, "今は出していない商品があります"),
+        [ErrorCodes.ItemUnavailable] = (StatusCodes.Status422UnprocessableEntity, "提供時間外の商品があります"),
         [ErrorCodes.ItemSoldOut] = (StatusCodes.Status422UnprocessableEntity, "売り切れの商品があります"),
-        [ErrorCodes.StockInsufficient] = (StatusCodes.Status422UnprocessableEntity, "残りの数を超える商品があります"),
-        [ErrorCodes.OptionInvalid] = (StatusCodes.Status422UnprocessableEntity, "オプションの選び方を確かめてください"),
-        [ErrorCodes.QuantityExceeded] = (StatusCodes.Status422UnprocessableEntity, "数量か明細の数が上限を超えています"),
+        [ErrorCodes.StockInsufficient] = (StatusCodes.Status422UnprocessableEntity, "残数を超える商品があります"),
+        [ErrorCodes.OptionInvalid] = (StatusCodes.Status422UnprocessableEntity, "オプションの選択を確認してください"),
+        [ErrorCodes.QuantityExceeded] = (StatusCodes.Status422UnprocessableEntity, "数量か明細数が上限を超えています"),
         [ErrorCodes.ConfirmationRequired] = (StatusCodes.Status422UnprocessableEntity, "確認が必要な商品があります"),
-        [ErrorCodes.LimitExceeded] = (StatusCodes.Status422UnprocessableEntity, "数の上限を超える商品があります"),
+        [ErrorCodes.LimitExceeded] = (StatusCodes.Status422UnprocessableEntity, "数量の上限を超える商品があります"),
         [ErrorCodes.LineStatusInvalid] = (StatusCodes.Status422UnprocessableEntity, "明細の状態に合わない操作です"),
-        [ErrorCodes.VisitHasOrders] = (StatusCodes.Status422UnprocessableEntity, "注文のある来店は取りやめられません"),
+        [ErrorCodes.VisitHasOrders] = (StatusCodes.Status422UnprocessableEntity, "注文のある来店は取り消せません"),
         [ErrorCodes.BillChanged] = (StatusCodes.Status422UnprocessableEntity, "会計の明細が変わりました"),
-        [ErrorCodes.PaymentAmountInvalid] = (StatusCodes.Status422UnprocessableEntity, "支払の額を確かめてください"),
-        [ErrorCodes.PaymentMethodUnavailable] = (StatusCodes.Status422UnprocessableEntity, "この支払方法は使えません")
+        [ErrorCodes.PaymentAmountInvalid] = (StatusCodes.Status422UnprocessableEntity, "支払額を確認してください"),
+        [ErrorCodes.PaymentMethodUnavailable] = (StatusCodes.Status422UnprocessableEntity, "この支払方法は利用できません")
     };
 
     public static ValidationProblem Validation(IDictionary<string, string[]> errors) =>

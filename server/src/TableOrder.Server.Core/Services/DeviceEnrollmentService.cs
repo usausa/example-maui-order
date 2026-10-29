@@ -106,17 +106,17 @@ public sealed class DeviceEnrollmentService
     {
         if (!Enum.IsDefined(kind))
         {
-            return new(ServiceError.Validation("kind", "端末の種類を選んでください"));
+            return new(ServiceError.Validation("kind", "端末の種類を選択してください"));
         }
 
         if (maxUses is < 1 or > MaxTokenUses)
         {
-            return new(ServiceError.Validation("maxUses", $"台数は 1 から {MaxTokenUses} で入れてください"));
+            return new(ServiceError.Validation("maxUses", $"上限台数は 1 から {MaxTokenUses} で入力してください"));
         }
 
         if (days is < 1 or > MaxTokenDays)
         {
-            return new(ServiceError.Validation("days", $"期限は 1 から {MaxTokenDays} 日で入れてください"));
+            return new(ServiceError.Validation("days", $"有効期間は 1 から {MaxTokenDays} 日で入力してください"));
         }
 
         var context = contextProvider.Current;

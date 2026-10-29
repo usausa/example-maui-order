@@ -41,7 +41,7 @@ paths:
 - サンプルのメニューの Id (商品、オプション、ルール、持ち場) は `TestMenu` の定数を使い、テストのクラスに書き直さない (足りなければ `TestMenu` に足す)
 - 開発の環境の自動の進行は、`SimulationService` を DI から取り、時間を 0 にして店舗の文脈で呼んで確かめる (テストのサーバは自動の進行を止める)
 - 古いデータの片付けは、来店の営業日をさかのぼらせて (`ServerFactory.MoveVisitToPreviousDayAsync` の日数) `CleanupService` を店舗の文脈で呼び、子の表まで消えたことを表ごとの行の数 (`ServerFactory.CountVisitRowsAsync`) で確かめる
-- 管理画面の操作 (端末の管理、店内の今、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
+- 管理画面の操作 (端末の管理、店内状況、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
 - 管理画面の画面 (サインイン、役割で絞った画面) は `TestAdmin` (Cookie を持ち、自動では移らない) で開き、フォームは画面の偽造防止の値と Blazor のフォームの名前を付けて送る。移る先は `TestAdmin.LocationOf`、画面の文字は `TestAdmin.ReadPageAsync` (日本語は文字参照で出る) で確かめる
 - 管理画面のテストの利用者は `ServerFactory.CreateAdminUserAsync` でテストごとに作り、サンプルの利用者の資格情報を替えない
 - テストのサーバの店舗の PIN は `ServerFactory.StaffPin` で、ハッシュの回数を少なくしている (テストを遅くしない)

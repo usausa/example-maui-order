@@ -72,18 +72,18 @@ public sealed partial class TenantService
         var trimmedCode = code.Trim();
         if (!CodePattern().IsMatch(trimmedCode))
         {
-            return new(ServiceError.Validation("code", $"コードは英小文字・数字・ハイフンの {MaxCodeLength} 文字までで入れてください (先頭は英小文字か数字)"));
+            return new(ServiceError.Validation("code", $"コードは英小文字・数字・ハイフンで {MaxCodeLength} 文字以内で入力してください (先頭は英小文字か数字)"));
         }
 
         var trimmedName = name.Trim();
         if ((trimmedName.Length == 0) || (trimmedName.Length > MaxNameLength))
         {
-            return new(ServiceError.Validation("name", $"名前は {MaxNameLength} 文字までで入れてください"));
+            return new(ServiceError.Validation("name", $"会社名は {MaxNameLength} 文字以内で入力してください"));
         }
 
         if (String.IsNullOrWhiteSpace(brandName.Ja) || (brandName.Ja.Length > Length.BrandName) || (brandName.En?.Length > Length.BrandName))
         {
-            return new(ServiceError.Validation("brandName", $"チェーンの名前は日本語を必ず入れ、言語ごとに {Length.BrandName} 文字までで入れてください"));
+            return new(ServiceError.Validation("brandName", $"チェーン名は日本語を必須とし、言語ごとに {Length.BrandName} 文字以内で入力してください"));
         }
 
         var context = contextProvider.Current;
@@ -95,7 +95,7 @@ public sealed partial class TenantService
         }
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
-            return new(ServiceError.Validation("code", "このコードのテナントはあります"));
+            return new(ServiceError.Validation("code", "このコードはすでに使われています"));
         }
 
         return new((await tenantAccessor.QueryAsync(id, cancellationToken))!, true);

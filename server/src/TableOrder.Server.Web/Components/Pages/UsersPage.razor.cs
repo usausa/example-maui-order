@@ -154,14 +154,14 @@ public sealed partial class UsersPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{editName.Trim()} を替えました", Severity.Success);
+        Snackbar.Add($"{editName.Trim()} を変更しました", Severity.Success);
         await LoadAsync();
     }
 
     private async Task ResetPasswordAsync()
     {
         if (editing is not { } item ||
-            !await DialogService.ConfirmAsync("仮のパスワードを出し直す", $"{item.User.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
+            !await DialogService.ConfirmAsync("仮パスワードの再発行", $"{item.User.Name} の仮パスワードを再発行しますか？ 現在のパスワードは使えなくなります", "再発行"))
         {
             return;
         }
@@ -181,7 +181,7 @@ public sealed partial class UsersPage : IDisposable
     private async Task ResetTwoFactorAsync()
     {
         if (editing is not { } item ||
-            !await DialogService.ConfirmAsync("多要素を外す", $"{item.User.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、利用者が登録し直します。", "外す"))
+            !await DialogService.ConfirmAsync("多要素認証の解除", $"{item.User.Name} の多要素認証を解除しますか？ パスワードだけでサインインできるようになります", "解除"))
         {
             return;
         }
@@ -193,7 +193,7 @@ public sealed partial class UsersPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{item.User.Name} の多要素を外しました", Severity.Success);
+        Snackbar.Add($"{item.User.Name} の多要素認証を解除しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -204,7 +204,7 @@ public sealed partial class UsersPage : IDisposable
             return;
         }
 
-        if (!isActive && !await DialogService.ConfirmAsync("利用者を止める", $"{item.User.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
+        if (!isActive && !await DialogService.ConfirmAsync("利用者の停止", $"{item.User.Name} を停止しますか？ サインインできなくなります", "停止"))
         {
             return;
         }
@@ -216,7 +216,7 @@ public sealed partial class UsersPage : IDisposable
             return;
         }
 
-        Snackbar.Add(isActive ? $"{item.User.Name} を戻しました" : $"{item.User.Name} を止めました", Severity.Success);
+        Snackbar.Add(isActive ? $"{item.User.Name} を再開しました" : $"{item.User.Name} を停止しました", Severity.Success);
         await LoadAsync();
     }
 

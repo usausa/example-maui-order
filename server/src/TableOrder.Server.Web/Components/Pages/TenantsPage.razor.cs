@@ -73,14 +73,10 @@ public sealed partial class TenantsPage
     // 止めると、テナントの端末はトークンを断られて止まり、利用者はサインインできなくなる
     private async Task SetSuspendedAsync(TenantSummaryEntity tenant, bool suspended)
     {
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            suspended ? "テナントを止める" : "テナントを戻す",
-            suspended
-                ? $"{tenant.Name} を止めます。テナントの端末は止まり、利用者はサインインできなくなります。"
-                : $"{tenant.Name} を戻します。端末と利用者は、また使えるようになります。",
-            yesText: suspended ? "止める" : "戻す",
-            cancelText: "やめる");
-        if (confirmed != true)
+        if (!await DialogService.ConfirmAsync(
+            suspended ? "テナントの停止" : "テナントの再開",
+            suspended ? $"{tenant.Name} を停止しますか？ 端末と利用者が使えなくなります" : $"{tenant.Name} を再開しますか？",
+            suspended ? "停止" : "再開"))
         {
             return;
         }
@@ -92,7 +88,7 @@ public sealed partial class TenantsPage
             return;
         }
 
-        Snackbar.Add(suspended ? $"{tenant.Name} を止めました" : $"{tenant.Name} を戻しました", Severity.Success);
+        Snackbar.Add(suspended ? $"{tenant.Name} を停止しました" : $"{tenant.Name} を再開しました", Severity.Success);
         await LoadAsync();
     }
 }

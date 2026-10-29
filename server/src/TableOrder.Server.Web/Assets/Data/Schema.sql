@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS AdminUsers (
     FOREIGN KEY (TenantId) REFERENCES Tenants (Id)
 );
 
--- 店舗の担当が受け持つ店舗
+-- 店舗担当者が受け持つ店舗
 CREATE TABLE IF NOT EXISTS AdminUserStores (
     TenantId  TEXT  NOT NULL,
     UserId    TEXT  NOT NULL,

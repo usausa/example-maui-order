@@ -6,7 +6,7 @@ public static class AdminPolicies
     // サインインした利用者 (役割を問わない)
     public const string SignedIn = "Admin" + nameof(SignedIn);
 
-    // テナントの管理者と運営者
+    // テナント管理者と運営者
     public const string TenantAdmin = "Admin" + nameof(TenantAdmin);
 
     // 運営者

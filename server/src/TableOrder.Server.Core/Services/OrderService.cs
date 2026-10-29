@@ -487,7 +487,7 @@ public sealed class OrderService
 
             foreach (var line in lines.Where(static x => (x.Quantity < 1) || !Enum.IsDefined(x.Timing)))
             {
-                errors[line.Id.ToString()] = ["数量 (1 以上) と出す時機を確かめてください"];
+                errors[line.Id.ToString()] = ["数量 (1 以上) と提供のタイミングを確認してください"];
             }
         }
 
@@ -532,7 +532,7 @@ public sealed class OrderService
 
             if (!IsValidSelection(item, optionIds, options, catalog))
             {
-                invalid[key] = ["オプションの選び方を確かめてください"];
+                invalid[key] = ["オプションの選択を確認してください"];
                 continue;
             }
 
@@ -608,7 +608,7 @@ public sealed class OrderService
                 .FirstOrDefault(static x => x != UnavailableReason.None);
             if (reason != UnavailableReason.None)
             {
-                unavailable[plan.Id.ToString()] = [reason == UnavailableReason.Children ? "お子様のいる来店だけの商品です" : "出している時間の外の商品です"];
+                unavailable[plan.Id.ToString()] = [reason == UnavailableReason.Children ? "お子様連れの来店のみの商品です" : "提供時間外の商品です"];
             }
         }
 
@@ -691,7 +691,7 @@ public sealed class OrderService
                 {
                     foreach (var target in targets)
                     {
-                        exceeded[target.Id.ToString()] = ["数の上限を超えています"];
+                        exceeded[target.Id.ToString()] = ["数量の上限を超えています"];
                     }
                 }
             }

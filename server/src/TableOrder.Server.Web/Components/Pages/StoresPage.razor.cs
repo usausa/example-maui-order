@@ -7,7 +7,7 @@ using MudBlazor;
 using TableOrder.Server.Web.Application.Context;
 using TableOrder.Server.Web.Components.Parts;
 
-// 店舗の管理 (選んだテナントの店舗の一覧、追加、基本の変更、使わなくする)。運営者とテナントの管理者だけが開ける
+// 店舗の管理 (選んだテナントの店舗の一覧、追加、基本の変更、使わなくする)。運営者とテナント管理者だけが開ける
 public sealed partial class StoresPage : IDisposable
 {
     private List<StoreEntity> stores = [];
@@ -75,7 +75,7 @@ public sealed partial class StoresPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{result.Value.Name.Ja} を足しました", Severity.Success);
+        Snackbar.Add($"{result.Value.Name.Ja} を追加しました", Severity.Success);
         addForm = new StoreForm();
         await LoadAsync();
         Selection.NotifyChoicesChanged();
@@ -103,7 +103,7 @@ public sealed partial class StoresPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{editForm.NameJa.Trim()} を替えました。店舗の端末は起動からやり直します", Severity.Success);
+        Snackbar.Add($"{editForm.NameJa.Trim()} を変更しました", Severity.Success);
         await LoadAsync();
         Selection.NotifyChoicesChanged();
     }
@@ -117,12 +117,7 @@ public sealed partial class StoresPage : IDisposable
 
         if (!isActive)
         {
-            var confirmed = await DialogService.ShowMessageBoxAsync(
-                "店舗を使わなくする",
-                $"{store.Name.Ja} を使わなくします。新しい端末は登録できなくなります。",
-                yesText: "使わなくする",
-                cancelText: "やめる");
-            if (confirmed != true)
+            if (!await DialogService.ConfirmAsync("店舗の利用停止", $"{store.Name.Ja} を利用停止しますか？ 端末を新しく登録できなくなります", "利用停止"))
             {
                 return;
             }
@@ -135,7 +130,7 @@ public sealed partial class StoresPage : IDisposable
             return;
         }
 
-        Snackbar.Add(isActive ? $"{store.Name.Ja} を使います" : $"{store.Name.Ja} を使わなくしました", Severity.Success);
+        Snackbar.Add(isActive ? $"{store.Name.Ja} の利用を再開しました" : $"{store.Name.Ja} を利用停止しました", Severity.Success);
         await LoadAsync();
         Selection.NotifyChoicesChanged();
     }

@@ -12,12 +12,12 @@ using TableOrder.Contract.Visits;
 using TableOrder.Server.Web.Application.Context;
 using TableOrder.Server.Web.Hubs;
 
-// 店内の今。選んだ店舗のテーブルと来店、選んだ来店の注文、呼び出し、品切れ、通知の記録を出し、店舗の通知を送るたびに読み直す
+// 店内状況。選んだ店舗のテーブルと来店、選んだ来店の注文、呼び出し、品切れ、通知履歴を出し、店舗の通知を送るたびに読み直す
 // テーブルを押すと右の欄に来店を出し、ホール端末が使えないときは、そこで来店を開く・閉じる・取りやめる
 // (ホール端末と同じ VisitService を呼ぶので、テーブル端末には同じ通知が届く)
 public sealed partial class FloorPage : IDisposable
 {
-    // 通知の記録に出す数
+    // 通知履歴に出す数
     private const int RecentEventCount = 20;
 
     // 通知はまとまって届くので、少し待ってから 1 回だけ読み直す
@@ -229,7 +229,7 @@ public sealed partial class FloorPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"テーブル {table.Name} の来店を開きました", Severity.Success);
+        Snackbar.Add($"テーブル {table.Name} の来店を登録しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -246,8 +246,8 @@ public sealed partial class FloorPage : IDisposable
             return;
         }
 
-        var held = orders.SelectMany(static x => x.Lines).Any(static x => x.Status == OrderLineStatus.Held) ? "お願いしていない食後の品は、閉じると作りません。" : string.Empty;
-        if (!await ConfirmAsync("来店を閉じる", $"テーブル {table.Name} の来店を、レジで払ったとして閉じます。テーブル端末は待受に戻ります。{held}", "閉じる"))
+        var held = orders.SelectMany(static x => x.Lines).Any(static x => x.Status == OrderLineStatus.Held) ? " 依頼前の食後の品は作りません" : string.Empty;
+        if (!await DialogService.ConfirmAsync("レジ会計済み", $"テーブル {table.Name} の来店を終了しますか？{held}", "終了"))
         {
             return;
         }
@@ -259,14 +259,14 @@ public sealed partial class FloorPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"テーブル {table.Name} の来店を閉じました", Severity.Success);
+        Snackbar.Add($"テーブル {table.Name} の来店を終了しました", Severity.Success);
         await LoadAsync();
     }
 
     // 注文のないまま帰った来店を取りやめる
     private async Task CancelAsync(TableListResponseItem table)
     {
-        if ((table.Visit is not { } visit) || !await ConfirmAsync("来店を取りやめる", $"テーブル {table.Name} の来店を、注文のないまま帰ったとして取りやめます。テーブル端末は待受に戻ります。", "取りやめる"))
+        if ((table.Visit is not { } visit) || !await DialogService.ConfirmAsync("来店取消", $"テーブル {table.Name} の来店を取り消しますか？", "取消"))
         {
             return;
         }
@@ -278,12 +278,9 @@ public sealed partial class FloorPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"テーブル {table.Name} の来店を取りやめました", Severity.Success);
+        Snackbar.Add($"テーブル {table.Name} の来店を取り消しました", Severity.Success);
         await LoadAsync();
     }
-
-    private async Task<bool> ConfirmAsync(string title, string message, string yesText) =>
-        await DialogService.ShowMessageBoxAsync(title, message, yesText: yesText, cancelText: "やめる") == true;
 
     //--------------------------------------------------------------------------------
     // Display
@@ -323,21 +320,21 @@ public sealed partial class FloorPage : IDisposable
     private static string EventName(string type) =>
         type switch
         {
-            EventTypes.VisitOpened => "来店を開いた",
-            EventTypes.VisitUpdated => "来店が替わった",
-            EventTypes.VisitMoved => "席を移した",
-            EventTypes.VisitClosed => "来店を閉じた",
-            EventTypes.OrderCreated => "注文を受けた",
-            EventTypes.OrderLinesUpdated => "明細が進んだ",
-            EventTypes.TicketCreated => "チケットを作った",
-            EventTypes.TicketUpdated => "チケットが進んだ",
+            EventTypes.VisitOpened => "来店登録",
+            EventTypes.VisitUpdated => "来店の更新",
+            EventTypes.VisitMoved => "席の移動",
+            EventTypes.VisitClosed => "来店終了",
+            EventTypes.OrderCreated => "注文受付",
+            EventTypes.OrderLinesUpdated => "明細の更新",
+            EventTypes.TicketCreated => "チケット作成",
+            EventTypes.TicketUpdated => "チケットの更新",
             EventTypes.CallCreated => "呼び出し",
-            EventTypes.CallUpdated => "呼び出しに応えた",
-            EventTypes.StockUpdated => "品切れが替わった",
-            EventTypes.MenuPublished => "メニューを公開した",
-            EventTypes.StoreUpdated => "店舗が替わった",
-            EventTypes.DeviceUpdated => "端末を替えた",
-            EventTypes.PaymentUpdated => "支払が進んだ",
+            EventTypes.CallUpdated => "呼び出しの更新",
+            EventTypes.StockUpdated => "品切れの更新",
+            EventTypes.MenuPublished => "メニュー公開",
+            EventTypes.StoreUpdated => "店舗の更新",
+            EventTypes.DeviceUpdated => "端末の更新",
+            EventTypes.PaymentUpdated => "支払の更新",
             _ => type
         };
 
@@ -347,10 +344,10 @@ public sealed partial class FloorPage : IDisposable
     private static string ErrorMessage(ServiceError error) =>
         AdminNames.ErrorMessage(error, static code => code switch
         {
-            ErrorCodes.TableOccupied => "このテーブルには来店があります。読み直してください",
-            ErrorCodes.VisitHasOrders => "注文のある来店は取りやめられません。レジで払ったら閉じてください",
-            ErrorCodes.CheckoutInProgress => "会計中の来店は取りやめられません",
-            ErrorCodes.VisitNotOpen => "来店は終わっています。読み直してください",
+            ErrorCodes.TableOccupied => "このテーブルはすでに来店中です",
+            ErrorCodes.VisitHasOrders => "注文のある来店は取り消せません",
+            ErrorCodes.CheckoutInProgress => "会計中の来店は取り消せません",
+            ErrorCodes.VisitNotOpen => "来店はすでに終了しています",
             _ => null
         });
 }

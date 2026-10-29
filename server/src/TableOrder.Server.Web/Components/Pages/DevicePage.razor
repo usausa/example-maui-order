@@ -3,17 +3,16 @@
 <PageTitle>端末</PageTitle>
 
 <MudText Typo="Typo.h4">端末</MudText>
-<MudText Class="mt-2">店舗の端末の登録 (ペアリングコード、EMM の登録トークン)、置き場所の割り当てと名前の変更、無効化</MudText>
 
 @if (Selection.StoreId is null)
 {
-    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選択してください</MudAlert>
 }
 else
 {
     <MudPaper Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6">ペアリングコードを出す</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">端末の設定の画面で入れる 6 桁のコードです (10 分、1 台)。置き場所は登録のあとに替えられます。</MudText>
+        <MudText Typo="Typo.h6">ペアリングコードの発行</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">有効期限 10 分、1 台のみ</MudText>
         <MudGrid Class="mt-2" Spacing="2">
             <MudItem xs="12" sm="3">
                 <MudSelect T="DeviceKind" Value="issueKind" ValueChanged="SelectIssueKind" Label="端末の種類">
@@ -46,20 +45,19 @@ else
                 </MudItem>
             }
             <MudItem xs="12" sm="2" Class="d-flex align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueAsync">コードを出す</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueAsync">発行</MudButton>
             </MudItem>
         </MudGrid>
         @if (issued is not null)
         {
             <MudAlert Severity="Severity.Success" Class="mt-4">
-                ペアリングコード <span class="pairing-code">@issued.Code</span> (@FormatTime(issued.ExpiresAt) まで)
+                ペアリングコード <span class="pairing-code">@issued.Code</span> (@FormatTime(issued.ExpiresAt) まで有効)
             </MudAlert>
         }
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6">登録トークンを出す (EMM)</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">EMM の管理対象の構成で端末に配る値です。端末は起動したときにこの値で自分で登録します。テーブルと持ち場は、登録したあとに下の一覧で割り当てます。</MudText>
+        <MudText Typo="Typo.h6">登録トークンの発行 (EMM)</MudText>
         <MudGrid Class="mt-2" Spacing="2">
             <MudItem xs="12" sm="3">
                 <MudSelect T="DeviceKind" @bind-Value="tokenKind" Label="端末の種類">
@@ -70,19 +68,19 @@ else
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" sm="2">
-                <MudNumericField T="int" @bind-Value="tokenMaxUses" Label="台数" Min="1" Max="@DeviceEnrollmentService.MaxTokenUses" />
+                <MudNumericField T="int" @bind-Value="tokenMaxUses" Label="上限台数" Min="1" Max="@DeviceEnrollmentService.MaxTokenUses" />
             </MudItem>
             <MudItem xs="6" sm="2">
-                <MudNumericField T="int" @bind-Value="tokenDays" Label="期限 (日)" Min="1" Max="@DeviceEnrollmentService.MaxTokenDays" />
+                <MudNumericField T="int" @bind-Value="tokenDays" Label="有効期間 (日)" Min="1" Max="@DeviceEnrollmentService.MaxTokenDays" />
             </MudItem>
             <MudItem xs="12" sm="2" Class="d-flex align-center">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueTokenAsync">トークンを出す</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="IssueTokenAsync">発行</MudButton>
             </MudItem>
         </MudGrid>
         @if (issuedToken is not null)
         {
             <MudAlert Severity="Severity.Success" Class="mt-4">
-                <div>管理対象の構成に入れる値です (@FormatTime(issuedToken.ExpiresAt) まで)。トークンはこのときだけ見せます。</div>
+                <div>管理対象の構成の値 (@FormatTime(issuedToken.ExpiresAt) まで有効、トークンは再表示できません)</div>
                 <table class="managed-config mt-2">
                     <tr>
                         <th>apiEndPoint</th>
@@ -98,9 +96,9 @@ else
         <MudTable Items="tokens" Dense="true" Elevation="0" Class="mt-4 nowrap-table">
             <HeaderContent>
                 <MudTh>種類</MudTh>
-                <MudTh>登録した台数</MudTh>
-                <MudTh>期限 (@timeZone)</MudTh>
-                <MudTh>出した日時 (@timeZone)</MudTh>
+                <MudTh>登録台数</MudTh>
+                <MudTh>有効期限 (@timeZone)</MudTh>
+                <MudTh>発行日時 (@timeZone)</MudTh>
                 <MudTh>状態</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
@@ -113,30 +111,30 @@ else
                 <MudTd>
                     @if (IsUsable(context))
                     {
-                        <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => RevokeTokenAsync(context)">取り消す</MudButton>
+                        <MudButton Size="Size.Small" Color="Color.Error" OnClick="() => RevokeTokenAsync(context)">取消</MudButton>
                     }
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
-                <MudText>出した登録トークンはありません。</MudText>
+                <MudText>発行した登録トークンはありません</MudText>
             </NoRecordsContent>
         </MudTable>
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
         <div class="d-flex align-center">
-            <MudText Typo="Typo.h6">登録した端末</MudText>
+            <MudText Typo="Typo.h6">登録済みの端末</MudText>
             <MudSpacer />
-            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+            <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">再読み込み</MudButton>
         </div>
         <MudTable Items="devices" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
             <HeaderContent>
                 <MudTh>名前</MudTh>
                 <MudTh>種類</MudTh>
-                <MudTh>置き場所</MudTh>
-                <MudTh>最後の通信 (@timeZone)</MudTh>
-                <MudTh>電池</MudTh>
-                <MudTh>アプリの版</MudTh>
+                <MudTh>割り当て</MudTh>
+                <MudTh>最終通信 (@timeZone)</MudTh>
+                <MudTh>電池残量</MudTh>
+                <MudTh>バージョン</MudTh>
                 <MudTh>状態</MudTh>
                 <MudTh></MudTh>
             </HeaderContent>
@@ -160,7 +158,7 @@ else
                 <MudTd>
                     @if (context.Device.IsActive)
                     {
-                        <MudButton Size="Size.Small" OnClick="() => Edit(context)">@(context.IsWaitingPlacement ? "割り当てる" : "変更")</MudButton>
+                        <MudButton Size="Size.Small" OnClick="() => Edit(context)">@(context.IsWaitingPlacement ? "割り当て" : "変更")</MudButton>
                     }
                 </MudTd>
             </RowTemplate>
@@ -169,7 +167,6 @@ else
                 {
                     <MudTr>
                         <td colspan="8" class="pa-4">
-                            <MudText Typo="Typo.body2">保存すると端末に知らせ、端末は起動からやり直して新しい置き場所で動きます。無効にすると、端末は登録を消して端末の設定の画面に戻ります。</MudText>
                             <MudGrid Class="mt-2" Spacing="2">
                                 <MudItem xs="12" sm="4">
                                     <MudTextField T="string" @bind-Value="editName" Label="名前" MaxLength="@Length.DeviceName" />
@@ -198,17 +195,17 @@ else
                                 }
                             </MudGrid>
                             <div class="d-flex gap-2 mt-4">
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
-                                <MudButton OnClick="CancelEdit">やめる</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存</MudButton>
+                                <MudButton OnClick="CancelEdit">キャンセル</MudButton>
                                 <MudSpacer />
-                                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RevokeAsync">無効にする</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="RevokeAsync">無効化</MudButton>
                             </div>
                         </td>
                     </MudTr>
                 }
             </ChildRowContent>
             <NoRecordsContent>
-                <MudText>登録した端末はありません。</MudText>
+                <MudText>登録済みの端末はありません</MudText>
             </NoRecordsContent>
         </MudTable>
     </MudPaper>

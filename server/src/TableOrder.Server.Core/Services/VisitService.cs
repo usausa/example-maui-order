@@ -435,7 +435,7 @@ public sealed class VisitService
     {
         if ((adults is < 0 or > Length.MaxGuests) || (children is < 0 or > Length.MaxGuests) || (adults + children == 0))
         {
-            return ServiceError.Validation("adults", $"大人と子どもをそれぞれ {Length.MaxGuests} 人まで、合わせて 1 人以上で送ってください");
+            return ServiceError.Validation("adults", $"人数は大人と子どもそれぞれ {Length.MaxGuests} 人まで、合わせて 1 人以上にしてください");
         }
 
         return null;

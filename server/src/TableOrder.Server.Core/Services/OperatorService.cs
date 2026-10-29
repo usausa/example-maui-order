@@ -39,18 +39,18 @@ public sealed class OperatorService
         var trimmedEmail = email.Trim();
         if ((trimmedEmail.Length == 0) || (trimmedEmail.Length > AdminUserService.MaxEmailLength))
         {
-            return new(ServiceError.Validation("email", "メールアドレスを入れてください"));
+            return new(ServiceError.Validation("email", "メールアドレスを入力してください"));
         }
 
         if (!AdminUserService.IsEmail(trimmedEmail))
         {
-            return new(ServiceError.Validation("email", "メールアドレスの形で入れてください"));
+            return new(ServiceError.Validation("email", "メールアドレスの形式で入力してください"));
         }
 
         var trimmedName = name.Trim();
         if ((trimmedName.Length == 0) || (trimmedName.Length > AdminUserService.MaxNameLength))
         {
-            return new(ServiceError.Validation("name", $"名前は {AdminUserService.MaxNameLength} 文字までで入れてください"));
+            return new(ServiceError.Validation("name", $"名前は {AdminUserService.MaxNameLength} 文字以内で入力してください"));
         }
 
         var context = contextProvider.Current;
@@ -61,7 +61,7 @@ public sealed class OperatorService
         }
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
-            return new(ServiceError.Validation("email", "このメールアドレスはほかの利用者が使っています"));
+            return new(ServiceError.Validation("email", "このメールアドレスはすでに使われています"));
         }
 
         return new((await accountAccessor.QueryOperatorAsync(id, cancellationToken))!, true);
@@ -72,7 +72,7 @@ public sealed class OperatorService
         var trimmed = name.Trim();
         if ((trimmed.Length == 0) || (trimmed.Length > AdminUserService.MaxNameLength))
         {
-            return ServiceError.Validation("name", $"名前は {AdminUserService.MaxNameLength} 文字までで入れてください");
+            return ServiceError.Validation("name", $"名前は {AdminUserService.MaxNameLength} 文字以内で入力してください");
         }
 
         if (await accountAccessor.UpdateOperatorAsync(userId, trimmed, contextProvider.Current.Now, version, cancellationToken) == 0)
@@ -98,7 +98,7 @@ public sealed class OperatorService
     {
         if (!isActive && (userId == actorId))
         {
-            return ServiceError.Validation("isActive", "自分は止められません");
+            return ServiceError.Validation("isActive", "自分は停止できません");
         }
 
         if (await accountAccessor.UpdateOperatorActiveAsync(userId, isActive, NewStamp(), contextProvider.Current.Now, version, cancellationToken) == 0)

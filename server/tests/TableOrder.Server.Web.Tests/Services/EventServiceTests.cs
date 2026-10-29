@@ -8,7 +8,7 @@ using TableOrder.Server.Core.Models.Entity;
 using TableOrder.Server.Core.Services;
 using TableOrder.Server.Web.Endpoints;
 
-// 店舗の通知 (管理画面の通知の記録)
+// 店舗の通知 (管理画面の通知履歴)
 public sealed class EventServiceTests : IClassFixture<ServerFactory>
 {
     private readonly ServerFactory factory;

@@ -27,7 +27,7 @@ public sealed record ReceiptTexts(
         "クレジットカード",
         "登録番号",
         "電子レシートが見つかりません",
-        "URL をお確かめください。見られる期間を過ぎたレシートは出せません。");
+        "表示期限を過ぎたか、URL が正しくありません");
 
     public static ReceiptTexts English { get; } = new(
         "en",

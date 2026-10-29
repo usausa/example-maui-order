@@ -15,7 +15,7 @@ public sealed partial class TwoFactorPage
 
     private const int RecoveryCodeCount = 10;
 
-    private const string WriteFailed = "多要素の設定を書けませんでした。画面を開き直して、もう一度試してください。";
+    private const string WriteFailed = "多要素認証を設定できませんでした";
 
     private AdminUserEntity? user;
 
@@ -96,7 +96,7 @@ public sealed partial class TwoFactorPage
         var code = Code!.Code.Replace(" ", string.Empty, StringComparison.Ordinal).Replace("-", string.Empty, StringComparison.Ordinal);
         if (!await UserManager.VerifyTwoFactorTokenAsync(user, UserManager.Options.Tokens.AuthenticatorTokenProvider, code))
         {
-            message = "コードが違います。認証アプリの時刻が合っているかも確かめてください。";
+            message = "コードが正しくありません (認証アプリの時刻も確認してください)";
             return;
         }
 

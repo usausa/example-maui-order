@@ -9,7 +9,7 @@
 
 <MudPaper Class="account-card pa-8" Outlined="true">
     <MudText Typo="Typo.h5" Class="mb-2">認証アプリのコード</MudText>
-    <MudText Class="mb-6">認証アプリに出ている 6 桁のコードを入れてください。</MudText>
+    <MudText Class="mb-6">認証アプリに表示された 6 桁のコードを入力してください</MudText>
     @if (message is not null)
     {
         <MudAlert Severity="Severity.Error" Class="mb-4">@message</MudAlert>
@@ -24,15 +24,15 @@
         <button type="submit" class="account-button">サインイン</button>
     </EditForm>
     <details class="account-details">
-        <summary>認証アプリが使えないとき (回復用のコード)</summary>
+        <summary>回復コードを使う</summary>
         <EditForm Model="Recovery!" method="post" OnValidSubmit="RecoverAsync" FormName="recovery">
             <DataAnnotationsValidator />
             <div class="account-field">
-                <label for="recovery">回復用のコード</label>
+                <label for="recovery">回復コード</label>
                 <InputText id="recovery" class="account-input" autocomplete="off" @bind-Value="Recovery!.Code" />
                 <ValidationMessage For="() => Recovery!.Code" class="account-error" />
             </div>
-            <button type="submit" class="account-button account-button-secondary">回復用のコードでサインイン</button>
+            <button type="submit" class="account-button account-button-secondary">回復コードでサインイン</button>
         </EditForm>
     </details>
     <div class="account-links">

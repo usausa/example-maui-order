@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Accessors;
 
-// テナントの利用者 (テナントの管理者と店舗の担当) の管理。運営者 (テナントに属さない) は AccountAccessor で扱う
+// テナントの利用者 (テナント管理者と店舗担当者) の管理。運営者 (テナントに属さない) は AccountAccessor で扱う
 // 条件 (版) を付けた更新は、更新した件数を返す (0 件は、見つからないか先に変えられた)。1 件の取得は、なければ null
 [DataAccessor]
 [ExecuteConfig(typeof(DataProfile))]

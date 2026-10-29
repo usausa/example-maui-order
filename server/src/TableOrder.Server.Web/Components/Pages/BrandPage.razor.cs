@@ -11,9 +11,9 @@ public sealed partial class BrandPage : IDisposable
 {
     private static readonly (string Name, IReadOnlyList<string> Roles)[] Groups =
     [
-        ("Brand (主色と補助色)", ThemeRoles.Brand),
-        ("Neutral (地・面・文字・罫線)", ThemeRoles.Neutral),
-        ("Status (失敗・完了・注意)", ThemeRoles.Status)
+        ("Brand (主色・補助色)", ThemeRoles.Brand),
+        ("Neutral (背景・面・文字・罫線)", ThemeRoles.Neutral),
+        ("Status (エラー・完了・注意)", ThemeRoles.Status)
     ];
 
     private readonly Dictionary<string, string?> colors = ThemeRoles.All.ToDictionary(static x => x, static _ => (string?)null);
@@ -123,11 +123,11 @@ public sealed partial class BrandPage : IDisposable
         // 知らせられなかった店舗は、読み直した版でもう一度保存すると知らせ直す
         if (result.Value.UnnotifiedStores.Count > 0)
         {
-            Snackbar.Add($"チェーンの設定を保存しましたが、{String.Join("、", result.Value.UnnotifiedStores.Select(static x => x.Ja))} の端末に知らせられませんでした。もう一度保存してください", Severity.Warning);
+            Snackbar.Add($"チェーンの設定を保存しましたが、{String.Join("、", result.Value.UnnotifiedStores.Select(static x => x.Ja))} の端末に通知できませんでした (もう一度保存してください)", Severity.Warning);
         }
         else
         {
-            Snackbar.Add("チェーンの設定を保存しました。テーブル端末は待受のときに読み直します", Severity.Success);
+            Snackbar.Add("チェーンの設定を保存しました", Severity.Success);
         }
 
         await LoadAsync();

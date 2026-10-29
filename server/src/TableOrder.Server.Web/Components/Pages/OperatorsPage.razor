@@ -4,11 +4,9 @@
 <PageTitle>運営者</PageTitle>
 
 <MudText Typo="Typo.h4">運営者</MudText>
-<MudText Class="mt-2">サービスの運営者 (すべてのテナントを扱う利用者) の追加、仮のパスワード、多要素を外す、止める</MudText>
 
 <MudPaper Class="pa-4 mt-4">
-    <MudText Typo="Typo.h6">運営者を足す</MudText>
-    <MudText Typo="Typo.body2" Class="mt-1">仮のパスワードを一度だけ出します。運営者は次のサインインでパスワードを替えます。</MudText>
+    <MudText Typo="Typo.h6">運営者の追加</MudText>
     <MudGrid Class="mt-2" Spacing="2">
         <MudItem xs="12" sm="4">
             <MudTextField T="string" @bind-Value="addEmail" Label="メールアドレス" InputType="InputType.Email" MaxLength="@AdminUserService.MaxEmailLength" />
@@ -17,36 +15,36 @@
             <MudTextField T="string" @bind-Value="addName" Label="名前" MaxLength="@AdminUserService.MaxNameLength" />
         </MudItem>
         <MudItem xs="12" sm="2" Class="d-flex align-center">
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="AddAsync">足す</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="Busy" OnClick="AddAsync">追加</MudButton>
         </MudItem>
     </MudGrid>
     @if (issued is not null)
     {
         <MudAlert Severity="Severity.Success" Class="mt-4">
-            @issued.Email の仮のパスワード <span class="temporary-password">@issued.Password</span> (この画面を離れると出しません。本人に伝えてください)
+            @issued.Email の仮パスワード <span class="temporary-password">@issued.Password</span> (再表示できません)
         </MudAlert>
     }
 </MudPaper>
 
 <MudPaper Class="pa-4 mt-4">
     <div class="d-flex align-center">
-        <MudText Typo="Typo.h6">運営者</MudText>
+        <MudText Typo="Typo.h6">運営者一覧</MudText>
         <MudSpacer />
-        <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">読み直す</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAsync">再読み込み</MudButton>
     </div>
     <MudTable Items="operators" Dense="true" Elevation="0" Class="mt-2 nowrap-table">
         <HeaderContent>
             <MudTh>名前</MudTh>
             <MudTh>メールアドレス</MudTh>
-            <MudTh>多要素</MudTh>
-            <MudTh>最後のサインイン (UTC)</MudTh>
+            <MudTh>多要素認証</MudTh>
+            <MudTh>最終サインイン (UTC)</MudTh>
             <MudTh>状態</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
             <MudTd>@context.Email</MudTd>
-            <MudTd>@(context.TwoFactorEnabled ? "使う" : "--")</MudTd>
+            <MudTd>@(context.TwoFactorEnabled ? "有効" : "--")</MudTd>
             <MudTd>@(context.LastSignInAt is { } signedIn ? AdminNames.FormatFullDateTime(signedIn, AdminNames.Utc) : "--")</MudTd>
             <MudTd>@StatusText(context)</MudTd>
             <MudTd>
@@ -64,21 +62,21 @@
                             </MudItem>
                         </MudGrid>
                         <div class="d-flex gap-2 mt-4 flex-wrap">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
-                            <MudButton OnClick="CancelEdit">やめる</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存</MudButton>
+                            <MudButton OnClick="CancelEdit">キャンセル</MudButton>
                             <MudSpacer />
-                            <MudButton Variant="Variant.Outlined" OnClick="ResetPasswordAsync">仮のパスワードを出し直す</MudButton>
+                            <MudButton Variant="Variant.Outlined" OnClick="ResetPasswordAsync">仮パスワードを再発行</MudButton>
                             @if (context.TwoFactorEnabled)
                             {
-                                <MudButton Variant="Variant.Outlined" OnClick="ResetTwoFactorAsync">多要素を外す</MudButton>
+                                <MudButton Variant="Variant.Outlined" OnClick="ResetTwoFactorAsync">多要素認証を解除</MudButton>
                             }
                             @if (context.IsActive)
                             {
-                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="context.Id == Scope.UserId" OnClick="() => SetActiveAsync(false)">止める</MudButton>
+                                <MudButton Variant="Variant.Outlined" Color="Color.Error" Disabled="context.Id == Scope.UserId" OnClick="() => SetActiveAsync(false)">停止</MudButton>
                             }
                             else
                             {
-                                <MudButton Variant="Variant.Outlined" OnClick="() => SetActiveAsync(true)">戻す</MudButton>
+                                <MudButton Variant="Variant.Outlined" OnClick="() => SetActiveAsync(true)">再開</MudButton>
                             }
                         </div>
                     </td>

@@ -166,12 +166,10 @@ public sealed partial class DevicePage : IDisposable
     // 取り消すと、それからの登録を断る (登録した端末はそのまま)。出したばかりのトークンなら、見せている値も消す
     private async Task RevokeTokenAsync(DeviceEnrollmentEntity token)
     {
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "登録トークンを取り消す",
-            $"{FormatTime(token.CreatedAt)} に出した{AdminNames.DeviceKindName(token.Kind)}の登録トークンを取り消します。それからの登録を断ります (登録した端末はそのまま使えます)。",
-            yesText: "取り消す",
-            cancelText: "やめる");
-        if (confirmed != true)
+        if (!await DialogService.ConfirmAsync(
+            "登録トークンの取消",
+            $"{FormatTime(token.CreatedAt)} に発行した{AdminNames.DeviceKindName(token.Kind)}の登録トークンを取り消しますか？ 登録済みの端末はそのまま使えます",
+            "取消"))
         {
             return;
         }
@@ -226,7 +224,7 @@ public sealed partial class DevicePage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{editName.Trim()} を替えました。端末は起動からやり直します", Severity.Success);
+        Snackbar.Add($"{editName.Trim()} を変更しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -237,12 +235,7 @@ public sealed partial class DevicePage : IDisposable
             return;
         }
 
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "端末を無効にする",
-            $"{item.Device.Name} を無効にします。端末は登録を消して、端末の設定の画面に戻ります。",
-            yesText: "無効にする",
-            cancelText: "やめる");
-        if (confirmed != true)
+        if (!await DialogService.ConfirmAsync("端末の無効化", $"{item.Device.Name} を無効化しますか？ 端末の登録は解除されます", "無効化"))
         {
             return;
         }
@@ -254,7 +247,7 @@ public sealed partial class DevicePage : IDisposable
             return;
         }
 
-        Snackbar.Add($"{item.Device.Name} を無効にしました", Severity.Success);
+        Snackbar.Add($"{item.Device.Name} を無効化しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -277,10 +270,10 @@ public sealed partial class DevicePage : IDisposable
         (token.RevokedAt is null) && (token.ExpiresAt > TimeProvider.GetUtcNow()) && (token.UsedCount < token.MaxUses);
 
     private string TokenStatusText(DeviceEnrollmentEntity token) =>
-        token.RevokedAt is not null ? "取り消した" :
+        token.RevokedAt is not null ? "取消済み" :
         token.ExpiresAt <= TimeProvider.GetUtcNow() ? "期限切れ" :
-        token.UsedCount >= token.MaxUses ? "使い切った" :
-        "使える";
+        token.UsedCount >= token.MaxUses ? "使用済み" :
+        "利用可能";
 
     private string StationName(Guid id) =>
         stations.FirstOrDefault(x => x.Id == id)?.Name ?? id.ToString("D");
@@ -296,5 +289,5 @@ public sealed partial class DevicePage : IDisposable
     private string FormatLastSeen(DateTimeOffset value) => AdminNames.FormatFullDateTime(value, timeZone);
 
     private static string ErrorMessage(ServiceError error) =>
-        AdminNames.ErrorMessage(error, static code => code == ErrorCodes.VersionMismatch ? "ほかで替えられたか、無効にされています。読み直してください" : null);
+        AdminNames.ErrorMessage(error, static code => code == ErrorCodes.VersionMismatch ? "ほかで変更または無効化されたため、再読み込みしてください" : null);
 }

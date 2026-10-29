@@ -393,7 +393,7 @@ public sealed class DeviceService
         var storeId = context.RequireStoreId();
         if ((tableId is { } table) && (await storeAccessor.QueryActiveTableAsync(tenantId, storeId, table, cancellationToken) is null))
         {
-            return ServiceError.Validation("tableId", "店舗の使っているテーブルを選んでください");
+            return ServiceError.Validation("tableId", "利用可能なテーブルを選択してください");
         }
 
         if (stationIds.Count > 0)
@@ -401,7 +401,7 @@ public sealed class DeviceService
             var known = (await GetStationListAsync(cancellationToken)).Select(static x => x.Id).ToHashSet();
             if (!stationIds.All(known.Contains))
             {
-                return ServiceError.Validation("stationIds", "今のメニューの持ち場を選んでください");
+                return ServiceError.Validation("stationIds", "現在のメニューの持ち場を選択してください");
             }
         }
 
@@ -415,7 +415,7 @@ public sealed class DeviceService
         var trimmed = name.Trim();
         if ((trimmed.Length == 0) || (trimmed.Length > Length.DeviceName))
         {
-            return ServiceError.Validation("name", $"名前は {Length.DeviceName} 文字までで入れてください");
+            return ServiceError.Validation("name", $"名前は {Length.DeviceName} 文字以内で入力してください");
         }
 
         var context = contextProvider.Current;
@@ -436,7 +436,7 @@ public sealed class DeviceService
         {
             if ((tableId is { } table) && (await storeAccessor.QueryActiveTableAsync(transaction.Tx, tenantId, storeId, table, cancellationToken) is null))
             {
-                return ServiceError.Validation("tableId", "店舗の使っているテーブルを選んでください");
+                return ServiceError.Validation("tableId", "利用可能なテーブルを選択してください");
             }
 
             // 表示していた版でなければ (ほかで替えた、無効にした)、読み直してもらう

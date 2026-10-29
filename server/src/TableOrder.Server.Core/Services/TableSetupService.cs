@@ -107,7 +107,7 @@ public sealed class TableSetupService
 
             if ((target < 0) || (target >= tables.Count))
             {
-                return ServiceError.Validation("offset", "これより前 (後ろ) には動かせません");
+                return ServiceError.Validation("offset", "これ以上移動できません");
             }
 
             (tables[index], tables[target]) = (tables[target], tables[index]);
@@ -138,12 +138,12 @@ public sealed class TableSetupService
                 {
                     if (table.HasOpenVisit)
                     {
-                        return ServiceError.Validation("isActive", "来店中です。来店を閉じてから使わなくしてください");
+                        return ServiceError.Validation("isActive", "来店中のテーブルは利用停止できません");
                     }
 
                     if (table.DeviceCount > 0)
                     {
-                        return ServiceError.Validation("isActive", "置いた端末があります。端末の置き場所を替えるか無効にしてから使わなくしてください");
+                        return ServiceError.Validation("isActive", "端末が割り当てられているため利用停止できません");
                     }
                 }
             }
@@ -180,7 +180,7 @@ public sealed class TableSetupService
         }
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
-            return ServiceError.Validation("name", "同じ名前のテーブルがあります");
+            return ServiceError.Validation("name", "同じ名前のテーブルがすでにあります");
         }
     }
 
@@ -195,16 +195,16 @@ public sealed class TableSetupService
         var name = input.Name.Trim();
         if ((name.Length == 0) || (name.Length > MaxNameLength))
         {
-            return ServiceError.Validation("name", $"テーブルの名前は {MaxNameLength} 文字までで入れてください");
+            return ServiceError.Validation("name", $"テーブル名は {MaxNameLength} 文字以内で入力してください");
         }
 
         if (input.Area?.Trim().Length > MaxAreaLength)
         {
-            return ServiceError.Validation("area", $"エリアは {MaxAreaLength} 文字までで入れてください");
+            return ServiceError.Validation("area", $"エリアは {MaxAreaLength} 文字以内で入力してください");
         }
 
         return input.Capacity is < 1 or > MaxCapacity
-            ? ServiceError.Validation("capacity", $"席の数は 1 から {MaxCapacity} で入れてください")
+            ? ServiceError.Validation("capacity", $"席数は 1 から {MaxCapacity} で入力してください")
             : null;
     }
 }

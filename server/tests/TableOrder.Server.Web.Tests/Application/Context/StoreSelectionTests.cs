@@ -31,7 +31,7 @@ public sealed class StoreSelectionTests
         Assert.Equal(OtherStoreId, selection.StoreId);
     }
 
-    // テナントの管理者は自分のテナントのどの店舗も選べ、ほかのテナントは選べない
+    // テナント管理者は自分のテナントのどの店舗も選べ、ほかのテナントは選べない
     [Fact]
     public void TenantAdminSelectsOnlyOwnTenant()
     {
@@ -49,7 +49,7 @@ public sealed class StoreSelectionTests
         Assert.Null(selection.StoreId);
     }
 
-    // 店舗の担当は受け持つ店舗だけを選べる
+    // 店舗担当者は受け持つ店舗だけを選べる
     [Fact]
     public void StoreStaffSelectsOnlyAssignedStores()
     {

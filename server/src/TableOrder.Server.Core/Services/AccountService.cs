@@ -32,7 +32,7 @@ public sealed class AccountService
     public ValueTask<AdminUserEntity?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken) =>
         accountAccessor.QueryByNormalizedEmailAsync(normalizedEmail, cancellationToken);
 
-    // 店舗の担当が受け持つ店舗 (ほかの役割は店舗を限らない)
+    // 店舗担当者が受け持つ店舗 (ほかの役割は店舗を限らない)
     public async ValueTask<IReadOnlyList<Guid>> GetStoreIdsAsync(AdminUserEntity user, CancellationToken cancellationToken)
     {
         if ((user.Role != AdminRole.StoreStaff) || (user.TenantId is not { } tenantId))

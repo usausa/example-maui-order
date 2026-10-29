@@ -1,23 +1,21 @@
 @page "/store-settings"
 
-<PageTitle>店舗の設定</PageTitle>
+<PageTitle>店舗設定</PageTitle>
 
-<MudText Typo="Typo.h4">店舗の設定</MudText>
-<MudText Class="mt-2">来店の開き方、機能の有無、言語、支払方法、電子レシートと事業者、呼び出しの用件、スタッフの PIN (保存するとテーブル端末は待受のときに読み直す)</MudText>
+<MudText Typo="Typo.h4">店舗設定</MudText>
 
 @if (Selection.StoreId is null)
 {
-    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選んでください。</MudAlert>
+    <MudAlert Severity="Severity.Info" Class="mt-4">テナントと店舗を選択してください</MudAlert>
 }
 else if (version is not null)
 {
     <MudPaper Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6">来店の開き方</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">どの形でも、ホール端末と案内の画面からは来店を開けます。テーブル端末の待受は、選んだ形に合わせて文言が替わります。</MudText>
-        <MudSelect T="VisitOpening" @bind-Value="visitOpening" Label="来店を開く端末" Class="mt-2 opening-field">
-            <MudSelectItem T="VisitOpening" Value="VisitOpening.Hall">スタッフ (入口でスタッフが席を決め、ホール端末で開く)</MudSelectItem>
-            <MudSelectItem T="VisitOpening" Value="VisitOpening.Reception">受付機 (お客様が人数を入れ、サーバが空席を決める)</MudSelectItem>
-            <MudSelectItem T="VisitOpening" Value="VisitOpening.Table">席 (お客様が空いている席に座り、テーブル端末で始める)</MudSelectItem>
+        <MudText Typo="Typo.h6">案内方法</MudText>
+        <MudSelect T="VisitOpening" @bind-Value="visitOpening" Label="案内方法" Class="mt-2 opening-field">
+            <MudSelectItem T="VisitOpening" Value="VisitOpening.Hall">スタッフ (ホール端末で案内)</MudSelectItem>
+            <MudSelectItem T="VisitOpening" Value="VisitOpening.Reception">受付機 (お客様が人数を入力し、空席を自動で案内)</MudSelectItem>
+            <MudSelectItem T="VisitOpening" Value="VisitOpening.Table">セルフ着席 (お客様が空席に着き、テーブル端末で開始)</MudSelectItem>
         </MudSelect>
     </MudPaper>
 
@@ -25,29 +23,28 @@ else if (version is not null)
         <MudText Typo="Typo.h6">機能</MudText>
         <MudGrid Class="mt-2" Spacing="2">
             <MudItem xs="12" sm="6">
-                <MudSwitch T="bool" @bind-Value="registerCheckout" Label="お会計で「レジで払う」を出す" Color="Color.Primary" />
+                <MudSwitch T="bool" @bind-Value="registerCheckout" Label="お会計にレジ払いを表示" Color="Color.Primary" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudSwitch T="bool" @bind-Value="splitPayment" Label="割り勘で 1 人分ずつ払える" Color="Color.Primary" />
+                <MudSwitch T="bool" @bind-Value="splitPayment" Label="割り勘 (1 人分ずつの支払い)" Color="Color.Primary" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudNumericField T="int" @bind-Value="lastOrderNoticeMinutes" Label="ラストオーダーの何分前から知らせるか (0 は知らせない)" Min="0" Max="180" />
+                <MudNumericField T="int" @bind-Value="lastOrderNoticeMinutes" Label="ラストオーダーのお知らせ (何分前、0 で無効)" Min="0" Max="180" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudNumericField T="int" @bind-Value="finishSeconds" Label="お礼の画面から待受に戻るまでの秒数" Min="5" Max="300" />
+                <MudNumericField T="int" @bind-Value="finishSeconds" Label="お礼の画面の表示時間 (秒)" Min="5" Max="300" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudNumericField T="int" @bind-Value="kitchenAlertMinutes" Label="キッチン端末で、チケットができてから何分で注意の色にするか (0 は替えない)" Min="0" Max="120" />
+                <MudNumericField T="int" @bind-Value="kitchenAlertMinutes" Label="キッチンの遅れの警告 (分、0 で無効)" Min="0" Max="120" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudNumericField T="int" @bind-Value="daypartGraceMinutes" Label="時間帯 (ランチなど) の終わりから、何分までに届いた注文を受けるか (送ったあとの通信の遅れ。0 は受けない)" Min="0" Max="10" />
+                <MudNumericField T="int" @bind-Value="daypartGraceMinutes" Label="時間帯の終了後の注文の猶予 (分、0 で無効)" Min="0" Max="10" />
             </MudItem>
         </MudGrid>
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6">言語と会計</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">言語が 1 つなら、テーブル端末は言語のボタンを出しません。テーブルで払えない店は、レジでの会計を外せません。電子レシートは、テーブルで払い終えた来店にだけ作ります。</MudText>
+        <MudText Typo="Typo.h6">言語と支払方法</MudText>
         <div class="d-flex flex-wrap gap-4 mt-2">
             <MudCheckBox T="bool" @bind-Value="japanese" Label="日本語" />
             <MudCheckBox T="bool" @bind-Value="english" Label="英語" />
@@ -56,21 +53,19 @@ else if (version is not null)
             <MudCheckBox T="bool" @bind-Value="qrCode" Label="QR コード決済" />
             <MudCheckBox T="bool" @bind-Value="creditCard" Label="クレジットカード" />
         </div>
-        <MudSwitch T="bool" @bind-Value="electronicReceipt" Label="テーブルで払い終えたら、お礼の画面に電子レシートの QR を出す" Color="Color.Primary" Class="mt-2" />
-        <MudText Typo="Typo.body2" Class="mt-2">事業者の名前と登録番号は電子レシートに出します。登録番号を入れた店のレシートは適格簡易請求書になります。替えても、出したレシートの事業者は替わりません。</MudText>
+        <MudSwitch T="bool" @bind-Value="electronicReceipt" Label="電子レシート (テーブル会計のお礼の画面に QR を表示)" Color="Color.Primary" Class="mt-2" />
         <MudGrid Class="mt-1" Spacing="2">
             <MudItem xs="12" sm="6">
-                <MudTextField T="string" @bind-Value="issuerName" Label="事業者の名前" MaxLength="@Length.IssuerName" />
+                <MudTextField T="string" @bind-Value="issuerName" Label="事業者名" MaxLength="@Length.IssuerName" />
             </MudItem>
             <MudItem xs="12" sm="6">
-                <MudTextField T="string" @bind-Value="invoiceRegistrationNumber" Label="登録番号 (T と 13 桁の数字。ないときは空)" MaxLength="@Length.InvoiceRegistrationNumber" />
+                <MudTextField T="string" @bind-Value="invoiceRegistrationNumber" Label="登録番号" HelperText="T と 13 桁の数字 (空欄可)" MaxLength="@Length.InvoiceRegistrationNumber" />
             </MudItem>
         </MudGrid>
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
         <MudText Typo="Typo.h6">呼び出しの用件</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">すべて外すと、テーブル端末は店員呼出を出しません。</MudText>
         <div class="d-flex flex-wrap gap-4 mt-2">
             @foreach (var reason in reasons)
             {
@@ -80,13 +75,13 @@ else if (version is not null)
     </MudPaper>
 
     <MudPaper Class="pa-4 mt-4">
-        <MudText Typo="Typo.h6">スタッフの PIN</MudText>
-        <MudText Typo="Typo.body2" Class="mt-1">替えるときだけ入れてください (@Length.StaffPinDigits 桁の数字)。サーバはハッシュだけを持ちます。</MudText>
+        <MudText Typo="Typo.h6">スタッフ PIN</MudText>
+        <MudText Typo="Typo.body2" Class="mt-1">変更するときだけ入力 (@Length.StaffPinDigits 桁の数字)</MudText>
         <MudTextField T="string" @bind-Value="newPin" Label="新しい PIN" InputType="InputType.Password" MaxLength="@Length.StaffPinDigits" Class="mt-2 pin-field" />
     </MudPaper>
 
     <div class="d-flex gap-2 mt-4">
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存する</MudButton>
-        <MudButton OnClick="LoadAsync">読み直す</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveAsync">保存</MudButton>
+        <MudButton OnClick="LoadAsync">再読み込み</MudButton>
     </div>
 }

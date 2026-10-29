@@ -1,6 +1,6 @@
 namespace TableOrder.Server.Core.Models.Entity;
 
-// 店舗の担当が受け持つ店舗
+// 店舗担当者が受け持つ店舗
 public sealed class AdminUserStoreEntity
 {
     public Guid TenantId { get; set; }

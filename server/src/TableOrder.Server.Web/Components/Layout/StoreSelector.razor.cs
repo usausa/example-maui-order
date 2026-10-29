@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Components;
 using TableOrder.Server.Web.Application.Context;
 
 // 管理画面で扱うテナントと店舗を選ぶ (選んだものは回線の間だけ覚える)
-// 運営者はテナントを選び、テナントの利用者は自分のテナントの店舗 (店舗の担当は受け持つ店舗) から選ぶ
+// 運営者はテナントを選び、テナントの利用者は自分のテナントの店舗 (店舗担当者は受け持つ店舗) から選ぶ
 public sealed partial class StoreSelector : IDisposable
 {
     private List<TenantEntity> tenants = [];

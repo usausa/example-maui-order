@@ -17,14 +17,14 @@ public sealed class AdminScope
     // 属するテナント (運営者は null)
     public Guid? TenantId { get; private set; }
 
-    // 店舗の担当が受け持つ店舗
+    // 店舗担当者が受け持つ店舗
     public IReadOnlyList<Guid> StoreIds { get; private set; } = [];
 
     public bool MustChangePassword { get; private set; }
 
     public bool IsOperator => Role == AdminRole.Operator;
 
-    // チェーンの設定・店舗の追加・利用者の管理ができる (テナントの管理者と運営者)
+    // チェーンの設定・店舗の追加・利用者の管理ができる (テナント管理者と運営者)
     public bool CanManageTenant => Role is AdminRole.Operator or AdminRole.TenantAdmin;
 
     // クレームが足りない (サインインしていない) ときは、どのテナントも扱えないままにする

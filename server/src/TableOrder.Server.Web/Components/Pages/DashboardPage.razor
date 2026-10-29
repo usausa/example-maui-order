@@ -6,7 +6,7 @@
 
 @if (Scope.IsOperator)
 {
-    <MudText Class="mt-2">契約しているテナント</MudText>
+    <MudText Class="mt-2">契約中のテナント</MudText>
     <MudTable Items="tenants" Dense="true" Class="mt-4">
         <HeaderContent>
             <MudTh>コード</MudTh>
@@ -22,7 +22,7 @@
 }
 else
 {
-    <MudText Class="mt-2">扱える店舗</MudText>
+    <MudText Class="mt-2">担当店舗</MudText>
     <MudTable Items="stores" Dense="true" Class="mt-4">
         <HeaderContent>
             <MudTh>コード</MudTh>

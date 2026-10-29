@@ -71,7 +71,7 @@ public sealed partial class TablesPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"テーブル {addName.Trim()} を足しました", Severity.Success);
+        Snackbar.Add($"テーブル {addName.Trim()} を追加しました", Severity.Success);
         addName = string.Empty;
         addArea = string.Empty;
         await LoadAsync();
@@ -95,7 +95,7 @@ public sealed partial class TablesPage : IDisposable
             return;
         }
 
-        Snackbar.Add($"テーブル {editName.Trim()} を替えました", Severity.Success);
+        Snackbar.Add($"テーブル {editName.Trim()} を変更しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -115,7 +115,7 @@ public sealed partial class TablesPage : IDisposable
             return;
         }
 
-        Snackbar.Add(isActive ? $"テーブル {table.Name} を使います" : $"テーブル {table.Name} を使わなくしました", Severity.Success);
+        Snackbar.Add(isActive ? $"テーブル {table.Name} の利用を再開しました" : $"テーブル {table.Name} を利用停止しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -140,5 +140,5 @@ public sealed partial class TablesPage : IDisposable
     private bool IsLast(TableSetupEntity table) => (tables.Count > 0) && (tables[^1].Id == table.Id);
 
     private static string StatusText(TableSetupEntity table) =>
-        !table.IsActive ? "使っていない" : table.HasOpenVisit ? "来店中" : "使う";
+        !table.IsActive ? "利用停止中" : table.HasOpenVisit ? "来店中" : "利用可能";
 }

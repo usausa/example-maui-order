@@ -22,7 +22,7 @@ public sealed record StoreBasics(
 // 新しい店舗に入れるメニュー (写す店舗がないとき。外部の連携でメニューを公開するまでの仮)
 public sealed record MenuSeed(string MenuVersion, string Content);
 
-// 店舗の追加と基本の変更、使わなくすること (運営者とテナントの管理者が、選んだテナントの文脈で呼ぶ)
+// 店舗の追加と基本の変更、使わなくすること (運営者とテナント管理者が、選んだテナントの文脈で呼ぶ)
 // 新しい店舗の設定 (言語、支払方法、電子レシート、機能、呼び出しの用件、メニュー) は選んだ店舗から写し、なければ既定の設定とサンプルのメニューにする
 // 電子レシートの事業者の名前と登録番号は写さない (フランチャイズの店は事業者が違うので、店舗の設定で店ごとに入れる)
 public sealed partial class StoreSetupService
@@ -95,7 +95,7 @@ public sealed partial class StoreSetupService
 
         if (!StaffPins.IsValid(staffPin))
         {
-            return new(ServiceError.Validation("staffPin", $"スタッフの PIN は {Length.StaffPinDigits} 桁の数字で入れてください"));
+            return new(ServiceError.Validation("staffPin", $"スタッフ PIN は {Length.StaffPinDigits} 桁の数字で入力してください"));
         }
 
         var context = contextProvider.Current;
@@ -117,7 +117,7 @@ public sealed partial class StoreSetupService
             var source = await storeAccessor.QueryAsync(tenantId, sourceId, cancellationToken);
             if (source is null)
             {
-                return new(ServiceError.Validation("sourceStoreId", "設定を写す店舗を選び直してください"));
+                return new(ServiceError.Validation("sourceStoreId", "設定のコピー元を選択し直してください"));
             }
 
             languages = source.Languages;
@@ -173,7 +173,7 @@ public sealed partial class StoreSetupService
         }
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
-            return new(ServiceError.Validation("code", "この店舗コードの店舗はあります"));
+            return new(ServiceError.Validation("code", "この店舗コードはすでに使われています"));
         }
 
         return new((await storeAccessor.QueryAsync(tenantId, storeId, cancellationToken))!, true);
@@ -226,7 +226,7 @@ public sealed partial class StoreSetupService
         }
         catch (DbException e) when (dialect.IsDuplicate(e))
         {
-            return ServiceError.Validation("code", "この店舗コードの店舗はあります");
+            return ServiceError.Validation("code", "この店舗コードはすでに使われています");
         }
     }
 
@@ -239,12 +239,12 @@ public sealed partial class StoreSetupService
         {
             if (await storeAccessor.CountActiveDeviceAsync(tenantId, storeId, cancellationToken) > 0)
             {
-                return ServiceError.Validation("isActive", "使っている端末があります。端末をすべて無効にしてから使わなくしてください");
+                return ServiceError.Validation("isActive", "有効な端末があるため利用停止できません");
             }
 
             if (await storeAccessor.CountOpenVisitAsync(tenantId, storeId, cancellationToken) > 0)
             {
-                return ServiceError.Validation("isActive", "来店中のテーブルがあります。来店を閉じてから使わなくしてください");
+                return ServiceError.Validation("isActive", "来店中のテーブルがあるため利用停止できません");
             }
         }
 
@@ -264,42 +264,42 @@ public sealed partial class StoreSetupService
     {
         if (!CodePattern().IsMatch(basics.Code.Trim()))
         {
-            return ServiceError.Validation("code", $"店舗コードは英数字とハイフンの {MaxCodeLength} 文字までで入れてください");
+            return ServiceError.Validation("code", $"店舗コードは英数字とハイフンで {MaxCodeLength} 文字以内で入力してください");
         }
 
         if (String.IsNullOrWhiteSpace(basics.Name.Ja) || (basics.Name.Ja.Trim().Length > Length.BrandName) || (basics.Name.En?.Trim().Length > Length.BrandName))
         {
-            return ServiceError.Validation("name", $"店舗の名前は日本語を必ず入れ、言語ごとに {Length.BrandName} 文字までで入れてください");
+            return ServiceError.Validation("name", $"店舗名は日本語を必須とし、言語ごとに {Length.BrandName} 文字以内で入力してください");
         }
 
         if (!TimeZoneInfo.TryFindSystemTimeZoneById(basics.TimeZone, out _))
         {
-            return ServiceError.Validation("timeZone", "タイムゾーンを選び直してください");
+            return ServiceError.Validation("timeZone", "タイムゾーンが正しくありません");
         }
 
         if (!IsTime(basics.OpenTime) || !IsTime(basics.CloseTime))
         {
-            return ServiceError.Validation("openTime", "営業時間は HH:mm で入れてください");
+            return ServiceError.Validation("openTime", "営業時間は HH:mm で入力してください");
         }
 
         if (!String.IsNullOrEmpty(basics.LastOrderTime) && !IsTime(basics.LastOrderTime))
         {
-            return ServiceError.Validation("lastOrderTime", "ラストオーダーは HH:mm で入れてください (ないときは空にする)");
+            return ServiceError.Validation("lastOrderTime", "ラストオーダーは HH:mm で入力してください");
         }
 
         if (!Enum.IsDefined(basics.TaxRounding))
         {
-            return ServiceError.Validation("taxRounding", "税の丸めを選び直してください");
+            return ServiceError.Validation("taxRounding", "端数処理を選択し直してください");
         }
 
         if (basics.MaxQuantityPerLine is < 1 or > MaxQuantityLimit)
         {
-            return ServiceError.Validation("maxQuantityPerLine", $"1 明細の数量の上限は 1 から {MaxQuantityLimit} で入れてください");
+            return ServiceError.Validation("maxQuantityPerLine", $"1 明細の数量上限は 1 から {MaxQuantityLimit} で入力してください");
         }
 
         if (basics.MaxLinesPerOrder is < 1 or > MaxLinesLimit)
         {
-            return ServiceError.Validation("maxLinesPerOrder", $"1 回の注文の明細の上限は 1 から {MaxLinesLimit} で入れてください");
+            return ServiceError.Validation("maxLinesPerOrder", $"1 回の注文の明細数上限は 1 から {MaxLinesLimit} で入力してください");
         }
 
         return null;

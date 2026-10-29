@@ -85,7 +85,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         using (var wrong = await admin.SignInAsync(email, "wrong-password-0"))
         {
             Assert.Equal(HttpStatusCode.OK, wrong.StatusCode);
-            Assert.Contains("メールアドレスかパスワードが違います。", await TestAdmin.ReadPageAsync(wrong), StringComparison.Ordinal);
+            Assert.Contains("メールアドレスまたはパスワードが正しくありません", await TestAdmin.ReadPageAsync(wrong), StringComparison.Ordinal);
         }
 
         // Act / Assert: 5 回目で止め、正しいパスワードでもサインインできない
@@ -96,7 +96,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
 
         using var locked = await admin.SignInAsync(email, ServerFactory.AdminPassword);
         Assert.Equal(HttpStatusCode.OK, locked.StatusCode);
-        Assert.Contains("しばらくサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
+        Assert.Contains("15 分ほどサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
     }
 
     // 同時に間違えたサインインも 1 回ずつ数え、5 回で止める (資格情報の版の違いで数え漏らさない)
@@ -124,7 +124,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         using var locked = await admin.SignInAsync(email, ServerFactory.AdminPassword);
 
         // Assert
-        Assert.Contains("しばらくサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
+        Assert.Contains("15 分ほどサインインできません", await TestAdmin.ReadPageAsync(locked), StringComparison.Ordinal);
     }
 
     // サインインの送信は、接続元ごとに 1 分の回数を超えると断り、サインインの画面に戻して知らせる (画面を開くのは限らない)
@@ -150,10 +150,10 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         Assert.Equal(HttpStatusCode.Redirect, limited.StatusCode);
         Assert.Equal("/account/sign-in?error=limit", TestAdmin.LocationOf(limited));
         Assert.Equal(HttpStatusCode.OK, page.StatusCode);
-        Assert.Contains("しばらく受け付けません", await TestAdmin.ReadPageAsync(page), StringComparison.Ordinal);
+        Assert.Contains("1 分ほど受け付けません", await TestAdmin.ReadPageAsync(page), StringComparison.Ordinal);
     }
 
-    // 店舗の担当は、テナントの管理者の画面 (チェーン) を開けない
+    // 店舗担当者は、テナント管理者の画面 (チェーン) を開けない
     [Fact]
     public async Task StoreStaffCannotOpenTenantAdminPages()
     {
@@ -243,7 +243,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         using (var wrong = await admin.PostFormAsync("/account/sign-in-2fa?returnUrl=%2F", "code", new Dictionary<string, string> { ["Code.Code"] = "000000" }))
         {
             Assert.Equal(HttpStatusCode.OK, wrong.StatusCode);
-            Assert.Contains("コードが違います。", await TestAdmin.ReadPageAsync(wrong), StringComparison.Ordinal);
+            Assert.Contains("コードが正しくありません", await TestAdmin.ReadPageAsync(wrong), StringComparison.Ordinal);
         }
 
         // Act / Assert: 認証アプリのコードでサインインする
@@ -333,7 +333,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.DoesNotContain("パスワードを替えました。", await TestAdmin.ReadPageAsync(response), StringComparison.Ordinal);
+        Assert.DoesNotContain("パスワードを変更しました", await TestAdmin.ReadPageAsync(response), StringComparison.Ordinal);
         var stored = (await Account.FindByEmailAsync(email.ToUpperInvariant(), TestContext.Current.CancellationToken))!;
         Assert.Equal(user.PasswordHash, stored.PasswordHash);
     }
@@ -409,7 +409,7 @@ public sealed class AccountPagesTests : IClassFixture<ServerFactory>
         using var admin = new TestAdmin(factory);
         using var response = await admin.SignInAsync(email, ServerFactory.AdminPassword);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("メールアドレスかパスワードが違います。", await TestAdmin.ReadPageAsync(response), StringComparison.Ordinal);
+        Assert.Contains("メールアドレスまたはパスワードが正しくありません", await TestAdmin.ReadPageAsync(response), StringComparison.Ordinal);
     }
 
     private async ValueTask<string> EnableTwoFactorAsync(string email)

@@ -7,7 +7,7 @@ using TableOrder.Contract.Menu;
 using TableOrder.Server.Core.Services;
 using TableOrder.Server.Web.Endpoints;
 
-// 店内の今 (管理画面と同じく、選んだ店舗の文脈で呼ぶ)
+// 店内状況 (管理画面と同じく、選んだ店舗の文脈で呼ぶ)
 public sealed class FloorServiceTests : IClassFixture<ServerFactory>
 {
     private readonly ServerFactory factory;

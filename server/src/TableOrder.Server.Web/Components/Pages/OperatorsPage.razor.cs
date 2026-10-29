@@ -110,14 +110,14 @@ public sealed partial class OperatorsPage
             return;
         }
 
-        Snackbar.Add($"{editName.Trim()} を替えました", Severity.Success);
+        Snackbar.Add($"{editName.Trim()} を変更しました", Severity.Success);
         await LoadAsync();
     }
 
     private async Task ResetPasswordAsync()
     {
         if (editing is not { } item ||
-            !await DialogService.ConfirmAsync("仮のパスワードを出し直す", $"{item.Name} のパスワードを仮のパスワードに替えます。開いている管理画面はサインインからやり直し、次のサインインでパスワードを替えます。", "出し直す"))
+            !await DialogService.ConfirmAsync("仮パスワードの再発行", $"{item.Name} の仮パスワードを再発行しますか？ 現在のパスワードは使えなくなります", "再発行"))
         {
             return;
         }
@@ -137,7 +137,7 @@ public sealed partial class OperatorsPage
     private async Task ResetTwoFactorAsync()
     {
         if (editing is not { } item ||
-            !await DialogService.ConfirmAsync("多要素を外す", $"{item.Name} の認証アプリの登録を外します。次からはパスワードだけでサインインし、本人が登録し直します。", "外す"))
+            !await DialogService.ConfirmAsync("多要素認証の解除", $"{item.Name} の多要素認証を解除しますか？ パスワードだけでサインインできるようになります", "解除"))
         {
             return;
         }
@@ -149,7 +149,7 @@ public sealed partial class OperatorsPage
             return;
         }
 
-        Snackbar.Add($"{item.Name} の多要素を外しました", Severity.Success);
+        Snackbar.Add($"{item.Name} の多要素認証を解除しました", Severity.Success);
         await LoadAsync();
     }
 
@@ -160,7 +160,7 @@ public sealed partial class OperatorsPage
             return;
         }
 
-        if (!isActive && !await DialogService.ConfirmAsync("運営者を止める", $"{item.Name} を止めます。サインインできなくなり、開いている管理画面はサインインからやり直します。", "止める"))
+        if (!isActive && !await DialogService.ConfirmAsync("運営者の停止", $"{item.Name} を停止しますか？ サインインできなくなります", "停止"))
         {
             return;
         }
@@ -172,7 +172,7 @@ public sealed partial class OperatorsPage
             return;
         }
 
-        Snackbar.Add(isActive ? $"{item.Name} を戻しました" : $"{item.Name} を止めました", Severity.Success);
+        Snackbar.Add(isActive ? $"{item.Name} を再開しました" : $"{item.Name} を停止しました", Severity.Success);
         await LoadAsync();
     }
 

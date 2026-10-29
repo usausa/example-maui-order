@@ -163,7 +163,7 @@ public sealed class EventService
         return eventAccessor.QueryLastSeqAsync(context.RequireTenantId(), context.RequireStoreId(), cancellationToken);
     }
 
-    // 文脈の店舗の直近の通知 (管理画面の通知の記録。新しい順。残す時間を過ぎたものは消しているので、count より少ないことがある)
+    // 文脈の店舗の直近の通知 (管理画面の通知履歴。新しい順。残す時間を過ぎたものは消しているので、count より少ないことがある)
     public async ValueTask<List<EventEntity>> GetRecentAsync(int count, CancellationToken cancellationToken)
     {
         var context = contextProvider.Current;

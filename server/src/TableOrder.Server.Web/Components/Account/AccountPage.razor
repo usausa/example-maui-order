@@ -15,13 +15,13 @@
             <dd>@user.Email</dd>
             <dt>役割</dt>
             <dd>@AdminNames.RoleName(user.Role)</dd>
-            <dt>多要素</dt>
-            <dd>@(user.TwoFactorEnabled ? "使う" : "使わない")</dd>
+            <dt>多要素認証</dt>
+            <dd>@(user.TwoFactorEnabled ? "有効" : "無効")</dd>
         </dl>
     }
     <div class="account-links">
-        <a href="@AccountPaths.Password">パスワードを替える</a>
-        <a href="@AccountPaths.TwoFactor">多要素 (認証アプリ)</a>
+        <a href="@AccountPaths.Password">パスワードの変更</a>
+        <a href="@AccountPaths.TwoFactor">多要素認証</a>
         <a href="">管理画面に戻る</a>
     </div>
     <form action="@AccountPaths.SignOut" method="post" class="account-signout">

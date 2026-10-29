@@ -78,7 +78,7 @@
 | | `CallReasons` | 呼び出しの用件 | 管理画面 |
 | | `DiningTables` | テーブル (席) | 管理画面 |
 | 管理画面 | `AdminUsers` | 管理画面の利用者 (役割、パスワードのハッシュ、多要素)。運営者はテナントに属さない | 管理画面 (サインイン、利用者の管理) |
-| | `AdminUserStores` | 店舗の担当が受け持つ店舗 | 管理画面 |
+| | `AdminUserStores` | 店舗担当者が受け持つ店舗 | 管理画面 |
 | 端末 | `Devices` | 登録した端末 (種類、置き場所、公開鍵) | `POST /devices/pair`、管理画面 |
 | | `DeviceStations` | キッチン端末が受け持つ持ち場 | `POST /devices/pair`、管理画面 |
 | | `DeviceStatuses` | 端末の状態 (電池、アプリの版、最後の通信) | `POST /devices/me/heartbeat`、ハブの接続 |
@@ -235,7 +235,7 @@ erDiagram
 | --- | --- | --- |
 | `Id` | guid | |
 | `TenantId` | guid? | 属するテナント (運営者は null) |
-| `Role` | enum | `Operator` (運営者) / `TenantAdmin` (テナントの管理者) / `StoreStaff` (店舗の担当) |
+| `Role` | enum | `Operator` (運営者) / `TenantAdmin` (テナント管理者) / `StoreStaff` (店舗担当者) |
 | `Email` / `NormalizedEmail` | string | サインインの名前 (メールアドレス) と、大文字にそろえたもの |
 | `Name` | string | 画面に出す名前 |
 | `PasswordHash` | string | パスワードのハッシュ (ASP.NET Core Identity の形式。PBKDF2)。平文は持たない |
@@ -254,12 +254,12 @@ erDiagram
 - 運営者はテナントに属さないので、`Tenants` と同じくテナントの外の表にする。  
   サインインと自分の資格情報の読み書きは利用者の `Id` かメールアドレスで引き、テナントの利用者の一覧と管理はテナントで絞る
 
-### AdminUserStores (店舗の担当が受け持つ店舗)
+### AdminUserStores (店舗担当者が受け持つ店舗)
 
 | 列 | 型 | 中身 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
-| `UserId` | guid | 利用者 (店舗の担当) |
+| `UserId` | guid | 利用者 (店舗担当者) |
 | `StoreId` | guid | 受け持つ店舗 |
 
 - 主キー: `UserId`、`StoreId`

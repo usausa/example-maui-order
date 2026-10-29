@@ -5,7 +5,7 @@ public static class AdminClaimNames
 {
     public const string Role = "admin_role";
 
-    // 店舗の担当が受け持つ店舗 (店舗ごとに 1 つ)
+    // 店舗担当者が受け持つ店舗 (店舗ごとに 1 つ)
     public const string StoreId = "admin_store_id";
 
     // 画面に出す名前

@@ -55,7 +55,7 @@ html, body {
     word-break: break-all;
 }
 
-/* Floor (押して選ぶテーブルの行、選んだ行、折り返さない短い値、取り消した明細) */
+/* Floor (押して選ぶテーブルの行、選んだ行、折り返さない短い値、取り消した明細、横に並べる表) */
 .floor-tables .mud-table-row {
     cursor: pointer;
 }
@@ -66,6 +66,12 @@ html, body {
 
 .floor-nowrap {
     white-space: nowrap;
+}
+
+/* 横に 3 つ並べる表 (呼び出し、品切れ、通知履歴) は、1280px の幅でも和文が折り返さないようにセルの左右を詰める */
+.floor-side.mud-simple-table.mud-table-dense table tr > td {
+    padding-left: 8px;
+    padding-right: 8px;
 }
 
 .line-cancelled {

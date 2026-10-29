@@ -2,17 +2,17 @@
 @attribute [ExcludeFromInteractiveRouting]
 @layout AccountLayout
 
-<PageTitle>多要素</PageTitle>
+<PageTitle>多要素認証</PageTitle>
 
 <MudPaper Class="account-card pa-8" Outlined="true">
-    <MudText Typo="Typo.h5" Class="mb-6">多要素 (認証アプリ)</MudText>
+    <MudText Typo="Typo.h5" Class="mb-6">多要素認証</MudText>
     @if (message is not null)
     {
         <MudAlert Severity="Severity.Error" Class="mb-4">@message</MudAlert>
     }
     @if (recoveryCodes.Count > 0)
     {
-        <MudAlert Severity="Severity.Warning" Class="mb-4">回復用のコードは今だけ出します。認証アプリが使えないときのために、控えて安全な場所にしまってください (1 つのコードは 1 回だけ使えます)。</MudAlert>
+        <MudAlert Severity="Severity.Warning" Class="mb-4">回復コードは再表示できないため、控えて保管してください (各コードは 1 回だけ使用可能)</MudAlert>
         <div class="account-codes">
             @foreach (var recoveryCode in recoveryCodes)
             {
@@ -22,23 +22,23 @@
     }
     @if (enabled)
     {
-        <MudText Class="mb-4">サインインのときに、パスワードに続けて認証アプリのコードを入れます。</MudText>
+        <MudText Class="mb-4">多要素認証は有効です</MudText>
         <EditForm Model="Action!" method="post" OnSubmit="HandleAsync" FormName="enabled">
             <div class="account-actions">
-                <button type="submit" name="Action.Action" value="codes" class="account-button account-button-secondary">回復用のコードを出し直す</button>
-                <button type="submit" name="Action.Action" value="disable" class="account-button account-button-danger">多要素を外す</button>
+                <button type="submit" name="Action.Action" value="codes" class="account-button account-button-secondary">回復コードを再発行</button>
+                <button type="submit" name="Action.Action" value="disable" class="account-button account-button-danger">多要素認証を解除</button>
             </div>
         </EditForm>
     }
     else
     {
-        <MudText Class="mb-2">1. 認証アプリで、次の鍵を手で入れて登録します。</MudText>
+        <MudText Class="mb-2">1. 認証アプリに次のセットアップキーを登録</MudText>
         <div class="account-key">@sharedKey</div>
         <details class="account-details">
-            <summary>鍵の URI (認証アプリに URI で渡すとき)</summary>
+            <summary>セットアップキーの URI</summary>
             <code class="account-uri">@authenticatorUri</code>
         </details>
-        <MudText Class="mt-4 mb-2">2. 認証アプリに出た 6 桁のコードを入れて、確かめます。</MudText>
+        <MudText Class="mt-4 mb-2">2. 認証アプリに表示された 6 桁のコードを入力</MudText>
         <EditForm Model="Code!" method="post" OnValidSubmit="EnableAsync" FormName="enable">
             <DataAnnotationsValidator />
             <div class="account-field">
@@ -46,7 +46,7 @@
                 <InputText id="code" class="account-input" autocomplete="one-time-code" inputmode="numeric" @bind-Value="Code!.Code" />
                 <ValidationMessage For="() => Code!.Code" class="account-error" />
             </div>
-            <button type="submit" class="account-button">確かめて使う</button>
+            <button type="submit" class="account-button">有効化</button>
         </EditForm>
     }
     <div class="account-links">
