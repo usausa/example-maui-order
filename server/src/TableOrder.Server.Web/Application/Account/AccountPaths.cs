@@ -27,7 +27,7 @@ public static class AccountPaths
     // サインインのあとに戻る先は、この管理画面の中の経路だけにする (ほかのサイトに飛ばされないように)
     public static string LocalReturnPath(string? returnPath) =>
         !String.IsNullOrEmpty(returnPath) &&
-        returnPath.StartsWith('/') &&
+        returnPath.StartsWith('/', StringComparison.Ordinal) &&
         !returnPath.StartsWith("//", StringComparison.Ordinal) &&
         !returnPath.StartsWith("/\\", StringComparison.Ordinal)
             ? returnPath

@@ -1,14 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android</TargetFrameworks>
+    <TargetFrameworks>net11.0-android</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <RootNamespace>TableOrder.TableApp</RootNamespace>
     <UseMaui>true</UseMaui>
     <SingleProject>true</SingleProject>
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
     <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
-    <MauiXamlInflator>SourceGen</MauiXamlInflator>
     <CodeAnalysisRuleSet>..\..\..\Analyzers.ruleset</CodeAnalysisRuleSet>
 
     <!-- 画面の文言は日本語を既定 (AppResources.resx) にし、英語を AppResources.en.resx に置く -->
@@ -32,12 +31,6 @@
   </PropertyGroup>
 
   <!--
-  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-    <UseMonoRuntime>false</UseMonoRuntime>
-  </PropertyGroup>
-  -->
-
-  <!--
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishAot>true</PublishAot>
   </PropertyGroup>
@@ -52,7 +45,7 @@
     <AndroidManifestPlaceholders>testOnly=false;cleartext=false</AndroidManifestPlaceholders>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net10.0-android|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net11.0-android|AnyCPU'">
     <AndroidKeyStore>True</AndroidKeyStore>
     <AndroidSigningKeyStore>example.keystore</AndroidSigningKeyStore>
     <AndroidSigningKeyAlias>example</AndroidSigningKeyAlias>
@@ -114,32 +107,32 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BunnyTail.DependencyInjection" Version="0.10.0" />
-    <PackageReference Include="BunnyTail.MemberAccessor" Version="1.19.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="15.0.1" />
-    <PackageReference Include="Components.Maui" Version="1.51.0" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.13">
+    <PackageReference Include="BunnyTail.DependencyInjection" Version="1.0.0" />
+    <PackageReference Include="BunnyTail.MemberAccessor" Version="2.0.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="17.0.0" />
+    <PackageReference Include="Components.Maui" Version="2.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="11.0.0">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.120" />
-    <PackageReference Include="Microsoft.Maui.Essentials" Version="10.0.120" />
-    <PackageReference Include="SkiaSharp" Version="4.153.1" />
-    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.153.1" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="11.0.10" />
+    <PackageReference Include="Microsoft.Maui.Essentials" Version="11.0.10" />
+    <PackageReference Include="SkiaSharp" Version="4.156.1" />
+    <PackageReference Include="SkiaSharp.Views.Maui.Controls" Version="4.156.1" />
     <PackageReference Include="Plugin.Maui.DebugRainbows" Version="1.2.2">
       <IncludeAssets Condition="'$(Configuration)' != 'Debug'">none</IncludeAssets>
       <PrivateAssets Condition="'$(Configuration)' != 'Debug'">all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="System.Reactive" Version="7.0.0" />
-    <PackageReference Include="Usa.Smart.Core" Version="2.20.0" />
-    <PackageReference Include="Usa.Smart.Maui" Version="2.33.0" />
-    <PackageReference Include="Usa.Smart.Maui.Extensions" Version="2.33.0" />
-    <PackageReference Include="Usa.Smart.Mvvm" Version="2.17.0" />
-    <PackageReference Include="Usa.Smart.Navigation" Version="3.17.0" />
-    <PackageReference Include="Usa.Smart.Navigation.Extensions.DependencyInjection" Version="3.17.0" />
-    <PackageReference Include="Usa.Smart.Navigation.Maui" Version="3.17.0" />
-    <PackageReference Include="Usa.Smart.Reactive" Version="2.15.0" />
-    <PackageReference Include="Usa.Smart.Results" Version="2.2.0" />
+    <PackageReference Include="Usa.Smart.Core" Version="3.0.0" />
+    <PackageReference Include="Usa.Smart.Maui" Version="3.0.0" />
+    <PackageReference Include="Usa.Smart.Maui.Extensions" Version="3.0.0" />
+    <PackageReference Include="Usa.Smart.Mvvm" Version="3.0.0" />
+    <PackageReference Include="Usa.Smart.Navigation" Version="3.21.0" />
+    <PackageReference Include="Usa.Smart.Navigation.Extensions.DependencyInjection" Version="3.21.0" />
+    <PackageReference Include="Usa.Smart.Navigation.Maui" Version="3.21.0" />
+    <PackageReference Include="Usa.Smart.Reactive" Version="3.0.0" />
+    <PackageReference Include="Usa.Smart.Results" Version="3.0.0" />
   </ItemGroup>
 
 </Project>

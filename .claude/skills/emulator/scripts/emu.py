@@ -42,7 +42,7 @@ import urllib.parse
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[4]
-FRAMEWORK = 'net10.0-android'
+FRAMEWORK = 'net11.0-android'
 
 # 端末アプリ (名前: パッケージ名、プロジェクト、Device Owner の受け口)。モノレポに端末アプリを足したらここに足す
 # 受け口のないアプリは None にし、Device Owner の操作をしない

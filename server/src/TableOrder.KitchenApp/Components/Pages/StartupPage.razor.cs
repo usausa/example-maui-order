@@ -86,6 +86,9 @@ public sealed partial class StartupPage : IDisposable
     // Initialize
     //--------------------------------------------------------------------------------
 
+    private Task RetryAsync() => InitializeAsync();
+
+    // 描画のあととやり直しのタイマーから呼ぶときは枠組みが描き直さないので、終えたら描き直す
     private async Task InitializeAsync()
     {
         if (isRunning)

@@ -19,7 +19,7 @@ public abstract class AppPageBase : ComponentBase, IHandleEvent
     // 押したボタンの処理を待っている間 (ボタンを押せなくし、重ねて押した処理を断る。二重押しで 2 回発行しない)
     protected bool Busy { get; private set; }
 
-    Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem callback, object? arg) => HandleEventAsync(callback, arg);
+    Task IHandleEvent.HandleEventAsync(EventCallbackWorkItem item, object? arg) => HandleEventAsync(item, arg);
 
     protected async Task HandleEventAsync(EventCallbackWorkItem callback, object? arg)
     {

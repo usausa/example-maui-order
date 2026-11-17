@@ -29,7 +29,7 @@ python .claude/skills/verify/scripts/verify.py
 
 ## 前提
 
-- .NET SDK 10 と Android のワークロード
+- .NET SDK 11 と Android のワークロード
 - InspectCode は `jb` (JetBrains.ReSharper.GlobalTools を `dotnet tool install -g` で入れる)
 - テストは `dotnet test` ではなく `dotnet run --project` で実行する (xunit v3 の実行形式)
 

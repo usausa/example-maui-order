@@ -18,7 +18,7 @@
 | 構成 | モノレポ。区分 (共有、サーバ、端末) ごとのフォルダに置く ([プロジェクト](#プロジェクト)) |
 | 通信 | 要求は REST (Minimal API) か gRPC、通知・プッシュ・端末の状態は SignalR か gRPC のストリーム、テレメトリは OpenTelemetry (OTLP)。入口が違っても業務の処理は同じにする |
 | 特例の扱い | ドリンクバー、お酒、キッズ、数量限定などはコードで分けず、メニューのタグとルールの設定で表す |
-| 技術 | .NET 10 / .NET MAUI、画面の切り替えは Smart.Navigation |
+| 技術 | .NET 11 / .NET MAUI、画面の切り替えは Smart.Navigation |
 | 基にした構成 | template-maui-keyboard (物理キーと Input 関連を除く)、example-maui-pos の端末、template-avalonia-desktop の画面の切り替え、template-maui-server の通信 |
 | 確認 | エミュレータ Tablet_1920x1200_Android15 (220dpi、約 1396x873dp) |
 | 将来 | Android の MDM 用 API (Device Owner、ロックタスク) で専用端末にする |

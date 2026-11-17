@@ -94,8 +94,8 @@ public sealed class Settings : IDeviceContext
         get => (preferences.Get(StaffPinIterationsKey, 0) is > 0 and var iterations) &&
                (preferences.Get<string?>(StaffPinSaltKey, null) is { } salt) &&
                (preferences.Get<string?>(StaffPinHashKey, null) is { } hash)
-            ? new StaffPinHash(iterations, salt, hash)
-            : null;
+                   ? new StaffPinHash(iterations, salt, hash)
+                   : null;
         set
         {
             if (value is null)

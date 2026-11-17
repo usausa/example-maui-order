@@ -17,7 +17,7 @@ public sealed class MainPageViewModel : ExtendViewModelBase, IAppLifecycle
 
     private bool destroying;
 
-    private IDisposable? navigatingBusy;
+    private BusyStateScope? navigatingBusy;
 
     public INavigator Navigator { get; }
 

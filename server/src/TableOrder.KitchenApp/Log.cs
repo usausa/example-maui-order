@@ -24,6 +24,9 @@ internal static partial class Log
     [LoggerMessage(Level = LogLevel.Warning, Message = "Device key is not available.")]
     public static partial void WarnDeviceKeyUnavailable(this ILogger logger, Exception exception);
 
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Kiosk screen is not available.")]
+    public static partial void WarnKioskScreenUnavailable(this ILogger logger, Exception exception);
+
     // Event
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Api failed. operation=[{operation}], status=[{status}], errorCode=[{errorCode}]")]
