@@ -207,7 +207,7 @@ public static class ApplicationExtensions
         builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
         // 通知のハブ。通知の中身は API の応答と同じ形にする
-        builder.Services.AddSignalR()
+        builder.Services.AddSignalR(options => builder.Configuration.GetSection("SignalR").Bind(options))
             .AddJsonProtocol(static options => JsonDefaults.Apply(options.PayloadSerializerOptions));
 
         return builder;
@@ -520,7 +520,9 @@ public static class ApplicationExtensions
             .AddInteractiveServerComponents(options =>
             {
                 options.DetailedErrors = builder.Environment.IsDevelopment();
-            });
+            })
+            .AddHubOptions(options => builder.Configuration.GetSection("Blazor:Hub").Bind(options));
+        builder.Services.Configure<Microsoft.AspNetCore.Components.Server.CircuitOptions>(builder.Configuration.GetSection("Blazor:Circuit"));
 
         // Error boundary logging
         builder.Services.AddScoped<Microsoft.AspNetCore.Components.Web.IErrorBoundaryLogger, ErrorBoundaryLogger>();
@@ -595,6 +597,8 @@ public static class ApplicationExtensions
                         .AddRuntimeInstrumentation()
                         .AddHttpClientInstrumentation()
                         .AddAspNetCoreInstrumentation()
+                        // 部品の型ごとに分かれる Blazor の描画の計測は系列が多すぎるので出さない
+                        .AddView(static instrument => instrument.Meter.Name == "Microsoft.AspNetCore.Components.Lifecycle" ? MetricStreamConfiguration.Drop : null)
                         .AddApplicationInstrumentation()
                         .AddOtlpExporter();
                 });
