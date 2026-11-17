@@ -4,9 +4,11 @@ paths:
 ---
 # Accessor (Smart.Data.Accessor)
 
-SQL ファイルの書き方は sql.md に置く。
+## 名前
 
-- メソッド名は DB の操作で付け、2-way SQL のファイル名 (`{Accessor}.{Method}.sql`) をメソッド名に合わせる。業務の動詞 (登録、認可) は Service の名前にする
+- 2-way SQL のファイル名 (`{Accessor}.{Method}.sql`) は、メソッド名に合わせる
+- 業務の動詞 (登録、認可) は Service の名前にする
+- メソッド名は DB の操作で付ける
 
 | 操作 | 名前 (末尾の `Async` は省略) | 例 |
 | --- | --- | --- |
@@ -20,16 +22,35 @@ SQL ファイルの書き方は sql.md に置く。
 | 削除 | `DeleteXxx` | `Delete` |
 | スクリプトの実行 | `ExecuteXxx` | `ExecuteSchema`、`ExecuteScript` |
 
-- `By{…}` は、キーでない条件を名前に出すときに付ける (`QueryEnrollmentByPairingCode`、`QueryVacantTableByGuests`、`QueryDoneTicketListByStation`)。親の Id で選ぶ子の一覧 (`QueryStationList`) には付けない
-- 戻り値の 0 や null が何を意味するか (見つからない、先に変えられた) は、メソッドのコメントに書く (同じ意味のメソッドが多い Accessor は、クラスのコメントにまとめてよい)
+- `By{…}` は、キーでない条件を名前に出すときに付け (`QueryEnrollmentByPairingCode`、`QueryVacantTableByGuests`、`QueryDoneTicketListByStation`)、親の Id で選ぶ子の一覧 (`QueryStationList`) には付けない
 
-- SQL はすべて 2-way SQL のファイルに書き、Builder 属性 (`[SelectSingle]` / `[Insert]` / `[Delete]`) は使わない (テナントの条件をファイルで確かめるため)
+## クラス
+
+- テナントのわからないリクエストで引くものは `DirectoryAccessor` に置く
+- テナントの表 (`Tenants`) は `TenantAccessor` に置く
+- 管理画面のサインインと自分の資格情報は `AccountAccessor` に置く
+- 表に紐付かない処理は `GenericAccessor` に置く
+- テナントをまたぐバックグラウンド処理 (通知のディスパッチャ、古いデータのクリーンアップ、失効リスト) は `BackgroundAccessor` に置く
+- テナントの条件を調べるテスト (`SqlTenantConditionTests`) から外すのは、この 5 つの Accessor だけにする
+
+## メソッド
+
 - テナントを持つ表を扱うメソッドは、最初の引数 (トランザクションがあればその次) に `Guid tenantId` を受ける
-- テナントのわからない要求で引くものは `DirectoryAccessor`、テナントの表は `TenantAccessor`、管理画面のサインインと自分の資格情報は `AccountAccessor`、表に紐付かない処理は `GenericAccessor`、テナントをまたぐ裏の処理 (通知の送り手、古いデータの消去、すぐに拒む一覧) は `BackgroundAccessor` に置く (この 5 つだけテナントの条件を調べるテストから外す)
-- 書き込みの中で読むものは、同じ名前でトランザクションを最初の引数に受ける版を足す (SQL のファイルは共有する。別の接続で読むと、まだコミットしていない変更が見えない)。書き換えない行 (公開したメニュー) だけは外で読んでよい
-- 使わなくなったメソッドは消す (トランザクションを受ける版だけを使うなら、受けない版も消す)
-- 一覧を作るときに項目ごとに読まない (N+1)。親の条件で子をまとめて引く (`IN (SELECT ...)`)
-- 状態を条件にした `[Execute]` の更新は戻り値 (更新した件数) を判定し、0 件なら続きの書き込みをしない (失敗を返してコミットしない。通知を書かない)
-- 型の変換は `DataProfile` に登録する (GUID は `GuidTextConverter`、日時は `DateTimeOffsetTextConverter`、列挙型は `EnumTextConverter<T>`、言語ごとの文字は `LocalizedTextConverter`)。新しい列挙型も登録する
-- 更新の引数は列ごとに渡す (`/*@ entity.Prop */` にはコンバータが効かない)
+- 書き込みの中で読むものは、同じ名前でトランザクションを最初の引数に受けるオーバーロードを足す (別の接続で読むと、まだコミットしていない変更が見えないため)
+- トランザクションを受けるオーバーロードは、受けないものと SQL のファイルを共有する
+- 書き換えない行 (公開したメニュー) だけは、トランザクションの外で読んでよい
+- 使わなくなったメソッドは削除する (トランザクションを受けるオーバーロードだけを使うなら、受けないものも削除する)
+- 更新の引数は列ごとに渡す (`/*@ entity.Prop */` にはコンバータが効かないため)
+- 戻り値の 0 や null が何を意味するか (見つからない、先に変更された) は、メソッドのコメントに書く (同じ意味のメソッドが多い Accessor は、クラスのコメントにまとめてよい)
+
+## 読み書き
+
+- SQL はすべて 2-way SQL のファイルに書き、Builder 属性 (`[SelectSingle]`、`[Insert]`、`[Delete]`) は使わない (テナントの条件をファイルで確認するため)
+- 一覧を作るときは項目ごとに読まず (N+1)、親の条件で子をまとめて引く (`IN (SELECT ...)`)
+- 状態を条件にした `[Execute]` の更新は戻り値 (更新した件数) を判定し、0 件なら続きの書き込みをせずに失敗を返す (コミットせず、通知も書かない)
+
+## 型
+
+- 型の変換は `DataProfile` に登録する (GUID は `GuidTextConverter`、日時は `DateTimeOffsetTextConverter`、日付は `DateOnlyTextConverter`、列挙型は `EnumTextConverter<T>`、言語ごとの文字列は `LocalizedTextConverter`)
+- 新しい列挙型も `DataProfile` に登録する
 - 読み出さない列 (登録トークンのハッシュ) は行の型に持たない

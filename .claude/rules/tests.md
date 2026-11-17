@@ -7,44 +7,97 @@ paths:
 ---
 # テスト
 
-- xunit v3 (Microsoft Testing Platform)。実行は `dotnet run --project`、キャンセルは `TestContext.Current.CancellationToken`
-- テストのプロジェクトは対象の区分の `tests/` に `{対象のプロジェクト名}.Tests` で置き、テストは対象と同じフォルダ構成と名前空間に置く
-- テスト名はアンダースコアなしの PascalCase (`SplitPaymentClosesVisitWhenFullyPaid`) にする
-- テストの目的は、メソッドの上に日本語のコメントで書く
-- 本文は `// Arrange`、`// Act`、`// Assert` で区切り、準備がなければ `// Arrange` を省く。ラベルには説明を付けず、準備の意図はその処理の行のコメントに書く
-- 段階を追うシナリオは `// Act / Assert: 確かめること` を重ね、段階の間に `// Arrange` を挟まない (準備と変更前の値の記録は、最初の `// Arrange` か段階の中に書く)
-- 段階のないテストで、対象の呼び出しをすべて Assert の式の中に書くとき (複数行でもよい) は、説明のない `// Act / Assert` にする
-- `// Act` と `// Assert` を分けるテストでは、応答の読み取り (`ReadErrorCodeAsync`、`ReadPageAsync`) を `// Assert` に置く (要求と一体の `GetAsync<T>` は `// Act` でよい)
-- 例外として、続きの前提 (書き込みの成否、次の要求や呼び出しに使う値) は、準備と `// Act` の途中で確かめてよい
+## 実行
+
+- テストは xunit v3 (Microsoft Testing Platform) で書く
+- キャンセルには `TestContext.Current.CancellationToken` を使う
 - テストは実行順に依存させない
 - テストの間で状態を共有しない
-- 計算のテストは、例の値と境界 (割り切れない、ちょうど、日をまたぐ、開店前) で確かめる
-- 共有のプロジェクト (`Domain`、`Client`) が画面・端末・サーバに依存しないことは、各テストの `DependencyTests` で確かめる
-- 端末の鍵の値の変換 (`DeviceCredentials`) は、Keystore と同じ形を返すテストの鍵で確かめ、サーバの API のテストでもその変換で登録とトークンが通ることを確かめる
-- サーバのテストから `TableOrder.Client` を参照しても、サーバのソリューションには入れない (サーバの InspectCode が、端末だけが使う型を使われていないと指摘するため)
-- API の結果は状態とエラーコード (`"ORDERING_PAUSED"` のような文字列) で確かめる
-- errorCode のない応答 (204、304、401、429、画面の転送) は状態コードで確かめる (ポリシーの 403 は `DEVICE_SCOPE` まで確かめる)
-- 端末の API は `TestDevice` で呼ぶ (JSON を送る要求は `PostAsync`、`PutAsync`、`PatchAsync`、成功の JSON を読む GET は `GetAsync<T>`)。例外として、本文のない POST、失敗や状態コードだけを確かめる GET、ヘッダーの要る要求は `TestDevice.Client` を直接呼ぶ
-- サンプルのデータ (`SampleData.sql`、`Menu.json`、`MenuWashoku.json`) を変えたら、`SampleData.cs`、`TestMenu.cs` と、値を確かめるテストを合わせる
-- API と画面の経路は `ApiRoutes` で書き、直書きしない (`$"{ApiRoutes.Visits}/{visit.Id}/bill"`。経路を替えたら、テストもビルドで気づく)
-- 期待する額はメニューの値 (価格) を書かず、明細と `Pricing` から求める (サンプルのメニューを変えてもテストを壊さない)
-- 通知は別のスレッドで届くので、届いた順に読んで時間を区切って待つ。送っていないことは、後から起こした通知が次に届くことで確かめる (通知は seq の順に届く)
-- サーバの API のテストは、クラスごとのサーバ (`ServerFactory`。一時ファイルの DB とサンプルのデータ) で行い、テストごとに端末を登録して (`TestDevice`) ほかのテストと状態を分ける
-- 端末の無効化・テナントの停止・テスト用のテナントの準備は `ServerFactory` の決まった SQL で行い (無効化と停止は、管理画面の操作と同じくすぐに拒む一覧も読み直す)、テナントを止めるテストは自分で作ったテナントを使う
-- ほかのサーバで替えたものを一覧の読み直しで断ることは、読み直しの間隔を短くしたテストのサーバ (`new ServerFactory()` の `Settings`) で、一覧を読み直さずに DB だけを替えて (`RevokeDeviceAsync(refresh: false)`) 確かめる
-- サーバが通知の接続を切ることは `TestHubConnection.WaitClosedAsync` で確かめる (テストの接続はつなぎ直さない)
-- 店舗の通知を送ったことの画面への知らせは、`StoreActivity.Watch` で受けて時間を区切って待つ。知らせないことは `StoreActivity` を直接作り、`Notify` を呼んで確かめる
-- 来店や品切れを変えるテストは、テストごとの店舗 (`ServerFactory.CreateStoreAsync`) で行い、サンプルのデータの店舗を変えない
-- 通知のハブのテストは `TestHubConnection` (Long Polling) でつなぎ、`ready` を受けてから操作する。`ready` の番号までの通知は端末と同じく読み飛ばす (送り手の遅れで、つないだあとに届くことがある)
-- 端末のアプリの窓口 (`TableOrder.Client` の REST と SignalR) は、サーバのテストで `TestTerminal` (テストのサーバの中のハンドラと Long Polling) につないで確かめ、`Client/` の下に窓口と同じフォルダ (`Rest/`、`SignalR/`) で置く
-- 注文のテストの単価は `TestMenu` (サーバのメニューと `Pricing`) で求め、メニューの価格を書かない
-- サンプルのメニューの Id (商品、オプション、ルール、持ち場) は `TestMenu` の定数を使い、テストのクラスに書き直さない (足りなければ `TestMenu` に足す)
-- 開発の環境の自動の進行は、`SimulationService` を DI から取り、時間を 0 にして店舗の文脈で呼んで確かめる (テストのサーバは自動の進行を止める)
-- 古いデータの片付けは、来店の営業日をさかのぼらせて (`ServerFactory.MoveVisitToPreviousDayAsync` の日数) `CleanupService` を店舗の文脈で呼び、子の表まで消えたことを表ごとの行の数 (`ServerFactory.CountVisitRowsAsync`) で確かめる
-- 管理画面の操作 (端末の管理、店内状況、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗の文脈 (`ServerFactory.BeginStore`) で呼ぶ
-- 管理画面の画面 (サインイン、役割で絞った画面) は `TestAdmin` (Cookie を持ち、自動では移らない) で開き、フォームは画面の偽造防止の値と Blazor のフォームの名前を付けて送る。移る先は `TestAdmin.LocationOf`、画面の文字は `TestAdmin.ReadPageAsync` (日本語は文字参照で出る) で確かめる
-- 管理画面のテストの利用者は `ServerFactory.CreateAdminUserAsync` でテストごとに作り、サンプルの利用者の資格情報を替えない
-- テストのサーバの店舗の PIN は `ServerFactory.StaffPin` で、ハッシュの回数を少なくしている (テストを遅くしない)
-- テーブル端末のテストの来店は、ホール端末で開く (`ServerFactory.OpenVisitAsync`。テーブル端末と受付機は、来店の開き方を替えた店舗 (`CreateStoreAsync(VisitOpening.Xxx)`) でだけ開ける)
-- 画像は、サンプルの写真 (起動で `Assets/Images` から写したもの) か、`IImageStore` に直接置いたもので確かめる (テストのサーバの置き場はクラスごとの一時のフォルダ)
-- テナントで分けられていることは、サンプルの 2 つのテナント (同じ店舗コード) の端末で、それぞれの店舗の値だけが返ることで確かめる
+
+## 配置と名前
+
+- テストのプロジェクトは、対象の区分の `tests/` に `{対象のプロジェクト名}.Tests` で置く
+- テストは、対象と同じフォルダ構成と名前空間に置く
+- テスト名は、アンダースコアなしの PascalCase (`SplitPaymentClosesVisitWhenFullyPaid`) にする
+- テストの目的は、メソッドの上に日本語のコメントで書く
+
+## Arrange / Act / Assert
+
+- テストの本体は `// Arrange`、`// Act`、`// Assert` で区切る
+- 準備がなければ `// Arrange` を省く
+- `// Arrange`、`// Act`、`// Assert` には説明を付けない
+- 準備の意図は、その処理の行のコメントに書く
+- 段階を追うシナリオは `// Act / Assert: 確認すること` を重ね、段階の間に `// Arrange` を挟まない
+- 段階を追うシナリオの準備と変更前の値の記録は、最初の `// Arrange` か段階の中に書く
+- 段階のないテストで、対象の呼び出しをすべて Assert の式の中に書くとき (複数行でもよい) は、説明のない `// Act / Assert` にする
+- `// Act` と `// Assert` を分けるテストでは、レスポンスの読み取り (`ReadErrorCodeAsync`、`ReadPageAsync`) を `// Assert` に置く (リクエストと一体の `GetAsync<T>` は `// Act` でよい)
+- 例外として、続きの前提 (書き込みの成否、次のリクエストや呼び出しに使う値) は、準備と `// Act` の途中で確認してよい
+
+## 観点
+
+- 計算のテストは、例の値と境界 (割り切れない、ちょうど、日をまたぐ、開店前) で検証する
+- 共有のプロジェクトの依存の範囲は、各テストの `DependencyTests` で検証する (`Client` は画面・端末・サーバに依存しない。`Domain` はさらに `Contract`、`Client`、ASP.NET Core にも依存しない)
+- テナントで分けられていることは、サンプルの 2 つのテナント (同じ店舗コード) の端末で、それぞれの店舗の値だけが返ることで検証する
+
+## API
+
+- API の結果は、ステータスコードとエラーコード (`"ORDERING_PAUSED"` のような文字列) で検証する
+- errorCode のないレスポンス (204、304、401、429、画面のリダイレクト) は、ステータスコードで検証する
+- ポリシーで拒否した 403 は、`DEVICE_SCOPE` まで検証する
+- 端末の API は `TestDevice` で呼ぶ (JSON を送るリクエストは `PostAsync`、`PutAsync`、`PatchAsync`、成功の JSON を読む GET は `GetAsync<T>`)
+- 例外として、本文のない POST、失敗やステータスコードだけを検証する GET、ヘッダの要るリクエストは `TestDevice.Client` を直接呼ぶ
+- API と画面の経路は `ApiRoutes` で書き (`$"{ApiRoutes.Visits}/{visit.Id}/bill"`)、直書きしない (経路を変更すると、テストもビルドで気づくため)
+
+## 端末の API クライアント
+
+- 端末のアプリの API クライアント (`TableOrder.Client` の REST と SignalR) は、サーバのテストで `TestTerminal` を使い、テストのサーバの中のハンドラと Long Polling で接続して検証する
+- API クライアントのテストは、サーバのテストの `Client/` の下に、API クライアントと同じフォルダ (`Rest/`、`SignalR/`) で置く
+- 端末の鍵の値の変換 (`DeviceCredentials`) は、Keystore と同じ形を返すテストの鍵で検証する
+- サーバの API のテストでも、`DeviceCredentials` の変換で登録とトークンが通ることを検証する
+- サーバのテストから `TableOrder.Client` を参照しても、`TableOrder.Client` はサーバのソリューションに入れない (端末だけが使う型を、サーバの InspectCode が未使用と指摘するため)
+
+## テストのサーバ
+
+- サーバの API のテストは、一時ファイルの DB とサンプルのデータで起動するクラスごとのサーバ (`ServerFactory`) で行う
+- テストごとに端末を登録して (`TestDevice`)、ほかのテストと状態を分ける
+- 来店や品切れを変更するテストは、テストごとの店舗 (`ServerFactory.CreateStoreAsync`) で行い、サンプルのデータの店舗を変更しない
+- テーブル端末のテストの来店は、ホール端末で開く (`ServerFactory.OpenVisitAsync`)
+- テーブル端末と受付機は、来店の開き方を切り替えた店舗 (`CreateStoreAsync(VisitOpening.Xxx)`) でだけ来店を開ける
+- テストのサーバの店舗の PIN は `ServerFactory.StaffPin` で、ハッシュの回数を少なくしてある (テストを遅くしないため)
+- 端末の無効化・テナントの停止・テスト用のテナントの準備は、`ServerFactory` に用意した SQL で行う
+- `ServerFactory` の端末の無効化とテナントの停止は、管理画面の操作と同じく失効リストも再読み込みする
+- テナントを停止するテストは、そのテストで作ったテナントを使う
+- ほかのサーバでの変更を失効リストの再読み込みで拒否することは、再読み込みの間隔を短くしたテストのサーバ (`new ServerFactory()` の `Settings`) で、失効リストを再読み込みせずに DB だけを変更して (`RevokeDeviceAsync(refresh: false)`) 検証する
+- 画像は、サンプルの写真 (起動時に `Assets/Images` からコピーしたもの) か、`IImageStore` に直接置いたもので検証する (テストのサーバの保存先は、クラスごとの一時フォルダ)
+
+## サンプルのデータ
+
+- サンプルのデータ (`SampleData.sql`、`Menu.json`、`MenuWashoku.json`) を変更したら、`SampleData.cs`、`TestMenu.cs` と、値を検証するテストを合わせる
+- サンプルのメニューの Id (商品、オプション、ルール、持ち場) は `TestMenu` の定数を使い、テストのクラスで定義し直さない (足りなければ `TestMenu` に足す)
+- 期待する額は、メニューの価格を書かずに、明細と `Pricing` から求める (サンプルのメニューを変更してもテストを壊さないため)
+- 注文のテストの単価は、メニューの価格を書かずに、`TestMenu` (サーバのメニューと `Pricing`) で求める
+
+## 通知
+
+- 通知は別のスレッドで届くので、届いた順に読み、タイムアウトを付けて待つ
+- 通知を送っていないことは、後から起こした通知が次に届くことで検証する (通知は seq の順に届くため)
+- 通知のハブのテストは `TestHubConnection` (Long Polling) で接続し、`ready` を受けてから操作する
+- `ready` の番号までの通知は、端末と同じく読み飛ばす (ディスパッチャの遅れで、接続したあとに届くことがあるため)
+- サーバが通知の接続を切ることは、`TestHubConnection.WaitClosedAsync` で検証する (テストの接続は再接続しない)
+- 店舗の通知を送ったことを画面に伝えることは、`StoreActivity.Watch` で受け、タイムアウトを付けて待つ
+- 画面に伝えないことは、`StoreActivity` を直接作り、`Notify` を呼んで検証する
+
+## バックグラウンド処理
+
+- 開発の環境のシミュレーションは、`SimulationService` を DI から取り、時間を 0 にして店舗のコンテキストで呼んで検証する (テストのサーバはシミュレーションを止める)
+- 古いデータのクリーンアップのテストは、来店の営業日をさかのぼらせて (`ServerFactory.MoveVisitToPreviousDayAsync` の日数)、`CleanupService` を店舗のコンテキストで呼ぶ
+- クリーンアップで子の表まで削除されたことは、表ごとの行の数 (`ServerFactory.CountVisitRowsAsync`) で検証する
+
+## 管理画面
+
+- 管理画面の操作 (端末の管理、店内状況、チェーンと店舗の設定) は、Service を DI から取り、管理画面と同じく選んだ店舗のコンテキスト (`ServerFactory.BeginStore`) で呼ぶ
+- 管理画面のページ (サインイン、役割で絞ったページ) は、`TestAdmin` (Cookie を持ち、リダイレクトを自動では追わない) で開く
+- フォームは、ページの偽造防止トークンと Blazor のフォームの名前を付けて送る
+- リダイレクト先は `TestAdmin.LocationOf` で検証する
+- ページの文字は `TestAdmin.ReadPageAsync` で検証する (日本語は文字参照で出るため)
+- 管理画面のテストの利用者は `ServerFactory.CreateAdminUserAsync` でテストごとに作り、サンプルの利用者の資格情報を変更しない
