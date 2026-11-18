@@ -100,3 +100,11 @@
 | 外部の連携 | ⬜ | 設計 ([docs/plan.md](docs/plan.md#-外部の連携)) | 外部のクライアント、メニューと写真の公開、端末の再読み込み、POS、Webhook |
 | 本番の環境 | ⬜ | 構成の検討 ([docs/plan.md](docs/plan.md#-本番の環境)) | Amazon ECS・Amazon RDS・AWS CDK (C#) の IaC、画像の保存先 (Amazon S3)、複数台での運用 |
 | 店舗のエッジ | ⬜ | | 回線が切れても店内で注文を続ける |
+
+## 🔗 基にしたテンプレート
+
+| テンプレート | 基にしたもの |
+| --- | --- |
+| [template-maui](https://github.com/usausa/template-maui) | 端末の共通の部品 |
+| [template-maui-keyboard](https://github.com/usausa/template-maui-keyboard) | 端末のアプリの構成 (物理キーの入力とフォーカスの移動を除く) |
+| [template-maui-server](https://github.com/usausa/template-maui-server) | サーバの構成と通信 |
