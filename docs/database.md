@@ -47,7 +47,7 @@
 
 型:
 
-| 型 | SQLite | C# | 中身 |
+| 型 | SQLite | C# | 内容 |
 | --- | --- | --- | --- |
 | `guid` | TEXT | `Guid` | 小文字のハイフン付き (`D` 形式) |
 | `string` | TEXT | `string` | |
@@ -176,7 +176,7 @@ erDiagram
 
 ### Tenants (テナント)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `Id` | guid | |
 | `Code` | string | テナントのコード (運営と契約で使う) |
@@ -199,7 +199,7 @@ erDiagram
 
 ### Stores (店舗)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -237,7 +237,7 @@ erDiagram
 
 ### CallReasons (呼び出しの用件)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `StoreId` | guid | |
@@ -250,7 +250,7 @@ erDiagram
 
 ### DiningTables (テーブル)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -266,12 +266,12 @@ erDiagram
 - 一意: `StoreId`、`Name`
 - `GET /tables` の来店の要約 (`visit`) は、次から求める
   - 開いている来店
-  - その来店の明細 (まだ提供していない品)
+  - その来店の明細 (未提供の品)
   - その来店の呼び出し (終わっていないもの)
 
 ### AdminUsers (管理画面の利用者)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `Id` | guid | |
 | `TenantId` | guid? | 属するテナント (運営者は null) |
@@ -302,7 +302,7 @@ erDiagram
 
 ### AdminUserStores (店舗担当者が受け持つ店舗)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `UserId` | guid | 利用者 (店舗担当者) |
@@ -316,7 +316,7 @@ erDiagram
 
 ### Devices (端末)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | 登録のときにサーバが採番 |
@@ -345,7 +345,7 @@ erDiagram
 
 ### DeviceStations (キッチン端末の持ち場)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `DeviceId` | guid | |
@@ -358,7 +358,7 @@ erDiagram
 
 ### DeviceStatuses (端末の状態)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `DeviceId` | guid | |
@@ -372,7 +372,7 @@ erDiagram
 
 ### DeviceEnrollments (端末の登録の受け口)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -405,7 +405,7 @@ erDiagram
 
 ### ApiClients (外部のクライアント)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | `client_id` |
@@ -428,7 +428,7 @@ erDiagram
 
 ### MenuPublications (メニューの公開)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -449,7 +449,7 @@ erDiagram
 
 ### Stocks (品切れ)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `StoreId` | guid | |
@@ -472,7 +472,7 @@ erDiagram
 
 ### Visits (来店)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | 来店を開いた端末が採番 (管理画面の案内ではサーバ) |
@@ -500,7 +500,7 @@ erDiagram
 
 ### VisitConfirmations (確認の記録)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `VisitId` | guid | |
@@ -512,7 +512,7 @@ erDiagram
 
 ### Orders (注文)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | 送信した端末が採番 |
@@ -532,7 +532,7 @@ erDiagram
 
 ### OrderLines (明細)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | 送信した端末が採番。数量の一部を取り消して分けた明細は、サーバが採番 |
@@ -576,7 +576,7 @@ erDiagram
 
 ### OrderLineOptions (明細のオプション)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `LineId` | guid | |
@@ -594,7 +594,7 @@ erDiagram
 
 ### KitchenTickets (チケット)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | サーバが採番 |
@@ -614,7 +614,7 @@ erDiagram
 
 ### Calls (呼び出し)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | テーブル端末が採番 |
@@ -637,7 +637,7 @@ erDiagram
 
 ### Payments (支払)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | テーブル端末が採番 |
@@ -663,7 +663,7 @@ erDiagram
 
 ### Receipts (電子レシート)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `VisitId` | guid | |
@@ -686,7 +686,7 @@ erDiagram
 
 ### EventSequences (通知の通し番号)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `StoreId` | guid | |
@@ -697,7 +697,7 @@ erDiagram
 
 ### Events (通知)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `StoreId` | guid | |
@@ -718,7 +718,7 @@ erDiagram
 
 ### WebhookEndpoints (Webhook の送り先)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -733,7 +733,7 @@ erDiagram
 
 ### WebhookDeliveries (Webhook の送り状況)
 
-| 列 | 型 | 中身 |
+| 列 | 型 | 内容 |
 | --- | --- | --- |
 | `TenantId` | guid | テナント (キーの先頭) |
 | `Id` | guid | |
@@ -797,6 +797,6 @@ erDiagram
 - 来店は店舗ごとに、営業日の古い順に 200 件 (`Cleanup:VisitBatchSize`) ずつのトランザクションで、子の表から削除する
 - メニューの公開も、店舗ごとに削除する
 - 店舗のデータのクリーンアップは今の状態を変えないので、通知を書かない
-- 次の削除の処理は作っていない ([backlog.md](backlog.md))
+- 次の削除の処理は未実装 ([backlog.md](backlog.md))
   - Webhook の送り状況: 外部連携と一緒に作る
   - 解約したテナントの行: テナントの解約と一緒に作る

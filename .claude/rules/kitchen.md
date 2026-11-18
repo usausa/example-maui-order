@@ -6,7 +6,7 @@ paths:
 
 ## 画面
 
-- 画面は `Components/Pages` に `@page` を付けて置き、中身は `.razor.cs` の partial class に書く
+- 画面は `Components/Pages` に `@page` を付けて置き、処理は `.razor.cs` の partial class に書く
 - 部品は `Components/Controls` に置く (`Shared` は名前空間に使えない。CA1716)
 - コンポーネントの DI は `[Inject] public required` のプロパティで受ける
 - razor のフィールドとプロパティに、ディレクティブと同じ名前 (`code` など) を付けない (`@code` と取り違える)
@@ -29,7 +29,7 @@ paths:
 - チケットの再取得は操作のあとと通知の両方から重なって走るので、頼んだ順の番号を付け、あとに頼んだ再取得のレスポンスを古いレスポンスで上書きしない
 - 通知での再取得に失敗したら、しばらくしてから再取得する
 
-## 見た目と文言
+## デザインと文言
 
 - 色の値は `wwwroot/css/app.css` の `:root` に役割の名前の CSS 変数 (`--primary-color` など) で持ち、ほかの場所は `var(--xxx-color)` で使う
 - 色の値は、ホール端末の System にそろえる
@@ -53,7 +53,7 @@ paths:
 
 ## 端末の鍵と接続先
 
-- 端末の鍵は WebCrypto の取り出せない鍵にする (`extractable` を false)
+- 端末の鍵は WebCrypto のエクスポートできない鍵にする (`extractable` を false)
 - IndexedDB の操作は順に並べる
 - WebCrypto が使えない (HTTPS か localhost でない) ときは、起動でメッセージを出して止まる
 - 接続先は、アプリを配信したサーバ (`NavigationManager.BaseUri` の起点) にする

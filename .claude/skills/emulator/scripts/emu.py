@@ -22,7 +22,7 @@
 #   python emu.py logcat [--lines N] [--grep 正規表現]
 #   python emu.py pref get <key>             アプリの設定 (shared_prefs) の値を出す
 #   python emu.py pref set <key> <value>     アプリの設定の文字列を書き換える (動いているアプリを止めてから。ないキーは足さない)
-#   python emu.py browse <url>               既定のブラウザで Web アプリ (キッチン端末) を開く (localhost はこの PC の同じポートにつなぐ。同じタブを使い回す)
+#   python emu.py browse <url>               既定のブラウザで Web アプリ (キッチン端末) を開く (localhost はこの PC の同じポートにつなぐ。同じタブを再利用する)
 #   python emu.py browse --reload            ブラウザで開いている画面を読み込み直す (全画面の間も使える)
 #   python emu.py browse --locale <言語>     ブラウザを止めて、ブラウザだけの言語を替える (例: ja-JP。default で端末の言語に戻す)
 #   python emu.py browse --close             ブラウザを止めて、ポートのつなぎを外す
@@ -53,10 +53,10 @@ APPS = {
 }
 PACKAGE, PROJECT, ADMIN = APPS['table']
 
-# Web アプリ (キッチン端末) を開いたタブを使い回すための、呼び出し元の名前
+# Web アプリ (キッチン端末) を開いたタブを再利用するための、呼び出し元の名前
 BROWSER_TAB = 'tableorder.emu'
 
-# --avd で選んだ AVD の名前と、決めたエミュレータ (1 回の実行の中で使い回す)
+# --avd で選んだ AVD の名前と、決めたエミュレータ (1 回の実行の中で再利用する)
 AVD = None
 SELECTED = None
 

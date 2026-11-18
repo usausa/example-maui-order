@@ -36,7 +36,7 @@ paths:
 
 - 管理画面のページは `AppPageBase` を継承し、選んだテナントと店舗 (`StoreSelection`) のコンテキストで Service を呼ぶ
 - ほかの部品からのイベント (店舗の選び直し、店舗の通知) で再読み込みするときは、`AppPageBase.ReloadAsync` で行う (コンテキストを始め、失敗を画面の `ErrorBoundary` に渡す。イベントの中の例外を捨てない)
-- 店舗の通知で再読み込みする管理画面は、選んだ店舗を `StoreActivity.Watch` で監視する (店舗を選び直したら監視し直す)
+- 店舗の通知で再読み込みする管理画面は、選んだ店舗を `StoreActivity.Watch` で監視する (店舗を変更したら、監視する店舗も切り替える)
 - `StoreActivity` からディスパッチャのスレッドで呼ばれたら、少し待って 1 回だけ、画面のコンテキスト (`InvokeAsync` と `BeginServiceScope`) で再読み込みする
 - 再読み込みで、選んだものと入力の途中の値を消さない
 - 店舗の選択 (`StoreSelector`) もページと同じ `ErrorBoundary` の中に置く (外の失敗は回線ごと終わり、選択と入力を失うため)

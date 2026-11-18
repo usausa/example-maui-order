@@ -2,8 +2,8 @@
 
 注文サーバの API の想定。  
 店内の注文に関わる端末 (テーブル、ホール、キッチン、受付。どれもこのリポジトリのアプリ) と、外部のシステムが使う。  
-作った API は [architecture.md](architecture.md#-10-サーバの実装) に挙げる。  
-まだ作っていない API は、端末とこれから作るサーバがこの文書に合わせる。
+実装した API は [architecture.md](architecture.md#-10-サーバの実装) に挙げる。  
+未実装の API は、端末とこれから実装するサーバがこの文書に合わせる。
 
 | 内容 | 文書 |
 | --- | --- |
@@ -133,7 +133,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 アクセストークンのクレーム:
 
-| クレーム | 端末 | 外部 | 中身 |
+| クレーム | 端末 | 外部 | 内容 |
 | --- | :---: | :---: | --- |
 | `iss` / `aud` | ✅ | ✅ | 発行したサーバと、この API |
 | `sub` | ✅ | ✅ | 端末の `id`。外部はクライアントの `id` |
@@ -173,7 +173,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 
 | 項目 | ルール |
 | --- | --- |
-| 見分け方 | テナントと店舗は、アクセストークンのクレーム (`tenant_id`、`store_id`) で決める |
+| 判別 | テナントと店舗は、アクセストークンのクレーム (`tenant_id`、`store_id`) で決める |
 | URL・ヘッダ・本文 | テナントは入れない。店舗を指すのは、テナント全体のクライアントだけ (店舗コードで指す) |
 | 接続先 | すべてのテナントで同じ (Web の画面のキッチン端末と管理画面も同じ) |
 | 認証のあと | 署名・発行者 (`iss`)・対象 (`aud`)・期限を検証したトークンのテナント・店舗・端末の種類・置き場所は、そのリクエストの間は信用する。リクエストごとにデータベースで引き直さない |
@@ -200,7 +200,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 - テナントがあって止まっていないかは、トークンを発行するときに確認する
 - トークンを信用していても、リクエストの中の `id` は毎回テナントと店舗で絞って引く (オブジェクト単位の認可)
 - 業務の処理は、テナントと店舗をリクエストのコンテキストで受け取り、データの読み書きで必ず絞る (データベースはすべての表に `TenantId` を持つ。[database.md](database.md#テナントの持ち方))。  
-  絞り忘れは、SQL がテナントで絞っているかを調べるテストで見つける
+  絞り忘れは、SQL がテナントで絞っているかを検証するテストで見つける
 
 ---
 
@@ -345,7 +345,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | `sortOrder` | int | |
 | `visit` | object? | 今の来店の要約 `{ visitId, adults, children, status, openedAt, lastOrderedAt, unservedCount, openCallCount, version }` (ホールの席の一覧のため) |
 
-- `visit` の `unservedCount` は、まだ出していない明細 (取消と食後の品を除く)
+- `visit` の `unservedCount` は、未提供の明細 (取消と食後の品を除く)
 - `visit` の `version` は、来店の操作に使う
 
 | Method | Path | 利用者 | 概要 |
@@ -369,7 +369,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | --- | --- | --- | --- |
 | GET | `/menu` | テーブル / ホール / キッチン | メニュー (`MenuResponse`)。`If-None-Match` に `menuVersion` を付けると、変わっていなければ `304` |
 | GET | `/images/{name}` | 全端末 | 画像 (料理の写真、チェーンのロゴ)。ない名前は `404`、使えない文字の名前は `400` |
-| PUT | `/images/{name}` | 外部 (本部) | 画像のアップロード → `204`。同じ名前で中身が違えば `409` (`IMAGE_CONFLICT`) |
+| PUT | `/images/{name}` | 外部 (本部) | 画像のアップロード → `204`。同じ名前で内容が違えば `409` (`IMAGE_CONFLICT`) |
 | POST | `/menu/publications` | 外部 (本部) | 本部で編集したメニューの公開 `MenuPublishRequest { storeCodes, menu }` → `200` `{ menuVersion, storeCodes }`。通知 `menu.published` |
 
 画像:
@@ -377,9 +377,9 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 - テナントごとに保存する
 - 名前は英小文字・数字・`-`・`_`・`.` にし、拡張子は `png` / `jpg` / `jpeg` / `webp` にする
 - 内容を変えるときは、名前も変える (内容のハッシュを入れる。例: `hamburg.3f2a9c1e.png`)。  
-  名前は内容が変わると変わるので、端末はキャッシュして使い回す (`Cache-Control: private, max-age=31536000, immutable`)
+  名前は内容が変わると変わるので、端末はキャッシュして再利用する (`Cache-Control: private, max-age=31536000, immutable`)
 - 形式は `image/png` / `image/jpeg` / `image/webp` で、2 MB まで。  
-  形式は中身の先頭で検証する
+  形式は内容の先頭で検証する
 - 写真は端末の画面に合う大きさ (1280x960 ほど) にする
 - 公開の前にアップロードし、商品の `imageName` で指す
 
@@ -471,7 +471,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
 | 上限 (`Limit`) | 来店の注文とカートを合わせて上限を超えたら入れない | 超える注文は `422` (`LIMIT_EXCEEDED`) |
 | 出せる条件 (`Availability`) | 条件を満たさない品とカテゴリを出さない。カートの品が満たさなくなったら、外すまで確定させない | 満たさない明細は `422` (`ITEM_UNAVAILABLE`)。時間帯の終わりから店舗の設定の分数 (`daypartGraceMinutes`) のうちに届いた注文は受ける |
 
-- テーブル端末は、時刻の見直しと人数の変更で、出せる条件に合う品とカテゴリを出し直す。  
+- テーブル端末は、時刻の見直しと人数の変更で、出せる条件に合う品とカテゴリを再表示する。  
   カートに入れるときと確定するときにも、条件を確認する
 - 数え方 (人数の取り方、足りない数、上限) は、端末とサーバで同じ計算 (`TableOrder.Domain.TagRules`) を使う
 
@@ -602,7 +602,7 @@ RFC 9457 の Problem Details に `errorCode` を足す (コードは [§5](#-5-�
   - `visit.moved` で、元のテーブル端末は待受に、移動先は注文の画面になる
   - `ticket.updated` で、キッチン端末は今のテーブルを出す
 - `POST /visits/{id}/confirmations`
-  - ホール端末は、代わりの注文でスタッフがお客様に確認したときに記録する
+  - ホール端末は、代理注文でスタッフがお客様に確認したときに記録する
   - 来店で 1 回だけ記録する。  
     確認のルールでない `ruleId` は `400`
   - `visit.updated` は、ほかの端末が同じ来店で聞き直さないように送る
@@ -699,7 +699,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | 確認のルールの対象の品: 来店の記録があるか | `CONFIRMATION_REQUIRED` |
 | 上限のルール: 来店のこれまでの注文と合わせた数 | `LIMIT_EXCEEDED` |
 
-- `MENU_CHANGED` のときは、端末がメニューを再取得して、確認し直してもらう。  
+- `MENU_CHANGED` のときは、端末がメニューを再取得して、再確認してもらう。  
   `menuVersion` が違っても、価格と内容が同じなら受ける
 - 時間帯は、終わりから `daypartGraceMinutes` の分数のうちは受ける。  
   同じ `id` の再送は、時間帯によらず受けた注文を返す
@@ -730,7 +730,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | POST | `/kitchen/tickets/{id}/lines/{lineId}/start` | キッチン | 作り始め (`Cooking`) → `200` (チケット) |
 | POST | `/kitchen/tickets/{id}/lines/{lineId}/ready` | キッチン | できあがり (`Ready`) → `200` (チケット) |
 | POST | `/kitchen/tickets/{id}/bump` | キッチン | すべての明細をできあがりにして下げる (`Done`) → `200` (チケット) |
-| POST | `/kitchen/tickets/{id}/recall` | キッチン | 下げたチケットを戻す (押し間違い) → `200` (チケット)。まだ出していない明細は `Cooking` に戻す |
+| POST | `/kitchen/tickets/{id}/recall` | キッチン | 下げたチケットを戻す (押し間違い) → `200` (チケット)。未提供の明細は `Cooking` に戻す |
 
 - `GET /kitchen/tickets`
   - `status` の既定は `Open` で、古い順。  
@@ -813,7 +813,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | `paidAmount` / `balance` | money | 払った額 / 残り |
 | `guests` | int | 大人 + 子ども |
 | `splitAmounts` | money[] | 人数で割った目安 ([金額と税](business.md#-5-金額と税)) |
-| `hasUnservedLines` | bool | まだ出していない品がある (お支払いのあともお持ちすることを出す) |
+| `hasUnservedLines` | bool | 未提供の品がある (お支払いのあともお持ちすることを出す) |
 
 支払 (`PaymentResponse`):
 
@@ -944,7 +944,7 @@ Held / Ordered / Cooking / Ready --取消 (ホール)--> Cancelled
 | --- | --- |
 | 送り先 | テナントごとに管理画面で登録する (店舗に限ることもできる) |
 | 鍵 | サーバが生成し、登録した画面で一度だけ見せる |
-| 本文 | `{ id, type, occurredAt, tenantId, storeId, storeCode, seq, data }`。`id` は配信の Id、`data` は §3.2 の通知の中身 |
+| 本文 | `{ id, type, occurredAt, tenantId, storeId, storeCode, seq, data }`。`id` は配信の Id、`data` は §3.2 の通知の内容 |
 | `visit.closed` の本文 | 来店に、会計の明細と支払を足す |
 | 署名 | `X-Signature: t={送った時刻の Unix 秒},v1={HMAC-SHA256(鍵, "{t}.{本文}") の 16 進}` を付ける。受け取る側は、時刻が 5 分より古いものを捨てる |
 | リトライ | `2xx` を受けるまで、1 分から倍にして 1 時間までの間隔で 24 時間リトライする (1 回のタイムアウトは 10 秒)。過ぎたらあきらめる |
@@ -1013,7 +1013,7 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 起動 | `POST /devices/token`、`GET /devices/me/config`、`/hubs/store` (`ready` を待つ)、`GET /store`、`GET /menu` (変わっていなければ `304`)、`GET /stock`、`GET /images/{name}` (まだキャッシュしていない写真)、`GET /devices/me/visit`、`GET /visits/{id}/orders` (来店の途中なら) | |
 | 待受 | `POST /visits` (来店の開き方が席の店。人数を入れて始める) | `visit.opened` (注文の画面へ)、`store.updated` (設定のバージョンが変わったら起動からやり直す) |
 | 注文 | `POST /visits/{id}/confirmations`、`POST /visits/{id}/orders` | `stock.updated`、`menu.published`、`store.updated` (一時停止、ラストオーダー)、`visit.updated` |
-| 注文履歴 | `GET /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` (ホールの代わりの注文)、`order.lines.updated` |
+| 注文履歴 | `GET /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` (ホールの代理注文)、`order.lines.updated` |
 | 店員呼出 | `POST /visits/{id}/calls`、`GET /visits/{id}/calls` | `call.updated` (向かっています) |
 | お会計 | `GET /visits/{id}/bill`、`POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel`、`POST /visits/{id}/payments`、`POST /payments/{id}/result` (カード)、`GET /payments/{id}`、`POST /payments/{id}/cancel`、`GET /visits/{id}/receipt` | `payment.updated`、`visit.updated` (人数)、`visit.closed` (お礼と電子レシート) |
 | 来店の終わり | | `visit.closed` (待受へ)、`visit.moved` (移った先は注文の画面、元は待受) |
@@ -1033,11 +1033,11 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 席の一覧 | `GET /tables` | `visit.opened` / `visit.updated` / `visit.moved` / `visit.closed`、`order.created`、`call.created` / `call.updated` |
 | 案内 | `POST /visits` (テーブルと人数) | |
 | 来店の操作 | `GET /visits/{id}`、`PATCH /visits/{id}` (人数)、`POST /visits/{id}/move`、`POST /visits/{id}/cancel`、`POST /visits/{id}/close` (レジで払った) | |
-| 代わりの注文 | `GET /visits/{id}/orders`、`POST /visits/{id}/confirmations` (スタッフがお客様に聞いた確認のルール)、`POST /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` |
+| 代理注文 | `GET /visits/{id}/orders`、`POST /visits/{id}/confirmations` (スタッフがお客様に聞いた確認のルール)、`POST /visits/{id}/orders`、`POST /visits/{id}/orders/release` | `order.created` |
 | 取消 | `POST /orders/{orderId}/lines/{lineId}/cancel` | |
 | 提供 | `GET /serving`、`POST /serving/serve` | `order.lines.updated` (できあがり) |
 | 呼び出し | `GET /calls`、`POST /calls/{id}/acknowledge`、`POST /calls/{id}/done` | `call.created` (音を鳴らす) |
-| 会計の手伝い | `GET /visits/{id}/bill`、`POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel` | `payment.updated` |
+| 会計の補助 | `GET /visits/{id}/bill`、`POST /visits/{id}/checkout`、`POST /visits/{id}/checkout/cancel` | `payment.updated` |
 | 品切れと一時停止 | `PUT /stock/{targetId}`、`POST /stock/reset`、`PUT /store/ordering` | `stock.updated`、`store.updated` |
 | 定期と再接続 | `POST /devices/me/heartbeat`、`POST /devices/token`、`GET /events?after=` | |
 
@@ -1095,7 +1095,7 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 403 | `TENANT_SUSPENDED` | トークンのリクエストで、契約を止めたテナント (端末は止まっていることを表示し、間をおいて再取得する) |
 | 404 | `NOT_FOUND` | 対象がない (ほかのテナントや店舗のものも同じ) |
 | 409 | `DUPLICATE_ID_MISMATCH` | 同じ `id` で内容が違う再送 |
-| 409 | `IMAGE_CONFLICT` | 同じ名前で中身の違う画像を置く |
+| 409 | `IMAGE_CONFLICT` | 同じ名前で内容の違う画像を置く |
 | 409 | `VERSION_MISMATCH` | 来店の楽観ロックの失敗 |
 | 409 | `TABLE_OCCUPIED` | 来店のあるテーブルでの開始・移動 |
 | 409 | `NO_VACANT_TABLE` | 受付機の来店の開始で、人数の入る空席がない |
@@ -1139,6 +1139,6 @@ URL はリソースごとに 1 つにし、端末の種類ごとに使える範�
 | 注文の一時停止 | 店舗の受付を一時的に止める (混雑のとき) | 店舗の `orderingPaused` |
 | メニューの配信と状態の外部への通知 | メニューをプッシュで配信し、注文の状態を Webhook で通知する | `POST /menu/publications`、Webhook |
 | テーブルでの会計 | 客席の端末で QR コード決済、アプリでクレジット | 会計 (QR は店舗が見せ、カードは決済端末) |
-| テナントの見分け方 | 契約・加盟店・店舗の `id` をパスかヘッダで指し、使えるテナントと店舗はトークンで限る。指す値は、1 つの資格情報で複数の店舗を扱う連携のため | トークンのテナントと店舗で決め、URL に入れない (端末とクライアントは 1 つのテナントに属するので、選ぶ値が要らない) |
+| テナントの判別 | 契約・加盟店・店舗の `id` をパスかヘッダで指し、使えるテナントと店舗はトークンで限る。指す値は、1 つの資格情報で複数の店舗を扱う連携のため | トークンのテナントと店舗で決め、URL に入れない (端末とクライアントは 1 つのテナントに属するので、選ぶ値が要らない) |
 | リクエストの中の `id` の確認 | `id` がトークンの範囲のものかを毎回確認する (オブジェクト単位の認可) | トークンのテナントと店舗の中で引き、ほかは `404` |
 | 外部の連携の認証 | OAuth 2.0 の client credentials で、契約・加盟店ごとのトークン | テナントごと (POS は店舗ごと) のクライアント |

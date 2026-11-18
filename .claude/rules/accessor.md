@@ -31,7 +31,7 @@ paths:
 - 管理画面のサインインと自分の資格情報は `AccountAccessor` に置く
 - 表に紐付かない処理は `GenericAccessor` に置く
 - テナントをまたぐバックグラウンド処理 (通知のディスパッチャ、古いデータのクリーンアップ、失効リスト) は `BackgroundAccessor` に置く
-- テナントの条件を調べるテスト (`SqlTenantConditionTests`) から外すのは、この 5 つの Accessor だけにする
+- テナントの条件を検証するテスト (`SqlTenantConditionTests`) から外すのは、この 5 つの Accessor だけにする
 
 ## メソッド
 
