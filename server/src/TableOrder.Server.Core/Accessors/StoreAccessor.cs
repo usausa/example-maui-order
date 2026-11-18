@@ -59,10 +59,10 @@ public sealed partial class StoreAccessor
 
     // 店舗を使わなくする前に、使っている端末と開いている来店がないかを確かめる
     [ExecuteScalar]
-    public partial ValueTask<long> CountActiveDeviceAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
+    public partial ValueTask<int> CountActiveDeviceAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
 
     [ExecuteScalar]
-    public partial ValueTask<long> CountOpenVisitAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
+    public partial ValueTask<int> CountOpenVisitAsync(Guid tenantId, Guid storeId, CancellationToken cancellationToken);
 
     [Execute]
     public partial ValueTask<int> InsertCallReasonAsync(DbTransaction tx, Guid tenantId, Guid storeId, string code, LocalizedText name, int sortOrder, bool isActive, CancellationToken cancellationToken);

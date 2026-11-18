@@ -53,4 +53,5 @@ paths:
 
 - 型の変換は `DataProfile` に登録する (GUID は `GuidTextConverter`、日時は `DateTimeOffsetTextConverter`、日付は `DateOnlyTextConverter`、列挙型は `EnumTextConverter<T>`、言語ごとの文字列は `LocalizedTextConverter`)
 - 新しい列挙型も `DataProfile` に登録する
+- 件数 (`CountXxx`) は `int` で返す (.NET の `Count` と同じ。DB の 64 bit の値は Accessor が変換し、int を超えると例外になる)
 - 読み出さない列 (登録トークンのハッシュ) は行の型に持たない

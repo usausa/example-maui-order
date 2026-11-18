@@ -17,7 +17,7 @@ public sealed partial class AccountAccessor
     public partial ValueTask<List<AdminUserStoreEntity>> QueryStoreListAsync(Guid tenantId, Guid userId, CancellationToken cancellationToken);
 
     [ExecuteScalar]
-    public partial ValueTask<long> CountOperatorAsync(CancellationToken cancellationToken);
+    public partial ValueTask<int> CountOperatorAsync(CancellationToken cancellationToken);
 
     [Execute]
     public partial ValueTask<int> InsertAsync(Guid id, Guid? tenantId, AdminRole role, string email, string normalizedEmail, string name, string passwordHash, bool mustChangePassword, string securityStamp, DateTimeOffset now, CancellationToken cancellationToken);

@@ -7,7 +7,7 @@ namespace TableOrder.Server.Core.Accessors;
 public sealed partial class TenantAccessor
 {
     [ExecuteScalar]
-    public partial ValueTask<long> CountAsync(CancellationToken cancellationToken);
+    public partial ValueTask<int> CountAsync(CancellationToken cancellationToken);
 
     [QueryFirst]
     public partial ValueTask<TenantEntity?> QueryAsync(Guid id, CancellationToken cancellationToken);

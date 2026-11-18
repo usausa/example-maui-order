@@ -16,7 +16,7 @@ public sealed partial class OrderAccessor
 
     // 要求の内容のハッシュが同じ注文の数 (同じ Id の送り直しの内容が同じかを比べる。ハッシュは行の型に持たない)
     [ExecuteScalar]
-    public partial ValueTask<long> CountByRequestHashAsync(DbTransaction tx, Guid tenantId, Guid id, byte[] requestHash, CancellationToken cancellationToken);
+    public partial ValueTask<int> CountByRequestHashAsync(DbTransaction tx, Guid tenantId, Guid id, byte[] requestHash, CancellationToken cancellationToken);
 
     // 来店の注文 (通し番号の順)
     [Query]

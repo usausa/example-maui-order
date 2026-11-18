@@ -50,7 +50,7 @@ public sealed partial class VisitAccessor
 
     // 来店の明細の数 (取消を除く)
     [ExecuteScalar]
-    public partial ValueTask<long> CountOrderLineAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
+    public partial ValueTask<int> CountOrderLineAsync(DbTransaction tx, Guid tenantId, Guid visitId, CancellationToken cancellationToken);
 
     [Query]
     public partial ValueTask<List<VisitConfirmationEntity>> QueryConfirmationListAsync(Guid tenantId, Guid visitId, CancellationToken cancellationToken);
