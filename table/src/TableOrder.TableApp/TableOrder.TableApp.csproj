@@ -8,7 +8,6 @@
     <SingleProject>true</SingleProject>
     <MauiEnableXamlCBindingWithSourceCompilation>true</MauiEnableXamlCBindingWithSourceCompilation>
     <MauiStrictXamlCompilation>true</MauiStrictXamlCompilation>
-    <CodeAnalysisRuleSet>..\..\..\Analyzers.ruleset</CodeAnalysisRuleSet>
 
     <!-- 画面の文言は日本語を既定 (AppResources.resx) にし、英語を AppResources.en.resx に置く -->
     <NeutralLanguage>ja</NeutralLanguage>

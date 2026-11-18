@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>net11.0</TargetFramework>
     <RootNamespace>TableOrder.KitchenApp</RootNamespace>
-    <CodeAnalysisRuleSet>..\..\..\Analyzers.ruleset</CodeAnalysisRuleSet>
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
     <!-- サーバは /kitchen の下で配る (wwwroot/index.html の base と合わせる) -->
     <StaticWebAssetBasePath>kitchen</StaticWebAssetBasePath>
