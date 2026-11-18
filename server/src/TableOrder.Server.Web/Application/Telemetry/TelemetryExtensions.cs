@@ -2,7 +2,7 @@ namespace TableOrder.Server.Web.Application.Telemetry;
 
 using OpenTelemetry.Metrics;
 
-public static class MeterProviderBuilderExtensions
+public static class TelemetryExtensions
 {
     public static MeterProviderBuilder AddApplicationInstrumentation(this MeterProviderBuilder builder)
     {

@@ -1,18 +1,24 @@
 namespace TableOrder.Server.Web.Application.Telemetry;
 
-using System.Diagnostics;
 using System.Diagnostics.Metrics;
 
 public sealed class ApplicationInstrument : IDisposable
 {
+    private readonly TimeProvider timeProvider;
+
+    private readonly long startTimestamp;
+
     private readonly Meter meter;
 
     private readonly Counter<long> requestLongExecution;
 
     private readonly Counter<long> requestExecution;
 
-    public ApplicationInstrument(IMeterFactory meterFactory)
+    public ApplicationInstrument(TimeProvider timeProvider, IMeterFactory meterFactory)
     {
+        this.timeProvider = timeProvider;
+        startTimestamp = timeProvider.GetTimestamp();
+
         meter = meterFactory.Create(Source.Name, Source.Version);
 
         meter.CreateObservableCounter("application.uptime", ObserveApplicationUptime);
@@ -26,8 +32,8 @@ public sealed class ApplicationInstrument : IDisposable
         meter.Dispose();
     }
 
-    private static long ObserveApplicationUptime() =>
-        (long)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalSeconds;
+    private long ObserveApplicationUptime() =>
+        (long)timeProvider.GetElapsedTime(startTimestamp).TotalSeconds;
 
     public void IncrementRequestExecution(string method, string route) =>
         requestExecution.Add(1, new("http.request.method", method), new("http.route", route));
